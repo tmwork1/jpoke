@@ -233,6 +233,12 @@ class Event(Enum):
     #         subject_spec="source:self" を使う
     ON_FORCE_BERRY_TRIGGER = auto()
 
+    # emit: core/item_manager.py（consume_item。きのみ消費が確定した時点）,
+    #       handlers/move_attack.py（なげつける: ItemManagerを経由しない消費・被弾効果）
+    # handle: ability.py（はんすう: 次のターン終了時に同じきのみを再度食べるカウントを開始する）
+    #         subject_spec="source:self" を使う
+    ON_BERRY_CONSUMED = auto()
+
     # emit: core/move_executor.py（技によるひんし時）
     # handle: volatile.py（おんねん・みちづれ等のひんし時効果）
     ON_MOVE_KO = auto()

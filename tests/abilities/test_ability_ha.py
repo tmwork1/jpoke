@@ -446,6 +446,246 @@ def test_はりこみ_死に出しの相手には発動しない():
     assert battle.damage_calculator.atk_modifier == 4096
 
 
+def test_はんすう_HP割合条件を無視して2ターン後の終了時に同じきのみを食べ直す():
+    """はんすう: きのみ消費のターン自身の終了時ではなく、次のターンの終了時に
+    同じきのみを再度食べる。オボンのみの通常発動条件（HP50%以下）を満たさなくても
+    強制的に効果を得る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="はんすう", item_name="オボンのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.modify_hp(mon, v=-round(mon.max_hp * 0.1))  # 50%は超えているが満タンではない
+    hp_before = mon.hp
+    battle.item_manager.consume_item(mon)
+    assert mon.ability.cud_chew_item == "オボンのみ"
+    assert mon.ability.cud_chew_turns == 2
+    assert not mon.has_item()
+
+    t.end_turn(battle)  # 消費したターン自身の終了時: 2→1、まだ発動しない
+    assert mon.ability.cud_chew_turns == 1
+    assert mon.hp == hp_before
+    assert not mon.has_item()
+
+    t.end_turn(battle)  # 次のターンの終了時: 1→0、発動してHP50%超でも回復する
+    assert mon.ability.cud_chew_turns == 0
+    assert mon.hp > hp_before
+    assert not mon.has_item()  # 再度消費されるため持ち物としては残らない
+
+
+def test_はんすう_効果の無いきのみは消費されるが効果は発動しない():
+    """はんすう: 半減系きのみ等、はんすうの強制発動イベントに登録されていないきのみは、
+    効果を発動させずに消費だけが行われる（アニメーションのみで効果無し、に相当）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="はんすう", item_name="オッカのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.item_manager.consume_item(mon)
+    assert mon.ability.cud_chew_item == "オッカのみ"
+
+    t.end_turn(battle)
+    t.end_turn(battle)
+    assert mon.ability.cud_chew_turns == 0
+    assert mon.ability.cud_chew_item == ""
+    assert not mon.has_item()
+
+
+def test_はんすう_複数のきのみを消費した場合は最後のきのみのみが対象になる():
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="はんすう", item_name="オボンのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.item_manager.consume_item(mon)
+    assert mon.ability.cud_chew_item == "オボンのみ"
+
+    battle.item_manager.gain_item(mon, "ラムのみ")
+    battle.item_manager.consume_item(mon)
+    # 対象が最後に消費したラムのみに更新され、カウントも消費時点にリセットされる
+    assert mon.ability.cud_chew_item == "ラムのみ"
+    assert mon.ability.cud_chew_turns == 2
+
+
+def test_はんすう_発動前に交代すると発動しない():
+    battle = t.start_battle(
+        team0=[
+            Pokemon("カビゴン", ability_name="はんすう", item_name="オボンのみ"),
+            Pokemon("ピカチュウ"),
+        ],
+        team1=[Pokemon("コイキング")],
+    )
+    mon = battle.actives[0]
+    battle.item_manager.consume_item(mon)
+    assert mon.ability.cud_chew_turns == 2
+
+    t.run_switch(battle, 0, 1)
+    assert mon.ability.cud_chew_turns == 0
+    assert mon.ability.cud_chew_item == ""
+
+    t.run_switch(battle, 0, 0)
+    assert battle.actives[0] is mon
+    t.end_turn(battle)
+    t.end_turn(battle)
+    assert not mon.has_item()  # 場に戻っても発動しない
+
+
+def test_はんすう_かがくへんかガス中はカウントが進まず解除後に再開する():
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="はんすう", item_name="オボンのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.item_manager.consume_item(mon)
+    assert mon.ability.cud_chew_turns == 2
+
+    battle.add_ability_disabled_reason(mon, "かがくへんかガス")
+    t.end_turn(battle)
+    assert mon.ability.cud_chew_turns == 2  # 無効化中は判定自体が発火しないため進まない
+
+    battle.remove_ability_disabled_reason(mon, "かがくへんかガス")
+    t.end_turn(battle)
+    assert mon.ability.cud_chew_turns == 1
+
+    t.end_turn(battle)
+    assert mon.ability.cud_chew_turns == 0
+
+
+def test_はんすう_かがくへんかガス発動中に消費したきのみは発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="はんすう", item_name="オボンのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.add_ability_disabled_reason(mon, "かがくへんかガス")
+    battle.item_manager.consume_item(mon)
+    assert mon.ability.cud_chew_turns == 0
+
+    battle.remove_ability_disabled_reason(mon, "かがくへんかガス")
+    t.end_turn(battle)
+    t.end_turn(battle)
+    assert not mon.has_item()  # ガス解除後もこのきのみに対してはんすうは発動しない
+
+
+def test_はんすう_特性が書き換わるとカウントが失われる():
+    """はんすう: 特性が書き換わるとカウントは失われ、はんすうに戻っても発動しない
+    （スキルスワップ等で新しいAbilityインスタンスに切り替わるため）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="はんすう", item_name="オボンのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.item_manager.consume_item(mon)
+    assert mon.ability.cud_chew_turns == 2
+
+    battle.ability_manager.change_ability(mon, "あついしぼう")
+    battle.ability_manager.change_ability(mon, "はんすう")
+    assert mon.ability.cud_chew_turns == 0
+
+    t.end_turn(battle)
+    t.end_turn(battle)
+    assert not mon.has_item()
+
+
+def test_はんすう_発動時に別の持ち物を持っている場合は効果を再現しない():
+    """はんすう: 特性で持ち物が復活するわけではないため、発動タイミングで既に
+    別の持ち物を持っている場合はそれを上書きせず、効果の再現も行わない（既知の制約）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="はんすう", item_name="オボンのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.item_manager.consume_item(mon)
+    battle.item_manager.gain_item(mon, "たべのこし")
+
+    t.end_turn(battle)
+    t.end_turn(battle)
+    assert mon.ability.cud_chew_turns == 0
+    assert mon.has_item("たべのこし")  # 上書きされない
+
+
+def test_はんすう_なげつけるで自分のきのみを投げると次のターンに使用者が効果を得る():
+    """はんすう: なげつけるで自分の持ち物（きのみ）を消費した場合も対象になり、
+    次のターンの終了時に使用者自身がきのみの効果を得る。"""
+    battle = t.start_battle(
+        team0=[Pokemon(
+            "カビゴン", ability_name="はんすう", item_name="オボンのみ",
+            move_names=["なげつける"],
+        )],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    battle.modify_hp(attacker, v=-round(attacker.max_hp * 0.1))
+    hp_before = attacker.hp
+
+    t.run_move(battle, 0)
+    assert not attacker.has_item()
+    assert attacker.ability.cud_chew_item == "オボンのみ"
+    assert attacker.ability.cud_chew_turns == 2
+
+    t.end_turn(battle)
+    t.end_turn(battle)
+    assert attacker.hp > hp_before
+
+
+def test_はんすう_なげつけるを受けて効果が発動すると次のターンに対象が効果を得る():
+    """はんすう: なげつけるを受けてきのみの効果が発動した場合も対象になり、
+    次のターンの終了時に対象がもう一度効果を得る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="オボンのみ", move_names=["なげつける"])],
+        team1=[Pokemon("カビゴン", ability_name="はんすう")],
+    )
+    defender = battle.actives[1]
+    battle.modify_hp(defender, v=-round(defender.max_hp * 0.4))
+
+    t.run_move(battle, 0)
+    assert defender.ability.cud_chew_item == "オボンのみ"
+    assert defender.ability.cud_chew_turns == 2
+    hp_after_hit = defender.hp
+    assert hp_after_hit > defender.max_hp * 0.6 - 1  # なげつける時点で即座に回復済み
+
+    t.end_turn(battle)
+    t.end_turn(battle)
+    assert defender.hp > hp_after_hit  # 次のターンの終了時にもう一度回復する
+
+
+def test_はんすう_なげつけるで効果の無いきのみを受けても対象にならない():
+    """はんすう: 半減系きのみ等、なげつけるを受けても効果の無いきのみは対象にならない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="オッカのみ", move_names=["なげつける"])],
+        team1=[Pokemon("カビゴン", ability_name="はんすう")],
+    )
+    defender = battle.actives[1]
+
+    t.run_move(battle, 0)
+    assert defender.ability.cud_chew_turns == 0
+    assert defender.ability.cud_chew_item == ""
+
+
+def test_はんすう_むしくいで奪ったきのみも対象になる():
+    """はんすう: むしくい・ついばむで奪って消費したきのみも対象になり、
+    次のターンの終了時にもう一度効果を得る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="はんすう", move_names=["むしくい"])],
+        team1=[Pokemon("ピカチュウ", item_name="オボンのみ")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    battle.modify_hp(attacker, v=-round(attacker.max_hp * 0.6))
+    hp_before = attacker.hp
+
+    t.run_move(battle, 0)
+    assert not defender.has_item()
+    hp_after_steal = attacker.hp
+    assert hp_after_steal > hp_before  # むしくいで即座に効果を得る
+    assert attacker.ability.cud_chew_item == "オボンのみ"
+    assert attacker.ability.cud_chew_turns == 2
+
+    t.end_turn(battle)
+    t.end_turn(battle)
+    assert attacker.hp > hp_after_steal  # はんすうでもう一度効果を得る
+
+
 def test_ハードロック_かたやぶりで無効():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["じしん"])],

@@ -5,7 +5,7 @@ if TYPE_CHECKING:
 
 from jpoke.utils import fast_copy
 from jpoke.data import ABILITIES
-from jpoke.types import AbilityState, AbilityName
+from jpoke.types import AbilityState, AbilityName, ItemName
 
 from .effect import GameEffect
 
@@ -35,6 +35,11 @@ class Ability(GameEffect):
         self.activated_since_switch_in: bool = False
         self.mold_breaker_active: bool = False
 
+        self.cud_chew_item: ItemName = ""
+        """はんすう専用: 次のターン終了時に再度食べるきのみ名。"""
+        self.cud_chew_turns: int = 0
+        """はんすう専用: 再発動までの残りターン数（消費時点で2にセットし0で発動）。"""
+
         self.data: AbilityData  # 型ヒントのための属性。実際のデータはsuper().__init__で設定される
 
     def __deepcopy__(self, memo):
@@ -51,6 +56,8 @@ class Ability(GameEffect):
         self.count = 0
         self.state = ""
         self.activated_since_switch_in = False
+        self.cud_chew_item = ""
+        self.cud_chew_turns = 0
         self.reset_enable_state()
 
     def reset_enable_state(self):

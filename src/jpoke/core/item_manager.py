@@ -20,6 +20,11 @@ class ItemManager:
 
     def __init__(self, battle: Battle):
         self.battle = battle
+        self.suppress_berry_consumed_event: bool = False
+        """True の間は consume_item が Event.ON_BERRY_CONSUMED を発火しない。
+        はんすうが自分の再発動できのみを消費する際、その消費自体が新たな
+        はんすうカウントの起点にならないようにするための一時停止フラグ。
+        """
 
     def __deepcopy__(self, memo):
         cls = self.__class__
@@ -288,6 +293,11 @@ class ItemManager:
         """
         if mon.item.is_berry():
             mon.ate_berry = True
+            if not self.suppress_berry_consumed_event:
+                self._events.emit(
+                    Event.ON_BERRY_CONSUMED,
+                    EventContext(source=mon, item_name=mon.item.base_name)
+                )
         return self.remove_item(mon, source=mon, track_loss=track_loss)
 
     def force_trigger_berry(self, mon: Pokemon, *, track_loss: bool = True) -> None:

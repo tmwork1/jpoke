@@ -3068,6 +3068,58 @@ def はらぺこスイッチ_on_turn_end(battle: Battle, ctx: EventContext, valu
     return HandlerReturn(value=value)
 
 
+def はんすう_on_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """はんすう特性: ターン終了時の判定でカウントを1減らし、0になったら同じきのみを再度食べる。
+
+    きのみ消費時点でカウントを2にセットしておき（Event.ON_BERRY_CONSUMED側のハンドラ）、
+    この判定を経るたびに1減らす。同じターン中に消費してからこの判定を迎えれば
+    「次のターンの終了時」に、この判定を過ぎた後に消費すれば「2ターン後の終了時」に、
+    それぞれ自然に0へ到達する。
+
+    再発動時はHP割合などの発動条件を無視して強制的に効果を得るため、
+    force_trigger_berry（ほおばる・おちゃかい等と同じ強制発動処理）を流用する。
+    このとき suppress_berry_consumed_event を立てて、はんすう自身の消費が
+    新たなはんすうカウントの起点にならないようにする（Ver.1.2.0の無限発動バグは再現しない）。
+
+    既に他の持ち物を持っている場合、特性で持ち物を復活させることはできない仕様のため、
+    持ち物を書き換えずに効果の再現を諦める（既知の制約）。
+    """
+    mon = ctx.source
+    ability = mon.ability
+    if ability.cud_chew_turns <= 0:
+        return HandlerReturn(value=value)
+
+    ability.cud_chew_turns -= 1
+    if ability.cud_chew_turns > 0:
+        return HandlerReturn(value=value)
+
+    item_name = ability.cud_chew_item
+    ability.cud_chew_item = ""
+    if not item_name or mon.has_item():
+        return HandlerReturn(value=value)
+
+    _announce_ability_triggered(battle, mon)
+    item_manager = battle.item_manager
+    item_manager.suppress_berry_consumed_event = True
+    try:
+        item_manager.gain_item(mon, item_name)
+        item_manager.force_trigger_berry(mon, track_loss=False)
+    finally:
+        item_manager.suppress_berry_consumed_event = False
+    return HandlerReturn(value=value)
+
+
+def はんすう_start_counter(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """はんすう特性: きのみを消費したとき、再発動までのカウントを開始する。
+
+    消費時点のカウントを2にセットする（詳細は はんすう_on_turn_end を参照）。
+    """
+    mon = ctx.source
+    mon.ability.cud_chew_item = ctx.item_name
+    mon.ability.cud_chew_turns = 2
+    return HandlerReturn(value=value)
+
+
 def はりきり_modify_accuracy(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """はりきり特性: 物理技（一撃必殺・必中技除外）の命中率を0.8倍にする。"""
     if (

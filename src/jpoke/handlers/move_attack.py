@@ -2076,6 +2076,17 @@ def ナイトバースト_lower_acc(battle: Battle, ctx: AttackContext, value: A
     return modify_defender_stats(battle, ctx, value, stats={"accuracy": -1}, chance=0.4)
 
 
+# なげつけるで対象に効果が発動するきのみの集合（はんすうの対象判定にも使う）。
+# 半減系きのみ等、この集合に含まれないきのみを受けても効果が無いためはんすうの対象にならない。
+_NAGETSUKERU_BERRY_EFFECT_ITEMS: frozenset[str] = frozenset({
+    "ラムのみ", "クラボのみ", "カゴのみ", "モモンのみ", "チーゴのみ", "ナナシのみ",
+    "キーのみ", "ヒメリのみ", "オレンのみ", "オボンのみ", "フィラのみ", "ウイのみ",
+    "マゴのみ", "バンジのみ", "イアのみ", "チイラのみ", "リュガのみ", "アッキのみ",
+    "カムラのみ", "ヤタピのみ", "ズアのみ", "タラプのみ", "サンのみ", "スターのみ",
+    "ミクルのみ",
+})
+
+
 def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """なげつける: アイテムに応じた追加効果を命中時に適用する。
 
@@ -2097,6 +2108,9 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
     対象の特性がりんぷん、または持ち物がおんみつマントの場合、これらの追加効果は
     （きのみによる回復効果も含めて）一切発動しない。resolve_secondary_chance経由で
     ON_MODIFY_SECONDARY_CHANCEを発火させ、確率0で無効化された場合はここで打ち切る。
+
+    上記のうちきのみで実際に効果が発動したもの（_NAGETSUKERU_BERRY_EFFECT_ITEMS）は、
+    対象がはんすう持ちの場合の再発動対象にするため Event.ON_BERRY_CONSUMED を発火する。
     """
     if battle.resolve_secondary_chance(ctx, 1.0) < 1:
         return HandlerReturn(value=value)
@@ -2216,6 +2230,15 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
             battle.modify_stats(defender, {stat: boost}, source=ctx.attacker)
     elif item_name == "ミクルのみ":
         battle.volatile_manager.apply(ctx.defender, "めいちゅうアップ", source=ctx.attacker)
+
+    if item_name in _NAGETSUKERU_BERRY_EFFECT_ITEMS:
+        # モジュール読み込み時の循環インポートを避けるため遅延インポートする
+        # （move_attack.py は jpoke.core パッケージの初期化中に読み込まれる経路があるため）
+        from jpoke.core.context import EventContext
+        battle.events.emit(
+            Event.ON_BERRY_CONSUMED,
+            EventContext(source=ctx.defender, item_name=item_name)
+        )
     return HandlerReturn(value=value)
 
 
@@ -2274,8 +2297,19 @@ def なげつける_consume_item(battle: Battle, ctx: AttackContext, value: Any)
     より優先度の低い同一攻撃側のON_HITハンドラより先にアイテムを手放させる。
     remove_itemは対象がすでにアイテムを持っていない場合は何もしないため、
     ON_HITで消費済みの場合にON_MOVE_ENDで再度呼び出しても副作用はない。
+
+    ItemManager.consume_itemを経由しないため、使用者自身がきのみを投げたときは
+    ここで明示的にEvent.ON_BERRY_CONSUMEDを発火し、はんすうの再発動対象にする
+    （2回目呼び出し時は既に手放しているためis_berryがFalseとなり二重発火しない）。
     """
-    battle.item_manager.remove_item(ctx.attacker, source=ctx.attacker)
+    attacker = ctx.attacker
+    if attacker.item.is_berry():
+        from jpoke.core.context import EventContext
+        battle.events.emit(
+            Event.ON_BERRY_CONSUMED,
+            EventContext(source=attacker, item_name=attacker.item.base_name)
+        )
+    battle.item_manager.remove_item(attacker, source=attacker)
     return HandlerReturn(value=value)
 
 

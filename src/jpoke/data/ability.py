@@ -2434,7 +2434,19 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             )
         }
     ),
-    "はんすう": AbilityData(),
+    "はんすう": AbilityData(
+        handlers={
+            Event.ON_BERRY_CONSUMED: h.AbilityHandler(
+                h.はんすう_start_counter,
+                subject_spec="source:self",
+            ),
+            Event.ON_TURN_END: h.AbilityHandler(
+                h.はんすう_on_turn_end,
+                subject_spec="source:self",
+                priority=150,  # docs/spec/turn.md ON_TURN_END: 「150 はんすう」
+            ),
+        }
+    ),
     "ハードロック": AbilityData(
         flags={
             "mold_breaker_ignorable"
