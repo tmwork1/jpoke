@@ -9,6 +9,10 @@ from pathlib import Path
 
 import pytest
 
+from jpoke import Pokemon
+
+from . import test_utils as t
+
 SRC_ROOT = Path(__file__).resolve().parent.parent / "src" / "jpoke"
 
 # 直接代入が許可されているファイル（相対パス、"/" 区切り）
@@ -32,6 +36,36 @@ DIRECT_ASSIGNMENT_PATTERN = re.compile(r"(?<![=!<>])\.hp\s*=(?!=)")
 def _iter_python_files():
     for path in SRC_ROOT.rglob("*.py"):
         yield path
+
+
+def test_Pokemon_modify_hpが公開APIとして露出していない():
+    """`Pokemon.modify_hp()` はHPクランプのみを行いON_HP_CHANGE系ハンドラの発火・瀕死判定・
+    ログ記録をスキップする内部専用の低レベル実装であり、外部からは `Battle.modify_hp()` を
+    使うべきという規約になっている。かつてはこの規約がdocstringのみで示され、メソッド名に
+    アンダースコアが付いていなかったため誤って直接呼び出しやすい罠になっていた。
+    `_modify_hp_raw` へのリネーム後、外部公開されたクラス属性としては存在しないことを確認する。
+    """
+    assert not hasattr(Pokemon, "modify_hp")
+    assert hasattr(Pokemon, "_modify_hp_raw")
+
+
+def test_consume_itemの引数名がtargetにリネームされている():
+    """`Battle.consume_item()` / `ItemManager.consume_item()` の第1引数は、
+    `gain_item` / `remove_item` / `take_item` 等の他のアイテム系メソッドとの引数名統一のため、
+    従来の `mon` から `target` にリネームされた（破壊的変更）。`target=` キーワード引数での
+    呼び出しが機能し、旧引数名 `mon=` を渡すと TypeError になることを確認する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="オボンのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+
+    assert battle.consume_item(target=mon) is True
+    assert not mon.has_item()
+
+    with pytest.raises(TypeError):
+        battle.consume_item(mon=battle.actives[0])  # type: ignore[call-arg]
 
 
 def test_hp直接代入がallowlist外のファイルに存在しない():

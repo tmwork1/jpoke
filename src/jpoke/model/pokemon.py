@@ -566,8 +566,10 @@ class Pokemon:
     def terastallize(self):
         """テラスタルする。
 
-        Returns:
-            テラスタルに成功した場合True、失敗した場合False
+        `is_terastallized` を立てるだけの内部メソッドで、戻り値は常に `None`。
+        `Event.ON_TERASTALLIZE` の発火や `can_terastallize()` の判定は行わないため、
+        単体で呼び出さず `TurnController` がコマンド（`Command.get_terastal_command()`）を
+        解決する経路（`Battle.step()` 等）から使うこと。
         """
         self.is_terastallized = True
 
@@ -586,8 +588,11 @@ class Pokemon:
     def megaevolve(self):
         """メガシンカする。
 
-        Returns:
-            メガシンカに成功した場合True、失敗した場合False
+        フォルムを切り替えるだけの内部メソッドで、戻り値は常に `None`。
+        メガシンカ前後の特性ハンドラの付け替えや `Event.ON_ABILITY_ENABLED` の発火、
+        `can_megaevolve()` の判定は行わないため、単体で呼び出さず `TurnController` が
+        コマンド（`Command.get_megaevol_command()`）を解決する経路（`Battle.step()` 等）
+        から使うこと。
         """
         mega_name = MEGA_STONES[self.item.name][-1]
         self.set_form(mega_name, set_default_ability=True)
@@ -851,8 +856,8 @@ class Pokemon:
         self._evs[idx] = value
         self.update_stats(hp_policy)
 
-    def modify_hp(self, v: int) -> int:
-        """HPを増減させる。
+    def _modify_hp_raw(self, v: int) -> int:
+        """HPを増減させる（内部専用の低レベル実装）。
 
         Args:
             v: 増減量（正の値で回復、負の値でダメージ）
@@ -860,9 +865,11 @@ class Pokemon:
         Returns:
             実際に変化したHP量
 
-        Note:
-            HPは0から最大HPの範囲に制限される。
-            このメソッドは内部用です。外部からはbattle.modify_hp()を使用してください。
+        Warning:
+            HPを0から最大HPの範囲にクランプするだけの内部専用メソッドであり、
+            ON_HP_CHANGE系ハンドラの発火・瀕死判定・ログ記録を一切行わない。
+            外部コード（テスト・bot・探索コード含む）から直接呼び出さないこと。
+            通常は必ず `Battle.modify_hp()` を使用する。
         """
         hp_before = self.hp
         self.hp = max(0, min(self.max_hp, hp_before + v))

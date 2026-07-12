@@ -309,13 +309,13 @@ class ItemManager:
             return False
         return self.swap_items(source=source, ignore_sticky_hold=ignore_sticky_hold)
 
-    def consume_item(self, mon: Pokemon, *, track_loss: bool = True) -> bool:
+    def consume_item(self, target: Pokemon, *, track_loss: bool = True) -> bool:
         """ポケモンの道具を消費する。
 
         きのみを消費する場合は食べたフラグを立ててから remove_item を呼ぶ。
 
         Args:
-            mon: アイテムを消費するポケモン
+            target: アイテムを消費するポケモン
             track_loss: True の場合、last_lost_item_name を更新し
                 リサイクル・しゅうかく・ものひろい等の復元/拾得対象にする。
                 割れたふうせん等、対象外にすべき場合は False を指定する。
@@ -323,14 +323,14 @@ class ItemManager:
         Returns:
             消費に成功した場合はTrue
         """
-        if mon.item.is_berry():
-            mon.ate_berry = True
+        if target.item.is_berry():
+            target.ate_berry = True
             if not self.suppress_berry_consumed_event:
                 self._events.emit(
                     Event.ON_BERRY_CONSUMED,
-                    EventContext(source=mon, item_name=mon.item.base_name)
+                    EventContext(source=target, item_name=target.item.base_name)
                 )
-        return self.remove_item(mon, source=mon, track_loss=track_loss)
+        return self.remove_item(target, source=target, track_loss=track_loss)
 
     def force_trigger_berry(self, mon: Pokemon, *, track_loss: bool = True) -> None:
         """きのみを強制発動してから消費する。
