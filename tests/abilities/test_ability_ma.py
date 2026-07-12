@@ -386,6 +386,88 @@ def test_マジックミラー_変化技を跳ね返す():
     assert defender.boosts["atk"] == 0
 
 
+def test_マジックミラー_攻撃技は跳ね返さない():
+    """マジックミラー: 分類が変化以外の技（攻撃技）は反射対象外。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ニャース", ability_name="マジックミラー")],
+    )
+    _, defender = battle.actives
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert not any(log.log == LogCode.MOVE_REFLECTED for log in battle.event_logger.logs)
+    assert defender.hp < hp_before
+
+
+def test_マジックミラー_かたやぶりを持つ相手には発動しない():
+    """マジックミラー: 攻撃側がかたやぶりを持つ場合、防御側特性が無効化され跳ね返せない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["なきごえ"])],
+        team1=[Pokemon("ニャース", ability_name="マジックミラー")],
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+    assert not any(log.log == LogCode.MOVE_REFLECTED for log in battle.event_logger.logs)
+    assert defender.boosts["atk"] == -1
+    assert attacker.boosts["atk"] == 0
+
+
+def test_マジックミラー_かがくへんかガスで無効化されている間は跳ね返さない():
+    """マジックミラー: かがくへんかガス等で特性が無効化されている間は反射しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["なきごえ"])],
+        team1=[Pokemon("ニャース", ability_name="マジックミラー")],
+    )
+    attacker, defender = battle.actives
+    battle.add_ability_disabled_reason(defender, "かがくへんかガス")
+    t.run_move(battle, 0)
+    assert not any(log.log == LogCode.MOVE_REFLECTED for log in battle.event_logger.logs)
+    assert defender.boosts["atk"] == -1
+    assert attacker.boosts["atk"] == 0
+
+
+def test_マジックミラー_跳ね返った効果を自分のマジックミラーで再び跳ね返さない():
+    """マジックミラー: 自分のマジックミラーで跳ね返ってきた効果を再び跳ね返すことはできない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="マジックミラー", move_names=["なきごえ"])],
+        team1=[Pokemon("ニャース", ability_name="マジックミラー")],
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+    # 跳ね返された効果は使用者(attacker)に1回だけ適用され、再度跳ね返されない
+    assert attacker.boosts["atk"] == -1
+    assert defender.boosts["atk"] == 0
+
+
+def test_マジックミラー_ミラーアーマー持ちから受けた技はミラーアーマーで再度跳ね返される():
+    """マジックミラー: ミラーアーマー持ちから能力を下げる変化技を受けた場合、
+    マジックミラーで跳ね返した効果はミラーアーマーで跳ね返される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ミラーアーマー", move_names=["なきごえ"])],
+        team1=[Pokemon("ニャース", ability_name="マジックミラー")],
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+    # マジックミラーで跳ね返した効果がミラーアーマーで再度跳ね返され、マジックミラー側に低下が生じる
+    assert attacker.boosts["atk"] == 0
+    assert defender.boosts["atk"] == -1
+
+
+def test_マジックミラー_ミラーアーマー持ちを攻撃した場合はミラーアーマーの反射が再度跳ね返されない():
+    """マジックミラー: マジックミラー持ちがミラーアーマー持ちのランクを下げようとした場合、
+    ミラーアーマーで跳ね返された効果はマジックミラーで跳ね返されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="マジックミラー", move_names=["なきごえ"])],
+        team1=[Pokemon("ニャース", ability_name="ミラーアーマー")],
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+    assert not any(log.log == LogCode.MOVE_REFLECTED for log in battle.event_logger.logs)
+    # ミラーアーマーの反射で攻撃側(マジックミラー持ち)に低下が生じ、防御側は無傷
+    assert attacker.boosts["atk"] == -1
+    assert defender.boosts["atk"] == 0
+
+
 def test_マルチスケイル_HP満タンのとき半減():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
