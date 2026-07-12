@@ -228,8 +228,15 @@ def _activate_weather(battle: Battle,
                       *,
                       weather: WeatherName,
                       count: int) -> HandlerReturn:
-    """天候を変更する"""
-    if mon and battle.weather_manager.apply(weather, count, source=mon):
+    """天候を変更する。
+
+    より強い天候（おおひでり等）に阻まれて天候自体は変わらない場合でも、特性バーは表示される
+    （既に同じ天候が有効なため不発の場合は表示されない）。
+    """
+    if mon is None:
+        return HandlerReturn(value=value)
+    activated = battle.weather_manager.apply(weather, count, source=mon)
+    if activated or battle.weather_manager.current_name != weather:
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
 

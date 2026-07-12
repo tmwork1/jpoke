@@ -9,7 +9,7 @@ import pytest
 from jpoke import Pokemon
 from jpoke.data.ability import ABILITIES
 from jpoke.enums import Command, Event
-from jpoke.types import Stat, AilmentName, VolatileName
+from jpoke.types import Stat, AilmentName, VolatileName, WeatherName
 
 from .. import test_utils as t
 
@@ -1774,6 +1774,36 @@ def test_ポイズンヒール_どく状態で1_8回復する(ailment_name: Ailm
     mon.hp = 1
     t.end_turn(battle)
     assert mon.hp == 1 + mon.max_hp // 8
+
+
+@pytest.mark.parametrize(
+    "strong_weather",
+    ["おおひでり", "おおあめ", "らんきりゅう"]
+)
+def test_ひでり_強天候中は天候を変えないが特性は発動する(strong_weather: WeatherName):
+    """ひでり: おおひでり・おおあめ・らんきりゅう状態のときは晴れに変えられないが、
+    特性バー（発動ログ・ability.revealed）は表示される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("ピカチュウ", ability_name="ひでり")],
+        team1=[Pokemon("ピカチュウ")],
+        weather=(strong_weather, 99),
+    )
+    t.run_switch(battle, 0, 1)
+    assert battle.weather.name == strong_weather
+    assert battle.actives[0].ability.revealed is True
+
+
+def test_ひでり_同じ晴れが既に有効なときは特性が発動しない():
+    """ひでり: 既に晴れ状態のときは発動せず、継続ターンも書き換わらない（特性バーも表示されない）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("ピカチュウ", ability_name="ひでり")],
+        team1=[Pokemon("ピカチュウ")],
+        weather=("はれ", 3),
+    )
+    t.run_switch(battle, 0, 1)
+    assert battle.weather.name == "はれ"
+    assert battle.weather.count == 3
+    assert battle.actives[0].ability.revealed is False
 
 
 if __name__ == "__main__":
