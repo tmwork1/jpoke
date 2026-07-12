@@ -3294,10 +3294,15 @@ def ひひいろのこどう_activate_weather(battle: Battle, ctx: EventContext,
 
 
 def ひひいろのこどう_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """ひひいろのこどう特性: はれ中の攻撃補正を1.33倍にする。ばんのうがさを持つ場合は無効。"""
+    """ひひいろのこどう特性: はれ中の攻撃補正を1.33倍にする。ばんのうがさを持つ場合は無効。
+
+    こんらんの自傷ダメージ（"_こんらん"）には影響しない
+    （ちからもち等と同じくChampions仕様＝第五世代以降の仕様に準拠）。
+    """
     if (
         battle.weather_for(ctx.attacker).sunny
         and ctx.move.category == "physical"
+        and ctx.move.name != "_こんらん"
     ):
         value = apply_fixed_modifier(value, 5461)
     return HandlerReturn(value=value)

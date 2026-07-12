@@ -1142,6 +1142,54 @@ def test_ひひいろのこどう_はれ以外では補正なし():
     assert 4096 == battle.damage_calculator.atk_modifier
 
 
+def test_ひひいろのこどう_こんらん自傷ダメージには補正なし():
+    """ひひいろのこどう: こんらんの自傷ダメージには攻撃補正がかからない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ひひいろのこどう")],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"こんらん": 2},
+    )
+    attacker = battle.actives[0]
+    battle.test_option.trigger_volatile = True
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.atk_modifier == 4096
+    assert attacker.hp < attacker.max_hp
+
+
+def test_ひひいろのこどう_ボディプレスで自分の防御を1_33倍にする():
+    """ひひいろのこどう: ボディプレス使用時は自分の防御実数値に補正をかけてダメージを与える"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ひひいろのこどう", move_names=["ボディプレス"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert 5461 == battle.damage_calculator.atk_modifier
+
+
+def test_ひひいろのこどう_あなをほるのダメージにも補正がかかる():
+    """ひひいろのこどう: あなをほるで与えるダメージにも攻撃補正がかかる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ひひいろのこどう", move_names=["あなをほる"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    t.run_move(battle, 0)
+    assert 5461 == battle.damage_calculator.atk_modifier
+
+
+def test_ひひいろのこどう_イカサマを受けるときは補正なし():
+    """ひひいろのこどう: 自分がイカサマを受ける側（実数値を攻撃力として使われる側）の
+    ときは、実際にイカサマを使う相手にひひいろのこどうの効果は乗らない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ひひいろのこどう")],
+        team1=[Pokemon("ピカチュウ", move_names=["イカサマ"])],
+    )
+    t.run_move(battle, 1)
+    assert 4096 == battle.damage_calculator.atk_modifier
+
+
 @pytest.mark.parametrize(
     "move_name, priority",
     [
