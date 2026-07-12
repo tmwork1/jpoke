@@ -61,6 +61,36 @@ def test_modify_hp_r負_最低1ダメージ():
     assert mon.hp == 7
 
 
+def test_set_ailment_既存の状態異常を上書きできる():
+    """battle.set_ailment(): 既存の状態異常があっても上書きして付与できる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("カビゴン")],
+        ailment1=("まひ", None),
+    )
+    mon = battle.actives[1]
+    assert mon.ailment.name == "まひ"
+
+    result = battle.set_ailment(mon, "やけど")
+
+    assert result
+    assert mon.ailment.name == "やけど"
+
+
+def test_set_ailment_状態異常を付与できる():
+    """battle.set_ailment(): 対象に状態異常を直接付与できる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[1]
+
+    result = battle.set_ailment(mon, "どく")
+
+    assert result
+    assert mon.ailment.name == "どく"
+
+
 def test_こおり_3回目行動時に強制解凍():
     """こおり: Champions仕様 - 行動不能2回の後（3回目の行動時）は必ず解凍する"""
     battle = t.start_battle(

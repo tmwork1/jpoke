@@ -1,11 +1,13 @@
 # test_ailment
 
-テスト数: 27
+テスト数: 29
 
 - [x] faint_HPが0になる
 - [x] faint_faintedがTrueになる
 - [x] modify_hp_r正_最低1回復
 - [x] modify_hp_r負_最低1ダメージ
+- [x] set_ailment_既存の状態異常を上書きできる
+- [x] set_ailment_状態異常を付与できる
 - [x] こおり_3回目行動時に強制解凍
 - [x] こおり_thaw技被弾で解凍する
 - [x] こおり_行動不能
