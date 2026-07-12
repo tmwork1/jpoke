@@ -145,12 +145,11 @@ data/ability.py  →  handlers/ability.py に実装  →  data/ability.py に登
 
 - 一時退避に `git stash` を使わない。中断する作業でも作業ブランチにWIPコミットしておく
   （stashは `git status` にも `git branch` にも現れず、存在を忘れて長期間放置されやすい）
-- Agent（`isolation: "worktree"`）で作業したworktreeは、タスクの結論（マージ or 破棄）が出た時点で
-  `git worktree remove` する。**worktreeを除去するコマンドはworktreeの外（リポジトリルート等）から
-  実行する**（内部の作業ディレクトリから実行すると削除に失敗し孤立ディレクトリが残ることがある）
-- **例外**: `work1` `work3` など汎用作業用に手動作成したworktree（Agentの`isolation: "worktree"`
-  以外で作られたもの）は、対応するPRがマージされてもタスクの結論とみなさず、ユーザーの明示的な
-  指示がない限り `git worktree remove` しない。ユーザーが継続利用する前提の永続ワークスペースとして扱う
+- worktree（Agentの`isolation: "worktree"`で作られたものか、`work1`/`work3`のように汎用作業用に
+  手動作成したものかを問わず）は、タスクの結論（マージ or 破棄）が出た時点で `git worktree remove`
+  する。永続ワークスペースとして残す例外は設けない。**worktreeを除去するコマンドはworktreeの外
+  （リポジトリルート等）から実行する**（内部の作業ディレクトリから実行すると削除に失敗し孤立
+  ディレクトリが残ることがある）
 - 作業の節目や `.loop` 以外のセッション終了時には `git status` / `git worktree list` /
   `git stash list` で放置物がないか確認する
 
