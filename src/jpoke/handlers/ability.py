@@ -3342,9 +3342,16 @@ _BEAST_BOOST_ORDER: tuple[str, ...] = ("atk", "def", "spa", "spd", "spe")
 
 
 def ビーストブースト_boost_best_stat_on_ko(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ビーストブースト特性: 攻撃技で倒すと最も実数値が高い能力が1段階上がる。"""
+    """ビーストブースト特性: 攻撃技で倒すと最も実数値が高い能力が1段階上がる。
+
+    ワンダールーム下ではぼうぎょ・とくぼうの実数値が入れ替わった状態で
+    比較する（docs/spec/abilities/ビーストブースト.md）。
+    """
     mon = ctx.attacker
-    best_stat = max(_BEAST_BOOST_ORDER, key=lambda s: mon.stats[s])
+    stats = dict(mon.stats)
+    if battle.get_global_field("ワンダールーム").is_active:
+        stats["def"], stats["spd"] = stats["spd"], stats["def"]
+    best_stat = max(_BEAST_BOOST_ORDER, key=lambda s: stats[s])
     if battle.modify_stats(mon, {best_stat: +1}, source=mon):
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
