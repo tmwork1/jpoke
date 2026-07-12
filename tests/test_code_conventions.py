@@ -14,6 +14,7 @@ from jpoke import Pokemon
 from . import test_utils as t
 
 SRC_ROOT = Path(__file__).resolve().parent.parent / "src" / "jpoke"
+EXAMPLES_ROOT = Path(__file__).resolve().parent.parent / "examples"
 
 # 直接代入が許可されているファイル（相対パス、"/" 区切り）
 # - model/pokemon.py: hp の実体を保持するクラス自身の実装
@@ -66,6 +67,29 @@ def test_consume_itemの引数名がtargetにリネームされている():
 
     with pytest.raises(TypeError):
         battle.consume_item(mon=battle.actives[0])  # type: ignore[call-arg]
+
+
+def test_examplesがtest_option経由で命中率等を固定していない():
+    """`battle.test_option` はテストコード専用の内部低レベルAPIで、ユーザー向けサンプルである
+    `examples/` から使うべきではないという規約になっている。命中率を固定したい場合は公開APIの
+    `Battle(..., accuracy_fix_threshold=0)` を使う。かつて
+    `examples/04_research/03_janken_nash_fictitious_play.py` と
+    `04_janken_nash_cfr.py` が `battle.test_option.accuracy = 100` を使っており、他の
+    examples の `accuracy_fix_threshold=0` と命中率固定の手段が2系統に分裂していた
+    （id: r5-4）。再発防止のため examples/ 配下に `test_option` の使用が無いことを確認する。
+    """
+    violations = []
+    for path in EXAMPLES_ROOT.rglob("*.py"):
+        text = path.read_text(encoding="utf-8")
+        for lineno, line in enumerate(text.splitlines(), start=1):
+            if "test_option" in line:
+                rel_path = path.relative_to(EXAMPLES_ROOT).as_posix()
+                violations.append(f"{rel_path}:{lineno}: {line.strip()}")
+
+    assert not violations, (
+        "examples/ 配下で battle.test_option の使用を検出"
+        "（accuracy_fix_threshold 等の公開APIに置き換えること）:\n" + "\n".join(violations)
+    )
 
 
 def test_hp直接代入がallowlist外のファイルに存在しない():

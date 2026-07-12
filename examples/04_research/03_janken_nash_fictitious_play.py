@@ -125,8 +125,8 @@ def play_game(row_probs: tuple[float, float, float],
     p0.team.append(build_pokemon())
     p1.team.append(build_pokemon())
 
-    battle = Battle(p0, p1, seed=seed)
-    battle.test_option.accuracy = 100  # 命中率のブレを消し、技選択の駆け引きだけを見る
+    # accuracy_fix_threshold=0 で命中率のブレを消し、技選択の駆け引きだけを見る
+    battle = Battle(p0, p1, seed=seed, accuracy_fix_threshold=0)
     battle.start()  # Turn 0: 初期繰り出し
 
     while battle.judge_winner() is None and battle.turn <= max_turns:
