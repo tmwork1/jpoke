@@ -25,6 +25,8 @@
   セットする薄い公開ラッパー（既存の `ailment_manager` / `weather_manager` /
   `terrain_manager` への委譲）。シナリオ構築や `calc_lethal()` によるダメージ計算
   検証で、対戦を進行させずに状態異常・天候込みの複合致死率を確認できる
+- `examples/07_replay.py` — `Battle.build_replay_data()` / `ReplayPlayer` /
+  `replay_battle()`（リプレイの記録・再生一式）を紹介するサンプルを新設
 
 ### Changed
 

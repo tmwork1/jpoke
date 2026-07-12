@@ -98,6 +98,52 @@ def main() -> None:
     # 技そのもののダメージは変わらないが、攻撃の合間に入る毎ターンのどくダメージが
     # 加算される分だけ致死率が底上げされ、結果としてより少ない発数で確定しやすくなる
 
+    # modify_hp()/modify_stats() で「特定のHP・ランク状態から始まる」シナリオも
+    # 直接組み立てられる（Pokemon.hp への直接代入は禁止されており、必ずこれらを通す）
+    print("-" * 50)
+    print("防御側のHP・ランク状態を変えて比較:")
+
+    scenario_attacker_player = Player("ScenarioAttacker")
+    scenario_attacker_player.add_pokemon("ガブリアス", move_names=[move_name])
+    scenario_defender_player = Player("ScenarioDefender")
+    scenario_defender_player.add_pokemon("カイリュー")
+
+    scenario_battle = Battle(scenario_attacker_player, scenario_defender_player, seed=1)
+    scenario_battle.start()
+    scenario_attacker = scenario_battle.get_active(scenario_attacker_player)
+    scenario_defender = scenario_battle.get_active(scenario_defender_player)
+
+    # max_attack=1 に絞ることで、HP・ランク状態を変えた結果が1発の致死率に
+    # そのまま反映されるようにする
+    full_hp_final = scenario_battle.calc_lethal(
+        attacker=scenario_attacker, moves=move_name, max_attack=1,
+    )[-1]
+
+    # modify_hp(r=-0.6) で最大HPの60%分のダメージを与え、残りHP40%の状態を直接作る
+    # （v で固定量、r で割合指定。同時指定は不可）
+    scenario_battle.modify_hp(scenario_defender, r=-0.6, reason="シナリオ構築用")
+    damaged_final = scenario_battle.calc_lethal(
+        attacker=scenario_attacker, moves=move_name, max_attack=1,
+    )[-1]
+    print(
+        f"{move_name}を1発当てた時点の致死率: "
+        f"HP満タン {full_hp_final.lethal_probability:.2%} / "
+        f"HP{scenario_defender.hp}/{scenario_defender.max_hp} "
+        f"{damaged_final.lethal_probability:.2%}"
+    )
+
+    # modify_stats() は複数の能力ランクを同時に変更できる。ぼうぎょ+1を積むと
+    # 受けるダメージが下がり、致死率は逆に下がる方向に動く
+    scenario_battle.modify_stats(scenario_defender, {"def": 1})
+    raised_def_final = scenario_battle.calc_lethal(
+        attacker=scenario_attacker, moves=move_name, max_attack=1,
+    )[-1]
+    print(f"上記の状態からさらにぼうぎょ+1した後の致死率: {raised_def_final.lethal_probability:.2%}")
+
+    # faint() は modify_hp(v=-target.max_hp) の薄いラッパーで、対象を即座にひんしにする
+    scenario_battle.faint(scenario_defender)
+    print(f"faint()呼び出し後: fainted={scenario_defender.fainted}")
+
     # calc_lethal は確定数・致死率に集約した結果を返すが、その内部で使われている
     # 生のダメージロール（通常16通り）そのものを見たい場合は calc_damages() /
     # 乱数で1つ選んだ値だけでよければ roll_damage() を直接呼べる
