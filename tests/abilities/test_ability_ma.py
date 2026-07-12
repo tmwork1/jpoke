@@ -1234,6 +1234,52 @@ def test_もふもふ_接触技を半減():
     assert 2048 == battle.damage_calculator.damage_modifier
 
 
+def test_もふもふ_かたやぶりで両方の効果が無効化される():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["ほのおのパンチ"])],
+        team1=[Pokemon("ピカチュウ", ability_name="もふもふ")],
+    )
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.damage_modifier
+
+
+def test_もふもふ_みがわり状態で防いだときも発動する():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", ability_name="もふもふ")],
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.run_move(battle, 0)
+    assert 2048 == battle.damage_calculator.damage_modifier
+
+
+def test_もふもふ_こんらんの自傷ダメージは半減しない():
+    """こんらんの自傷ダメージ（"_こんらん"）は接触技・ほのお技のいずれでもないため補正されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="もふもふ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"こんらん": 2},
+    )
+    attacker = battle.actives[0]
+    battle.test_option.trigger_volatile = True
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.damage_modifier
+    assert attacker.hp < attacker.max_hp
+
+
+def test_もふもふ_テラスタルでほのおタイプに変化した技にも発動する():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", tera_type="ほのお", move_names=["テラバースト"])],
+        team1=[Pokemon("ピカチュウ", ability_name="もふもふ")],
+    )
+    attacker = battle.actives[0]
+    attacker.terastallize()
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_type == "ほのお"
+    assert 8192 == battle.damage_calculator.damage_modifier
+
+
 def test_もらいび_かたやぶりには貫通される():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="もらいび")],
