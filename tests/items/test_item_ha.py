@@ -155,6 +155,18 @@ def test_ばんのうがさ_すいすいが発動しない():
     assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["spe"]
 
 
+def test_ばんのうがさ_ようりょくそが発動しない():
+    """ばんのうがさ使用者: 晴れ状態でもようりょくそによる素早さ上昇が発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ようりょくそ", item_name="ばんのうがさ")],
+        team1=[Pokemon("カビゴン")],
+        weather=("はれ", 99),
+    )
+    mon = battle.actives[0]
+    # ばんのうがさがあるので素早さは2倍にならない
+    assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["spe"]
+
+
 def test_ばんのうがさ_晴れのほのお技強化が無効():
     """ばんのうがさ防御側: 晴れでほのお技の1.5倍補正を受けない"""
     battle = t.start_battle(

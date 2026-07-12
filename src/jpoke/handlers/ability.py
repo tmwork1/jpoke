@@ -4465,7 +4465,9 @@ def ゆきふらし_activate_weather(battle: Battle, ctx: EventContext, value: A
 
 
 def ようりょくそ_boost_speed(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
-    """ようりょくそ特性: はれ中に素早さが2倍になる。ばんのうがさを持つ場合は無効。"""
+    """ようりょくそ特性: にほんばれ・おおひでり中に素早さが2倍になる。
+    ばんのうがさを持つ場合や、ノーてんき/エアロックで天候効果が無効化されている場合は発動しない。
+    """
     if battle.weather_for(ctx.source).sunny:
         value *= 2
     return HandlerReturn(value=value)
