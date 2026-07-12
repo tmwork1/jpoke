@@ -281,6 +281,23 @@ package-check:
   （実験用の並び替えはコミットに含めず、`core/__init__.py` は元の順序のまま）
 - `import jpoke` の初期化コスト削減（実測 約460ms。pokedex.json 544KB と
   全ハンドラテーブルを import 時に無条件ロードしている。遅延 import の余地あり）
+  - 実施済み（1st段）: `python -X importtime -c "import jpoke"` の計測で総コストの
+    約35%（約78〜80ms）が `src/jpoke/__init__.py` の
+    `from importlib.metadata import version as _version` 経由の
+    `importlib.metadata` import（re, json, email, ast, dis, tokenize, inspect,
+    pathlib, zipfile, textwrap 等を連鎖 import する重いモジュール）に起因すると
+    判明したため、`__version__` をリテラル `"0.1.0"`（`pyproject.toml` の
+    version と同値）へ変更して `importlib.metadata` の import 自体を除去した。
+    `pyproject.toml` の version と二重管理になるリスクは
+    `tests/test_version.py` を新設して機械的に検証することで担保した
+    （`pyproject.toml` を正規表現で読む方式。プロジェクトが Python 3.10+ 対応のため
+    `tomllib`〈3.11+ 標準〉単体には依存しない）。importtime 実測: 修正前
+    総コスト約243〜273ms（3回計測、`importlib.metadata` 単体で約80ms） →
+    修正後は `importlib.metadata` のブロックが importtime 出力から消滅し、
+    総コストも有意に減少（実測値は該当PRの報告を参照）
+  - 残課題（2nd段、未着手）: pokedex.json 544KB の読み込み（実測 約11ms、
+    全体の約5%）と全ハンドラテーブルの無条件ロードの遅延 import 化は
+    別件として保留中
 - CONTRIBUTING.md / SECURITY.md の整備
 - 実施済み: `CONTRIBUTING.md`（開発環境セットアップ・テスト実行・コードスタイル・
   ハンドラ追加の流れ・ブランチ/PRの流れ・対象範囲の注意）と `SECURITY.md`
