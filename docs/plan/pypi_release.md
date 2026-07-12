@@ -206,8 +206,14 @@ package-check:
 
 ## フェーズ 4: 公開後の改善（ブロッカーではない）
 
-- 利用者向け API リファレンスの整備（`docs/` は現状すべて開発内部向け。
-  最低限 `Battle` / `Player` / `Pokemon` の公開 API を README か `docs/api/` にまとめる）
+- 実施済み: 利用者向け API リファレンスの整備。`docs/api/README.md` を新設し、
+  `Battle`（コンストラクタ主要引数・対戦進行系/状態取得系/ダメージ計算系/シナリオ構築系/
+  ログ系/poke-env互換プロパティ/リプレイ系にグルーピング）、`Player`（`add_pokemon()`,
+  `choose_command()` のオーバーライド方法, `team` 属性がスナップショットである注意点,
+  `battle_against()`）、`Pokemon`（コンストラクタ引数のデフォルト値, `set_evs()`/`set_ivs()`,
+  `show()`, 状態読み取り系）を実際のソースコード（`core/battle.py`, `core/player.py`,
+  `model/pokemon.py`）を読んで確認しながらまとめた。README.md の「ドキュメント」テーブルにも
+  1行追加
 - `tests/test_utils.py` の主要ヘルパー（`start_battle` / `run_move` / `run_switch`）を
   `jpoke.testing` として本体パッケージへ昇格
 - 実施済み: `core` ⇔ `model` ⇔ `data` の循環 import 解消。パッケージ内の他ファイルが

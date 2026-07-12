@@ -93,6 +93,7 @@ battle.print_logs()                 # このターンのログを表示
 
 | ディレクトリ | 役割 |
 |---|---|
+| `docs/api/` | 利用者向け公開APIリファレンス（`Battle` / `Player` / `Pokemon`） |
 | `docs/spec/` | 技・アイテム・特性・場の効果の挙動仕様 |
 | `docs/plan/` | 実行計画と優先順位 |
 | `docs/progress/` | カテゴリ別の実装追跡（`ability.md`, `item.md`, `move.md` 等） |
