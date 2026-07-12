@@ -3531,9 +3531,13 @@ def ふくつのたて_boost_B(battle: Battle, ctx: EventContext, value: Any) ->
 
 
 def ふしぎなうろこ_boost_B(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """ふしぎなうろこ特性: 状態異常時に物理技への防御補正を1.5倍にする。"""
+    """ふしぎなうろこ特性: 状態異常時に物理技への防御補正を1.5倍にする。
+
+    こんらんの自傷ダメージ（"_こんらん"）には効果が無い（第五世代以降の仕様）。
+    """
     if (
         ctx.defender.ailment.is_active
+        and ctx.move.name != "_こんらん"
         and battle.query.deals_physical_damage(ctx.attacker, ctx.move)
     ):
         value = apply_fixed_modifier(value, 6144)
@@ -3541,12 +3545,23 @@ def ふしぎなうろこ_boost_B(battle: Battle, ctx: AttackContext, value: int
 
 
 def ふしぎなまもり_block_non_effective(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ふしぎなまもり特性: 効果抜群でない攻撃技を無効化する。"""
+    """ふしぎなまもり特性: 効果抜群でない攻撃技を無効化する。
+
+    タイプを持たない技（わるあがき）は相性判定の対象外のため無効化しない。
+    """
     if (
         not ctx.move.is_attack
+        or not ctx.move.type
         or battle.query.is_super_effective(ctx)
     ):
         return HandlerReturn(value=value)
+
+    _announce_ability_triggered(battle, ctx.defender)
+    battle.add_event_log(
+        ctx.attacker,
+        LogCode.MOVE_IMMUNED,
+        payload=FailureLogPayload(move=ctx.move.name, display_reason="ふしぎなまもり")
+    )
     return HandlerReturn(value=False, stop_event=True)
 
 

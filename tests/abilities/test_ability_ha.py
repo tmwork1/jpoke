@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 
 import pytest
 
-from jpoke import Pokemon
+from jpoke import Move, Pokemon
 from jpoke.data.ability import ABILITIES
 from jpoke.enums import Command, Event
 from jpoke.types import Stat, AilmentName, VolatileName, WeatherName
@@ -1770,6 +1770,17 @@ def test_ふくがん_命中率を1_3倍にする(move_name: str, expected_accur
     assert battle.move_executor.accuracy == expected_accuracy
 
 
+def test_ふくつのこころ_S最大時は上昇しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ふくつのこころ")],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    mon.boosts["spe"] = 6
+    battle.volatile_manager.apply(mon, "ひるみ")
+    assert mon.boosts["spe"] == 6
+
+
 @pytest.mark.parametrize(
     "volatile_name, expected_rank",
     [
@@ -1791,6 +1802,66 @@ def test_ふしぎなうろこ_かたやぶりで無効():
     """ふしぎなうろこ: かたやぶり持ちの物理技はふしぎなうろこの防御補正を貫通する。"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", ability_name="ふしぎなうろこ")],
+        ailment1=("やけど", None),
+    )
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.def_modifier
+
+
+def test_ふしぎなうろこ_こんらんのみでは発動しない():
+    """ふしぎなうろこ: こんらん（状態変化）だけでは発動しない。状態異常でないと発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", ability_name="ふしぎなうろこ")],
+        volatile1={"こんらん": 2},
+    )
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.def_modifier
+
+
+def test_ふしぎなうろこ_こんらんの自傷ダメージには発動しない():
+    """ふしぎなうろこ: こんらんの自傷ダメージ（"_こんらん"）には効果が無い（第五世代以降の仕様）。"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ", ability_name="ふしぎなうろこ")],
+        team0=[Pokemon("ピカチュウ")],
+        ailment1=("やけど", None),
+        volatile1={"こんらん": 2},
+    )
+    battle.test_option.trigger_volatile = True
+    t.run_move(battle, 1)
+    assert 4096 == battle.damage_calculator.def_modifier
+
+
+def test_ふしぎなうろこ_ぼうぎょ参照の特殊技には発動する():
+    """サイコショック等、特殊技だがぼうぎょを参照する技には効果が乗る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["サイコショック"])],
+        team1=[Pokemon("ピカチュウ", ability_name="ふしぎなうろこ")],
+        ailment1=("やけど", None),
+    )
+    t.run_move(battle, 0)
+    assert 6144 == battle.damage_calculator.def_modifier
+
+
+def test_ふしぎなうろこ_ワンダールームでとくぼうが1_5倍になる():
+    """ワンダールーム中は物理技でも防御と特防が入れ替わり参照されるため、
+    ふしぎなうろこの効果は実質的に特防を1.5倍にする形になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", ability_name="ふしぎなうろこ")],
+        ailment1=("やけど", None),
+        field={"ワンダールーム": 5},
+    )
+    defender = battle.actives[1]
+    before = defender.stats["spd"]
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_defense == round(before * 1.5)
+
+
+def test_ふしぎなうろこ_特殊技には発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
         team1=[Pokemon("ピカチュウ", ability_name="ふしぎなうろこ")],
         ailment1=("やけど", None),
     )
@@ -1823,6 +1894,31 @@ def test_ふしぎなまもり_かたやぶりで無効化される():
     assert defender.hp < defender.max_hp
 
 
+def test_ふしぎなまもり_こんらんの自傷ダメージは無効化されない():
+    """ふしぎなまもり: こんらんの自傷ダメージは通常の攻撃フローを経由しないため無効化されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピジョット", ability_name="ふしぎなまもり", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"こんらん": 2},
+    )
+    mon = battle.actives[0]
+    before = mon.hp
+    battle.test_option.trigger_volatile = True
+    t.run_move(battle, 0)
+    assert mon.hp < before
+
+
+def test_ふしぎなまもり_わるあがきは無効化されない():
+    """ふしぎなまもり: タイプを持たないわるあがきは相性判定の対象外のため無効化できない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピジョット", ability_name="ふしぎなまもり")],
+    )
+    attacker, defender = battle.actives
+    battle.run_move(attacker, Move("わるあがき"))
+    assert defender.hp < defender.max_hp
+
+
 def test_ふしぎなまもり_変化技は通る():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["なきごえ"])],
@@ -1849,6 +1945,18 @@ def test_ふしぎなまもり_弱点技以外を無効化(move_name: str, move_
     _, defender = battle.actives
     t.run_move(battle, 0)
     assert move_blocked == (defender.hp == defender.max_hp)
+
+
+def test_ふしぎなまもり_発動時に特性バーとログを表示する():
+    """ふしぎなまもり: 攻撃を無効化したときは特性発動が公開され、無効化ログが記録される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピジョット", ability_name="ふしぎなまもり")],
+    )
+    _, defender = battle.actives
+    assert not defender.ability.revealed
+    t.run_move(battle, 0)
+    assert defender.ability.revealed
 
 
 @pytest.mark.parametrize(
@@ -1958,6 +2066,32 @@ def test_ぶきよう_アイテムが無効():
     mon.hp = 1
     t.end_turn(battle)
     assert mon.hp == 1
+
+
+def test_ぶきよう_くろいてっきゅうの効果を無視する():
+    """ぶきよう: くろいてっきゅうの浮遊無効化・すばやさ半減の効果をともに無視する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピジョット", ability_name="ぶきよう", item_name="くろいてっきゅう")],
+        team1=[Pokemon("ピカチュウ", move_names=["じしん"])],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    base_speed = mon.stats["spe"]
+    assert battle.speed_calculator.calc_effective_speed(mon) == base_speed
+
+    # くろいてっきゅうの浮遊無効化を受けないため、ひこうタイプの免疫が残りじしんが無効
+    t.run_move(battle, 1)
+    assert mon.hp == mon.max_hp
+
+
+def test_ぶきよう_フォルムチェンジアイテムの効果が発動しない():
+    """ぶきよう: だいこんごうだまを持っていてもディアルガはオリジンフォルムにならない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ディアルガ", ability_name="ぶきよう", item_name="だいこんごうだま")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    assert mon.name == "ディアルガ"
 
 
 def test_ブレインフォース_効果抜群のとき強化():
