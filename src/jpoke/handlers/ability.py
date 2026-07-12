@@ -65,6 +65,7 @@ _OGERPON_STAT: dict[str, Stat] = {
 
 _PROTECT_VOLATILES: frozenset[str] = frozenset({
     "まもる", "トーチカ", "キングシールド", "スレッドトラップ", "かえんのまもり",
+    "ニードルガード", "ファストガード",
 })
 
 _EFFECT_SPORE_AILMENTS: list[tuple[float, AilmentName]] = [

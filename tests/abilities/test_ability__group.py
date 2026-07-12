@@ -691,19 +691,23 @@ def test_ピンチ系特性_HP1_3以下で攻撃補正1_5倍(ability_name: str, 
 
 
 @pytest.mark.parametrize(
-    "ability_name, volatile_name",
+    "ability_name, volatile_name, move_name",
     [
-        ("ふかしのこぶし", "まもる"),
-        ("ふかしのこぶし", "トーチカ"),
-        ("ふかしのこぶし", "キングシールド"),
-        ("ふかしのこぶし", "スレッドトラップ"),
-        ("ふかしのこぶし", "かえんのまもり"),
-        ("かんつうドリル", "まもる"),
+        ("ふかしのこぶし", "まもる", "たいあたり"),
+        ("ふかしのこぶし", "トーチカ", "たいあたり"),
+        ("ふかしのこぶし", "キングシールド", "たいあたり"),
+        ("ふかしのこぶし", "スレッドトラップ", "たいあたり"),
+        ("ふかしのこぶし", "かえんのまもり", "たいあたり"),
+        ("ふかしのこぶし", "ニードルガード", "たいあたり"),
+        ("ふかしのこぶし", "ファストガード", "マッハパンチ"),
+        ("かんつうドリル", "まもる", "たいあたり"),
     ]
 )
-def test_ふかしのこぶし_接触技でまもるを貫通(ability_name: str, volatile_name: VolatileName):
+def test_ふかしのこぶし_接触技でまもるを貫通(
+    ability_name: str, volatile_name: VolatileName, move_name: str
+):
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name=ability_name, move_names=["たいあたり"])],
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name, move_names=[move_name])],
         team1=[Pokemon("ピカチュウ")],
         volatile1={volatile_name: 1},
     )
