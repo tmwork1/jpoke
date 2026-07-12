@@ -4062,8 +4062,14 @@ def マルチタイプ_apply_type(battle: Battle, ctx: EventContext, value: Any)
 
 
 def マルチタイプ_block_item_change(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
-    """マルチタイプ特性: プレートの奪取・交換を防ぐ。"""
+    """マルチタイプ特性: プレートの奪取・交換を防ぐ。
+
+    自分の持つプレートの奪取・交換を防ぐだけでなく、トリック/すりかえ等の
+    道具交換では相手がプレートを持っている場合も交換自体が失敗する。
+    """
     mon = getattr(ctx, "target", None) or getattr(ctx, "defender", None)
+    if getattr(ctx, "is_exchange", False) and battle.foe(mon).item.name in PLATE_TO_TYPE:
+        return HandlerReturn(value=False, stop_event=True)
     return _block_item_change(mon, list(PLATE_TO_TYPE.keys()))
 
 

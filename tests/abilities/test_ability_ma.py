@@ -540,6 +540,36 @@ def test_マルチタイプ_プレートの奪取を阻止する():
     assert mon.has_item()
 
 
+def test_マルチタイプ_プレートなしなら自分の道具変更は防がれない():
+    battle = t.start_battle(
+        team0=[Pokemon("アルセウス", ability_name="マルチタイプ", item_name="いのちのたま")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    target, source = battle.actives
+    assert battle.item_manager.can_change_item(target=target, source=source)
+
+
+def test_マルチタイプ_相手がプレートを持たなければ通常の道具変更を防がない():
+    """交換判定であっても、自分・相手ともプレートを持たなければ道具変更は妨げられない"""
+    battle = t.start_battle(
+        team0=[Pokemon("アルセウス", ability_name="マルチタイプ")],
+        team1=[Pokemon("ピカチュウ", item_name="いのちのたま")],
+    )
+    target, source = battle.actives
+    assert battle.item_manager.can_change_item(target=target, source=source, is_exchange=True)
+
+
+def test_マルチタイプ_相手がプレートを持つ場合トリックすりかえ相当の交換が失敗する():
+    """相手がプレートを持っている場合、自分がプレートを持っていなくても道具交換自体が失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("アルセウス", ability_name="マルチタイプ")],
+        team1=[Pokemon("ピカチュウ", item_name="せいれいプレート")],
+    )
+    before = [mon.item.name for mon in battle.actives]
+    assert not battle.item_manager.swap_items()
+    assert [mon.item.name for mon in battle.actives] == before
+
+
 def test_ミイラ_接触技で攻撃した相手の特性がミイラになる():
     """ミイラ: 直接攻撃でダメージを受けたとき攻撃者の特性をミイラにする"""
     battle = t.start_battle(

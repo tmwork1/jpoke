@@ -1020,6 +1020,150 @@ ITEMS: dict[ItemName, ItemData] = {
             )
         }
     ),
+    "ひのたまプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.ひのたまプレート_modify_power_by_type,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
+    "もりのプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.もりのプレート_modify_power_by_type,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
+    "しずくプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.しずくプレート_modify_power_by_type,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
+    "いかずちプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.いかずちプレート_modify_power_by_type,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
+    "つららのプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.つららのプレート_modify_power_by_type,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
+    "こぶしのプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.こぶしのプレート_modify_power_by_type,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
+    "もうどくプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.もうどくプレート_modify_power_by_type,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
+    "だいちのプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.だいちのプレート_modify_power_by_type,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
+    "あおぞらプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.あおぞらプレート_modify_power_by_type,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
+    "ふしぎのプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.ふしぎのプレート_modify_power_by_type,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
+    "たまむしのプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.たまむしのプレート_modify_power_by_type,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
+    "がんせきプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.がんせきプレート_modify_power_by_type,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
+    "もののけプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.もののけプレート_modify_power_by_type,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
+    "りゅうのプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.りゅうのプレート_modify_power_by_type,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
+    "こわもてプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.こわもてプレート_modify_power_by_type,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
+    "こうてつのプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.こうてつのプレート_modify_power_by_type,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "せんせいのツメ": ItemData(
         fling_power=80,
         handlers={
