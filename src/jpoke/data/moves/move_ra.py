@@ -5,7 +5,7 @@
 五十音順を維持すること。
 """
 from jpoke.enums import Event, LethalEvent
-from jpoke.core import LethalHandler
+from jpoke.core.lethal import LethalHandler
 from jpoke.types import MoveName
 
 from jpoke.handlers import move as h
@@ -86,6 +86,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=12,
+        target="self",
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.リサイクル_can_apply,

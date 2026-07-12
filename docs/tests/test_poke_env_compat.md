@@ -1,0 +1,44 @@
+# test_poke_env_compat
+
+テスト数: 40
+
+- [x] battle_active_pokemonとopponent_active_pokemonはobserver未設定時場の先頭2匹を返す
+- [x] battle_active_pokemonとopponent_active_pokemonはobserver視点で取得できる
+- [x] battle_against_n_battlesを複数指定すると回数分戦績が積み上がる
+- [x] battle_against_ターン上限で決着しない対戦は戦績にカウントされない
+- [x] battle_against_勝敗が戦績に反映される
+- [x] battle_available_movesはobserverが選択可能な技をmoveで返す
+- [x] battle_available_movesは技のppが尽きるとわるあがきのみになる
+- [x] battle_available_switchesはobserverの交代先候補をpokemonで返す
+- [x] battle_finishedとwonとlostは決着後に更新される
+- [x] battle_side_conditionsはobserver未設定時は空辞書
+- [x] battle_side_conditionsはobserver視点のサイドフィールド状態を返す
+- [x] battle_teamはobserver視点のチームリストを返す
+- [x] evs_from_poke_envの戻り値はpokemonのset_evsにそのまま渡せる
+- [x] evs_from_poke_envはchampions形式の努力値に変換する(value=0, expected=0)
+- [x] evs_from_poke_envはchampions形式の努力値に変換する(value=3, expected=0)
+- [x] evs_from_poke_envはchampions形式の努力値に変換する(value=4, expected=1)
+- [x] evs_from_poke_envはchampions形式の努力値に変換する(value=11, expected=1)
+- [x] evs_from_poke_envはchampions形式の努力値に変換する(value=12, expected=2)
+- [x] evs_from_poke_envはchampions形式の努力値に変換する(value=252, expected=32)
+- [x] max_turnsは100
+- [x] move_current_ppとmax_ppはppとdata_ppのエイリアス
+- [x] move_expected_hitsは技のヒット回数分布に応じた期待値を返す(move_name=たいあたり, expected=1.0)
+- [x] move_expected_hitsは技のヒット回数分布に応じた期待値を返す(move_name=タキオンカッター, expected=2.0)
+- [x] move_expected_hitsは技のヒット回数分布に応じた期待値を返す(move_name=ミサイルばり, expected=3.1)
+- [x] observationのdecision_randomは共有されrandomは独立している
+- [x] player_n_lost_battlesは対戦数から勝利数と引き分け数を引いた値
+- [x] player_n_tied_battlesは常に0
+- [x] player_win_rateは勝利数を対戦数で割った値
+- [x] player_win_rateは対戦数0のときゼロ除算にならず0を返す
+- [x] pokemon_current_hpとcurrent_hp_fractionはhpとhp_fractionのエイリアス
+- [x] pokemon_effectsはvolatilesのエイリアス
+- [x] pokemon_first_turnは登場直後True行動後False
+- [x] pokemon_statusはailment_nameのエイリアス
+- [x] randomplayerが選ぶコマンドは常にget_available_commandsに含まれる
+- [x] randomplayerは同じseedで対戦すると同じコマンド列を再現する
+- [x] stat_indexはhpからspeまでの6ステータスを網羅する
+- [x] stats_from_poke_envは欠けているキーを0扱いにする
+- [x] stats_from_poke_envは辞書をhp_atk_def_spa_spd_spe順のリストに変換する
+- [x] 変換マップの値は対応するliteral型の値に含まれる
+- [x] 無限交代ループの再現条件下でもコマンドが技を含んで決着する

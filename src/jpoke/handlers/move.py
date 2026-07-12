@@ -9,8 +9,8 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, AttackContext, Player
     from jpoke.types import RoleSpec, Stat, AilmentName, VolatileName
 
-from jpoke.core import Handler, HandlerReturn
-from jpoke.core.event_logger import FailureLogPayload
+from jpoke.core.handler import Handler, HandlerReturn
+from jpoke.core.log_payload import FailureLogPayload
 from jpoke.enums import Command, LogCode
 
 
@@ -91,7 +91,7 @@ def apply_ailment_to_defender(battle: Battle,
     if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn(value=value)
     return HandlerReturn(value=battle.ailment_manager.apply(
-        ctx.defender, ailment, count=count, source=ctx.attacker, ctx=ctx
+        ctx.defender, ailment, count=count, source=ctx.attacker
     ))
 
 
@@ -187,6 +187,11 @@ def charge_into_volatile(battle: Battle,
     """
     attacker = ctx.attacker
     if not attacker.has_volatile(volatile):
-        battle.volatile_manager.apply(attacker, volatile, count=1, source=attacker)
+        # move_name には実際に使用した技名（ctx.move.name）を渡す。
+        # とびはねる等、揮発状態名（volatile）と使用技名が異なるケースがあるため、
+        # 2ターン目に強制実行すべき技名は volatile 引数ではなく ctx.move.name を使う。
+        battle.volatile_manager.apply(
+            attacker, volatile, count=1, source=attacker, move_name=ctx.move.name
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)

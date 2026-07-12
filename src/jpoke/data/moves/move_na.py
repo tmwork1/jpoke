@@ -96,7 +96,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
     "なげつける": MoveData(
         type="あく",
         category="physical",
-        pp=10,
+        pp=12,
         power=1,
         accuracy=100,
         handlers={
@@ -159,7 +159,11 @@ MOVES_NA: dict[MoveName, MoveData] = {
         pp=16,
         power=90,
         accuracy=100,
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            )
+        },
     ),
     "なやみのタネ": MoveData(
         type="くさ",
@@ -293,7 +297,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
     "ねこだまし": MoveData(
         type="ノーマル",
         category="physical",
-        pp=10,
+        pp=12,
         power=40,
         accuracy=100,
         priority=3,
@@ -321,6 +325,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=12,
+        target="self",
         flags={"non_encore", "non_negoto"},
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
@@ -367,13 +372,16 @@ MOVES_NA: dict[MoveName, MoveData] = {
             ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ねっさのあらし_apply_burn_to_defender,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "ねっさのだいち": MoveData(
         type="じめん",
         category="special",
-        pp=10,
+        pp=12,
         power=70,
         accuracy=100,
         flags={"secondary_effect", "thaw"},
@@ -390,7 +398,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
     "ねっとう": MoveData(
         type="みず",
         category="special",
-        pp=15,
+        pp=16,
         power=80,
         accuracy=100,
         flags={"secondary_effect", "thaw"},
@@ -407,14 +415,17 @@ MOVES_NA: dict[MoveName, MoveData] = {
     "ねっぷう": MoveData(
         type="ほのお",
         category="special",
-        pp=10,
+        pp=12,
         power=95,
         accuracy=90,
         flags={"wind", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ねっぷう_apply_burn_to_defender,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "ねばねばネット": MoveData(
@@ -496,7 +507,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
     "のしかかり": MoveData(
         type="ノーマル",
         category="physical",
-        pp=15,
+        pp=16,
         power=85,
         accuracy=100,
         flags={"minimize", "contact", "secondary_effect"},
@@ -510,6 +521,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=12,
+        target="self",
         flags={"heal"},
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(

@@ -8,19 +8,21 @@ from typing import TYPE_CHECKING, Any, Literal
 if TYPE_CHECKING:
     from jpoke.data.models import PokemonData
 
-from jpoke.types import Nature, Type, Stat, Gender, \
+from jpoke.types import Nature, Type, Stat, Gender, HpPolicy, \
     AilmentName, VolatileName, BoostSource, PokemonName, AbilityName, MoveName, ItemName
 from jpoke.utils.constants import STATS
 from jpoke.utils import math as m
 from jpoke.utils import fast_copy
-from jpoke.data import POKEDEX, MEGA_STONES, MEGA_POKEMONS
+from jpoke.data.pokedex import POKEDEX
+from jpoke.data.megaevol import MEGA_STONES, MEGA_POKEMONS
+from jpoke.data.nature import NATURE_MODIFIER
 
 from .ability import Ability
 from .item import Item
 from .move import Move
 from .ailment import Ailment
 from .volatile import Volatile
-from .stats import PokemonStats
+from .stats import calc_hp, calc_stat, chmp_to_legacy_effort
 
 
 class Pokemon:
@@ -39,9 +41,9 @@ class Pokemon:
         ability: 特性
         item: アイテム
         moves: 覚えている技のリスト
-        rank: 能力ランクの辞書
+        boosts: 能力ランクの辞書
         volatiles: 揮発状態の辞書
-        terastallized: テラスタル済みかどうか
+        is_terastallized: テラスタル済みかどうか
     """
 
     # ── 初期化・コピー ──────────────────────────────────────────
@@ -60,12 +62,19 @@ class Pokemon:
         Args:
             name: ポケモン名
             gender: 性別（"male"/"female"/""）
-            nature: 性格
+            nature: 性格（デフォルト"まじめ"、ステータス補正なし）
             level: レベル（デフォルト50）
-            ability_name: 特性（文字列）
-            item_name: アイテム（文字列）
-            move_names: 技のリスト（文字列のリスト）
-            tera_type: テラスタルタイプ
+            ability_name: 特性（文字列、デフォルト""＝特性なし扱い）
+            item_name: アイテム（文字列、デフォルト""＝アイテムなし）
+            move_names: 技のリスト（文字列のリスト、省略時は["はねる"]の1技のみ
+                になるため、実際に戦わせる場合は必ず指定する）
+            tera_type: テラスタルタイプ（デフォルトNoneの場合、そのポケモンの
+                第1タイプを引き継ぐ）
+
+        Note:
+            個体値・努力値はコンストラクタの引数ではなく、初期状態は
+            個体値31・努力値0固定で生成される。変更する場合は生成後に
+            `set_ivs()` / `set_evs()` を呼ぶ。
         """
         self.data: PokemonData = POKEDEX[name]
         self.gender: Gender = gender
@@ -75,48 +84,38 @@ class Pokemon:
         self.tera_type: Type = tera_type or self.base_types[0]
 
         self.ability: Ability = Ability(ability_name)
-        self.base_ability_name: AbilityName = ability_name
+        self.base_ability: AbilityName = ability_name
 
         self.item = Item(item_name)
-        self.last_lost_item_name: ItemName = ""
 
         self.set_moves(move_names if move_names is not None else ["はねる"])
 
-        # ステータス計算マネージャー
-        self._stats_manager = PokemonStats()
+        # ステータス（実数値・個体値・努力値）
+        self._stats: list[int] = [100]*6
+        self._ivs: list[int] = [31]*6
+        self._evs: list[int] = [0]*6
 
-        # 初期ステータス計算
-        self.update_stats()
-
-        self.paradox_boost_stat: Stat | None = None
-        self.paradox_boost_source: BoostSource = ""
+        # 初期ステータス計算（hp は未定義のため update_stats() の hp 追従処理は経由しない）
+        self._recalc_stats()
 
         # バトル中に利用する属性はコンストラクタで明示的に定義する。
         self.revealed: bool = False
-        self.terastallized: bool = False
+        self.is_terastallized: bool = False
         self.hp: int = self.max_hp
         self.ailment: Ailment = Ailment()
-        self.stellar_boosted_types: set[Type] = set()
-        self.added_types: list[Type] = []
-        self.removed_types: list[Type] = []
         self.volatiles: dict[VolatileName, Volatile] = {}
-        self.active_turn: int = 0
-        self.hits_taken: int = 0
-        self.last_physical_damage_received: int = 0  # 今ターン最後に受けた物理ダメージ量（カウンター等の反射元）
-        self.last_special_damage_received: int = 0   # 今ターン最後に受けた特殊ダメージ量（ミラーコート等の反射元）
-        self.last_damage_received: int = 0           # 今ターン最後に受けたダメージ量
-        self.contact_hitter: "Pokemon | None" = None  # ターン中に接触技でダメージを与えたポケモン（くちばしキャノン等の判定用）
-        self.rank: dict[Stat, int] = {k: 0 for k in STATS}
-        self.executed_move: Move | None = None
-        self.last_move_type: Type | None = None  # 直近で使用した技の実効タイプ（テクスチャー2用）
-        self.last_move_name: MoveName | None = None  # 直近で使用した技名（テクスチャー2用）
-        self.ability_override_type: Type | None = None
-        self.move_override_types: list[Type] | None = None
-        self.volatile_override_type: Type | None = None
-        self.sleep_talk_active: bool = False  # ねごとによるサブ技実行中フラグ
+        self.boosts: dict[Stat, int] = {k: 0 for k in STATS}
+        self.last_move: Move | None = None
+        # トップレベルで選択した技（ねごと・さいはい等のネスト実行では更新されない）。
+        # アンコール・いちゃもん等「選択した技」を参照すべき効果はこちらを使う。
+        self.selected_move: Move | None = None
+        # 最後に実際にPPを消費した技（ねごとのサブ技のように消費量0の実行では更新されない）。
+        # かなしばり・うらみ・さいはい等「最後にPPを消費した技」を参照すべき効果はこちらを使う。
+        # 複数形の pp_consumed_moves（とっておき用、場に出てから消費した技名の集合）とは別物。
+        self.pp_consumed_move: Move | None = None
 
         # スコープ付きメモリ。技・特性個別のフラグはここに保存し、
-        # リセットはスコープ単位（turn: ターン開始 / switch: 登場時 / battle: リセットなし）
+        # リセットはスコープ単位（turn: ターン開始 / switch: 登場時・退場時 / battle: リセットなし）
         # で一括して行う。新しいフラグを追加してもリセット処理の追記は不要。
         # 代表的なフラグへのアクセスは下部のプロパティ（スコープ付きメモリ節）を参照。
         self.memory: dict[str, dict[str, Any]] = {"turn": {}, "switch": {}, "battle": {}}
@@ -127,8 +126,7 @@ class Pokemon:
         memo[id(self)] = new
         fast_copy(self, new, keys_to_deepcopy=[
             'ability', 'item', 'moves', 'ailment', 'volatiles',
-            'executed_move',
-            '_stats_manager',
+            'last_move', 'selected_move', 'pp_consumed_move',
         ])
         return new
 
@@ -139,28 +137,22 @@ class Pokemon:
         self.memory["switch"] = {}
 
     def reset_on_switch_out(self):
-        self.active_turn = 0
-        self.hits_taken = 0
-        self.rank = {k: 0 for k in STATS}
+        # switch スコープは登場時だけでなく退場時にも即座にクリアする
+        # （タイプ上書き系など、退場直後に戻す必要があるフラグを収容するため）
+        self.memory["switch"] = {}
+        self.boosts = {k: 0 for k in STATS}
         # ガードシェア・パワーシェア・パワートリックなどによる実数値の書き換えを
         # 種族値ベースの値に再計算してリセットする（交代でリセットされる仕様）
         self.update_stats()
-        self.executed_move = None
-        self.last_move_type = None
-        self.last_move_name = None
-        self.ability_override_type = None
-        self.move_override_types = None
-        self.volatile_override_type = None
+        self.last_move = None
+        self.selected_move = None
+        self.pp_consumed_move = None
         self.ability.activated_since_switch_in = False
-        self.paradox_boost_stat = None
-        self.paradox_boost_source = ""
-        self.added_types = []
-        self.removed_types = []
 
         # 特性の状態をリセット
         # 特性が変わっている場合は特性自体をリセットする
-        if self.ability.base_name != self.base_ability_name:
-            self.ability = Ability(self.base_ability_name)
+        if self.ability.base_name != self.base_ability:
+            self.ability = Ability(self.base_ability)
         else:
             self.ability.reset_on_switch_out()
 
@@ -172,16 +164,11 @@ class Pokemon:
 
     def reset_turn_state(self):
         """ターン初期化処理。"""
-        self.hits_taken = 0
-        self.last_physical_damage_received = 0
-        self.last_special_damage_received = 0
-        self.last_damage_received = 0
-        self.contact_hitter = None
         self.memory["turn"] = {}
 
     # ── スコープ付きメモリ ──────────────────────────────────────
     # 技・特性個別のフラグへのアクセサ。実体は memory の各スコープに保存され、
-    # reset_turn_state / reset_on_switch_in でスコープごと一括クリアされる。
+    # reset_turn_state / reset_on_switch_in / reset_on_switch_out でスコープごと一括クリアされる。
 
     @property
     def stat_lowered_this_turn(self) -> bool:
@@ -191,6 +178,50 @@ class Pokemon:
     @stat_lowered_this_turn.setter
     def stat_lowered_this_turn(self, value: bool):
         self.memory["turn"]["stat_lowered"] = value
+
+    @property
+    def sleep_talk_active(self) -> bool:
+        """ねごとによるサブ技実行中フラグ。呼び出し元のtry/finallyで必ずFalseに戻される。"""
+        return self.memory["turn"].get("sleep_talk_active", False)
+
+    @sleep_talk_active.setter
+    def sleep_talk_active(self, value: bool):
+        self.memory["turn"]["sleep_talk_active"] = value
+
+    @property
+    def hits_taken(self) -> int:
+        """このターン中に受けた攻撃回数（カウント等）。"""
+        return self.memory["turn"].get("hits_taken", 0)
+
+    @hits_taken.setter
+    def hits_taken(self, value: int):
+        self.memory["turn"]["hits_taken"] = value
+
+    @property
+    def last_damage_taken(self) -> dict[str, Any]:
+        """今ターン最後に受けたダメージ情報（damage: 量, category: "physical"/"special"/None）。"""
+        return self.memory["turn"].setdefault("last_damage_taken", {"damage": 0, "category": None})
+
+    @last_damage_taken.setter
+    def last_damage_taken(self, value: dict[str, Any]):
+        self.memory["turn"]["last_damage_taken"] = value
+
+    @property
+    def last_damage_received(self) -> int:
+        """今ターン最後に受けたダメージ量（種別問わず）。"""
+        return self.last_damage_taken["damage"]
+
+    @property
+    def last_physical_damage_received(self) -> int:
+        """今ターン最後に受けた物理ダメージ量（カウンター等の反射元）。"""
+        info = self.last_damage_taken
+        return info["damage"] if info["category"] == "physical" else 0
+
+    @property
+    def last_special_damage_received(self) -> int:
+        """今ターン最後に受けた特殊ダメージ量（ミラーコート等の反射元）。"""
+        info = self.last_damage_taken
+        return info["damage"] if info["category"] == "special" else 0
 
     @property
     def stat_raised_this_turn(self) -> bool:
@@ -221,12 +252,89 @@ class Pokemon:
 
     @property
     def pp_consumed_moves(self) -> set[MoveName]:
-        """場に出てからPPを消費して使用した技名の集合（とっておき用）。"""
+        """場に出てからPPを消費して使用した技名の集合（とっておき用）。
+        単数形の pp_consumed_move（最後にPPを消費した1つの技）とは別物。"""
         return self.memory["switch"].setdefault("pp_consumed_moves", set())
 
     @pp_consumed_moves.setter
     def pp_consumed_moves(self, value: set[MoveName]):
         self.memory["switch"]["pp_consumed_moves"] = value
+
+    @property
+    def ability_override_type(self) -> Type | None:
+        """特性によるタイプ上書き（へんげんじざい等）。登場・退場時にリセットされる。"""
+        return self.memory["switch"].get("ability_override_type")
+
+    @ability_override_type.setter
+    def ability_override_type(self, value: Type | None):
+        self.memory["switch"]["ability_override_type"] = value
+
+    @property
+    def move_override_types(self) -> list[Type] | None:
+        """技によるタイプ上書き（テクスチャー・ミラータイプ等）。登場・退場時にリセットされる。"""
+        return self.memory["switch"].get("move_override_types")
+
+    @move_override_types.setter
+    def move_override_types(self, value: list[Type] | None):
+        self.memory["switch"]["move_override_types"] = value
+
+    @property
+    def volatile_override_type(self) -> Type | None:
+        """揮発性状態によるタイプ上書き（まほうのこな・みずびたし等）。登場・退場時にリセットされる。"""
+        return self.memory["switch"].get("volatile_override_type")
+
+    @volatile_override_type.setter
+    def volatile_override_type(self, value: Type | None):
+        self.memory["switch"]["volatile_override_type"] = value
+
+    @property
+    def added_types(self) -> list[Type]:
+        """技・特性等で追加されたタイプ（ハロウィン・もりののろい等）。登場・退場時にリセットされる。"""
+        return self.memory["switch"].setdefault("added_types", [])
+
+    @added_types.setter
+    def added_types(self, value: list[Type]):
+        self.memory["switch"]["added_types"] = value
+
+    @property
+    def removed_types(self) -> list[Type]:
+        """はねやすめ等によるタイプ除去。登場・退場時にリセットされる。"""
+        return self.memory["switch"].setdefault("removed_types", [])
+
+    @removed_types.setter
+    def removed_types(self, value: list[Type]):
+        self.memory["switch"]["removed_types"] = value
+
+    @property
+    def last_lost_item_name(self) -> ItemName:
+        """直近で失った（消費・奪取された）アイテム名（ものひろい・しゅうかく用）。
+
+        リサイクル・しゅうかく等は交代して控えに戻っても記憶を保持するため、
+        switch スコープではなく battle スコープ（バトル中リセットなし）に保存する。
+        """
+        return self.memory["battle"].get("last_lost_item_name", "")
+
+    @last_lost_item_name.setter
+    def last_lost_item_name(self, value: ItemName):
+        self.memory["battle"]["last_lost_item_name"] = value
+
+    @property
+    def paradox_boost_stat(self) -> Stat | None:
+        """パラドックス特性で強化されているステータス。登場・退場時にリセットされる。"""
+        return self.memory["switch"].get("paradox_boost_stat")
+
+    @paradox_boost_stat.setter
+    def paradox_boost_stat(self, value: Stat | None):
+        self.memory["switch"]["paradox_boost_stat"] = value
+
+    @property
+    def paradox_boost_source(self) -> BoostSource:
+        """パラドックス補正の発動要因。登場・退場時にリセットされる。"""
+        return self.memory["switch"].get("paradox_boost_source", "")
+
+    @paradox_boost_source.setter
+    def paradox_boost_source(self, value: BoostSource):
+        self.memory["switch"]["paradox_boost_source"] = value
 
     @property
     def ate_berry(self) -> bool:
@@ -236,6 +344,21 @@ class Pokemon:
     @ate_berry.setter
     def ate_berry(self, value: bool):
         self.memory["battle"]["ate_berry"] = value
+
+    @property
+    def stellar_boosted_types(self) -> set[Type]:
+        """ステラテラスタルで威力補正が消費済みのタイプ集合（バトル中リセットされない）。"""
+        return self.memory["battle"].setdefault("stellar_boosted_types", set())
+
+    @property
+    def last_move_type(self) -> Type | None:
+        """直近で使用した技の実効タイプ（テクスチャー2用）。last_move から算出する。"""
+        return self.last_move.type if self.last_move else None
+
+    @property
+    def last_move_name(self) -> MoveName | None:
+        """直近で使用した技名（テクスチャー2用）。last_move から算出する。"""
+        return self.last_move.name if self.last_move else None
 
     # ── 基本情報 ────────────────────────────────────────────────
 
@@ -266,18 +389,18 @@ class Pokemon:
         """
         return self._level
 
-    @level.setter
-    def level(self, level: int):
+    def set_level(self, level: int, hp_policy: HpPolicy = "keep_absolute"):
         """ポケモンのレベルを設定する。
 
         Args:
             level: レベル
+            hp_policy: 最大HP変化時のhpの追従方法（HpPolicy参照）
 
         Note:
             レベル変更時にステータスを自動再計算する。
         """
         self._level = level
-        self.update_stats()
+        self.update_stats(hp_policy)
 
     @property
     def nature(self) -> str:
@@ -288,18 +411,18 @@ class Pokemon:
         """
         return self._nature
 
-    @nature.setter
-    def nature(self, nature: Nature):
+    def set_nature(self, nature: Nature, hp_policy: HpPolicy = "keep_absolute"):
         """ポケモンの性格を設定する。
 
         Args:
             nature: 性格名
+            hp_policy: 最大HP変化時のhpの追従方法（HpPolicy参照）
 
         Note:
             性格変更時にステータスを自動再計算する。
         """
         self._nature = nature
-        self.update_stats()
+        self.update_stats(hp_policy)
 
     @property
     def weight(self) -> float:
@@ -401,25 +524,25 @@ class Pokemon:
 
     def set_form(self,
                  name: PokemonName,
-                 keep_damage: bool = True,
+                 hp_policy: HpPolicy = "keep_absolute",
                  set_default_ability: bool = False) -> bool:
         """ポケモンのフォルムをエイリアス指定で切り替える。
 
         Args:
             name: 変更先フォルムの図鑑エイリアス
-            keep_damage: Trueの場合、現在の被ダメージ量を維持する
+            hp_policy: 最大HP変化時のhpの追従方法（HpPolicy参照）
             set_default_ability: Trueの場合、特性を変更先のデフォルト特性にリセットする
         """
         if self.name == name:
             return False
 
         self.data = POKEDEX[name]
-        self.update_stats(keep_damage=keep_damage)
+        self.update_stats(hp_policy)
 
         if set_default_ability:
             ability_name = self.data.abilities[0]
             self.ability = Ability(ability_name)
-            self.base_ability_name = self.ability.base_name
+            self.base_ability = self.ability.base_name
 
         return True
 
@@ -430,7 +553,7 @@ class Pokemon:
         Returns:
             テラスタル済みの場合はタイプ名、そうでなければNone
         """
-        return self.tera_type if self.terastallized else ""
+        return self.tera_type if self.is_terastallized else ""
 
     def can_terastallize(self) -> bool:
         """テラスタル可能かどうかを判定する。
@@ -438,7 +561,7 @@ class Pokemon:
         Returns:
             テラスタル可能な場合True
         """
-        return not self.terastallized and self.tera_type != ""
+        return not self.is_terastallized and self.tera_type != ""
 
     def terastallize(self):
         """テラスタルする。
@@ -446,7 +569,7 @@ class Pokemon:
         Returns:
             テラスタルに成功した場合True、失敗した場合False
         """
-        self.terastallized = True
+        self.is_terastallized = True
 
     @property
     def megaevolved(self) -> bool:
@@ -480,62 +603,68 @@ class Pokemon:
         """
         return self.data.base
 
-    @base.setter
-    def base(self, base: list[int]):
+    def set_base(self, base: list[int], hp_policy: HpPolicy = "keep_absolute"):
         """種族値を設定する。
 
         Args:
             base: 種族値のリスト
+            hp_policy: 最大HP変化時のhpの追従方法（HpPolicy参照）
 
         Note:
             種族値変更時にステータスを自動再計算する。
         """
         self.data.base = base
-        self.update_stats()
+        self.update_stats(hp_policy)
 
     @property
-    def indiv(self) -> list[int]:
+    def ivs(self) -> list[int]:
         """個体値を取得する。
 
         Returns:
             個体値のリスト
         """
-        return self._stats_manager.indiv
+        return self._ivs
 
-    @indiv.setter
-    def indiv(self, indiv: list[int]):
+    def set_ivs(self, ivs: list[int], hp_policy: HpPolicy = "keep_absolute"):
         """個体値を設定する。
 
         Args:
-            indiv: 個体値のリスト
+            ivs: 個体値のリスト
+            hp_policy: 最大HP変化時のhpの追従方法（HpPolicy参照）
 
         Note:
             個体値変更時にステータスを自動再計算する。
         """
-        self._stats_manager.indiv = indiv
-        self.update_stats()
+        self._ivs = ivs
+        self.update_stats(hp_policy)
 
     @property
-    def effort(self) -> list[int]:
+    def evs(self) -> list[int]:
         """努力値をChampions形式（0〜32）で取得する。
+
+        Note:
+            poke-env の `evs`（各値0〜252）とは名前は同じだがスケールが異なる。
+            poke-env形式からの変換は `types/poke_env.py` の `evs_from_poke_env` を使う。
 
         Returns:
             Champions形式の努力値のリスト
         """
-        return self._stats_manager.effort
+        return self._evs
 
-    @effort.setter
-    def effort(self, effort: list[int]):
+    def set_evs(self, evs: list[int], hp_policy: HpPolicy = "keep_absolute"):
         """努力値をChampions形式（0〜32）で設定する。
 
         Args:
-            effort: Champions形式の努力値のリスト（各値0〜32）
+            evs: Champions形式の努力値のリスト（各値0〜32）
+            hp_policy: 最大HP変化時のhpの追従方法（HpPolicy参照）
 
         Note:
             努力値変更時にステータスを自動再計算する。
+            poke-env の `evs`（各値0〜252）とはスケールが異なるため、
+            poke-env形式の値をそのまま渡さないこと（`evs_from_poke_env` で変換する）。
         """
-        self._stats_manager.effort = effort
-        self.update_stats()
+        self._evs = evs
+        self.update_stats(hp_policy)
 
     @property
     def stats(self) -> dict[Stat, int]:
@@ -544,20 +673,39 @@ class Pokemon:
         Returns:
             ステータス名をキーとする実数値の辞書
         """
-        return self._stats_manager.stats_dict
+        labels = STATS[:6]
+        return {s: v for s, v in zip(labels, self._stats)}
 
-    @stats.setter
-    def stats(self, stats: dict[Stat, int]):
+    def set_stats(self, stats: dict[Stat, int], hp_policy: HpPolicy = "keep_absolute"):
         """実数値から努力値を逆算して設定する。
 
         Args:
             stats: ステータス名をキー、実数値を値とする辞書
+            hp_policy: 最大HP変化時のhpの追従方法（HpPolicy参照）
 
         Note:
             設定後、ステータスを自動再計算する。
         """
-        self._stats_manager.set_stats_from_dict(stats, self._level, self.data.base, self._nature)
-        self.update_stats()
+        for i, value in enumerate(stats.values()):
+            self._set_stat_from_value(i, value)
+        self.update_stats(hp_policy)
+
+    def get_raw_stat(self, idx: int) -> int:
+        """指定インデックスの実数値を取得する。
+
+        Args:
+            idx: ステータスのインデックス (0=HP, 1=攻撃, 2=防御, ...)
+        """
+        return self._stats[idx]
+
+    def set_raw_stat(self, idx: int, value: int):
+        """指定インデックスの実数値を努力値と無関係に直接書き換える。
+
+        Note:
+            ガードシェア・パワーシェア・パワートリック・スピードスワップなど、
+            努力値の再計算を伴わずに実数値そのものを操作する専用効果でのみ使用する。
+        """
+        self._stats[idx] = value
 
     @property
     def ranked_stats(self) -> dict[Stat, int]:
@@ -577,7 +725,7 @@ class Pokemon:
         Returns:
             ランク補正値
         """
-        v = self.rank[stat]
+        v = self.boosts[stat]
         return (2 + v) / 2 if v >= 0 else 2 / (2 - v)
 
     @property
@@ -587,10 +735,10 @@ class Pokemon:
         Returns:
             最大HP
         """
-        return self._stats_manager.stats[0]
+        return self._stats[0]
 
     @property
-    def hp_ratio(self) -> float:
+    def hp_fraction(self) -> float:
         """現在のHP割合を取得する。
 
         Returns:
@@ -603,57 +751,105 @@ class Pokemon:
         """パラドックス補正が有効かどうかを取得する。"""
         return self.paradox_boost_stat is not None
 
-    def update_stats(self, keep_damage: bool = False):
+    def _apply_hp_policy(self, old_max_hp: int, old_hp: int, hp_policy: HpPolicy):
+        """新しい最大HPに対してhpを追従させる（HpPolicy参照）。"""
+        if hp_policy == "reset":
+            self.hp = self.max_hp
+        elif hp_policy == "keep_ratio":
+            ratio = old_hp / old_max_hp if old_max_hp else 0.0
+            self.hp = max(0, min(self.max_hp, round(self.max_hp * ratio)))
+        else:
+            damage = old_max_hp - old_hp
+            self.hp = max(0, min(self.max_hp, self.max_hp - damage))
+
+    def _recalc_stats(self):
+        """レベル・種族値・個体値・努力値・性格から実数値を再計算する。"""
+        self._stats[0] = calc_hp(
+            self._level, self.data.base[0],
+            self._ivs[0], chmp_to_legacy_effort(self._evs[0])
+        )
+
+        nc = NATURE_MODIFIER[self._nature]
+        for i in range(1, 6):
+            self._stats[i] = calc_stat(
+                self._level, self.data.base[i],
+                self._ivs[i], chmp_to_legacy_effort(self._evs[i]), nc[i]
+            )
+
+    def _set_stat_from_value(self, idx: int, value: int) -> bool:
+        """指定インデックスの実数値になるよう努力値を逆算して設定する。
+
+        Note:
+            Champions努力値（0〜32）に対応するSV等価値を前提とした逆算を行う。
+            該当する努力値が見つからない場合は失敗する。
+        """
+        nc = NATURE_MODIFIER[self._nature]
+
+        for chmp in range(33):
+            eff = chmp_to_legacy_effort(chmp)
+            if idx == 0:
+                v = calc_hp(self._level, self.data.base[idx], self._ivs[idx], eff)
+            else:
+                v = calc_stat(self._level, self.data.base[idx], self._ivs[idx], eff, nc[idx])
+
+            if v == value:
+                self._evs[idx] = chmp
+                self._stats[idx] = v
+                return True
+
+        return False
+
+    def update_stats(self, hp_policy: HpPolicy = "keep_absolute"):
         """ステータスを再計算する。
 
         Args:
-            keep_damage: Trueの場合、現在の被ダメージ量を保持する
+            hp_policy: 最大HP変化時のhpの追従方法（HpPolicy参照）
 
         Note:
             レベル、性格、種族値、個体値、努力値に基づいて
             全ステータスを再計算する。レベルアップや性格変更時に使用。
         """
-        # 被ダメージ量を保持する場合
-        damage = self.max_hp - self.hp if keep_damage else 0
+        old_max_hp = self.max_hp
+        old_hp = self.hp
 
-        # ステータスを再計算
-        self._stats_manager.update_stats(
-            self._level, self.data.base, self._nature
-        )
+        self._recalc_stats()
 
-        # 被ダメージ量を復元
-        if keep_damage:
-            self.hp = self.max_hp - damage
+        self._apply_hp_policy(old_max_hp, old_hp, hp_policy)
 
-    def set_stats(self, idx: int, value: int) -> bool:
+    def set_stat(self, idx: int, value: int, hp_policy: HpPolicy = "keep_absolute") -> bool:
         """指定した実数値になるよう努力値を設定する。
 
         Args:
             idx: ステータスのインデックス(0=HP, 1=攻撃, 2=防御, ...)
             value: 目標の実数値
+            hp_policy: 最大HP変化時のhpの追従方法（HpPolicy参照。idx=0の場合のみ関与する）
 
         Returns:
             設定に成功した場合True、失敗した場合False
-
-        Note:
-            内部的に PokemonStats に委譲する。
         """
-        return self._stats_manager.set_stats_from_value(
-            idx, value, self._level, self.data.base, self._nature
-        )
+        old_max_hp = self.max_hp
+        old_hp = self.hp
 
-    def set_effort(self, idx: int, value: int):
+        ok = self._set_stat_from_value(idx, value)
+
+        if ok and idx == 0:
+            self._apply_hp_policy(old_max_hp, old_hp, hp_policy)
+
+        return ok
+
+    def set_evs_at(self, idx: int, value: int, hp_policy: HpPolicy = "keep_absolute"):
         """指定インデックスの努力値をChampions形式（0〜32）で設定する。
 
         Args:
             idx: ステータスのインデックス
             value: 設定するChampions形式の努力値（0〜32）
+            hp_policy: 最大HP変化時のhpの追従方法（HpPolicy参照）
 
         Note:
             設定後、ステータスを自動再計算する。
         """
-        self._stats_manager.effort[idx] = value
-        self.update_stats()
+        self._evs[idx] = value
+        self.update_stats(hp_policy)
 
     def modify_hp(self, v: int) -> int:
         """HPを増減させる。
@@ -685,9 +881,9 @@ class Pokemon:
         Note:
             ランクは-6から+6の範囲に制限される。
         """
-        old = self.rank[stat]
-        self.rank[stat] = m.clamp_stats(old + v)
-        return self.rank[stat] - old
+        old = self.boosts[stat]
+        self.boosts[stat] = m.clamp_stats(old + v)
+        return self.boosts[stat] - old
 
     @property
     def critical_rank(self) -> int:
@@ -847,6 +1043,38 @@ class Pokemon:
         """
         return self.volatiles.get(volatile_name, None)
 
+    # ── poke-env 互換 ───────────────────────────────────────────
+    # poke-env との互換性のために追加したエイリアス property。
+    # 実体は既存の property/属性であり、ここでは名前の変換のみを行う。
+
+    @property
+    def current_hp(self) -> int:
+        """poke-env 互換: 現在HP（`hp` のエイリアス）。"""
+        return self.hp
+
+    @property
+    def current_hp_fraction(self) -> float:
+        """poke-env 互換: 現在のHP割合（`hp_fraction` のエイリアス）。"""
+        return self.hp_fraction
+
+    @property
+    def status(self) -> str:
+        """poke-env 互換: 状態異常名（`ailment.name` のエイリアス、型変換なし）。"""
+        return self.ailment.name
+
+    @property
+    def effects(self) -> dict[VolatileName, Volatile]:
+        """poke-env 互換: 揮発性状態の辞書（`volatiles` のエイリアス、型変換なし）。"""
+        return self.volatiles
+
+    @property
+    def first_turn(self) -> bool:
+        """poke-env 互換: 場に出てから最初の行動かどうか。
+
+        `acted_since_switch_in`（場に出てから一度でも行動したか）の否定形で代替する。
+        """
+        return not self.acted_since_switch_in
+
     # ── ユーティリティ ──────────────────────────────────────────
 
     def render_info(self) -> str:
@@ -857,7 +1085,7 @@ class Pokemon:
         """
         sep = '\n\t'
         s = f"{self.name}{sep}"
-        s += f"HP {self.hp}/{self.max_hp} ({self.hp_ratio*100:.0f}%){sep}"
+        s += f"HP {self.hp}/{self.max_hp} ({self.hp_fraction*100:.0f}%){sep}"
         s += f"{self._nature}{sep}"
         s += f"{self.ability.name}{sep}"
         s += f"{self.item.name or 'No item'}{sep}"
@@ -865,7 +1093,7 @@ class Pokemon:
             s += f"{self.tera_type}T{sep}"
         else:
             s += f"No terastal{sep}"
-        for st, ef in zip(self._stats_manager.stats, self._stats_manager.effort):
+        for st, ef in zip(self._stats, self._evs):
             s += f"{st}({ef})-" if ef else f"{st}-"
         s = s[:-1] + sep
         s += "/".join(move.name for move in self.moves)
@@ -889,7 +1117,25 @@ class Pokemon:
             "ability": self.ability.name,
             "item": self.item.name,
             "moves": [move.name for move in self.moves],
-            "indiv": self._stats_manager.indiv,
-            "effort": self._stats_manager.effort,
+            "ivs": self._ivs,
+            "evs": self._evs,
             "tera_type": self.tera_type,
         }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "Pokemon":
+        """to_dict() が返す辞書からポケモンを再構築する。"""
+        mon = cls(
+            data["name"],
+            gender=data["gender"],
+            nature=data["nature"],
+            level=data["level"],
+            ability_name=data["ability"],
+            item_name=data["item"],
+            move_names=data["moves"],
+            tera_type=data["tera_type"],
+        )
+        mon.set_ivs(list(data["ivs"]))
+        # to_dict() は瀕死・被弾状態を保存しない（常に全回復状態の再構築を想定）ため reset を使う
+        mon.set_evs(list(data["evs"]), hp_policy="reset")
+        return mon

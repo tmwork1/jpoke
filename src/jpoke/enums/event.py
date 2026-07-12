@@ -131,6 +131,10 @@ class Event(Enum):
     # handle: ability.py（ゼロフォーミング: テラスタル時に天候・フィールドを消去）
     ON_TERASTALLIZE = auto()
 
+    # emit: core/turn_controller.py（行動順解決後・各技実行前。予約コマンドを技に解決して発火）
+    # handle: move_attack.py（くちばしキャノンの予備動作: 加熱状態を付与）
+    ON_BEFORE_MOVE = auto()
+
     # emit: core/move_executor.py（技を実際に適用する前）
     # handle: volatile.py（アンコールによる技プロパティ上書き、メトロノームなど）
     ON_MODIFY_MOVE = auto()

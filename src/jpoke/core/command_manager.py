@@ -10,9 +10,10 @@ if TYPE_CHECKING:
 from jpoke.utils import fast_copy
 from jpoke.types import BattlePhase, MoveName
 from jpoke.enums import Event, Command, Interrupt
-from jpoke.model import Move
+from jpoke.model.move import Move
 
 from .context import EventContext
+from .replay import RecordedCommand
 
 
 class CommandManager:
@@ -176,6 +177,15 @@ class CommandManager:
             for ply in players:
                 sim = battle.build_observation(ply)
                 commands[ply] = ply.choose_command(sim)
+                if phase == "switch":
+                    # "action" は Battle.step() 側で既に記録済みのため、ここでは
+                    # 瀕死交代・だっしゅつパック等の割り込み交代のみを記録する。
+                    battle.command_log.append(RecordedCommand(
+                        turn=battle.turn,
+                        player_index=battle.players.index(ply),
+                        phase="switch",
+                        command=commands[ply],
+                    ))
         return commands
 
     def validate_command(self, player: Player, command: Command | None) -> bool:
@@ -222,6 +232,6 @@ class CommandManager:
         selection = state.selection
         return (
             self.battle.option.terastal
-            and all(not mon.terastallized for mon in selection)
+            and all(not mon.is_terastallized for mon in selection)
             and state.active.can_terastallize()
         )

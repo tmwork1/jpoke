@@ -52,6 +52,37 @@ def test_Gのちから_ぼうぎょダウン_secondary無し():
     assert results[1].min_damage == results[0].min_damage
 
 
+def test_set_ailmentでどくを付与すると確定数が短縮される():
+    """calc_lethal は防御側の状態異常による毎ターンダメージも合算する。
+
+    battle.set_ailment() でどくを付与すると、技ダメージに加えて毎ターンの
+    どくダメージが積み重なるため、どく無しの場合より少ない攻撃回数で
+    致死率がほぼ確定（100%近く）に達することを確認する。
+    """
+    battle_without = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カバルドン")],
+    )
+    results_without = t.calc_lethal(
+        battle_without, atk_idx=0, moves=Move("ドラゴンテール"), max_attack=10
+    )
+
+    battle_with = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カバルドン")],
+    )
+    defender = battle_with.actives[1]
+    assert battle_with.set_ailment(defender, "どく")
+    results_with = t.calc_lethal(
+        battle_with, atk_idx=0, moves=Move("ドラゴンテール"), max_attack=10
+    )
+
+    assert results_without[-1].n_attack == 5
+    assert results_with[-1].n_attack == 3
+    assert results_with[-1].n_attack < results_without[-1].n_attack
+    assert results_with[-1].lethal_probability > 0.9
+
+
 def test_アイスボディ_ゆき天気でターン終了時回復():
     """アイスボディ所持時、ゆき天気のターン終了時に最大HPの1/16を回復する"""
     with_ability = t.start_battle(
@@ -509,7 +540,7 @@ def test_クリアスモッグ_とくぼうリセットで2発目のダメージ
         team0=[Pokemon("ガブリアス")],
         team1=[Pokemon("カイリュー")],
     )
-    battle.actives[1].rank["spd"] = 2
+    battle.actives[1].boosts["spd"] = 2
     results = t.calc_lethal(battle, atk_idx=0, moves=Move("クリアスモッグ"), max_attack=2)
     assert results[1].min_damage > results[0].min_damage
 
@@ -920,8 +951,8 @@ def test_テラバースト_ステラでこうげきとくこうダウン():
     )
     battle.actives[0].terastallize()
     results = t.calc_lethal(battle, atk_idx=0, moves=Move("テラバースト"), max_attack=1)
-    assert results[0].attacker.rank["atk"] == -1
-    assert results[0].attacker.rank["spa"] == -1
+    assert results[0].attacker.boosts["atk"] == -1
+    assert results[0].attacker.boosts["spa"] == -1
 
 
 def test_テラバースト_ステラ以外はランクが下がらない():
@@ -932,8 +963,8 @@ def test_テラバースト_ステラ以外はランクが下がらない():
     )
     battle.actives[0].terastallize()
     results = t.calc_lethal(battle, atk_idx=0, moves=Move("テラバースト"), max_attack=1)
-    assert results[0].attacker.rank["atk"] == 0
-    assert results[0].attacker.rank["spa"] == 0
+    assert results[0].attacker.boosts["atk"] == 0
+    assert results[0].attacker.boosts["spa"] == 0
 
 
 def test_トラバサミ_バインド付与():
@@ -1072,6 +1103,17 @@ def test_ばかぢから_こうげきダウン():
     )
     results = t.calc_lethal(battle, atk_idx=0, moves=Move("ばかぢから"), max_attack=2)
     assert results[1].min_damage < results[0].min_damage
+
+
+def test_ばかぢから_こうげきとぼうぎょが両方ダウン():
+    """ばかぢから: 命中後にこうげき・ぼうぎょの両方が1段階ずつ下がる（リーサル計算側）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("ばかぢから"), max_attack=1)
+    assert results[0].attacker.boosts["atk"] == -1
+    assert results[0].attacker.boosts["def"] == -1
 
 
 def test_ばけのかわ_2発目は通常ダメージ():

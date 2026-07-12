@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 from jpoke.enums import Event
 from jpoke.types import Stat
 from jpoke.utils import fast_copy
-from jpoke.data import TYPE_MODIFIER
+from jpoke.data.type_chart import TYPE_MODIFIER
 from jpoke.utils.math import round_half_down
 
 from .context import AttackContext
@@ -88,7 +88,7 @@ class DamageCalculator:
         """
         self.reset_monitor_attributes()
 
-        if not move.power:
+        if not move.base_power:
             return [0]
 
         ctx = AttackContext(
@@ -227,7 +227,7 @@ class DamageCalculator:
         # テラスタル状態の相手にステラ技が効果抜群になる
         if (
             move_type == "ステラ"
-            and ctx.defender.terastallized
+            and ctx.defender.is_terastallized
         ):
             return self._events.emit(Event.ON_CALC_DEF_TYPE_MODIFIER, ctx, 8192)
 
@@ -262,7 +262,7 @@ class DamageCalculator:
             int: 補正後の最終威力
         """
         # 技威力
-        power = ctx.move.power
+        power = ctx.move.base_power
 
         # その他の補正
         power_modifier = self._events.emit(Event.ON_CALC_POWER_MODIFIER, ctx, 4096)

@@ -4,7 +4,7 @@ if TYPE_CHECKING:
     from jpoke.data.ability import AbilityData
 
 from jpoke.utils import fast_copy
-from jpoke.data import ABILITIES
+from jpoke.data.ability import ABILITIES
 from jpoke.types import AbilityState, AbilityName, ItemName
 
 from .effect import GameEffect

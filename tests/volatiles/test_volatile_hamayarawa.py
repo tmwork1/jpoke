@@ -201,10 +201,10 @@ def test_マジックコート_unreflectableフラグを持つじこあんじは
     )
     attacker = battle.actives[0]
     defender = battle.actives[1]
-    defender.rank["atk"] = 2
+    defender.boosts["atk"] = 2
     t.run_move(battle, 0)
     # 跳ね返されず、通常通り自分のランクが相手のランクにコピーされる
-    assert attacker.rank["atk"] == 2
+    assert attacker.boosts["atk"] == 2
 
 
 def test_マジックコート_unreflectableフラグを持つスキルスワップは跳ね返さない():
@@ -288,13 +288,13 @@ def test_マジックコート_変化技を跳ね返す():
     attacker = battle.actives[0]
     defender = battle.actives[1]
     # 技使用前のランク確認
-    assert attacker.rank["def"] == 0
-    assert defender.rank["def"] == 0
+    assert attacker.boosts["def"] == 0
+    assert defender.boosts["def"] == 0
     # 0番（ピカチュウ側）がにらみつけるを使う
     t.run_move(battle, 0)
     # マジックコートで跳ね返されるため、attacker（技使用者）の防御が下がる
-    assert attacker.rank["def"] == -1
-    assert defender.rank["def"] == 0
+    assert attacker.boosts["def"] == -1
+    assert defender.boosts["def"] == 0
 
 
 def test_マジックコート_攻撃技は跳ね返さない():

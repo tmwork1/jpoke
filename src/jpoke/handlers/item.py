@@ -13,9 +13,9 @@ from jpoke.types import RoleSpec, Stat, Type, MoveCategory, \
     AilmentName, WeatherName, TerrainName, SideFieldName
 from jpoke.utils.math import apply_fixed_modifier, round_half_down
 from jpoke.enums import Interrupt, LogCode, Command
-from jpoke.core import HandlerReturn, Handler
-from jpoke.core.event_logger import ItemPayload, StatChangePayload
-from jpoke.data import TYPE_MODIFIER
+from jpoke.core.handler import HandlerReturn, Handler
+from jpoke.core.log_payload import ItemPayload, StatChangePayload
+from jpoke.data.type_chart import TYPE_MODIFIER
 from jpoke.data.megaevol import MEGA_STONES
 from jpoke.data.pokedex import POKEDEX
 from . import ability_paradox as paradox
@@ -74,11 +74,11 @@ def _reset_negative_ranks(battle: Battle, mon: Pokemon, reason: str) -> bool:
     Returns:
         いずれかのランクが変化した場合True
     """
-    changed = {s: -v for s, v in mon.rank.items() if v < 0}
+    changed = {s: -v for s, v in mon.boosts.items() if v < 0}
     if not changed:
         return False
     for s in changed:
-        mon.rank[s] = 0
+        mon.boosts[s] = 0
     battle.add_event_log(
         mon, LogCode.STAT_CHANGED,
         payload=StatChangePayload(stats=changed, display_reason=reason),
@@ -1030,7 +1030,7 @@ def しろいハーブ_cancel_stat_drop(battle: Battle, ctx: EventContext, value
     # value は actual_changes ({stat: 変化量})。今回の変化で負になったランクがあるか確認する。
     mon = ctx.target
     assert mon is not None
-    triggered = any(v < 0 and mon.rank[s] < 0 for s, v in value.items())
+    triggered = any(v < 0 and mon.boosts[s] < 0 for s, v in value.items())
     if triggered and _reset_negative_ranks(battle, mon, reason="しろいハーブ"):
         _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
@@ -1114,7 +1114,7 @@ def スターのみ_random_boost(battle: Battle, ctx: EventContext, value: Any) 
         if mon.hp * denominator > mon.max_hp:
             return HandlerReturn(value=value)
     # すでにランクが最大の能力は選ばれない（5箇所全て最大なら発動しない）
-    candidates: list[Stat] = [s for s in ("atk", "def", "spa", "spd", "spe") if mon.rank[s] < 6]
+    candidates: list[Stat] = [s for s in ("atk", "def", "spa", "spd", "spe") if mon.boosts[s] < 6]
     if candidates:
         stat = battle.random.choice(candidates)
         if battle.modify_stats(mon, {stat: +2}):
@@ -1412,7 +1412,7 @@ def ねらいのまと_negate_immunity(battle: Battle, ctx: AttackContext, value
     浮遊等によるじめん技無効化（フリーフォール）や特性による耐性には影響しない。
     """
     move_type = ctx.move.type
-    if move_type == "ステラ" and ctx.defender.terastallized:
+    if move_type == "ステラ" and ctx.defender.is_terastallized:
         # ステラ技のテラスタル相手への効果抜群は無効化ではないため対象外
         return HandlerReturn(value=value)
 
@@ -1598,7 +1598,7 @@ def ビビリだま_boost_speed_on_intimidate(battle: Battle, ctx: EventContext,
     ):
         return HandlerReturn(value=value)
     reversed_direction = mon.ability.name in ("あまのじゃく", "ばんけん")
-    at_limit = mon.rank["atk"] >= 6 if reversed_direction else mon.rank["atk"] <= -6
+    at_limit = mon.boosts["atk"] >= 6 if reversed_direction else mon.boosts["atk"] <= -6
     if not at_limit and battle.modify_stats(mon, {"spe": +1}):
         _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
@@ -1660,7 +1660,7 @@ def フォーカスレンズ_boost_accuracy_second(battle: Battle, ctx: AttackCo
     attacker_player = battle.get_player(ctx.attacker)
     is_second = battle.query.is_second_actor(attacker_player)
     if is_second is None:
-        is_second = defender.executed_move is not None
+        is_second = defender.last_move is not None
 
     if is_second:
         value = apply_fixed_modifier(value, 4915)

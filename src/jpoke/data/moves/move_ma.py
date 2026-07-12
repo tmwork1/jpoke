@@ -5,7 +5,7 @@
 五十音順を維持すること。
 """
 from jpoke.enums import Event, LethalEvent
-from jpoke.core import LethalHandler
+from jpoke.core.lethal import LethalHandler
 from jpoke.types import MoveName
 
 from jpoke.handlers import move as h
@@ -74,7 +74,11 @@ MOVES_MA: dict[MoveName, MoveData] = {
         pp=12,
         power=80,
         accuracy=100,
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            )
+        },
     ),
     "マジカルフレイム": MoveData(
         type="ほのお",
@@ -149,6 +153,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=20,
+        target="self",
         flags={"non_negoto", "non_copycat"},  # まねっこ自身はまねっこでコピー不可
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(hs.まねっこ_can_use),
@@ -275,6 +280,9 @@ MOVES_MA: dict[MoveName, MoveData] = {
                 ha.ミストバースト_pay_hp,
                 subject_spec="attacker:self",
             ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
                 ha.ミストバースト_calc_power,
                 subject_spec="attacker:self",
@@ -308,7 +316,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
     "みずあめボム": MoveData(
         type="くさ",
         category="special",
-        pp=10,
+        pp=12,
         power=60,
         accuracy=90,
         flags={"bullet", "secondary_effect"},
@@ -410,6 +418,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         type="ゴースト",
         category="status",
         pp=8,  # champions基準（docs/champions/move_list.txt）。旧値5はSV本家基準の移行漏れ。
+        target="self",
         flags={"non_copycat"},
         handlers={
             # 第七世代以降: みちづれを成功させた直後にもう一度使うと必ず失敗する
@@ -444,9 +453,10 @@ MOVES_MA: dict[MoveName, MoveData] = {
     "みらいよち": MoveData(
         type="エスパー",
         category="special",
-        pp=10,
+        pp=12,
         power=120,
         accuracy=100,
+        flags={"unprotectable"},
         handlers={
             Event.ON_MOVE_CHARGE: h.MoveHandler(
                 ha.みらいよち_charge,
@@ -518,7 +528,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
     "みわくのボイス": MoveData(
         type="フェアリー",
         category="special",
-        pp=10,
+        pp=12,
         power=80,
         accuracy=100,
         flags={"sound", "secondary_effect"},
@@ -563,7 +573,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
     "むしのさざめき": MoveData(
         type="むし",
         category="special",
-        pp=10,
+        pp=12,
         power=90,
         accuracy=100,
         flags={"sound", "secondary_effect"},
@@ -583,13 +593,16 @@ MOVES_MA: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.むしのていこう_lower_spa_C,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "むねんのつるぎ": MoveData(
         type="ほのお",
         category="physical",
-        pp=10,
+        pp=12,
         power=90,
         accuracy=100,
         flags={"contact", "slash", "heal"},
@@ -600,7 +613,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
     "ムーンフォース": MoveData(
         type="フェアリー",
         category="special",
-        pp=15,
+        pp=16,
         power=95,
         accuracy=100,
         flags={"secondary_effect"},
@@ -614,6 +627,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         type="エスパー",
         category="status",
         pp=20,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.めいそう_modify_attacker_stats,
@@ -766,7 +780,10 @@ MOVES_MA: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.もえあがるいかり_apply_flinch,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "もえつきる": MoveData(
@@ -821,7 +838,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
     "もろはのずつき": MoveData(
         type="いわ",
         category="physical",
-        pp=5,
+        pp=8,
         power=150,
         accuracy=80,
         flags={"contact", "recoil"},

@@ -30,13 +30,16 @@ MOVES_YA: dict[MoveName, MoveData] = {
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 ha.やきつくす_burn_item,
                 subject_spec="attacker:self",
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "やけっぱち": MoveData(
         type="ほのお",
         category="physical",
-        pp=10,
+        pp=12,
         power=75,
         accuracy=100,
         flags={"contact"},
@@ -65,7 +68,7 @@ MOVES_YA: dict[MoveName, MoveData] = {
     "やまあらし": MoveData(
         type="かくとう",
         category="physical",
-        pp=10,
+        pp=12,
         power=60,
         accuracy=100,
         critical_rank=3,
@@ -86,7 +89,7 @@ MOVES_YA: dict[MoveName, MoveData] = {
     "ゆきなだれ": MoveData(
         type="こおり",
         category="physical",
-        pp=10,
+        pp=12,
         power=60,
         accuracy=100,
         priority=-4,
@@ -131,7 +134,10 @@ MOVES_YA: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ようかいえき_lower_defender_spd,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "ようせいのかぜ": MoveData(

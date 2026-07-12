@@ -39,7 +39,7 @@ def test_modify_hp_r正_最低1回復():
     )
     mon = battle.actives[0]
     # max_hp=8 にすると int(8 * (1/16)) == 0 になる
-    mon._stats_manager._stats[0] = 8
+    mon._stats[0] = 8
     mon.hp = 2
     result = battle.modify_hp(mon, r=1/16)
     assert result == 1, f"最低1HP回復のはずだが {result} だった"
@@ -54,11 +54,41 @@ def test_modify_hp_r負_最低1ダメージ():
     )
     mon = battle.actives[0]
     # max_hp=8 にすると int(8 * (-1/16)) == 0 になる
-    mon._stats_manager._stats[0] = 8
+    mon._stats[0] = 8
     mon.hp = 8
     result = battle.modify_hp(mon, r=-1/16)
     assert result == -1, f"最低1ダメージのはずだが {result} だった"
     assert mon.hp == 7
+
+
+def test_set_ailment_既存の状態異常を上書きできる():
+    """battle.set_ailment(): 既存の状態異常があっても上書きして付与できる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("カビゴン")],
+        ailment1=("まひ", None),
+    )
+    mon = battle.actives[1]
+    assert mon.ailment.name == "まひ"
+
+    result = battle.set_ailment(mon, "やけど")
+
+    assert result
+    assert mon.ailment.name == "やけど"
+
+
+def test_set_ailment_状態異常を付与できる():
+    """battle.set_ailment(): 対象に状態異常を直接付与できる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[1]
+
+    result = battle.set_ailment(mon, "どく")
+
+    assert result
+    assert mon.ailment.name == "どく"
 
 
 def test_こおり_3回目行動時に強制解凍():

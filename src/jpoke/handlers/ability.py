@@ -12,13 +12,13 @@ if TYPE_CHECKING:
 from jpoke.types import RoleSpec, Type, Stat, WeatherName, TerrainName, \
     AilmentName, VolatileName, ItemDisabledReason, MoveFlag, AbilityName, ItemName
 from jpoke.data.signature_items import PLATE_TO_TYPE, MEMORY_TO_TYPE
-from jpoke.data import TYPE_MODIFIER
+from jpoke.data.type_chart import TYPE_MODIFIER
 from jpoke.utils.math import apply_fixed_modifier
 from jpoke.enums import LogCode, Interrupt
-from jpoke.core import HandlerReturn, Handler
-from jpoke.core.event_logger import (
+from jpoke.core.handler import HandlerReturn, Handler
+from jpoke.core.log_payload import (
     AbilityPayload, AilmentPayload, VolatilePayload, FailureLogPayload,
-    FieldPayload, TextPayload,
+    FieldPayload, ItemRevealPayload, MoveRevealPayload,
 )
 
 AEGISLASH_SHIELD = "ギルガルド(シールド)"
@@ -150,7 +150,7 @@ def _apply_contact_counter_ailment(battle: Battle,
         and battle.random.random() < chance
     ):
         battle.ailment_manager.apply(
-            ctx.attacker, ailment, source=ctx.defender, ctx=ctx,
+            ctx.attacker, ailment, source=ctx.defender,
         )
         _announce_ability_triggered(battle, ctx.defender)
     return HandlerReturn(value=value)
@@ -494,7 +494,7 @@ def アナライズ_boost_power(battle: Battle, ctx: AttackContext, value: int) 
         defender_player = battle.get_player(ctx.defender)
         defender_state = battle.player_states[defender_player]
         is_second_actor = (
-            ctx.defender.executed_move is not None
+            ctx.defender.last_move is not None
             or defender_state.has_switched
         )
 
@@ -598,7 +598,7 @@ def いかりのつぼ_max_atk_on_crit(battle: Battle, ctx: AttackContext, value
     if not battle.move_executor.critical:
         return HandlerReturn(value=value)
     mon = ctx.defender
-    diff = 6 - mon.rank["atk"]
+    diff = 6 - mon.boosts["atk"]
     if diff > 0 and battle.modify_stats(mon, {"atk": diff}, source=ctx.attacker):
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
@@ -724,7 +724,7 @@ def うのミサイル_spit_out_prey(battle: Battle, ctx: AttackContext, value: 
     if form == CRAMORANT_GULPING:
         battle.modify_stats(ctx.attacker, {"def": -1}, source=mon)
     else:
-        battle.ailment_manager.apply(ctx.attacker, "まひ", source=mon, ctx=ctx)
+        battle.ailment_manager.apply(ctx.attacker, "まひ", source=mon)
 
     return HandlerReturn(value=value)
 
@@ -800,8 +800,8 @@ def おみとおし_reveal_foe_item(battle: Battle, ctx: EventContext, value: An
     _announce_ability_triggered(battle, mon)
     battle.add_event_log(
         mon,
-        LogCode.TEXT_LOG,
-        payload=TextPayload(text=f"{mon.name}は{foe.name}の{foe.item.base_name}をお見通しだ！")
+        LogCode.ITEM_REVEALED,
+        payload=ItemRevealPayload(target=foe.name, item=foe.item.base_name)
     )
     return HandlerReturn(value=value)
 
@@ -955,7 +955,7 @@ def かそく_boost_speed(battle: Battle, ctx: EventContext, value: Any) -> Hand
     """かそく特性: 場に出てから一度でも行動を選択していればターン終了時に素早さを1段階上げる。
 
     状態異常等でPPを消費せず技が失敗した場合も「行動を選択した」ことになるため、
-    技の成否を問わない acted_since_switch_in を判定に用いる（executed_move は
+    技の成否を問わない acted_since_switch_in を判定に用いる（last_move は
     技が実際に実行された場合のみ True になるため使用しない）。
     """
     mon = ctx.source
@@ -1715,7 +1715,7 @@ def しょうりのほし_modify_accuracy(battle: Battle, ctx: AttackContext, va
 
 
 def しろのいななき_boost(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """じしんかじょう特性: 攻撃技で相手を倒すと攻撃が1段階上がる。"""
+    """しろのいななき/じしんかじょう特性（同一効果の別名特性）: 攻撃技で相手を倒すと攻撃が1段階上がる。"""
     return _boost_on_move_ko(battle, ctx, value, stats={"atk": +1})
 
 
@@ -1756,7 +1756,7 @@ def シンクロ_return_ailment(battle: Battle, ctx: EventContext, value: Any) -
     if foe is None:
         return HandlerReturn(value=value)
     _announce_ability_triggered(battle, ctx.target)
-    battle.ailment_manager.apply(foe, ailment_name, source=ctx.target, ctx=ctx)
+    battle.ailment_manager.apply(foe, ailment_name, source=ctx.target)
     return HandlerReturn(value=value)
 
 
@@ -2118,7 +2118,9 @@ def スワームチェンジ_revert_form_on_faint(battle: Battle, ctx: EventCont
         return HandlerReturn(value=value)
     origin_form = mon.memory["battle"].get("スワームチェンジ_origin_form")
     if origin_form:
-        mon.set_form(origin_form, keep_damage=False)
+        # ひんし時点でhp=0のため、keep_absolute（デフォルト）でも
+        # 新フォルムの最大HPに関わらずhpは0にクランプされる。
+        mon.set_form(origin_form)
     return HandlerReturn(value=value)
 
 
@@ -2603,7 +2605,7 @@ def とびだすハバネロ_burn_attacker(battle: Battle, ctx: AttackContext, v
     attacker = ctx.attacker
     if attacker is None:
         return HandlerReturn(value=value)
-    battle.ailment_manager.apply(attacker, "やけど", source=ctx.defender, ctx=ctx)
+    battle.ailment_manager.apply(attacker, "やけど", source=ctx.defender)
     return HandlerReturn(value=value)
 
 
@@ -2714,7 +2716,6 @@ def どくしゅ_maybe_poison_on_contact(battle: Battle, ctx: AttackContext, val
         ctx.defender,
         "どく",
         source=ctx.attacker,
-        ctx=ctx,
     ):
         _announce_ability_triggered(battle, ctx.attacker)
     return HandlerReturn(value=value)
@@ -2730,7 +2731,7 @@ def どくのくさり_maybe_badly_poison(battle: Battle, ctx: AttackContext, va
         return HandlerReturn(value=value)
     if battle.random.random() < battle.resolve_secondary_chance(ctx, 0.3):
         battle.ailment_manager.apply(
-            ctx.defender, "もうどく", source=ctx.attacker, ctx=ctx,
+            ctx.defender, "もうどく", source=ctx.attacker,
         )
     return HandlerReturn(value=value)
 
@@ -3048,7 +3049,7 @@ def はらぺこスイッチ_on_switch_out(battle: Battle, ctx: EventContext, va
     （テラスタル中の維持は「生きたまま交代」した場合のみの例外）。
     """
     mon = ctx.source
-    if mon.fainted or not mon.terastallized:
+    if mon.fainted or not mon.is_terastallized:
         mon.ability.is_hangry = False
     return HandlerReturn(value=value)
 
@@ -3056,7 +3057,7 @@ def はらぺこスイッチ_on_switch_out(battle: Battle, ctx: EventContext, va
 def はらぺこスイッチ_on_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """はらぺこスイッチ特性: ターン終了時にフォルムを切り替える。"""
     mon = ctx.source
-    if mon.terastallized:
+    if mon.is_terastallized:
         return HandlerReturn(value=value)
 
     mon.ability.is_hangry = not mon.ability.is_hangry
@@ -3248,7 +3249,7 @@ def ばんけん_boost_atk_on_intimidate(battle: Battle, ctx: EventContext, valu
     """
     if ctx.stat_change_reason != "いかく" or "atk" not in value:
         return HandlerReturn(value=value)
-    if ctx.target.rank["atk"] < 6:
+    if ctx.target.boosts["atk"] < 6:
         _announce_ability_triggered(battle, ctx.target)
     return HandlerReturn(value={**value, "atk": 1})
 
@@ -3345,7 +3346,7 @@ def びびり_boost_spd_on_intimidate(battle: Battle, ctx: EventContext, value: 
     if (
         ctx.stat_change_reason != "いかく"
         or "atk" not in value
-        or mon.rank["atk"] <= -6
+        or mon.boosts["atk"] <= -6
     ):
         return HandlerReturn(value=value)
     if battle.modify_stats(mon, {"spe": +1}, source=ctx.source):
@@ -3644,7 +3645,7 @@ def へんげんじざい_change_type(battle: Battle, ctx: AttackContext, value:
 
     if (
         not ctx.attacker.ability.activated_since_switch_in
-        and not ctx.attacker.terastallized
+        and not ctx.attacker.is_terastallized
         and [move_type] != ctx.attacker.types
     ):
         ctx.attacker.ability_override_type = move_type
@@ -3693,7 +3694,7 @@ def ほうし_maybe_inflict_ailment_on_contact(battle: Battle, ctx: AttackContex
     ailment: AilmentName | None = next((a for threshold, a in _EFFECT_SPORE_AILMENTS if r < threshold), None)
     if ailment is None:
         return HandlerReturn(value=value)
-    battle.ailment_manager.apply(ctx.attacker, ailment, source=ctx.defender, ctx=ctx)
+    battle.ailment_manager.apply(ctx.attacker, ailment, source=ctx.defender)
     return HandlerReturn(value=value)
 
 
@@ -3956,12 +3957,12 @@ def ムラっけ_boost_stats(battle: Battle, ctx: EventContext, value: Any) -> H
     raised_stat: Stat | None = None
     changed = False
 
-    up_candidates = [stat for stat in stats if mon.rank[stat] < 6]
+    up_candidates = [stat for stat in stats if mon.boosts[stat] < 6]
     if up_candidates:
         raised_stat = battle.random.choice(up_candidates)
         changed = battle.modify_stats(mon, {raised_stat: +2}, source=mon, reason="ムラっけ") or changed
 
-    down_candidates = [stat for stat in stats if mon.rank[stat] > -6 and stat != raised_stat]
+    down_candidates = [stat for stat in stats if mon.boosts[stat] > -6 and stat != raised_stat]
     if down_candidates:
         lowered_stat = battle.random.choice(down_candidates)
         changed = battle.modify_stats(mon, {lowered_stat: -1}, source=mon, reason="ムラっけ") or changed
@@ -4207,8 +4208,8 @@ def よちむ_reveal_strongest_move(battle: Battle, ctx: EventContext, value: An
     _announce_ability_triggered(battle, mon)
     battle.add_event_log(
         mon,
-        LogCode.TEXT_LOG,
-        payload=TextPayload(text=f"{foe.name}の{chosen.name}を読み取った！")
+        LogCode.MOVE_REVEALED,
+        payload=MoveRevealPayload(target=foe.name, move=chosen.name)
     )
     return HandlerReturn(value=value)
 

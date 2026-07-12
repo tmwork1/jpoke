@@ -1,7 +1,9 @@
 # test_field
 
-テスト数: 182
+テスト数: 184
 
+- [x] set_terrain_地形を発動できる
+- [x] set_weather_天候を発動できる
 - [x] あめはれ_ばんのうがさ防御側は補正なし(weather=あめ, pokemon_name=ゼニガメ, move_name=みずでっぽう, expected=4096)
 - [x] あめはれ_ばんのうがさ防御側は補正なし(weather=あめ, pokemon_name=ヒトカゲ, move_name=ひのこ, expected=4096)
 - [x] あめはれ_ばんのうがさ防御側は補正なし(weather=はれ, pokemon_name=ヒトカゲ, move_name=ひのこ, expected=4096)

@@ -4,7 +4,7 @@ Note:
     このモジュール内の揮発状態定義はVOLATILES辞書内で五十音順に配置されています。
 """
 from jpoke.enums import Event, LethalEvent
-from jpoke.core import LethalHandler
+from jpoke.core.lethal import LethalHandler
 from jpoke.handlers import volatile as h
 from jpoke.handlers import lethal as l
 from .models import VolatileData
@@ -191,6 +191,23 @@ VOLATILES: dict[str, VolatileData] = {
                 h.きょけんとつげき_remove,
                 subject_spec="attacker:self",
                 priority=10,
+            ),
+        }
+    ),
+    "くちばしキャノン": VolatileData(
+        handlers={
+            Event.ON_DAMAGE_HIT: h.VolatileHandler(
+                h.くちばしキャノン_burn_on_contact,
+                subject_spec="defender:self",
+            ),
+            Event.ON_TRY_ACTION: h.VolatileHandler(
+                h.くちばしキャノン_end_heating,
+                subject_spec="attacker:self",
+                priority=5,
+            ),
+            Event.ON_TURN_END: h.VolatileHandler(
+                h.くちばしキャノン_end_heating,
+                subject_spec="source:self",
             ),
         }
     ),

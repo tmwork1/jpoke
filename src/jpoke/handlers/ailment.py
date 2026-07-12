@@ -6,8 +6,8 @@ if TYPE_CHECKING:
 from jpoke.types import RoleSpec
 from jpoke.utils.math import apply_fixed_modifier
 from jpoke.enums import LogCode
-from jpoke.core import Handler, HandlerReturn
-from jpoke.core.event_logger import FailureLogPayload
+from jpoke.core.handler import Handler, HandlerReturn
+from jpoke.core.log_payload import FailureLogPayload
 
 class AilmentHandler(Handler):
     def __init__(self,

@@ -4,7 +4,7 @@ if TYPE_CHECKING:
     from jpoke.types import Type, MoveCategory, MoveFlag, MoveTarget, MoveName
 
 from jpoke.utils import fast_copy
-from jpoke.data import MOVES
+from jpoke.data.move import MOVES
 from jpoke.data.models import MoveData
 from .effect import GameEffect
 
@@ -30,7 +30,7 @@ class Move(GameEffect):
         self.pp: int = self.data.pp
 
         self.type: Type = self.data.type
-        self.power: int | None = self.data.power
+        self.base_power: int | None = self.data.power
         self.category: MoveCategory = self.data.category
 
         self.data: MoveData  # type hint
@@ -38,7 +38,7 @@ class Move(GameEffect):
     def reset(self, reset_pp: bool = False):
         """技の状態をリセットする。"""
         self.type = self.data.type
-        self.power = self.data.power
+        self.base_power = self.data.power
         self.category = self.data.category
         if reset_pp:
             self.pp = self.data.pp
@@ -90,7 +90,7 @@ class Move(GameEffect):
         return self.data.accuracy
 
     @property
-    def critical_rank(self) -> int:
+    def crit_ratio(self) -> int:
         """急所ランク補正値を取得する。"""
         return self.data.critical_rank
 
@@ -146,3 +146,24 @@ class Move(GameEffect):
             and self.target in ("foe", "foe_side")
             and not self.has_flag("unreflectable")
         )
+
+    # ── poke-env 互換 ───────────────────────────────────────────
+
+    @property
+    def current_pp(self) -> int:
+        """poke-env 互換: 技の残りPP（`pp` のエイリアス）。"""
+        return self.pp
+
+    @property
+    def max_pp(self) -> int:
+        """poke-env 互換: 技の最大PP（`data.pp` のエイリアス）。"""
+        return self.data.pp
+
+    @property
+    def expected_hits(self) -> float:
+        """poke-env 互換: 期待ヒット数（poke-env の実装に合わせる）。"""
+        if self.min_hits == self.max_hits:
+            return float(self.min_hits)
+        # 2〜5回技のヒット数分布 2:3:4:5 = 35:35:15:15 の期待値 3.1（poke-env と同値）。
+        # (min_hits + max_hits) / 2 は 3.5 になり一致しないため採用しない。
+        return (2 + 3) * 0.35 + (4 + 5) * 0.15

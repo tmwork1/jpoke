@@ -3,124 +3,24 @@
 バトル中の各種イベント、コマンド、ダメージ情報を記録します。
 ログは後で再生やデバッグ、戦略分析に使用できます。
 """
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, asdict
 
-from jpoke.types import Stat, Type, HPChangeReason
 from jpoke.enums import LogCode
-
-
-@dataclass(frozen=True)
-class LogPayload:
-    """全ログ共通の基底ペイロード。
-
-    display_reason は render() の「末尾に [reason] を追加する」処理が
-    全 LogCode 共通で読む差し込み文言のため、サブクラスごとに重複定義せず
-    ここに1つだけ持たせる。使わないカテゴリ（HPChangePayload 等）は
-    単に設定しない（常に空文字）。
-    """
-    display_reason: str = ""  # 表示してよい理由テキスト（特性名・アイテム名など）
-
-
-@dataclass(frozen=True)
-class FailureLogPayload(LogPayload):
-    """MOVE_FAILED / MOVE_IMMUNED / ACTION_BLOCKED / HEAL_BLOCKED /
-    STAT_CHANGE_BLOCKED / MOVE_MISSED など「技が不発に終わった」ログ全般。
-    MOVE_MISSED では display_reason を設定しない運用とする
-    （命中判定による不発であり、特性等の「原因」を持たないため）。
-    """
-    move: str = ""  # 失敗/不発の原因となった技名（選択した技があれば）
-
-
-@dataclass(frozen=True)
-class HPChangePayload(LogPayload):
-    """display_reason は使わない（HP変化に「表示してよい理由」は無いため常に空）。
-    internal_reason は render() から一切参照しないことで
-    [move_damage] のような漏れを構造的に防ぐ。
-    """
-    pokemon: str = ""
-    value: int = 0
-    hp: int = 0
-    max_hp: int = 0
-    source: str | None = None             # 攻撃者名（あれば）
-    internal_reason: HPChangeReason = ""  # 表示しない内部判定コード
-
-
-@dataclass(frozen=True)
-class StatChangePayload(LogPayload):
-    """display_reason は基底のものをそのまま使う（いかく等）。"""
-    stats: dict[Stat, int] = field(default_factory=dict)
-    source: str | None = None
-
-
-@dataclass(frozen=True)
-class AilmentPayload(LogPayload):
-    """AILMENT_APPLIED/REMOVED は display_reason 未使用。
-    AILMENT_PREVENTED は特性名を display_reason に入れる。
-    """
-    ailment: str = ""
-    source: str | None = None
-
-
-@dataclass(frozen=True)
-class VolatilePayload(LogPayload):
-    """VOLATILE_APPLIED/IMMUNE/DISPLAY は display_reason 未使用。
-    VOLATILE_REMOVED・VOLATILE_PREVENTED は display_reason に理由（特性名等）を入れる。
-    """
-    volatile: str = ""
-    source: str | None = None
-
-
-@dataclass(frozen=True)
-class AbilityPayload(LogPayload):
-    ability: str = ""
-
-
-@dataclass(frozen=True)
-class ItemPayload(LogPayload):
-    item: str = ""
-
-
-@dataclass(frozen=True)
-class SwitchPayload(LogPayload):
-    """render() が pokemon を実際に読む唯一のカテゴリ。"""
-    pokemon: str = ""
-
-
-@dataclass(frozen=True)
-class FieldPayload(LogPayload):
-    field: str = ""
-    count: int | None = None
-
-
-@dataclass(frozen=True)
-class MoveActionPayload(LogPayload):
-    """PP_CONSUMED（move + value）、SUBSTITUTE_HIT・CRITICAL_HIT・
-    MOVE_REFLECTED・PROTECT_SUCCEEDED・PROTECT_FAILED（move のみ、
-    value は常に None）が対象。
-    """
-    move: str = ""
-    value: int | None = None
-
-
-@dataclass(frozen=True)
-class TerastalPayload(LogPayload):
-    """TERASALLIZED 専用。MEGA_EVOLVED はフィールドが異なる（pokemonのみ、
-    かつ render() 未使用）ため統合しない。MEGA_EVOLVED は payload=None のまま。
-    """
-    type: Type | None = None
-
-
-@dataclass(frozen=True)
-class TextPayload(LogPayload):
-    text: str = ""
-
-
-Payload = (
-    LogPayload | FailureLogPayload | HPChangePayload | StatChangePayload
-    | AilmentPayload | VolatilePayload | AbilityPayload | ItemPayload
-    | SwitchPayload | FieldPayload | MoveActionPayload | TerastalPayload
-    | TextPayload
+from jpoke.types import Stat
+from jpoke.core.log_payload import (
+    Payload, FailureLogPayload, HPChangePayload, StatChangePayload,
+    AilmentPayload, VolatilePayload, AbilityPayload, ItemPayload,
+    ItemRevealPayload, FieldPayload, MoveActionPayload, MoveRevealPayload,
+    TerastalPayload,
 )
+
+# STAT_CHANGED の render() 表示専用。Stat Literal（内部識別子）をそのまま
+# 表示すると英語が漏れるため、日本語ラベルに変換する。
+_STAT_LABELS: dict[Stat, str] = {
+    "hp": "HP", "atk": "こうげき", "def": "ぼうぎょ",
+    "spa": "とくこう", "spd": "とくぼう", "spe": "すばやさ",
+    "accuracy": "めいちゅう", "evasion": "かいひ",
+}
 
 
 @dataclass(frozen=True)
@@ -135,11 +35,19 @@ class EventLog:
         idx: プレイヤーのインデックス (0 or 1)
         log: イベントの内容を表すLogCode列挙値
         payload: イベントの詳細情報（必要に応じて）
+        pokemon: イベントの主体となったポケモン名（add_event_log の呼び出し元が
+            Pokemon インスタンスを渡した場合のみ設定される。Payload クラスごとに
+            同じ情報を別名（pokemon/source等）で持たせず、ここに一本化する）
+
+    プログラムでログを解析する場合は `render()` の文字列ではなく、
+    `log`/`pokemon`/`payload`（または `to_dict()`）を使う。
+    LogCode ごとの Payload 対応表は log_payload.py のモジュール docstring を参照。
     """
     turn: int
     idx: int
     log: LogCode
     payload: Payload | None = None
+    pokemon: str | None = None
 
     def to_dict(self) -> dict:
         """ログエントリを辞書形式に変換。
@@ -152,6 +60,7 @@ class EventLog:
             "idx": self.idx,
             "log": self.log.name,
             "payload": asdict(self.payload) if self.payload is not None else None,
+            "pokemon": self.pokemon,
         }
 
     def render(self) -> str:
@@ -159,6 +68,8 @@ class EventLog:
 
         LogCode と Payload から人間が読める文字列を生成します。
         display_reasonがある場合は"[基本記述]:[display_reason]"形式で統一します。
+        この文字列は人間向け表示専用であり、LogCode ごとに文体が異なるため
+        プログラムでの解析には使わないこと（`to_dict()` を使う）。
 
         Returns:
             ログのテキスト表現
@@ -188,15 +99,10 @@ class EventLog:
                 return "敗北"
 
             case LogCode.SWITCHED_IN:
-                pokemon = payload.pokemon if isinstance(payload, SwitchPayload) else "ポケモン"
-                return f"{pokemon} 入場"
+                return f"{self.pokemon or 'ポケモン'} 入場"
 
             case LogCode.SWITCHED_OUT:
-                pokemon = payload.pokemon if isinstance(payload, SwitchPayload) else "ポケモン"
-                return f"{pokemon} 退場"
-
-            case LogCode.TEXT_LOG:
-                return payload.text if isinstance(payload, TextPayload) else ""
+                return f"{self.pokemon or 'ポケモン'} 退場"
 
             case LogCode.MOVE_FAILED:
                 return "技は失敗した"
@@ -222,6 +128,11 @@ class EventLog:
             case LogCode.ITEM_LOST:
                 item = payload.item if isinstance(payload, ItemPayload) else "アイテム"
                 return f"{item}を失った"
+
+            case LogCode.ITEM_REVEALED:
+                target = payload.target if isinstance(payload, ItemRevealPayload) else "相手"
+                item = payload.item if isinstance(payload, ItemRevealPayload) else "アイテム"
+                return f"{self.pokemon or 'ポケモン'}は{target}の{item}をお見通しだ！"
 
             case LogCode.AILMENT_APPLIED:
                 ailment = payload.ailment if isinstance(payload, AilmentPayload) else "状態異常"
@@ -259,8 +170,10 @@ class EventLog:
                 stats = payload.stats if isinstance(payload, StatChangePayload) else {}
                 texts = []
                 for stat, value in stats.items():
-                    texts.append(f"{stat}{'+' if value > 0 else ''}{value}")
-                return " ".join(texts) if texts else "能力値が変化した"
+                    label = _STAT_LABELS.get(stat, stat)
+                    direction = "上がった" if value > 0 else "下がった"
+                    texts.append(f"{label}が{abs(value)}段階{direction}")
+                return "、".join(texts) if texts else "能力値が変化した"
 
             case LogCode.STAT_CHANGE_BLOCKED:
                 return "能力値は変化しなかった"
@@ -294,6 +207,11 @@ class EventLog:
             case LogCode.MOVE_IMMUNED:
                 move = payload.move if isinstance(payload, FailureLogPayload) else "技"
                 return f"{move} を無効化した"
+
+            case LogCode.MOVE_REVEALED:
+                target = payload.target if isinstance(payload, MoveRevealPayload) else "相手"
+                move = payload.move if isinstance(payload, MoveRevealPayload) else "技"
+                return f"{target}の{move}を読み取った！"
 
             case LogCode.FIELD_STARTED:
                 field_ = payload.field if isinstance(payload, FieldPayload) else "場の状態"
@@ -338,7 +256,8 @@ class EventLogger:
         """すべてのログをクリアする。"""
         self.logs.clear()
 
-    def add(self, turn: int, idx: int, log: LogCode, payload: Payload | None = None):
+    def add(self, turn: int, idx: int, log: LogCode, payload: Payload | None = None,
+             pokemon: str | None = None):
         """イベントログを追加。
 
         Args:
@@ -346,8 +265,9 @@ class EventLogger:
             idx: プレイヤーインデックス (0 or 1)
             log: イベントの内容を表すLogCode列挙値
             payload: イベントの詳細情報（必要に応じて）
+            pokemon: イベントの主体となったポケモン名（あれば）
         """
-        self.logs.append(EventLog(turn, idx, log, payload))
+        self.logs.append(EventLog(turn, idx, log, payload, pokemon))
 
     def get(self, turn: int, idx: int) -> list[EventLog]:
         """指定したターンとプレイヤーのイベントログを取得。

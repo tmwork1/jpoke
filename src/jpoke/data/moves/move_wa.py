@@ -28,13 +28,16 @@ MOVES_WA: dict[MoveName, MoveData] = {
     "ワイドフォース": MoveData(
         type="エスパー",
         category="special",
-        pp=10,
+        pp=12,
         power=80,
         accuracy=100,
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
                 ha.ワイドフォース_calc_power,
                 subject_spec="attacker:self",
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
             ),
         },
     ),
@@ -48,7 +51,10 @@ MOVES_WA: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ワイドブレイカー_lower_defender_atk,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "ワイルドボルト": MoveData(
@@ -80,6 +86,7 @@ MOVES_WA: dict[MoveName, MoveData] = {
         type="あく",
         category="status",
         pp=20,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.わるだくみ_modify_attacker_stats,

@@ -11,9 +11,9 @@ if TYPE_CHECKING:
 from jpoke.types import RoleSpec, Stat, AilmentName, VolatileName, MoveName
 
 from jpoke.enums import Event, Command, LogCode
-from jpoke.core import Handler, HandlerReturn
-from jpoke.core.event_logger import (
-    VolatilePayload, TextPayload, FailureLogPayload, MoveActionPayload,
+from jpoke.core.handler import Handler, HandlerReturn
+from jpoke.core.log_payload import (
+    VolatilePayload, FailureLogPayload, MoveActionPayload,
 )
 from jpoke.utils.math import apply_fixed_modifier
 
@@ -199,7 +199,7 @@ def あめまみれ_turn_end(battle: Battle, ctx: EventContext, value: Any) -> H
         HandlerReturn:
     """
     mon = ctx.source
-    battle.modify_stats(mon, {"spe": -1}, reason="あめまみれ")
+    battle.modify_stats(mon, {"spe": -1}, source=mon, reason="あめまみれ")
     battle.volatile_manager.tick(mon, "あめまみれ")
     return HandlerReturn(value=value)
 
@@ -288,11 +288,12 @@ def おんねん_deplete_attacking_move_pp(battle: Battle, ctx: EventContext, va
     """
     if ctx.move.pp == 0 or ctx.move.has_flag("non_onnen"):
         return HandlerReturn(value=value)
+    depleted_pp = ctx.move.pp
     ctx.move.pp = 0
     battle.add_event_log(
         ctx.attacker,
-        LogCode.TEXT_LOG,
-        payload=TextPayload(text=f"おんねんで{ctx.move.name}のPPを0にした")
+        LogCode.PP_CONSUMED,
+        payload=MoveActionPayload(move=ctx.move.name, value=depleted_pp, display_reason="おんねん")
     )
     return HandlerReturn(value=value)
 
@@ -447,6 +448,28 @@ def キングシールド_protect(battle: Battle, ctx: EventContext, value: Any)
 
 def キングシールド_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return remove_volatile(battle, ctx, value, volatile="キングシールド")
+
+
+def くちばしキャノン_burn_on_contact(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """くちばしキャノンの加熱中に接触技を受けた場合、その攻撃者を即座にやけど状態にする。
+
+    Event.ON_DAMAGE_HIT はヒットのたびに発火するため、加熱している間（ON_TRY_ACTION で
+    解除されるまで）に自分より先に行動した相手から接触技を受けた時点でやけどを付与する。
+    """
+    if battle.query.is_contact_reaction(ctx):
+        battle.ailment_manager.apply(ctx.attacker, "やけど", source=ctx.defender)
+    return HandlerReturn(value=value)
+
+
+def くちばしキャノン_end_heating(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """くちばしキャノンの加熱を終了する。
+
+    使用者自身の行動開始時点（Event.ON_TRY_ACTION、まひ等の行動可否判定より前の
+    priority=5）で解除することで、自分より後に行動する相手の接触技には反応しない
+    （加熱は自分が行動するまでの間のみ有効）。行動開始前に交代・瀕死等で行動が
+    発生しなかった場合のフォールバックとして Event.ON_TURN_END でも解除する。
+    """
+    return remove_volatile(battle, ctx, value, volatile="くちばしキャノン")
 
 
 def こだわり_restrict_commands(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -1384,7 +1407,7 @@ def リチャージ_block_action(battle: Battle, ctx: AttackContext, value: Any)
 def れんぞくぎり_reset_on_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """れんぞくぎり揮発状態: ターン終了時に前ターンの技がれんぞくぎり以外なら揮発を解除する。"""
     mon = ctx.source
-    if mon.executed_move is None or mon.executed_move.name != "れんぞくぎり":
+    if mon.last_move is None or mon.last_move.name != "れんぞくぎり":
         battle.volatile_manager.remove(mon, "れんぞくぎり")
     return HandlerReturn(value=value)
 

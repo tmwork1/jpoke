@@ -114,6 +114,46 @@ data/ability.py  →  handlers/ability.py に実装  →  data/ability.py に登
 `/loop <name>` を受け取ったとき、`.claude/loop/<name>.md` が存在する場合は **その指示書を Read して内容に従って実行する**。
 ループの開始時に `.claude/loop/instructions.md` を Read してフロー一覧を確認すること。
 
+## Git運用ルール
+
+### ブランチ・PR
+
+- **`.loop/` 経由の自動作業以外は main への直接コミット禁止**。作業前に必ず `feature/<内容>` などの
+  作業ブランチを切る
+- 完了したら `gh pr create` でPRを作成し、確認のうえ `gh pr merge` でmainに取り込む（`--no-verify` は使わない）
+- リポジトリは `delete_branch_on_merge` が有効。PRマージ後、**リモートブランチは自動削除されるが
+  ローカルブランチは残るので `git branch -d <branch>` で必ず削除する**（残したまま気づかず同じ
+  ブランチに追いコミットしてしまう事故を防ぐ）
+- **PRマージ後は、作業していたworktree（work1等）だけでなく、リポジトリルートも含めて main を
+  必ず `git pull`（または `git fetch` + `checkout`）で最新化する**。worktreeだけ最新化してリポジトリ
+  ルート側の `git pull` を忘れると、後続作業がマージ済みの変更に気づかないまま古い状態で進んでしまう
+  事故につながる
+- 既存ブランチで作業を再開する前に、そのブランチが既にmainへマージ済みでないか
+  （`git log <branch>..main`、`gh pr list --state merged`）を確認する
+- `.loop/` 系フロー（impl / review / todo / lethal / fuzz / replay_fuzz / flaky）は対象外。既存の
+  分離済みブランチ（`loop/{flow}` / `loop/{flow}/integration`）で作業し、ローカルテストを通過した
+  単位（`fuzz`/`replay_fuzz`/`flaky`は1件ごと、`todo`は5件ごと、`lethal`は10件ごと、`impl`/`review`
+  は §共通5 のバッチ整形ごと）でディスパッチャーが `_common.md` §共通6 の手順に従い GitHub PR経由
+  （`gh pr create` → 即 `gh pr merge`、人間レビュー待ちはしない）で自動的にmainへ反映する。
+  **ローカルの `jpoke/`（main の作業ツリー）へ直接コミット・マージすることは絶対にしない**
+  （同一 `.git` を共有する他セッション・他worktreeのローカル `main` refを不用意に動かし混乱を招くため）
+- ループはmain反映を自動かつ継続的に行うため、手動ブランチと `data/*.py` / `docs/progress/*` /
+  `docs/tests/*` など同じ共有ファイルに触れる作業を始める直前は `git pull` してmainを最新化すると
+  衝突を避けやすい
+
+### 一時保存・worktree
+
+- 一時退避に `git stash` を使わない。中断する作業でも作業ブランチにWIPコミットしておく
+  （stashは `git status` にも `git branch` にも現れず、存在を忘れて長期間放置されやすい）
+- Agent（`isolation: "worktree"`）で作業したworktreeは、タスクの結論（マージ or 破棄）が出た時点で
+  `git worktree remove` する。**worktreeを除去するコマンドはworktreeの外（リポジトリルート等）から
+  実行する**（内部の作業ディレクトリから実行すると削除に失敗し孤立ディレクトリが残ることがある）
+- **例外**: `work1` `work3` など汎用作業用に手動作成したworktree（Agentの`isolation: "worktree"`
+  以外で作られたもの）は、対応するPRがマージされてもタスクの結論とみなさず、ユーザーの明示的な
+  指示がない限り `git worktree remove` しない。ユーザーが継続利用する前提の永続ワークスペースとして扱う
+- 作業の節目や `.loop` 以外のセッション終了時には `git status` / `git worktree list` /
+  `git stash list` で放置物がないか確認する
+
 ## 開発ルール
 
 - **対象はポケモンチャンピオンズシングルバトルのみ**

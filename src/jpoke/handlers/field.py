@@ -7,8 +7,8 @@ if TYPE_CHECKING:
 from jpoke.enums import LogCode
 from jpoke.types import RoleSpec, GlobalFieldName, SideFieldName, VolatileName
 from jpoke.utils.math import apply_fixed_modifier
-from jpoke.core import HandlerReturn, Handler
-from jpoke.core.event_logger import FailureLogPayload
+from jpoke.core.handler import HandlerReturn, Handler
+from jpoke.core.log_payload import FailureLogPayload
 
 class FieldHandler(Handler):
     def __init__(self,
@@ -161,7 +161,8 @@ def オーロラベール_reduce_damage(battle: Battle, ctx: AttackContext, valu
             and side.get("ひかりのかべ").is_active
         ):
             return HandlerReturn(value=value)
-        value = apply_fixed_modifier(value, 2048)
+        modifier = 2732 if battle.option.double_battle else 2048
+        value = apply_fixed_modifier(value, modifier)
     return HandlerReturn(value=value)
 
 
@@ -438,7 +439,8 @@ def ひかりのかべ_reduce_damage(battle: Battle, ctx: AttackContext, value: 
         and not ctx.can_bypass_screen(battle)
         and ctx.move.category == "special"
     ):
-        value = apply_fixed_modifier(value, 2048)
+        modifier = 2732 if battle.option.double_battle else 2048
+        value = apply_fixed_modifier(value, modifier)
     return HandlerReturn(value=value)
 
 
@@ -586,7 +588,8 @@ def リフレクター_reduce_damage(battle: Battle, ctx: AttackContext, value: 
         and ctx.move.category == "physical"
         and ctx.move.name != "_こんらん"
     ):
-        value = apply_fixed_modifier(value, 2048)
+        modifier = 2732 if battle.option.double_battle else 2048
+        value = apply_fixed_modifier(value, modifier)
     return HandlerReturn(value=value)
 
 

@@ -4,18 +4,18 @@
 バトル中の場の状態を管理します。排他的な効果とスタック可能な効果を適切に処理します。
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any, get_args, Generic, TypeVar, cast
+from typing import TYPE_CHECKING, Any, get_args, Generic, Iterable, TypeVar, cast
 if TYPE_CHECKING:
     from jpoke.core import Battle, Player, EventManager
     from jpoke.model import Pokemon
 
 from jpoke.utils import fast_copy
 from jpoke.types import GlobalFieldName, SideFieldName, WeatherName, TerrainName
-from jpoke.data import WEATHER_PRIORITY
+from jpoke.data.field import WEATHER_PRIORITY
 from jpoke.enums import Event, LogCode
-from jpoke.model import Field
-from jpoke.core import EventContext
-from .event_logger import FieldPayload
+from jpoke.model.field import Field
+from .context import EventContext
+from .log_payload import FieldPayload
 
 T = TypeVar("T")
 
@@ -363,3 +363,49 @@ class SideFieldManager(StackableFieldManager[SideFieldName]):
 
         self._activate_field(name, modified_count)
         return True
+
+    def swap_fields(self, other: "SideFieldManager", names: Iterable[SideFieldName]) -> bool:
+        """指定したサイドフィールドの状態を他方のマネージャーと入れ替える（コートチェンジ用）。
+
+        継続ターン数（まきびし等の層数を含む）をそのまま交換する。有効/無効が
+        入れ替わったフィールドについてはハンドラの登録・解除のみ行い、
+        ON_FIELD_ACTIVATE / ON_FIELD_DEACTIVATE イベントは発火しない
+        （かぜのり・ふうりょくでんき等、フィールド「開始」を検知する特性が
+        誤発動しないようにするため）。FIELD_STARTED / FIELD_ENDED のバトルログも
+        出力しない（技の成功ログのみで表現する設計とする）。
+
+        Args:
+            other: 入れ替え相手のサイドフィールドマネージャー
+            names: 入れ替え対象のフィールド名一覧
+                （呼び出し側で「単体対象の状態」等の対象外フィールドを
+                あらかじめ除外したリストを渡すこと）
+
+        Returns:
+            bool: 1つ以上のフィールドが実際に入れ替わった場合True
+        """
+        changed = False
+        for name in names:
+            field_self = self.get(name)
+            field_other = other.get(name)
+            active_self = field_self.is_active
+            active_other = field_other.is_active
+            if not active_self and not active_other:
+                continue
+            changed = True
+
+            if active_self:
+                for player in field_self.owners:
+                    field_self.unregister_handlers(self._events, player)
+            if active_other:
+                for player in field_other.owners:
+                    field_other.unregister_handlers(other._events, player)
+
+            field_self.count, field_other.count = field_other.count, field_self.count
+
+            if field_self.is_active:
+                for player in field_self.owners:
+                    field_self.register_handlers(self._events, player)
+            if field_other.is_active:
+                for player in field_other.owners:
+                    field_other.register_handlers(other._events, player)
+        return changed

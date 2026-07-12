@@ -145,13 +145,13 @@ def アクアリング_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDi
 def Gのちから_lower_def(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """Gのちから: 命中後、追加効果有効時に防御側のぼうぎょを1段階下げる。"""
     if ctx.move_secondary:
-        ctx.defender.rank["def"] = clamp_stats(ctx.defender.rank["def"] - 1)
+        ctx.defender.boosts["def"] = clamp_stats(ctx.defender.boosts["def"] - 1)
     return hp_dist
 
 
 def アシッドボム_reduce_spd(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """アシッドボム: 命中後、防御側のとくぼうを2段階下げる。"""
-    ctx.defender.rank["spd"] = clamp_stats(ctx.defender.rank["spd"] - 2)
+    ctx.defender.boosts["spd"] = clamp_stats(ctx.defender.boosts["spd"] - 2)
     return hp_dist
 
 
@@ -175,11 +175,11 @@ def アッキのみ_boost_def(battle: Battle, ctx: LethalContext, hp_dist: State
         return hp_dist
 
     # ぼうぎょランクが最大なら発動しない（消費もしない）
-    if ctx.defender.rank["def"] >= 6:
+    if ctx.defender.boosts["def"] >= 6:
         return hp_dist
 
     # ぼうぎょランクを+1（一度だけ）
-    ctx.defender.rank["def"] = clamp_stats(ctx.defender.rank["def"] + 1)
+    ctx.defender.boosts["def"] = clamp_stats(ctx.defender.boosts["def"] + 1)
 
     # item_enabled=True の state を消費済みに更新して新しい StateDist を返す
     new_dist: StateDist = defaultdict(int)
@@ -270,7 +270,7 @@ def ウタンのみ_resist_psychic(battle: Battle, ctx: LethalContext, hp_dist: 
 def エレクトロビーム_boost_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """エレクトロビーム: チャージ時に追加効果有効なら攻撃側のとくこうを1段階上げる。"""
     if ctx.move_secondary:
-        ctx.attacker.rank["spa"] = clamp_stats(ctx.attacker.rank["spa"] + 1)
+        ctx.attacker.boosts["spa"] = clamp_stats(ctx.attacker.boosts["spa"] + 1)
     return hp_dist
 
 
@@ -315,7 +315,7 @@ def オレンのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist)
 
 def オーバーヒート_lower_attacker_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """オーバーヒート: 命中後、攻撃側のとくこうを2段階下げる。"""
-    ctx.attacker.rank["spa"] = clamp_stats(ctx.attacker.rank["spa"] - 2)
+    ctx.attacker.boosts["spa"] = clamp_stats(ctx.attacker.boosts["spa"] - 2)
     return hp_dist
 
 
@@ -362,8 +362,8 @@ def キラースピン_apply_どく(battle: Battle, ctx: LethalContext, hp_dist:
 
 def クリアスモッグ_reset_defender_rank(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """クリアスモッグ: 命中後、防御側の能力ランク変化を全て±0にリセットする。"""
-    for stat in ctx.defender.rank:
-        ctx.defender.rank[stat] = 0
+    for stat in ctx.defender.boosts:
+        ctx.defender.boosts[stat] = 0
     return hp_dist
 
 
@@ -385,7 +385,7 @@ def グラスフィールド_heal(battle: Battle, ctx: LethalContext, hp_dist: S
 
 def ゴールドラッシュ_lower_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """ゴールドラッシュ: 命中後、攻撃側のとくこうを2段階下げる（Champions基準）。"""
-    ctx.attacker.rank["spa"] = clamp_stats(ctx.attacker.rank["spa"] - 2)
+    ctx.attacker.boosts["spa"] = clamp_stats(ctx.attacker.boosts["spa"] - 2)
     return hp_dist
 
 
@@ -399,7 +399,7 @@ def サイコノイズ_apply_volatile(battle: Battle, ctx: LethalContext, hp_dis
 
 def サイコブースト_lower_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """サイコブースト: 命中後、攻撃側のとくこうを2段階下げる。"""
-    ctx.attacker.rank["spa"] = clamp_stats(ctx.attacker.rank["spa"] - 2)
+    ctx.attacker.boosts["spa"] = clamp_stats(ctx.attacker.boosts["spa"] - 2)
     return hp_dist
 
 
@@ -435,15 +435,15 @@ def シュカのみ_resist_ground(battle: Battle, ctx: LethalContext, hp_dist: S
 def しんぴのちから_boost_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """しんぴのちから: 命中後、追加効果有効時に攻撃側のとくこうを1段階上げる。"""
     if ctx.move_secondary:
-        ctx.attacker.rank["spa"] = clamp_stats(ctx.attacker.rank["spa"] + 1)
+        ctx.attacker.boosts["spa"] = clamp_stats(ctx.attacker.boosts["spa"] + 1)
     return hp_dist
 
 
 def じきゅうりょく_boost_def(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """じきゅうりょく: 攻撃を受けるとぼうぎょが1段階上がる。"""
-    if ctx.defender.rank["def"] >= 6:
+    if ctx.defender.boosts["def"] >= 6:
         return hp_dist
-    ctx.defender.rank["def"] = clamp_stats(ctx.defender.rank["def"] + 1)
+    ctx.defender.boosts["def"] = clamp_stats(ctx.defender.boosts["def"] + 1)
     return hp_dist
 
 
@@ -489,11 +489,11 @@ def タラプのみ_boost_spd(battle: Battle, ctx: LethalContext, hp_dist: State
         return hp_dist
 
     # とくぼうランクが最大なら発動しない（消費もしない）
-    if ctx.defender.rank["spd"] >= 6:
+    if ctx.defender.boosts["spd"] >= 6:
         return hp_dist
 
     # とくぼうランクを+1（一度だけ）
-    ctx.defender.rank["spd"] = clamp_stats(ctx.defender.rank["spd"] + 1)
+    ctx.defender.boosts["spd"] = clamp_stats(ctx.defender.boosts["spd"] + 1)
 
     # item_enabled=True の state を消費済みに更新して新しい StateDist を返す
     new_dist: StateDist = defaultdict(int)
@@ -518,7 +518,7 @@ def タンガのみ_resist_bug(battle: Battle, ctx: LethalContext, hp_dist: Stat
 def チャージビーム_boost_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """チャージビーム: 命中後、追加効果有効時に攻撃側のとくこうを1段階上げる。"""
     if ctx.move_secondary:
-        ctx.attacker.rank["spa"] = clamp_stats(ctx.attacker.rank["spa"] + 1)
+        ctx.attacker.boosts["spa"] = clamp_stats(ctx.attacker.boosts["spa"] + 1)
     return hp_dist
 
 
@@ -526,8 +526,8 @@ def テラバースト_lower_attacker_atk_spa(battle: Battle, ctx: LethalContext
     """テラバースト: ステラタイプにテラスタルして命中した場合、こうげき・とくこうを1段階ずつ下げる。"""
     if ctx.attacker.active_tera_type != "ステラ":
         return hp_dist
-    ctx.attacker.rank["atk"] = clamp_stats(ctx.attacker.rank["atk"] - 1)
-    ctx.attacker.rank["spa"] = clamp_stats(ctx.attacker.rank["spa"] - 1)
+    ctx.attacker.boosts["atk"] = clamp_stats(ctx.attacker.boosts["atk"] - 1)
+    ctx.attacker.boosts["spa"] = clamp_stats(ctx.attacker.boosts["spa"] - 1)
     return hp_dist
 
 
@@ -572,9 +572,10 @@ def バインド_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) 
     return _damage(hp_dist, damage)
 
 
-def ばかぢから_lower_atk(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
-    """ばかぢから: 命中後、攻撃側のこうげきを1段階下げる。"""
-    ctx.attacker.rank["atk"] = clamp_stats(ctx.attacker.rank["atk"] - 1)
+def ばかぢから_lower_atk_def(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """ばかぢから: 命中後、攻撃側のこうげき・ぼうぎょを1段階下げる。"""
+    ctx.attacker.boosts["atk"] = clamp_stats(ctx.attacker.boosts["atk"] - 1)
+    ctx.attacker.boosts["def"] = clamp_stats(ctx.attacker.boosts["def"] - 1)
     return hp_dist
 
 
@@ -630,14 +631,14 @@ def フィラのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist)
 
 def フルールカノン_lower_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """フルールカノン: 命中後、攻撃側のとくこうを2段階下げる。"""
-    ctx.attacker.rank["spa"] = clamp_stats(ctx.attacker.rank["spa"] - 2)
+    ctx.attacker.boosts["spa"] = clamp_stats(ctx.attacker.boosts["spa"] - 2)
     return hp_dist
 
 
 def フレアソング_boost_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """フレアソング: 命中後、追加効果有効時に攻撃側のとくこうを1段階上げる。"""
     if ctx.move_secondary:
-        ctx.attacker.rank["spa"] = clamp_stats(ctx.attacker.rank["spa"] + 1)
+        ctx.attacker.boosts["spa"] = clamp_stats(ctx.attacker.boosts["spa"] + 1)
     return hp_dist
 
 
@@ -649,14 +650,14 @@ def ホズのみ_resist_normal(battle: Battle, ctx: LethalContext, hp_dist: Stat
 def ほのおのまい_boost_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """ほのおのまい: 命中後、追加効果有効時に攻撃側のとくこうを1段階上げる。"""
     if ctx.move_secondary:
-        ctx.attacker.rank["spa"] = clamp_stats(ctx.attacker.rank["spa"] + 1)
+        ctx.attacker.boosts["spa"] = clamp_stats(ctx.attacker.boosts["spa"] + 1)
     return hp_dist
 
 
 def ほのおのムチ_lower_def(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """ほのおのムチ: 命中後、追加効果有効時に防御側のぼうぎょを1段階下げる。"""
     if ctx.move_secondary:
-        ctx.defender.rank["def"] = clamp_stats(ctx.defender.rank["def"] - 1)
+        ctx.defender.boosts["def"] = clamp_stats(ctx.defender.boosts["def"] - 1)
     return hp_dist
 
 
@@ -675,7 +676,7 @@ def マゴのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) ->
 def メテオビーム_boost_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """メテオビーム: C+1する"""
     if ctx.move_secondary:
-        ctx.attacker.rank["spa"] += 1
+        ctx.attacker.boosts["spa"] += 1
     return hp_dist
 
 
@@ -722,7 +723,7 @@ def ヨロギのみ_resist_rock(battle: Battle, ctx: LethalContext, hp_dist: Sta
 
 def りゅうせいぐん_lower_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """りゅうせいぐん: 命中後、攻撃側のとくこうを2段階下げる。"""
-    ctx.attacker.rank["spa"] = clamp_stats(ctx.attacker.rank["spa"] - 2)
+    ctx.attacker.boosts["spa"] = clamp_stats(ctx.attacker.boosts["spa"] - 2)
     return hp_dist
 
 
@@ -734,7 +735,7 @@ def リリバのみ_resist_steel(battle: Battle, ctx: LethalContext, hp_dist: St
 def りんごさん_lower_spd(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """りんごさん: 命中後、追加効果有効時に防御側のとくぼうを1段階下げる。"""
     if ctx.move_secondary:
-        ctx.defender.rank["spd"] = clamp_stats(ctx.defender.rank["spd"] - 1)
+        ctx.defender.boosts["spd"] = clamp_stats(ctx.defender.boosts["spd"] - 1)
     return hp_dist
 
 
@@ -746,7 +747,7 @@ def リンドのみ_resist_grass(battle: Battle, ctx: LethalContext, hp_dist: St
 def ルミナコリジョン_lower_spd(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """ルミナコリジョン: 命中後、追加効果有効時に防御側のとくぼうを2段階下げる。"""
     if ctx.move_secondary:
-        ctx.defender.rank["spd"] = clamp_stats(ctx.defender.rank["spd"] - 2)
+        ctx.defender.boosts["spd"] = clamp_stats(ctx.defender.boosts["spd"] - 2)
     return hp_dist
 
 

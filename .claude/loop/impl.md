@@ -12,6 +12,10 @@
 同じ entry ブランチにコミットする。ディスパッチャーがその entry ブランチを
 `loop/impl/integration` にマージする（impl と review の両変更がまとめて入る）。
 
+**ローリング・ディスパッチ**: `review_in_progress` / `plan_queue` の全件完了を待たず、1 件完了する
+たびにその場で収穫し、空いた分だけ即座に補充する（§3・§4・§7）。常に `review_parallel_max` /
+`planning_slots_max` 件が稼働している状態を維持する。
+
 ---
 
 ## 状態ファイルのスキーマ
@@ -36,15 +40,19 @@
   "review_queue":        [],
   "review_in_progress":  [],
   "completed":           ["..."],
-  "failed":              ["..."]
+  "failed":              ["..."],
+  "unformatted_merges":  0,
+  "last_format_commit":  "..."
 }
 ```
 
 - `review_queue`: impl 完了・review-test 待ちの件 / `review_in_progress`: review-test が background 実行中の件。
+- `unformatted_merges` / `last_format_commit`: §共通5（10 件ごとの一括整形）で使う。統合 worktree を
+  初回作成した直後は `last_format_commit` をそのときの HEAD で初期化する。
 
 ---
 
-## ウェイクアップ手順
+## 実行手順
 
 ### 0. worktree を用意する
 
@@ -53,46 +61,53 @@
 
 ```bash
 WORK="{config.worktree_base}\work"
-git worktree list --porcelain | grep -q "$WORK" || git worktree add --detach "$WORK" "$BR"
+if ! git worktree list --porcelain | grep -q "$WORK"; then
+  git worktree add --detach "$WORK" "$BR"
+  # 新規作成時のみ §共通4.5（<worktree> = $WORK）
+fi
 ```
 
 以降のディスパッチャーの git 操作はすべて `git -C "<対象 worktree>" ...`。
 
 ### 1. 状態ファイルを読む
 
-`.loop/impl_state.json` を Read で読み込む。
+`.loop/impl_state.json` を Read で読み込む（存在しなければ初回起動）。
 
 ### 2. 終了チェック
 
-`plan_queue` / `impl_queue` / `review_queue` / `review_in_progress` がすべて空なら
+`plan_queue` / `impl_queue` / `review_queue` / `review_in_progress` がすべて空なら、
+`unformatted_merges > 0` の場合は §3.5 の整形を先に実行してから、
 「{config.category} 全件完了: {completed}」と報告してループ終了。
 
 ### 3. レビュー結果の回収（Review Harvest）
 
 `review_in_progress` の各 entry の結果ファイル（`{プロジェクトルート}/.loop/review_results/{entry}.ok`
-または `.fail`）を確認する。**マージ前に `PRE=$(git -C "$INTG" rev-parse HEAD)` を記録**（§共通5 の基点）。
+または `.fail`）を確認する。
 
 - `.ok` が存在 →
-  1. マージ: `git -C "$INTG" merge --no-ff "loop/impl/{entry}" -m "Merge loop/impl/{entry}"`（dirty チェック不要）
+  1. マージ: `git -C "$INTG" merge --no-ff "loop/impl/{entry}" -m "Merge loop/impl/{entry}"`
+     （統合 worktree はループ専用で常にクリーン。dirty チェック不要）
   2. `git -C "$INTG" worktree remove "{config.worktree_base}\review" --force`
   3. `git -C "$INTG" branch -d "loop/impl/{entry}"`
-  4. `.ok` ファイルを削除
+  4. `.ok` ファイルを削除（§共通9 のガード付き rm を使う）
   5. `review_in_progress` から除き `completed` に追加
+  6. `unformatted_merges += 1`
 - `.fail` が存在 →
   1. レビュー worktree を削除（存在すれば、上と同じ）
   2. `git -C "$INTG" branch -D "loop/impl/{entry}"`
-  3. `.fail` ファイルを削除
+  3. `.fail` ファイルを削除（§共通9 のガード付き rm を使う）
   4. `review_in_progress` から除き `failed` に追加
 - どちらも存在しない → 実行中のまま維持
 
 non-fast-forward 衝突時は §共通8 に従う。
 
-#### 3.5 バッチ後の一括整形（マージが 1 件でもあった場合）
+#### 3.5 一括整形（未整形マージが 10 件たまったら）
 
-§共通5 を適用する。`{フロー固有のテストファイル群}` = `{config.test_files をスペース区切り} tests/test_lethal.py`
+`unformatted_merges >= 10` の場合のみ実行する。§共通5 を適用する。
+`{フロー固有のテストファイル群}` = `{config.test_files をスペース区切り} tests/test_lethal.py`
 （リーサルハンドラを実装した entry があるため test_lethal.py も併せてソートする）。
 
-### 4. バックグラウンド review-test の起動
+### 4. review-test の起動（background）
 
 `review_queue` にエントリがあり、かつ `len(review_in_progress) < config.review_parallel_max` の場合、
 `review_queue` 先頭の entry を取り出し:
@@ -101,6 +116,7 @@ non-fast-forward 衝突時は §共通8 に従う。
    ```bash
    git -C "$INTG" worktree add "{config.worktree_base}\review" "loop/impl/{entry}"
    ```
+   作成後、§共通4.5 を適用する（`<worktree>` = `{config.worktree_base}\review`）。
 2. `review_in_progress` に追加
 3. **review-test エージェント（background）** を起動:
 
@@ -118,6 +134,8 @@ jpoke {config.category} レビュー・テストタスク: {entry}
    impl が {entry} のリーサルハンドラを実装した場合（progress の「リーサル実装」列が `x`）は
    tests/test_lethal.py に `t.calc_lethal` を使ったテストも追加する
 3. python -m pytest tests/ -v を実行し全テストが通ることを確認する
+   （今回の実装と無関係な既存テストが flaky と判明した場合は `.claude/loop/_common.md` §共通13 に
+   従いその場で修正する）
    ※ sort_tests.py / generate_test_list.py は実行しない（マージ後にディスパッチャーが一括実行）
 4. {config.progress_file} の {entry} 行のテスト済み列を更新する（自分の行だけ）
    手順2でリーサルテストを追加した場合は「リーサルテスト」列も `x` にする
@@ -160,14 +178,8 @@ jpoke {config.category} 実装タスク: {entry}
      みがわり貫通など）。
    - 影響しない（大半の攻撃技・変化技） → progress の「リーサル実装」「リーサルテスト」列を `n/a` にする
    - ダブル専用効果 → 両列を `ダブル専用` にする / 実装が複雑で今回見送る → 両列を `保留` にする
-   - 影響する → handlers/lethal.py の既存パターン（`_heal`, `_heal_at_pinch`,
-     `_survive_at_full_hp`, `_type_resist_berry` など）を参照してハンドラ関数を実装する
-     - シグネチャ: `(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist`
-     - {config.category} の種別に対応する data ファイルの `lethal_handlers` にエントリを追加する
-       （move → data/move.py, item → data/item.py, ability → data/ability.py,
-       ailment → data/ailment.py, volatile → data/volatile.py, global_field → data/field.py）
-     - イベントは `LethalEvent.ON_BEFORE_HIT` / `ON_HIT` / `ON_TURN_END` / `ON_EVERY_EVENT` から選ぶ
-     - subject は `"attacker"` / `"defender"` / `None` から選ぶ
+   - 影響する → `.claude/loop/_common.md` §共通11「リーサル計算ハンドラの実装パターン」に従って
+     {config.category} の種別に応じたハンドラ関数を実装する
      - progress の「リーサル実装」列を `x` にする（「リーサルテスト」列は review-test が更新する）
    ※ ここでも sort_handlers.py / sort_data/*.py は実行しない（マージ後に一括整形）
 4. テストは書かない（review-test エージェントが担当）
@@ -201,21 +213,24 @@ jpoke {config.category} 計画書作成タスク: {entry}
 （計画書ファイルは作業ツリーに置くだけでよい。手順5の収穫で impl_queue に移り、impl コミットに含まれる）
 ```
 
-### 8. 状態保存・次ウェイクアップ
+### 8. 状態保存・終了
 
-§共通7 に従う（保存後 `delaySeconds=120` で予約。reason「{config.category} 実装ループ: 次の件へ」）。
+§共通7 に従う（続きは background エージェントの完了通知、またはユーザーの `/loop impl` 再実行で
+再開する）。
 
 ---
 
 ## main への反映
 
-§共通6 を適用する（`{branch}` = `loop/impl/integration`）。
+エントリ単位では反映しない。§3.5 のバッチ整形コミットが成立するたびに、その手順内（§共通5 →
+§共通6）で直ちに main へ反映される（`{branch}` = `loop/impl/integration`）。
 
 ## エラーハンドリング
 
 §共通8 に加えて:
 - impl 失敗 → `failed` に追加してループ継続（work worktree 内でブランチを削除してから次へ）。
 - review-test 失敗 → `failed` に追加してループ継続（review worktree・ブランチを削除してから次へ）。
+- エージェント呼び出しがAPIセッション制限で失敗した場合 → §共通12 に従う。
 
 ## 状態例
 
@@ -231,7 +246,8 @@ jpoke {config.category} 計画書作成タスク: {entry}
   },
   "plan_queue": ["からをやぶる", "ガードシェア"], "impl_queue": ["いばる"],
   "review_queue": ["あくまのキッス"], "review_in_progress": ["あくび"],
-  "completed": [], "failed": []
+  "completed": [], "failed": [],
+  "unformatted_merges": 4, "last_format_commit": "1df4c9e7..."
 }
 ```
 

@@ -8,13 +8,12 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from . import Battle, EventManager, Player, PlayerState
 
-from jpoke.model import Pokemon
+from jpoke.model.pokemon import Pokemon
 from jpoke.enums import Interrupt, LogCode
 from jpoke.exceptions import InvalidCommandError
 
 from .event_manager import Event
 from .context import EventContext
-from .event_logger import SwitchPayload
 from jpoke.utils import fast_copy
 
 
@@ -89,8 +88,8 @@ class SwitchManager:
         # バトンタッチのランク・volatile を交代先に適用する
         if baton_data:
             # ランク引き継ぎ（クリアボディ等を経由しない直接代入）
-            for stat, v in baton_data["rank"].items():
-                new.rank[stat] = v
+            for stat, v in baton_data["boosts"].items():
+                new.boosts[stat] = v
             # volatile 引き継ぎ
             for volatile_name, v_data in baton_data["volatiles"].items():
                 # とくせいなしは、バトン先の特性が protected フラグを持つ場合や
@@ -259,11 +258,7 @@ class SwitchManager:
         mon.reset_on_switch_in()
         self._register_handlers_on_switch_in(mon)
 
-        self.battle.add_event_log(
-            mon,
-            LogCode.SWITCHED_IN,
-            payload=SwitchPayload(pokemon=mon.name)
-        )
+        self.battle.add_event_log(mon, LogCode.SWITCHED_IN)
 
     def _switch_out(self, mon: Pokemon):
         """ポケモンの退場処理。
@@ -284,10 +279,7 @@ class SwitchManager:
         mon.reset_on_switch_out()
         self._unregister_handlers_on_switch_out(mon)
 
-        self.battle.add_event_log(
-            mon, LogCode.SWITCHED_OUT,
-            payload=SwitchPayload(pokemon=mon.name)
-        )
+        self.battle.add_event_log(mon, LogCode.SWITCHED_OUT)
 
     def override_ejectpack_interrupt(self, flag: Interrupt):
         """割り込みフラグを上書き。

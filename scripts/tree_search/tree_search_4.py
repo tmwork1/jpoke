@@ -23,20 +23,20 @@ def play_game(seed: int | None = None,
         (勝者のPlayerインスタンス または None（引き分け）, ターン数)
     """
     # Player 1（2手先までの総当たり探索）
-    player1 = TreeSearchPlayer(name="SearchPlayer", max_plies=2)
+    player1 = TreeSearchPlayer(username="SearchPlayer", max_plies=2)
     player1.team = [
         Pokemon("ヒトカゲ", item_name="", move_names=["とんぼがえり"]),
         Pokemon("リザードン", item_name="", move_names=["とんぼがえり"]),
     ]
 
-    player2 = Player(name="RandomPlayer")
+    player2 = Player(username="RandomPlayer")
     player2.team = [
         Pokemon("ゼニガメ", item_name="", move_names=["たいあたり"]),
         Pokemon("カメックス", item_name="", move_names=["たいあたり"]),
     ]
 
     # バトルを作成・実行
-    battle = Battle((player1, player2), n_selected=len(player1.team), seed=seed)
+    battle = Battle(player1, player2, n_selected=len(player1.team), seed=seed)
 
     battle.start()
 
@@ -57,7 +57,7 @@ def main():
     if winner is None:
         print(f"結果: 引き分け（{turn}ターン）")
     else:
-        print(f"結果: {winner.name} 勝利（{turn}ターン）")
+        print(f"結果: {winner.username} 勝利（{turn}ターン）")
 
 
 if __name__ == "__main__":

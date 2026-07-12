@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from jpoke.model import Pokemon
 
 from jpoke.enums import Event
-from jpoke.model import Move
+from jpoke.model.move import Move
 from jpoke.types import RoleSpec, HPChangeReason, StatChangeReason, ItemName
 
 

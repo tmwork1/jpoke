@@ -6,7 +6,8 @@ if TYPE_CHECKING:
 
 from copy import deepcopy
 
-from jpoke.model import Ability, Item
+from jpoke.model.ability import Ability
+from jpoke.model.item import Item
 
 
 OBSERVED_MOVE_INDEXES: dict[Pokemon, dict[int, int]] = {}  # 技のインデックス変更を記録する辞書. dict[Pokemon, dict[old_index, new_index]]
@@ -26,6 +27,19 @@ def build(battle: Battle, observer: Player) -> Battle:
 
     # Battle インスタンスをコピーして、相手プレイヤーの情報を隠蔽する
     new = deepcopy(battle)
+    # ゲーム進行用の random は deepcopy のまま独立させる（本体と共有すると、方策が
+    # choose_command() 内で sim.random を直接触った場合に、本来は技実行後（ダメージ
+    # ロール・命中判定・急所判定等）に消費されるはずの乱数列を行動選択時点で先取り
+    # 消費できてしまい、「これから打つ技が急所に当たるか」を打つ前に知った上で行動を
+    # 選べるチート的先読みが可能になる。そのため行動選択専用の decision_random だけを
+    # 本体と同一のオブジェクト参照に差し替える。
+    # 観測用コピーは choose_command()/choose_selection() に渡され、RandomPlayer 等は
+    # sim.decision_random（＝battle.decision_random）を消費して選択する。これを
+    # deepcopyのまま独立させると、技を使わず交代のみが選ばれ続けるターンでは本体の
+    # battle.decision_random が一切進まず、次のターンも同じ乱数状態から観測用コピーが
+    # 作られて同じ選択を繰り返す無限ループに陥る
+    # （交代コマンドのみ選ばれ続け技が二度と使われない不具合の原因だった）。
+    new.decision_random = battle.decision_random
     new.observer = observer
     _mask(new, opponent)
     return new
@@ -66,11 +80,13 @@ def _mask_pokemon(mon: Pokemon) -> Pokemon:
         mon: Pokemon インスタンス
     """
     # ステータス情報を隠蔽する
-    mon.nature = "まじめ"  # 無補正
-    mon.effort = [0] * 6
+    # 相手に見えるのはHP割合（HPバー）であって絶対量ではないため、
+    # マスキングによる最大HP変化でHP割合が歪まないよう keep_ratio で揃える。
+    mon.set_nature("まじめ", hp_policy="keep_ratio")  # 無補正
+    mon.set_evs([0] * 6, hp_policy="keep_ratio")
 
     # テラスタイプをベースタイプに上書きして隠蔽する
-    if not mon.terastallized:
+    if not mon.is_terastallized:
         mon.tera_type = mon.base_types[0]
 
     # 特性の情報を隠蔽する

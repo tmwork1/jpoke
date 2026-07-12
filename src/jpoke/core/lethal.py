@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Callable, cast
 if TYPE_CHECKING:
     from jpoke.core import Battle, SideFieldManager
     from jpoke.model import Pokemon, Move
+    from jpoke.types import MoveName
 
 from copy import deepcopy
 from dataclasses import dataclass, field
@@ -67,13 +68,13 @@ class LethalPokemonState:
     """致死率計算時点でのポケモン片側の状態スナップショット。
 
     将来的に item/ability の有効状態など他のフィールドを追加しやすいように、
-    rank と ailment を1つのオブジェクトにまとめる。
+    boosts と ailment を1つのオブジェクトにまとめる。
 
     Attributes:
-        rank: 計算時のランク補正
+        boosts: 計算時のランク補正
         ailment: 計算時の状態異常
     """
-    rank: dict[Stat, int] = field(default_factory=dict)
+    boosts: dict[Stat, int] = field(default_factory=dict)
     ailment: AilmentName = ""
 
 
@@ -156,7 +157,8 @@ def fainted(dist: StateDist) -> bool:
 
 def calc_lethal(battle: Battle,
                 attacker: Pokemon,
-                moves: Move | tuple[Move, int] | list[Move | tuple[Move, int]],
+                moves: MoveName | Move | tuple[MoveName | Move, int]
+                    | list[MoveName | Move | tuple[MoveName | Move, int]],
                 critical: bool,
                 move_secondary: bool,
                 max_attack: int) -> list[LethalResult]:
@@ -165,7 +167,8 @@ def calc_lethal(battle: Battle,
     Args:
         battle: 現在のバトル状態（deepcopy して使用するため破壊しない）
         attacker: 攻撃側ポケモン
-        moves: 技（単体 / (技, ヒット数) / リスト）
+        moves: 技（単体 / (技, ヒット数) / リスト）。技名の文字列を渡した場合は
+            内部で `Move(name)` に正規化される
         critical: 急所計算をするか
         move_secondary: 追加効果ハンドラを適用するか
         max_attack: 最大攻撃回数
@@ -191,20 +194,34 @@ def calc_lethal(battle: Battle,
     return _lethal_loop(hp_dist, battle, attacker, defender, move_list, critical, move_secondary, max_attack)
 
 
-def _generate_move_list(moves: Move | tuple[Move, int] | list[Move | tuple[Move, int]]) -> list[tuple[Move, int]]:
-    """moves 引数を (技, ヒット数) のリストに正規化する。"""
+def _generate_move_list(
+    moves: MoveName | Move | tuple[MoveName | Move, int]
+        | list[MoveName | Move | tuple[MoveName | Move, int]],
+) -> list[tuple[Move, int]]:
+    """moves 引数を (技, ヒット数) のリストに正規化する。技名の文字列は `Move` に変換する。"""
+    def to_move(x: MoveName | Move) -> Move:
+        if isinstance(x, str):
+            # jpoke.model はモジュールトップレベルでは import しない。
+            # jpoke.data.ability 等が jpoke.core.lethal（本モジュール）を import しているため、
+            # トップレベルで from jpoke.model import Move すると循環importになる。
+            from jpoke.model import Move
+            return Move(x)
+        return x
+
     if isinstance(moves, list):
         result = []
         for x in moves:
             if isinstance(x, tuple):
-                result.append(x)
+                move, n_hit = x
+                result.append((to_move(move), n_hit))
             else:
-                result.append((x, 1))
+                result.append((to_move(x), 1))
         return result
     elif isinstance(moves, tuple):
-        return [moves]
+        move, n_hit = moves
+        return [(to_move(move), n_hit)]
     else:
-        return [(moves, 1)]
+        return [(to_move(moves), 1)]
 
 
 def _lethal_loop(hp_dist: StateDist,
@@ -245,10 +262,10 @@ def _lethal_loop(hp_dist: StateDist,
                     n_attack=ctx.n_attack, move=ctx.move, hit=ctx.hit,
                     hp_dist=hp_dist, damage_dist=ctx.damage_dist,
                     attacker=LethalPokemonState(
-                        rank=ctx.attacker.rank.copy(), ailment=cast(AilmentName, ctx.attacker.ailment.name)
+                        boosts=ctx.attacker.boosts.copy(), ailment=cast(AilmentName, ctx.attacker.ailment.name)
                     ),
                     defender=LethalPokemonState(
-                        rank=ctx.defender.rank.copy(), ailment=cast(AilmentName, ctx.defender.ailment.name)
+                        boosts=ctx.defender.boosts.copy(), ailment=cast(AilmentName, ctx.defender.ailment.name)
                     ),
                 )
                 results.append(result)
@@ -299,11 +316,11 @@ def _calc_damage_dist(battle: Battle, ctx: LethalContext, hp_dist: StateDist) ->
     full_damages = battle.calc_damages(ctx.attacker, ctx.defender, ctx.move, critical=ctx.critical)
     ctx.defender.hp = saved_hp
 
-    ctx.defender.ability.add_disable_reason("リーサル計算")
+    ctx.defender.ability.add_disable_reason("lethal_calculation")
     try:
         damages = battle.calc_damages(ctx.attacker, ctx.defender, ctx.move, critical=ctx.critical)
     finally:
-        ctx.defender.ability.remove_disable_reason("リーサル計算")
+        ctx.defender.ability.remove_disable_reason("lethal_calculation")
 
     ctx.damage_dist = to_dist(damages)
     ctx.damage_dist_full = to_dist(full_damages) if full_damages != damages else None

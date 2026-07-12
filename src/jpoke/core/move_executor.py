@@ -9,12 +9,13 @@ if TYPE_CHECKING:
 
 from jpoke.types import Type, MoveCategory, MoveName
 from jpoke.utils.math import clamp_stats, clamp_critic
-from jpoke.model import Pokemon, Move
+from jpoke.model.pokemon import Pokemon
+from jpoke.model.move import Move
 from jpoke.enums import LogCode
 
 from .event_manager import Event
 from .context import AttackContext
-from .event_logger import FailureLogPayload, MoveActionPayload
+from .log_payload import FailureLogPayload, MoveActionPayload
 from jpoke.utils import fast_copy
 
 CRIT_RATES = [1/24, 1/8, 1/2, 1]
@@ -60,6 +61,10 @@ class MoveExecutor:
         self.move_power: int | None = None
         self.critical_rank: int | None = None
         self.critical: bool | None = None
+
+        # run_moveのネスト呼び出し深度（ねごと・さいはい等のサブ技実行を検出するため）。
+        # 深度が1（トップレベル実行）のときのみ selected_move を更新する。
+        self._run_move_depth: int = 0
 
     def reset_monitoring_flags(self):
         """技実行のモニタリング用フラグをリセットする。"""
@@ -132,13 +137,13 @@ class MoveExecutor:
             ヒットごとの威力。指定がなければ基礎威力を返す。
         """
         if move.data.multi_hit is None:
-            return move.power
+            return move.base_power
 
         power_sequence = move.data.multi_hit.get("power_sequence", ())
         if power_sequence:
             idx = min(hit_index - 1, len(power_sequence) - 1)
             return power_sequence[idx]
-        return move.power
+        return move.base_power
 
     def _check_hit(self, ctx: AttackContext) -> bool:
         """技の命中判定。
@@ -174,8 +179,8 @@ class MoveExecutor:
 
         # ランク補正
         ranks = {
-            "accuracy": attacker.rank["accuracy"],
-            "evasion": defender.rank["evasion"]
+            "accuracy": attacker.boosts["accuracy"],
+            "evasion": defender.boosts["evasion"]
         }
         modified_rank = self._events.emit(Event.ON_GET_STAT_RANK, ctx, ranks)
         rank_modifier = hit_rank_modifier(modified_rank["accuracy"], modified_rank["evasion"])
@@ -204,8 +209,8 @@ class MoveExecutor:
         Returns:
             bool: 急所に当たるかどうか
         """
-        if self.battle.option.critical_mode == "確定のみ":
-            critical_rank = clamp_critic(ctx.move.critical_rank)
+        if self.battle.option.critical_mode == "always":
+            critical_rank = clamp_critic(ctx.move.crit_ratio)
             self.critical_rank = critical_rank  # デバッグ用に保存
             return self.battle.random.random() < CRIT_RATES[critical_rank]
 
@@ -213,7 +218,7 @@ class MoveExecutor:
         critical_rank = self._events.emit(
             Event.ON_CALC_CRITICAL_RANK,
             ctx,
-            ctx.move.critical_rank
+            ctx.move.crit_ratio
         )
         critical_rank = clamp_critic(critical_rank)
 
@@ -278,6 +283,8 @@ class MoveExecutor:
         # 技のハンドラを登録
         ctx.move.register_handlers(self._events, ctx.attacker)
 
+        # run_moveのネスト呼び出し深度を記録する（ねごと・さいはい等のサブ技実行検出用）
+        self._run_move_depth += 1
         try:
             # 技タイプを評価する（可変技対応）
             ctx.move.type = self.resolve_move_type(ctx.attacker, ctx.move)
@@ -300,6 +307,8 @@ class MoveExecutor:
                 self._execute_move(ctx)
 
         finally:
+            self._run_move_depth -= 1
+
             # 技の状態をリセットする（タイプや威力の変更を元に戻す）
             ctx.move.reset()
 
@@ -400,10 +409,12 @@ class MoveExecutor:
             return
 
         # 発動した技の確定
-        ctx.attacker.executed_move = ctx.move
-        # 直近で使用した技の実効タイプ・技名を記録する（テクスチャー2用）
-        ctx.attacker.last_move_type = ctx.move.type
-        ctx.attacker.last_move_name = cast(MoveName, ctx.move.name)
+        ctx.attacker.last_move = ctx.move
+        # 選択した技の確定: トップレベル実行（深度1）のときのみ更新する。
+        # ねごと・さいはい等によるサブ技実行（深度2以上）では選択技は変化しない
+        # （アンコール・いちゃもん等「選択した技」を参照すべき効果のため）。
+        if self._run_move_depth == 1:
+            ctx.attacker.selected_move = ctx.move
         # non_negotoでない技のみバトル全体の最後使用技として記録する
         if not ctx.move.has_flag("non_negoto"):
             self.battle.last_used_move_name = cast(MoveName, ctx.move.name)
@@ -435,8 +446,8 @@ class MoveExecutor:
             ctx.hit_index = hit_index
 
             # ヒットごとの技の威力を設定
-            ctx.move.power = self._resolve_hit_power(ctx.move, hit_index)
-            self.move_power = ctx.move.power
+            ctx.move.base_power = self._resolve_hit_power(ctx.move, hit_index)
+            self.move_power = ctx.move.base_power
 
             # 命中判定: 通常技は初回ヒットのみ、ヒットごと判定技は毎ヒットで判定
             need_hit_check = (
@@ -507,18 +518,14 @@ class MoveExecutor:
             return
 
         ctx.defender.hits_taken += 1
-        ctx.defender.last_damage_received = actual_damage
         # カウンター・ミラーコートは「最後に受けた1回分」のダメージを参照するため、
         # 連続技で複数回ヒットした場合も合算せず直近のヒット量で上書きする。
-        if self.battle.query.deals_physical_damage(ctx.attacker, ctx.move):
-            ctx.defender.last_physical_damage_received = actual_damage
-        else:
-            ctx.defender.last_special_damage_received = actual_damage
-
-        # 接触技ヒット時に攻撃者を記録する（くちばしキャノン等の判定用）
-        # ぼうごパットで反応効果が防がれる場合は記録しない
-        if self.battle.query.is_contact_reaction(ctx):
-            ctx.defender.contact_hitter = ctx.attacker
+        # 技のカテゴリは run_move 実行時に既に確定済み（ctx.move.category）のため、
+        # ここで再度 resolve_move_category（battle.foe(attacker) を参照）を呼ばない。
+        # ON_HIT イベント（レッドカード等）で attacker が既に交代済みの場合、
+        # battle.foe(attacker) が例外を送出するため。
+        category = "physical" if (ctx.move.category == "physical" or ctx.move.has_flag("physical_damage")) else "special"
+        ctx.defender.last_damage_taken = {"damage": actual_damage, "category": category}
 
         self._events.emit(Event.ON_DAMAGE_HIT, ctx, actual_damage)
 
@@ -600,6 +607,9 @@ class MoveExecutor:
         if v > 0:
             # 実際にPPを消費した技として記録する（とっておき用）
             ctx.attacker.pp_consumed_moves.add(cast(MoveName, move.name))
+            # 最後にPPを消費した技として記録する（かなしばり・うらみ・さいはい等の参照先）。
+            # ねごとのサブ技は ねごと_suppress_pp により v=0 となるためここには記録されない。
+            ctx.attacker.pp_consumed_move = move
         self.battle.add_event_log(
             ctx.attacker,
             LogCode.PP_CONSUMED,

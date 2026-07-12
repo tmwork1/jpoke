@@ -20,13 +20,13 @@ def main(attacker: str,
         Pokemon(attacker)
     ]
 
-    player2 = Player(name="RandomPlayer")
+    player2 = Player(username="RandomPlayer")
     player2.team = [
         Pokemon(defender, ability_name=defender_ability, item_name=defender_item)
     ]
 
     # バトルを作成・実行
-    battle = Battle((player1, player2), n_selected=1)
+    battle = Battle(player1, player2, n_selected=1)
     battle.start()
 
     results = battle.calc_lethal(

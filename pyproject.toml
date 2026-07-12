@@ -1,23 +1,34 @@
 [project]
 name = "jpoke"
-version = "0.0.1"
-description = "A Japanese Python package for Pokemon battle simulation / bot development"
+version = "0.1.0"
+description = "Event-driven Pokemon Champions single-battle simulation and damage calculation library (unofficial)"
 authors = [
     { name = "Tomoo Mari", email = "tmtm.holmes@gmail.com" }
 ]
-license = { file = "LICENSE" }
+license = "MIT"
+license-files = ["LICENSE"]
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = []
+keywords = ["pokemon", "battle", "simulator", "damage-calculator"]
 classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Games/Entertainment :: Turn Based Strategy",
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Operating System :: OS Independent",
+    "Natural Language :: Japanese",
+    "Typing :: Typed",
 ]
 
 [project.urls]
 Homepage = "https://github.com/tmwork1/jpoke"
 Repository = "https://github.com/tmwork1/jpoke"
+Issues = "https://github.com/tmwork1/jpoke/issues"
+Changelog = "https://github.com/tmwork1/jpoke/blob/main/CHANGELOG.md"
 
 [dependency-groups]
 dev = [
@@ -36,6 +47,7 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 jpoke = ["py.typed"]
+"jpoke.data" = ["*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

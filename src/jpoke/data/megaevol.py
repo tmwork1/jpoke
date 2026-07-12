@@ -95,4 +95,4 @@ MEGA_STONES: dict[ItemName, tuple[PokemonName, ...]] = {
     "セグレイブナイト": ("セグレイブ", "メガセグレイブ"),
 }
 
-MEGA_POKEMONS = (v[-1] for v in MEGA_STONES.values())
+MEGA_POKEMONS = frozenset(v[-1] for v in MEGA_STONES.values())

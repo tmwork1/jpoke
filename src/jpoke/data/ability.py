@@ -5,7 +5,7 @@ Note:
 """
 
 from jpoke.enums import DomainEvent, Event, LethalEvent
-from jpoke.core import LethalHandler
+from jpoke.core.lethal import LethalHandler
 from jpoke.handlers import ability as h
 from jpoke.handlers import ability_paradox as paradox
 from jpoke.handlers import lethal as l
