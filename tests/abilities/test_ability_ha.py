@@ -1072,6 +1072,19 @@ def test_ひとでなし_どく状態の相手に確定急所(ailment_name: Ailm
     assert battle.move_executor.critical_rank == critical_rank
 
 
+def test_ひとでなし_どくの追加効果で新たに付与した状態は同じ攻撃の急所判定に反映されない():
+    """どくづきのようにどくの追加効果を持つ技は、急所判定を含むダメージ計算の後に
+    追加効果の発動判定が行われるため、その攻撃自体にはひとでなしの効果が無い。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ひとでなし", move_names=["どくづき"])],
+        team1=[Pokemon("カビゴン")],
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.critical_rank == 0
+    assert battle.actives[1].has_ailment("どく")
+
+
 @pytest.mark.parametrize(
     "move_name, expected_modifier",
     [
