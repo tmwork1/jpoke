@@ -413,7 +413,13 @@ class TurnController:
 
     def _run_end_phase(self):
         """ターン終了時の処理を実行する。"""
-        if self.battle.is_new_turn():
+        # ターン中の技実行等で既に勝敗が確定している場合、どく・やけど等の
+        # ターン終了時の継続ダメージ処理（ON_TURN_END）は実行しない
+        # （決着後に敗者側の追加行動や勝者側への継続ダメージが記録される
+        # のを防ぐ）。ただし瀕死交代処理（run_faint_switch）は決着後でも
+        # 内部で battle.judge_winner() を確認した上で早期returnする既存の
+        # 安全策があるため、そのまま呼び出す。
+        if self.battle.is_new_turn() and self.battle.winner is None:
             self._events.emit(Event.ON_TURN_END)
 
             # だっしゅつパックによる割り込みフラグをフェーズに合わせて設定
