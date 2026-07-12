@@ -17,6 +17,7 @@ python examples/01_quickstart.py
 | `05_tree_search_ai.py` | `TreeSearchPlayer` を継承した木探索AIとランダム方策の対戦 | AI開発（発展） |
 | `06_bulk_simulation.py` | `Player.battle_against()` による多数回対戦・構成比較 | 戦術研究（構成比較） |
 | `07_janken_nash.py` | 実バトルのモンテカルロ推定 + 反復最適反応によるNash均衡（混合戦略）の近似、`ProcessPoolExecutor` による並列化 | 戦術研究（読み合いの定量分析、発展） |
+| `08_janken_nash_cfr.py` | `Battle.copy()` を使ったロールアウトベースのregret matching（CFR風）による、HP状況に応じた適応的な戦略の自己対戦学習 | 戦術研究（読み合いの定量分析、発展） |
 
-`07_janken_nash.py` は多数回のバトルシミュレーションを行うため、他のサンプルより実行に
-時間がかかる（手元では十数秒程度）。
+`07_janken_nash.py` / `08_janken_nash_cfr.py` は多数回のバトルシミュレーションを行うため、
+他のサンプルより実行に時間がかかる（手元ではそれぞれ十数秒・数十秒程度）。
