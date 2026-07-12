@@ -1178,6 +1178,9 @@ def test_ばくれつパンチ_こんらんが発動する():
         team1=[Pokemon("カビゴン")],
         accuracy=100,
     )
+    # ダメージロールの上振れでカビゴンが瀕死になるとこんらんの付与判定ができなくなるため、
+    # ダメージを安全な値に固定する
+    t.fix_damage(battle, 50)
     t.run_move(battle, 0)
     assert battle.actives[1].has_volatile("こんらん")
 
