@@ -167,6 +167,51 @@ def main() -> None:
         f"期待ヒット数 {multi_hit_move.expected_hits:.1f}"
     )
 
+    # moves にはリストも渡せる。複数技を渡すと、その順番通りに1ラウンドとして
+    # 使用する（例: ["でんこうせっか", "かみなり"] は1発目にでんこうせっか、
+    # 2発目にかみなりを撃つ）。max_attack>1にすると、このラウンド自体を繰り返す
+    print("-" * 50)
+    combo_player = Player("ComboAttacker")
+    combo_player.add_pokemon("ピカチュウ", move_names=["でんこうせっか", "かみなり"])
+    combo_defender_player = Player("ComboDefender")
+    combo_defender_player.add_pokemon("カビゴン")
+
+    combo_battle = Battle(combo_player, combo_defender_player, seed=1)
+    combo_battle.start()
+    combo_attacker = combo_battle.get_active(combo_player)
+    combo_results = combo_battle.calc_lethal(
+        attacker=combo_attacker, moves=["でんこうせっか", "かみなり"], max_attack=1,
+    )
+    for result in combo_results:
+        print(f"{result.move.name}: ダメージ {result.min_damage}~{result.max_damage}")
+
+    # calc_lethal(secondary=True) は技本体の追加効果（状態異常付与等）のうち、
+    # 致死率計算に組み込まれている技に限り自動的に加味する（かえんほうしゃの
+    # やけど等、組み込まれていない技もある）。キラースピン（どく付与）は
+    # 組み込み済みで、secondary=Trueにすると付与されたどくの毎ターンダメージ分
+    # だけ確定数が早まる
+    print("-" * 50)
+    poison_move = "キラースピン"
+    secondary_attacker_player = Player("SecondaryAttacker")
+    secondary_attacker_player.add_pokemon("ドクロッグ", move_names=[poison_move])
+    secondary_defender_player = Player("SecondaryDefender")
+    secondary_defender_player.add_pokemon("フシギダネ")
+
+    secondary_battle = Battle(secondary_attacker_player, secondary_defender_player, seed=1)
+    secondary_battle.start()
+    secondary_attacker = secondary_battle.get_active(secondary_attacker_player)
+
+    without_secondary = secondary_battle.calc_lethal(
+        attacker=secondary_attacker, moves=poison_move, max_attack=8, secondary=False,
+    )[-1]
+    with_secondary = secondary_battle.calc_lethal(
+        attacker=secondary_attacker, moves=poison_move, max_attack=8, secondary=True,
+    )[-1]
+    print(
+        f"{poison_move}の確定数: secondary=False → {without_secondary.n_attack}発 / "
+        f"secondary=True → {with_secondary.n_attack}発（どくの蓄積ダメージ分早まる）"
+    )
+
     # 試してみよう: move_name を別の技に変えたり、defender_player のアイテムを
     # 変えたりすると、確定数や致死率がどう変わるか比較できる
 

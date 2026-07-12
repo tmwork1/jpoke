@@ -1,5 +1,6 @@
 """jpoke で学べること: 天候・地形の効果、技を実際に当てて状態異常を発生させる方法、
-battle.step() を伴う進行でアイテム・特性の発動ログを確認する方法。
+揮発性状態（やどりぎのタネ等）を直接付与する方法、battle.step() を伴う進行での
+アイテム・特性の発動ログ確認、追加効果の発動確率を固定して決定論的にする方法。
 
 01（calc_lethal）は防御側の状態異常・天候ダメージも計算に含められるが、
 天候・地形そのものの効果や、対戦を実際に進めたときのアイテム・特性の発動ログ
@@ -66,6 +67,25 @@ def show_ailment_via_actual_move() -> None:
     battle.print_logs()
 
 
+def show_volatile_via_set_volatile() -> None:
+    """揮発性状態はset_ailment()と同様、set_volatile()で直接付与できる。
+
+    やどりぎのタネ: ターン終了時に対象のHPを最大HPの1/8吸い取り、相手を回復させる。
+    """
+    attacker_player = Player("Attacker")
+    attacker_player.add_pokemon("ピカチュウ", move_names=["なきごえ"])
+    defender_player = Player("Defender")
+    defender_player.add_pokemon("フシギダネ", move_names=["たいあたり"])
+
+    battle = Battle(attacker_player, defender_player, seed=1)
+    battle.start()
+    defender = battle.get_active(defender_player)
+    battle.set_volatile(defender, "やどりぎのタネ")
+    print(f"揮発性状態の付与: has_volatile('やどりぎのタネ') = {defender.has_volatile('やどりぎのタネ')}")
+    battle.step()
+    battle.print_logs()
+
+
 def show_ability_and_item_logs() -> None:
     """calc_lethal()は対戦を進行させないため発動ログが出ない。battle.step()を伴う
     対戦であれば、特性・アイテムの発動ログがprint_logs()にそのまま表示される。
@@ -100,13 +120,51 @@ def show_ability_and_item_logs() -> None:
     item_battle.print_logs()
 
 
+def show_effect_chance_threshold() -> None:
+    """effect_chance_threshold: 指定値未満の追加効果発動確率を強制的に0%にする。
+
+    accuracy_fix_threshold（命中率の固定）と組み合わせると、確率で発動する要素を
+    すべて排除した完全に決定論的なシナリオを作れる（シナリオ検証・回帰テスト向け）。
+    かえんほうしゃのやけど付与（10%）で確認する。
+    """
+    move_name = "かえんほうしゃ"
+
+    def burned_after_one_hit(effect_chance_threshold: float | None, seed: int) -> bool:
+        attacker_player = Player("Attacker")
+        attacker_player.add_pokemon("ヒトカゲ", move_names=[move_name])
+        defender_player = Player("Defender")
+        defender_player.add_pokemon("フシギダネ")
+        battle = Battle(
+            attacker_player, defender_player, seed=seed,
+            accuracy_fix_threshold=0, effect_chance_threshold=effect_chance_threshold,
+        )
+        battle.start()
+        defender = battle.get_active(defender_player)
+        battle.step()
+        return defender.has_ailment("やけど")
+
+    seeds = range(1, 21)
+    # effect_chance_threshold未指定（既定）では、やけどの発動有無はseedごとに変わる（確率10%）
+    n_burned_default = sum(burned_after_one_hit(None, s) for s in seeds)
+    # 0.11未満の確率を0%にする指定なので、10%（0.1）のやけど付与は常に抑制される
+    n_burned_suppressed = sum(burned_after_one_hit(0.11, s) for s in seeds)
+    print(
+        f"{move_name}のやけど付与（{len(seeds)}試行）: "
+        f"既定 {n_burned_default}回発動 / effect_chance_threshold=0.11指定時 {n_burned_suppressed}回発動"
+    )
+
+
 def main() -> None:
     show_weather_effect()
     print("-" * 50)
     show_terrain_effect()
     print("-" * 50)
     show_ailment_via_actual_move()
+    print("-" * 50)
+    show_volatile_via_set_volatile()
     show_ability_and_item_logs()
+    print("-" * 50)
+    show_effect_chance_threshold()
 
     # 試してみよう: すなあらしを別の天候（あめ・にほんばれ・ゆき）に、
     # エレキフィールドを別の地形に変えると、対象タイプ・威力補正がどう変わるか比較できる
