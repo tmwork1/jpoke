@@ -147,7 +147,7 @@ def _apply_contact_counter_ailment(battle: Battle,
         and battle.random.random() < chance
     ):
         battle.ailment_manager.apply(
-            ctx.attacker, ailment, source=ctx.defender, ctx=ctx,
+            ctx.attacker, ailment, source=ctx.defender,
         )
         _announce_ability_triggered(battle, ctx.defender)
     return HandlerReturn(value=value)
@@ -670,7 +670,7 @@ def うのミサイル_spit_out_prey(battle: Battle, ctx: AttackContext, value: 
     if form == CRAMORANT_GULPING:
         battle.modify_stats(ctx.attacker, {"def": -1}, source=mon)
     else:
-        battle.ailment_manager.apply(ctx.attacker, "まひ", source=mon, ctx=ctx)
+        battle.ailment_manager.apply(ctx.attacker, "まひ", source=mon)
 
     return HandlerReturn(value=value)
 
@@ -1486,7 +1486,7 @@ def しょうりのほし_modify_accuracy(battle: Battle, ctx: AttackContext, va
 
 
 def しろのいななき_boost(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """じしんかじょう特性: 攻撃技で相手を倒すと攻撃が1段階上がる。"""
+    """しろのいななき/じしんかじょう特性（同一効果の別名特性）: 攻撃技で相手を倒すと攻撃が1段階上がる。"""
     return _boost_on_move_ko(battle, ctx, value, stats={"atk": +1})
 
 
@@ -1527,7 +1527,7 @@ def シンクロ_return_ailment(battle: Battle, ctx: EventContext, value: Any) -
     if foe is None:
         return HandlerReturn(value=value)
     _announce_ability_triggered(battle, ctx.target)
-    battle.ailment_manager.apply(foe, ailment_name, source=ctx.target, ctx=ctx)
+    battle.ailment_manager.apply(foe, ailment_name, source=ctx.target)
     return HandlerReturn(value=value)
 
 
@@ -2095,7 +2095,7 @@ def でんきにかえる_charge_on_hit(battle: Battle, ctx: AttackContext, valu
 
 
 def とうそうしん_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """とうそうしん特性: 同性の相手にこうげく/とくこうが1.25倍、異性には0.75倍になる。"""
+    """とうそうしん特性: 同性の相手にこうげき/とくこうが1.25倍、異性には0.75倍になる。"""
     a_gender = ctx.attacker.gender
     d_gender = ctx.defender.gender if ctx.defender is not None else ""
     if not a_gender or not d_gender:
@@ -2135,7 +2135,7 @@ def とびだすハバネロ_burn_attacker(battle: Battle, ctx: AttackContext, v
     attacker = ctx.attacker
     if attacker is None:
         return HandlerReturn(value=value)
-    battle.ailment_manager.apply(attacker, "やけど", source=ctx.defender, ctx=ctx)
+    battle.ailment_manager.apply(attacker, "やけど", source=ctx.defender)
     return HandlerReturn(value=value)
 
 
@@ -2210,7 +2210,6 @@ def どくしゅ_maybe_poison_on_contact(battle: Battle, ctx: AttackContext, val
         ctx.defender,
         "どく",
         source=ctx.attacker,
-        ctx=ctx,
     )
     return HandlerReturn(value=value)
 
@@ -2219,7 +2218,7 @@ def どくのくさり_maybe_badly_poison(battle: Battle, ctx: AttackContext, va
     """どくのくさり特性: 攻撃を命中させたとき30%の確率で相手をもうどくにする。"""
     if battle.random.random() < battle.resolve_secondary_chance(ctx, 0.3):
         battle.ailment_manager.apply(
-            ctx.defender, "もうどく", source=ctx.attacker, ctx=ctx,
+            ctx.defender, "もうどく", source=ctx.attacker,
         )
     return HandlerReturn(value=value)
 
@@ -2960,7 +2959,7 @@ def ほうし_maybe_inflict_ailment_on_contact(battle: Battle, ctx: AttackContex
     ailment: AilmentName | None = next((a for threshold, a in _EFFECT_SPORE_AILMENTS if r < threshold), None)
     if ailment is None:
         return HandlerReturn(value=value)
-    battle.ailment_manager.apply(ctx.attacker, ailment, source=ctx.defender, ctx=ctx)
+    battle.ailment_manager.apply(ctx.attacker, ailment, source=ctx.defender)
     return HandlerReturn(value=value)
 
 

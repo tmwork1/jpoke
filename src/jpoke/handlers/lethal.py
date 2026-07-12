@@ -570,9 +570,10 @@ def バインド_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) 
     return _damage(hp_dist, damage)
 
 
-def ばかぢから_lower_atk(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
-    """ばかぢから: 命中後、攻撃側のこうげきを1段階下げる。"""
+def ばかぢから_lower_atk_def(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """ばかぢから: 命中後、攻撃側のこうげき・ぼうぎょを1段階下げる。"""
     ctx.attacker.boosts["atk"] = clamp_stats(ctx.attacker.boosts["atk"] - 1)
+    ctx.attacker.boosts["def"] = clamp_stats(ctx.attacker.boosts["def"] - 1)
     return hp_dist
 
 

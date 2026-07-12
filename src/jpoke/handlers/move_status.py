@@ -1757,7 +1757,7 @@ def どくのいと_apply(battle: Battle, ctx: AttackContext, value: Any) -> Han
     """
     assert ctx.defender is not None
     stat_changed = bool(battle.modify_stats(ctx.defender, {"spe": -2}, source=ctx.attacker))
-    ailment_applied = battle.ailment_manager.apply(ctx.defender, "どく", source=ctx.attacker, ctx=ctx)
+    ailment_applied = battle.ailment_manager.apply(ctx.defender, "どく", source=ctx.attacker)
     return HandlerReturn(value=stat_changed or ailment_applied)
 
 

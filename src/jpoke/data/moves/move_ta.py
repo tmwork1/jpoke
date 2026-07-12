@@ -266,7 +266,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.ダイヤストーム_sharply_boost_defender_B,
+                ha.ダイヤストーム_sharply_boost_attacker_B,
             ),
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
                 ha.reduce_damage_in_double_battle,

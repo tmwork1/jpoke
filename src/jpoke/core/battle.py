@@ -752,8 +752,9 @@ class Battle:
     def set_ailment(self, target: Pokemon, name: AilmentName, count: int | None = None) -> bool:
         """状態異常を直接付与する（シナリオ構築・ダメージ計算検証用）。
 
-        既存の状態異常があれば上書きする。特性・タイプ等による無効化判定は行わない
-        （examples/スクリプトから素直に状態を作るための薄いラッパーのため）。
+        既存の状態異常があれば上書きするが、タイプ免疫（例: ほのおタイプへの「やけど」）や
+        ON_BEFORE_APPLY_AILMENT（不眠等の特性による無効化）の判定は通常付与と同様に行う。
+        これらの判定によって付与が阻まれた場合は戻り値がFalseになり、状態異常は付与されない。
 
         Args:
             target: 対象のポケモン

@@ -1085,6 +1085,17 @@ def test_ばかぢから_こうげきダウン():
     assert results[1].min_damage < results[0].min_damage
 
 
+def test_ばかぢから_こうげきとぼうぎょが両方ダウン():
+    """ばかぢから: 命中後にこうげき・ぼうぎょの両方が1段階ずつ下がる（リーサル計算側）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("ばかぢから"), max_attack=1)
+    assert results[0].attacker.boosts["atk"] == -1
+    assert results[0].attacker.boosts["def"] == -1
+
+
 def test_ばけのかわ_2発目は通常ダメージ():
     """ばけのかわ: 1発目後はability_enabledがFalseになり、2発目以降は通常ダメージ"""
     with_ability = t.start_battle(
