@@ -1469,6 +1469,7 @@ def test_とびだすハバネロ_被弾するとやけどにする(move_name: s
     ]
 )
 def test_とれないにおい_接触した相手の特性を上書き(move_name: str, result: bool):
+    """とれないにおい: 直接攻撃でダメージを受けたとき攻撃者の特性をとれないにおいにする（非接触技では発動しない）。"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=[move_name])],
         team1=[Pokemon("カビゴン", ability_name="とれないにおい")],
@@ -1478,6 +1479,18 @@ def test_とれないにおい_接触した相手の特性を上書き(move_name
     assert attacker.ability.name != "とれないにおい"
     t.run_move(battle, 0)
     assert (attacker.ability.name == "とれないにおい") is result
+
+
+def test_とれないにおい_uncopyableな特性には発動しない():
+    """とれないにおい: 上書きできない特性（uncopyable）の攻撃者には発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ARシステム", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン", ability_name="とれないにおい")],
+        accuracy=100,
+    )
+    attacker, _ = battle.actives
+    t.run_move(battle, 0)
+    assert attacker.ability.name == "ARシステム"
 
 
 def test_トレース_uncopyable特性だと不発():
