@@ -73,7 +73,7 @@ class TreeSearchPlayer(Player):
             return float("-inf")
 
         def hp_ratio(target: Player) -> float:
-            team = battle.player_states[target].team
+            team = battle.get_team(target)
             return sum(mon.hp / mon.max_hp for mon in team if not mon.fainted)
 
         return hp_ratio(self) - hp_ratio(opponent)
