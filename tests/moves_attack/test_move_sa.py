@@ -2591,6 +2591,29 @@ def test_そらをとぶ_2ターンで攻撃する():
     assert "そらをとぶ" not in attacker.volatiles
 
 
+def test_そらをとぶ_2ターン目にわるあがきへすり替わらない():
+    """そらをとぶ: 1ターン目で付与される揮発状態のmove_nameが「わるあがき」に
+    すり替わらず、そらをとぶ自身が設定されること（charge_into_volatileが
+    move_nameを正しく揮発状態に設定していることの回帰確認）。
+    Command.FORCEDで解決される2ターン目の技もそらをとぶであることを確認する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["そらをとぶ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+
+    # 1ターン目: 揮発状態付与（charge_into_volatileが呼ばれる）
+    t.run_move(battle, 0)
+    assert attacker.volatiles["そらをとぶ"].move_name == "そらをとぶ"
+
+    # 2ターン目に強制実行される技を実際のコマンド解決経路で確認する
+    with battle.phase_context("action"):
+        assert battle.get_available_commands(battle.players[0]) == [Command.FORCED]
+    move = battle.command_manager.resolve_move_from_command(battle.players[0], Command.FORCED)
+    assert move.name == "そらをとぶ"
+
+
 def test_そらをとぶ_かみなりは命中する():
     """そらをとぶ: そらをとぶ状態でもかみなりは命中する（許可リスト技）。"""
     battle = t.start_battle(

@@ -3,6 +3,7 @@
 import pytest
 from jpoke import Pokemon
 from jpoke.data.move import MOVES
+from jpoke.enums import Command
 from .. import test_utils as t
 
 
@@ -537,6 +538,28 @@ def test_あなをほる_1ターン目は地中に潜りHPが変わらない():
     t.run_move(battle, 0)
     assert attacker.has_volatile("あなをほる")
     assert defender.hp == defender_hp_before
+
+
+def test_あなをほる_2ターン目にわるあがきへすり替わらない():
+    """あなをほる: 1ターン目で付与される揮発状態のmove_nameが「わるあがき」に
+    すり替わらず、あなをほる自身が設定されること（charge_into_volatileが
+    move_nameを正しく揮発状態に設定していることの回帰確認）。
+    Command.FORCEDで解決される2ターン目の技もあなをほるであることを確認する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ディグダ", move_names=["あなをほる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    # 1ターン目: チャージ（charge_into_volatileが呼ばれる）
+    t.run_move(battle, 0)
+    assert attacker.volatiles["あなをほる"].move_name == "あなをほる"
+
+    # 2ターン目に強制実行される技を実際のコマンド解決経路で確認する
+    with battle.phase_context("action"):
+        assert battle.get_available_commands(battle.players[0]) == [Command.FORCED]
+    move = battle.command_manager.resolve_move_from_command(battle.players[0], Command.FORCED)
+    assert move.name == "あなをほる"
 
 
 def test_あなをほる_2ターン目に攻撃して揮発状態が解除される():

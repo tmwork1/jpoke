@@ -187,6 +187,11 @@ def charge_into_volatile(battle: Battle,
     """
     attacker = ctx.attacker
     if not attacker.has_volatile(volatile):
-        battle.volatile_manager.apply(attacker, volatile, count=1, source=attacker)
+        # move_name には実際に使用した技名（ctx.move.name）を渡す。
+        # とびはねる等、揮発状態名（volatile）と使用技名が異なるケースがあるため、
+        # 2ターン目に強制実行すべき技名は volatile 引数ではなく ctx.move.name を使う。
+        battle.volatile_manager.apply(
+            attacker, volatile, count=1, source=attacker, move_name=ctx.move.name
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
