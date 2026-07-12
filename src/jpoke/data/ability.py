@@ -2991,7 +2991,14 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             )
         }
     ),
-    "ほのおのたてがみ": AbilityData(),
+    "ほのおのたてがみ": AbilityData(
+        handlers={
+            Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
+                h.ほのおのたてがみ_modify_atk,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "ほろびのボディ": AbilityData(
         handlers={
             Event.ON_DAMAGE_HIT: h.AbilityHandler(

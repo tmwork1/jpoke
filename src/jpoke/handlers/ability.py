@@ -3814,6 +3814,11 @@ def ほのおのからだ_maybe_burn_attacker(battle: Battle, ctx: AttackContext
     return _apply_contact_counter_ailment(battle, ctx, value, ailment="やけど", chance=0.3)
 
 
+def ほのおのたてがみ_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """ほのおのたてがみ特性: ほのお技の攻撃補正を1.5倍にする。"""
+    return _modify_by_move_condition(ctx.move, value, modifier=6144, move_type="ほのお")
+
+
 def ほろびのボディ_apply_perish_song_on_contact(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ほろびのボディ特性: 直接攻撃を受けると自分と攻撃者の双方にほろびのうたを付与する。"""
     attacker = ctx.attacker
