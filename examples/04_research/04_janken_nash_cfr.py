@@ -125,9 +125,19 @@ def add_vec(a: tuple[float, float, float], b: tuple[float, float, float]) -> tup
     return (a[0] + b[0], a[1] + b[1], a[2] + b[2])
 
 
-def build_pokemon() -> Pokemon:
-    """「対戦相手の構成」から対戦用ポケモンを1体構築する。"""
-    mon = Pokemon(SPECIES_NAME, ability_name=ABILITY_NAME, nature=NATURE, move_names=MOVES)
+def build_pokemon_kwargs() -> dict:
+    """「対戦相手の構成」から `Player.add_pokemon()` に渡すkwargsを構築する。"""
+    return dict(name=SPECIES_NAME, ability_name=ABILITY_NAME, nature=NATURE, move_names=MOVES)
+
+
+def add_team_pokemon(player: Player) -> Pokemon:
+    """`player` のチームに「対戦相手の構成」のポケモンを1体追加する。
+
+    `Player.add_pokemon()` が jpoke の正規の追加ルート（`team.append(Pokemon(...))`
+    を使わない）。努力値・個体値は `add_pokemon()` の引数に無いため、返された
+    インスタンスに対して追加で設定する。
+    """
+    mon = player.add_pokemon(**build_pokemon_kwargs())
     mon.set_evs(EVS)
     mon.set_ivs(IVS, hp_policy="reset")  # 新規構築なので満タンにする
     return mon
@@ -204,8 +214,8 @@ def play_training_episode(regrets: dict[tuple[int, int], list[float]],
     """
     p0 = CFRMovePlayer(regrets, username="p0")
     p1 = CFRMovePlayer(regrets, username="p1")
-    p0.team.append(build_pokemon())
-    p1.team.append(build_pokemon())
+    add_team_pokemon(p0)
+    add_team_pokemon(p1)
 
     # accuracy_fix_threshold=0 で命中率のブレを消し、技選択の駆け引きだけを見る
     battle = Battle(p0, p1, seed=seed, accuracy_fix_threshold=0)
