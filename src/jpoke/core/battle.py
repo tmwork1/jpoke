@@ -358,6 +358,14 @@ class Battle:
 
         Returns:
             Battle インスタンスのコピー
+
+        Warning:
+            内部実装（observation_builder.build()）がモジュールグローバルな
+            辞書を呼び出しのたびに再代入・書き込み・読み出しするため、
+            スレッドセーフではない。自己対戦データ収集などで並列化する場合は
+            ProcessPoolExecutor 等のプロセス並列を使うこと。
+            ThreadPoolExecutor 等で複数スレッドから同時に build_observation()
+            を呼び出すと、内部状態が競合して壊れる可能性がある。
         """
         if self.is_observation():
             return self.copy()
