@@ -74,6 +74,14 @@ python -m pytest tests/ -q --cov=jpoke --cov-report=term
 `.pre-commit-config.yaml` を使うと、これらのチェック（の一部）をコミット前に
 ローカルで自動実行できます（`pip install pre-commit && pre-commit install`）。
 
+## バージョン管理
+
+`pyproject.toml` の `version` と `src/jpoke/__init__.py` の `__version__` は
+（`importlib.metadata` の import コストを避けるため）二重管理になっています。
+`pyproject.toml` の `version` を上げる際は `src/jpoke/__init__.py` の
+`__version__` も同じ値に **手動で** 揃えてください。両者の不一致は
+`tests/test_version.py` が検知します。
+
 ## アーキテクチャとハンドラ追加の流れ
 
 jpoke はイベント駆動アーキテクチャを採用しています。バトルロジックが `Event` を
