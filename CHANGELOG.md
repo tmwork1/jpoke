@@ -44,6 +44,13 @@
 - `Battle.print_logs(turn)` / `Battle.get_log_lines(turn)` が `turn="all"` を
   受け付けるようになった。1ターン目から現在ターンまでの全ログを一括で
   取得・出力できる（`turn=None` で現在ターンのみ、という既存の挙動は変更なし）
+- **破壊的変更**: `examples/` をユースケース別ディレクトリ構造に再編した。
+  従来のフラットな連番（`examples/01_quickstart.py` 〜
+  `examples/09_janken_nash_cfr.py`）を廃止し、`examples/01_basics/`,
+  `examples/02_ai/`, `examples/03_damage_calc/`, `examples/04_research/` の
+  ディレクトリに分割、各ディレクトリ内で独立して連番を振り直した
+  （例: `examples/01_quickstart.py` → `examples/01_basics/01_quickstart.py`）。
+  独立した作業が同じ番号を取り合う衝突事故を防ぐための変更
 
 ### Fixed
 

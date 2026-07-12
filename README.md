@@ -58,7 +58,7 @@ battle.print_logs()                 # このターンのログを表示
 
 戦術研究・AI開発・ダメージ計算ツール開発それぞれのユースケース別に動かして学べるサンプルを
 [examples/](https://github.com/tmwork1/jpoke/blob/main/examples/README.md) に用意している。
-`pip install jpoke` だけで `python examples/01_quickstart.py` のように実行できる。
+`pip install jpoke` だけで `python examples/01_basics/01_quickstart.py` のように実行できる。
 
 ## アーキテクチャ
 
