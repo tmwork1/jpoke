@@ -65,6 +65,13 @@
   ディレクトリに分割、各ディレクトリ内で独立して連番を振り直した
   （例: `examples/01_quickstart.py` → `examples/01_basics/01_quickstart.py`）。
   独立した作業が同じ番号を取り合う衝突事故を防ぐための変更
+- **破壊的変更**: `Pokemon.modify_hp()` を `Pokemon._modify_hp_raw()` にリネームした。
+  従来のdocstringで「内部用。外部からは`battle.modify_hp()`を使用」と警告して
+  いたにもかかわらず、アンダースコアなしのメソッド名のままトップレベル
+  `from jpoke import Pokemon` から到達可能で誤って直接呼び出しやすい状態
+  だった。直接呼ぶとHPのクランプのみが行われ、`ON_HP_CHANGE`系ハンドラの
+  発火・瀕死判定・ログ記録がスキップされる罠になっていたため、命名で
+  内部専用であることを明示した。外部コードは常に `Battle.modify_hp()` を使うこと
 
 ### Fixed
 
