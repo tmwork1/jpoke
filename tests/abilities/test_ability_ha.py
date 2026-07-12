@@ -2121,6 +2121,65 @@ def test_ふとうのけん_Aが既に最大でも特性は消費される():
     assert mon.boosts["atk"] == 0
 
 
+def test_ふみん_すでにねむり状態のポケモンを場に出すと即座に回復する():
+    """ふみん: 元の特性がふみんのポケモンが、特性を書き換えられてねむり状態になった後、
+    交代でベンチに戻ると特性はふみんに戻る（ねむりは残る）。この状態のポケモンを再び
+    場に出すと、場に出た直後に特性の効果でねむりが治る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["スキルスワップ"])],
+        team1=[
+            Pokemon("カビゴン", ability_name="ふみん"),
+            Pokemon("ラッキー", ability_name="しぜんかいふく"),
+        ],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    # スキルスワップで特性を入れ替え、ふみんの効果を持たない状態にする
+    t.run_move(battle, 0)
+    assert defender.ability.name == "せいでんき"
+    assert defender.base_ability == "ふみん"
+
+    # 特性がふみんでない間にねむり状態にする
+    assert battle.ailment_manager.apply(defender, "ねむり", count=3)
+
+    # ベンチに戻ると特性は元のふみんに戻るが、ねむりはそのまま残る
+    t.run_switch(battle, 1, 1)
+    bench = battle.get_team(battle.players[1])[0]
+    assert bench.ability.name == "ふみん"
+    assert bench.ailment.name == "ねむり"
+
+    # 再び場に出すと、場に出た直後にふみんの効果でねむりが治る
+    t.run_switch(battle, 1, 0)
+    active = battle.actives[1]
+    assert active.ability.name == "ふみん"
+    assert not active.ailment.is_active
+
+
+def test_ふみん_どくびしと同時に発生した場合はどくびしの毒付与が不発してから回復する():
+    """ふみん: すでにねむり状態のふみんのポケモンを、どくびしが設置されたサイドに
+    出した場合、どくびしのどく付与判定はねむり状態により不発してから、ふみんの
+    効果でねむりが治る（どくびしの効果は防がれる）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["スキルスワップ"])],
+        team1=[
+            Pokemon("カビゴン", ability_name="ふみん"),
+            Pokemon("ラッキー", ability_name="しぜんかいふく"),
+        ],
+        accuracy=100,
+        side1={"どくびし": 2},
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert battle.ailment_manager.apply(defender, "ねむり", count=3)
+
+    t.run_switch(battle, 1, 1)
+    t.run_switch(battle, 1, 0)
+    active = battle.actives[1]
+
+    # ねむりは治り、どくびしのどくも付与されない
+    assert not active.ailment.is_active
+
+
 def test_ふゆう_かたやぶりでじめん技が通る():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ふゆう")],

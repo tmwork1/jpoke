@@ -3603,6 +3603,11 @@ def ふみん_cure_sleep_on_enable(battle: Battle, ctx: EventContext, value: Any
     なやみのタネ・なかまづくり等で特性がふみんに書き換わった場合や、
     かがくへんかガス・かたやぶりの効果が終わって特性が再び有効になった場合、
     メガシンカで特性がふみんに変わった場合などに発動する。
+    ON_SWITCH_INにも同じ関数を登録しており、すでにねむり状態のふみんの
+    ポケモンを場に出した場合にも即座に回復する（docs/spec/turn.md の
+    ON_SWITCH_IN priority=100「ふみん（特性）による状態異常回復」に対応。
+    どくびしのどく付与判定も同じpriority=100だが、どくびしの方が先に
+    ハンドラ登録されているため実行順は保たれる）。
     """
     mon = ctx.source
     if mon is None:
