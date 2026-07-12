@@ -27,6 +27,20 @@ class TurnController:
     def __init__(self, battle: Battle):
         self.battle = battle
         self.action_order: list[int] = []
+        # judge_winner() で勝者が確定した際、GAME_WON/GAME_LOST ログの記録を
+        # 遅延させる場合に一時保持する (winner, loser) のペア。
+        # flush_winner_log() で実際にログへ記録する。
+        self._pending_winner_log: tuple[Player, Player] | None = None
+        # 勝敗ログの自動フラッシュを抑制する区間の深さ（ネスト可能なカウンタ）。
+        # begin_deferred_winner_log() 〜 end_deferred_winner_log() の間は、
+        # この区間の内側で発生した他の modify_hp 呼び出し（技のダメージによる
+        # 撃破に付随するさめはだ等の反撃ダメージ・状態異常付与など）が
+        # flush_winner_log() を呼んでも、区間を開いた呼び出し元が明示的に
+        # end_deferred_winner_log() を呼ぶまでログ記録を遅延させる。
+        # 区間は Python の呼び出しスタック上ではネストしない（対象の modify_hp
+        # 呼び出しは既に return しており、後続のイベント発火中に別の
+        # modify_hp 呼び出しが行われる）ため、真偽値ではなくカウンタで管理する。
+        self._deferred_flush_depth = 0
 
     def __deepcopy__(self, memo):
         cls = self.__class__
@@ -54,6 +68,12 @@ class TurnController:
     def judge_winner(self) -> Player | None:
         """勝者を判定して返す。
 
+        勝者の確定（`self.battle.winner` への設定）はこの呼び出しの中で即座に行うが、
+        GAME_WON/GAME_LOST ログの記録は `flush_winner_log()` が呼ばれるまで保留する
+        場合がある（`begin_deferred_winner_log()` / `end_deferred_winner_log()` を
+        参照）。瀕死の同時発生（例: みちづれによる相打ち）で勝者判定そのものが
+        呼び出し順に依存するケースがあるため、判定タイミング自体は変更しない。
+
         Returns:
             勝者のPlayerインスタンス、勝負がついていない場合はNone
         """
@@ -65,12 +85,51 @@ class TurnController:
             loser_idx = TOD_scores.index(0)
             loser = self.battle.players[loser_idx]
             winner = self.battle.players[loser_idx - 1]
-            self.battle.add_event_log(winner, LogCode.GAME_WON)
-            self.battle.add_event_log(loser, LogCode.GAME_LOST)
             self.battle.winner = winner
+            self._pending_winner_log = (winner, loser)
             return winner
 
         return None
+
+    def flush_winner_log(self) -> None:
+        """保留中のGAME_WON/GAME_LOSTログがあれば記録する。
+
+        `begin_deferred_winner_log()` 〜 `end_deferred_winner_log()` の抑制区間
+        （デフォルトでは開かれていない）の内側では何もしない。区間の内側で
+        この関数を呼んでも記録は行われず、区間が閉じられた時点
+        （`end_deferred_winner_log()`）で改めて評価される。保留がなければ
+        （抑制区間の外でも）何もしない。
+        """
+        if self._deferred_flush_depth > 0:
+            return
+        if self._pending_winner_log is None:
+            return
+        winner, loser = self._pending_winner_log
+        self.battle.add_event_log(winner, LogCode.GAME_WON)
+        self.battle.add_event_log(loser, LogCode.GAME_LOST)
+        self._pending_winner_log = None
+
+    def begin_deferred_winner_log(self) -> None:
+        """勝敗ログの自動フラッシュを抑制する区間を開始する（ネスト可）。
+
+        技の1ヒット処理（move_executor._execute_hit）のように、1回の
+        HP変化とそれに付随する後続イベント（ON_HIT・ON_DAMAGE_HIT・ON_MOVE_KO
+        等）をひとまとまりとして扱いたい場合に、その処理の先頭で呼ぶ。
+        区間の内側で発生した他の modify_hp 呼び出し（撃破に付随する
+        さめはだ等の反撃ダメージ・状態異常付与など）による自動フラッシュは
+        抑制され、対応する `end_deferred_winner_log()` が呼ばれるまで
+        GAME_WON/GAME_LOST ログの記録が遅延する。
+        """
+        self._deferred_flush_depth += 1
+
+    def end_deferred_winner_log(self) -> None:
+        """`begin_deferred_winner_log()` に対応する抑制区間を終了する。
+
+        区間の深さが0に戻った時点で、保留中のログがあれば記録する。
+        """
+        if self._deferred_flush_depth > 0:
+            self._deferred_flush_depth -= 1
+        self.flush_winner_log()
 
     def start_battle(self):
         """バトル開始処理を実行する。

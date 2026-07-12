@@ -61,6 +61,20 @@ class StatusManager:
 
         Returns:
             実際に変化したHP量（正=回復、負=ダメージ）
+
+        Note:
+            瀕死によりGAME_WON/GAME_LOSTログが確定する場合、勝者判定自体
+            （`battle.judge_winner()`）はここで即座に行うが、ログの記録
+            （`battle.flush_winner_log()`）は `battle.begin_deferred_winner_log()`
+            〜 `battle.end_deferred_winner_log()` の抑制区間の内側であれば
+            遅延する。技のダメージ処理（move_executor._execute_hit）のように、
+            この HP 変化と同一の「1ヒット」に属する後続イベント（ON_HIT・
+            ON_DAMAGE_HIT・ON_MOVE_KO 等）が呼び出し元でこの後に控えている
+            場合、それらの効果（撃破時特性・自己ランク変化・さめはだ等の
+            反撃ダメージなどのログ）が勝敗確定ログより後に記録されてしまう
+            不整合を避けるため、呼び出し元がその一連の処理全体を
+            `begin_deferred_winner_log()` / `end_deferred_winner_log()` で
+            囲む必要がある。
         """
         if v == 0:
             return 0
@@ -91,7 +105,14 @@ class StatusManager:
 
         if v < 0:
             if target.fainted:
+                # 勝者判定自体はここで即座に行う（=どちらが先にひんしになったかで
+                # 決まる）。ただしログ記録（GAME_WON/GAME_LOST）は、この HP 変化に
+                # 伴う効果（オボンのみ・状態異常付与などの ON_HP_CHANGED ハンドラ）
+                # よりも後に行いたいため、下記 flush_winner_log() 側に委ねる。
+                # ハンドラ側は battle.winner の値を参照しないため、ログ記録タイミング
+                # の変更が既存ハンドラの挙動に影響することはない。
                 self.battle.judge_winner()
+
                 # かたきうち用: 味方がひんしになったターンを記録する
                 player = self.battle.get_player(target)
                 self.battle.player_states[player].ally_fainted_turn = self.battle.turn
@@ -107,6 +128,8 @@ class StatusManager:
                 target.hits_taken += 1
 
             self._events.emit(Event.ON_HP_CHANGED, ctx, -v)
+
+            self.battle.flush_winner_log()
 
         return v
 
