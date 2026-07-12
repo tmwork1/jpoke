@@ -1019,6 +1019,39 @@ def test_メロメロボディ_接触攻撃30パーセントでメロメロ():
     assert battle.actives[1].has_volatile("メロメロ")
 
 
+def test_メロメロボディ_かたやぶりの技に対しても発動する():
+    """メロメロボディ: かたやぶりの効果がある技に対しても発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="メロメロボディ", gender="female")],
+        team1=[Pokemon("カビゴン", ability_name="かたやぶり", move_names=["たいあたり"], gender="male")],
+    )
+    battle.random.random = lambda: 0.29
+    t.run_move(battle, 1)
+    assert battle.actives[1].has_volatile("メロメロ")
+
+
+def test_メロメロボディ_性別不明には発動しない():
+    """メロメロボディ: 相手が性別不明の場合は発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="メロメロボディ", gender="female")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"], gender="")],
+    )
+    battle.random.random = lambda: 0.0
+    t.run_move(battle, 1)
+    assert not battle.actives[1].has_volatile("メロメロ")
+
+
+def test_メロメロボディ_同性には発動しない():
+    """メロメロボディ: 相手が同性の場合は発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="メロメロボディ", gender="female")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"], gender="female")],
+    )
+    battle.random.random = lambda: 0.0
+    t.run_move(battle, 1)
+    assert not battle.actives[1].has_volatile("メロメロ")
+
+
 def test_ものひろい_どろぼうで奪われたアイテムは拾わない():
     """ものひろい: take_item（どろぼう相当）で奪われた道具は場に存在し続けるため拾わない。"""
     battle = t.start_battle(

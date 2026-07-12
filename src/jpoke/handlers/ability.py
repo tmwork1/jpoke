@@ -4250,11 +4250,23 @@ def メガランチャー_modify_power(battle: Battle, ctx: AttackContext, value
 
 
 def メロメロボディ_maybe_infatuate_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """メロメロボディ特性: 直接攻撃を受けたとき30%の確率で攻撃者をメロメロにする。"""
-    if battle.query.is_contact_reaction(ctx) and battle.random.random() < 0.3:
+    """メロメロボディ特性: 直接攻撃を受けたとき30%の確率で攻撃者をメロメロにする。
+
+    相手か自分のどちらかが性別不明、または相手と同性の場合は発動しない。
+    """
+    attacker = ctx.attacker
+    defender = ctx.defender
+    if (
+        defender.gender != ""
+        and attacker.gender != ""
+        and attacker.gender != defender.gender
+        and battle.query.is_contact_reaction(ctx)
+        and battle.random.random() < 0.3
+    ):
         battle.volatile_manager.apply(
-            ctx.attacker, "メロメロ", source=ctx.defender,
+            attacker, "メロメロ", source=defender,
         )
+        _announce_ability_triggered(battle, defender)
     return HandlerReturn(value=value)
 
 
