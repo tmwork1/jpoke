@@ -3728,15 +3728,23 @@ def ヘドロえき_reverse_drain(battle: Battle, ctx: EventContext, value: int)
 
 
 def へんげんじざい_change_type(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
-    """へんげんじざい・リベロ: 技実行前に技タイプへ自身のタイプを変更する。"""
+    """へんげんじざい・リベロ: 技実行前に技タイプへ自身のタイプを変更する。
+
+    わるあがきなどタイプを持たない技（type=""）を使用したときは発動しない。
+    もりののろい/ハロウィンによる追加タイプ（added_types）を持っている場合は
+    複数タイプ扱いになるため発動条件を満たすが、発動時にはその追加タイプも
+    リセットして技タイプの単タイプにする。
+    """
     move_type = ctx.move.type
 
     if (
-        not ctx.attacker.ability.activated_since_switch_in
+        move_type
+        and not ctx.attacker.ability.activated_since_switch_in
         and not ctx.attacker.is_terastallized
         and [move_type] != ctx.attacker.types
     ):
         ctx.attacker.ability_override_type = move_type
+        ctx.attacker.added_types = []
         ctx.attacker.ability.activated_since_switch_in = True
         _announce_ability_triggered(battle, ctx.attacker)
     return HandlerReturn(value=value)

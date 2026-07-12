@@ -927,10 +927,10 @@ MOVES_TA: dict[MoveName, MoveData] = {
         accuracy=100,
         flags={"contact"},
         handlers={
-            Event.ON_TRY_MOVE_1: h.MoveHandler(
+            Event.ON_TRY_ACTION: h.MoveHandler(
                 ha.でんこうそうげき_fail_if_no_electric_type,
                 subject_spec="attacker:self",
-                priority=10,
+                priority=15,
             ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.でんこうそうげき_remove_electric_type,

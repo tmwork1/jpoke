@@ -2589,6 +2589,136 @@ def test_へんげんじざい_同一滞在で1回のみ発動():
     assert attacker.types == ["ノーマル"]
 
 
+def test_へんげんじざい_単タイプで技タイプと一致する場合は発動しない():
+    """既に単タイプで使用技のタイプと一致している場合は特性が発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="へんげんじざい", move_names=["10まんボルト", "ひのこ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+
+    t.run_move(battle, 0, 0)
+    assert attacker.types == ["でんき"]
+    # 発動していないため、続けて別タイプの技を出すと発動する
+    t.run_move(battle, 0, 1)
+    assert attacker.types == ["ほのお"]
+
+
+def test_へんげんじざい_複合タイプの片方が技タイプと一致していても単タイプになる():
+    """複合タイプを持つ場合、片方が技タイプと一致していても、技タイプの単タイプに変化する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギバナ", ability_name="へんげんじざい", move_names=["はっぱカッター"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    assert attacker.types == ["くさ", "どく"]
+
+    t.run_move(battle, 0, 0)
+    assert attacker.types == ["くさ"]
+
+
+def test_へんげんじざい_変化技でも発動する():
+    """攻撃技だけでなく変化技を使用したときも発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="へんげんじざい", move_names=["おにび"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+
+    t.run_move(battle, 0, 0)
+    assert attacker.types == ["ほのお"]
+
+
+def test_へんげんじざい_テラスタル中は発動しない():
+    """テラスタル中はへんげんじざいが発動せず、テラスタイプが維持される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="へんげんじざい", move_names=["ひのこ"], tera_type="みず")],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    attacker.terastallize()
+
+    t.run_move(battle, 0, 0)
+    assert attacker.types == ["みず"]
+
+
+def test_へんげんじざい_かがくへんかガスの効果中は発動しない():
+    """かがくへんかガスで特性が無効化されている間は発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="へんげんじざい", move_names=["ひのこ"])],
+        team1=[Pokemon("ピカチュウ", ability_name="かがくへんかガス")],
+    )
+    attacker = battle.actives[0]
+
+    t.run_move(battle, 0, 0)
+    assert attacker.types == ["ノーマル"]
+
+
+def test_へんげんじざい_わるあがきでは発動しない():
+    """PP切れでわるあがきになった場合はタイプを持たないため発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="へんげんじざい", move_names=["ひのこ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    attacker.moves[0].pp = 0
+
+    t.run_move(battle, 0, 0)
+    assert attacker.types == ["ノーマル"]
+
+
+def test_へんげんじざい_ほのおタイプでないもえつきるは失敗し発動しない():
+    """もえつきるがほのおタイプ不足で失敗する場合、失敗判定がタイプ変化より先に行われるため発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="へんげんじざい", move_names=["もえつきる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+
+    t.run_move(battle, 0, 0)
+    assert battle.move_executor.action_success is False
+    assert attacker.types == ["ノーマル"]
+    assert defender.hp == hp_before
+
+
+def test_へんげんじざい_でんきタイプでないでんこうそうげきは失敗し発動しない():
+    """でんこうそうげきがでんきタイプ不足で失敗する場合、失敗判定がタイプ変化より先に行われるため発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="へんげんじざい", move_names=["でんこうそうげき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+
+    t.run_move(battle, 0, 0)
+    assert battle.move_executor.action_success is False
+    assert attacker.types == ["ノーマル"]
+    assert defender.hp == hp_before
+
+
+def test_へんげんじざい_もりののろいで追加されたタイプは発動時にリセットされる():
+    """もりののろいで追加されたタイプを持つ状態から発動すると、技タイプの単タイプになる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="へんげんじざい", move_names=["もりののろい", "ひのこ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+
+    t.run_move(battle, 0, 0)
+    assert attacker.types == ["くさ"]
+
+    # 既にへんげんじざいは発動済みのため、以降のタイプは変化しない
+    t.run_move(battle, 0, 1)
+    assert attacker.types == ["くさ"]
+
+
 def test_へんしょく_ちからずくの技を受けてもタイプ変化しない():
     """へんしょく: 特性ちからずくの効果が発動した技（secondary_effect フラグ持ち）を
     受けた場合はタイプが変化しない（docs/spec/abilities/へんしょく.md参照）。"""
