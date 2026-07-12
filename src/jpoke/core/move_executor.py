@@ -209,7 +209,7 @@ class MoveExecutor:
         Returns:
             bool: 急所に当たるかどうか
         """
-        if self.battle.option.critical_mode == "確定のみ":
+        if self.battle.option.critical_mode == "always":
             critical_rank = clamp_critic(ctx.move.crit_ratio)
             self.critical_rank = critical_rank  # デバッグ用に保存
             return self.battle.random.random() < CRIT_RATES[critical_rank]

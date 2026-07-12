@@ -152,7 +152,7 @@ def main() -> None:
     print(f"{move_name}の生ダメージロール（{len(raw_damages)}通り）: {raw_damages}")
     print(f"roll_damage()で乱数を1つ引いた結果: {battle.roll_damage(attacker, defender, move_name)}")
 
-    # Battle(..., damage_roll='最大', critical_mode='確定のみ') を指定すると、
+    # Battle(..., damage_roll='max', critical_mode='always') を指定すると、
     # ダメージ計算そのものを「常に最大乱数・急所レートは基礎値のみ」に固定できる。
     # calc_lethal と並ぶ、最大保証ダメージを一発で知りたいときの代替手段
     fixed_attacker_player = Player("FixedRollAttacker")
@@ -162,7 +162,7 @@ def main() -> None:
 
     fixed_battle = Battle(
         fixed_attacker_player, fixed_defender_player, seed=1,
-        damage_roll="最大", critical_mode="確定のみ",
+        damage_roll="max", critical_mode="always",
     )
     fixed_battle.start()
     fixed_attacker = fixed_battle.get_active(fixed_attacker_player)
@@ -170,7 +170,7 @@ def main() -> None:
     # 元のattackerと条件を揃えるため、同じこうげき努力値を振っておく
     fixed_attacker.set_evs([0, 32, 0, 0, 0, 0])
     print(
-        f"damage_roll='最大'指定時のダメージ: "
+        f"damage_roll='max'指定時のダメージ: "
         f"{fixed_battle.roll_damage(fixed_attacker, fixed_defender, move_name)}"
         f"（通常ロールの最大値 {max(raw_damages)} と一致）"
     )

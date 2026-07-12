@@ -75,8 +75,8 @@ class BattleOption:
     Attributes:
         mega_evolution: メガシンカを許可するか
         terastal: テラスタルを許可するか
-        critical_mode: 急所判定モード（"通常" / "確定のみ"）
-        damage_roll: ダメージ乱数モード（"通常" / "平均" / "最大" / "最小"）
+        critical_mode: 急所判定モード（"normal" / "always"）
+        damage_roll: ダメージ乱数モード（"normal" / "average" / "max" / "min"）
         accuracy_fix_threshold: この値以上の命中率を100%固定にする（Noneなら無効）
         effect_chance_threshold: この値未満の追加効果確率を0%（発生しない）にする（Noneなら無効）
         double_battle: ダブルバトル向けのダメージ計算補正
@@ -84,8 +84,8 @@ class BattleOption:
     """
     mega_evolution: bool = True
     terastal: bool = True
-    critical_mode: CriticalMode = "通常"
-    damage_roll: DamageRollMode = "通常"
+    critical_mode: CriticalMode = "normal"
+    damage_roll: DamageRollMode = "normal"
     accuracy_fix_threshold: int | None = None
     effect_chance_threshold: float | None = None
     double_battle: bool = False
@@ -133,8 +133,8 @@ class Battle:
                  seed: int | None = None,
                  mega_evolution: bool = True,
                  terastal: bool = True,
-                 critical_mode: CriticalMode = "通常",
-                 damage_roll: DamageRollMode = "通常",
+                 critical_mode: CriticalMode = "normal",
+                 damage_roll: DamageRollMode = "normal",
                  accuracy_fix_threshold: int | None = None,
                  effect_chance_threshold: float | None = None,
                  double_battle: bool = False) -> None:
@@ -150,8 +150,8 @@ class Battle:
                 同一プロセス内で短時間に複数の `Battle` を作る場合でも衝突しない）
             mega_evolution: メガシンカを許可するか（デフォルトTrue）
             terastal: テラスタルを許可するか（デフォルトTrue）
-            critical_mode: 急所判定モード（"通常" / "確定のみ"、デフォルト"通常"）
-            damage_roll: ダメージ乱数モード（"通常" / "平均" / "最大" / "最小"、デフォルト"通常"）
+            critical_mode: 急所判定モード（"normal" / "always"、デフォルト"normal"）
+            damage_roll: ダメージ乱数モード（"normal" / "average" / "max" / "min"、デフォルト"normal"）
             accuracy_fix_threshold: この値以上の命中率を100%固定にする（Noneなら無効）
             effect_chance_threshold: この値未満の追加効果確率を0%にする（Noneなら無効）
             double_battle: ダブルバトル向けのダメージ計算補正
@@ -807,11 +807,11 @@ class Battle:
         """
         damages = self.calc_damages(attacker, defender, move, critical)
         match self.option.damage_roll:
-            case "平均":
+            case "average":
                 return round_half_down(sum(damages) / len(damages))
-            case "最大":
+            case "max":
                 return max(damages)
-            case "最小":
+            case "min":
                 return min(damages)
             case _:
                 # random.choice() は getrandbits() 経由でPRNG内部状態に依存するため、
