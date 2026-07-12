@@ -110,6 +110,23 @@ def test_ゆきだま_こおり被弾でA上昇():
     assert not foe.has_item()
 
 
+def test_ゆきだま_マジシャンより先に発動して奪われない():
+    """ゆきだま: 特性マジシャンのこおり技を受けても、ゆきだまが先に発動して消費されるため奪われない
+    （攻撃側の素早さが防御側より高い場合でも、素早さに依存せずゆきだまが先に発動する）
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="マジシャン", move_names=["こなゆき"])],
+        team1=[Pokemon("カビゴン", item_name="ゆきだま")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.boosts["atk"] == 1
+    assert not foe.has_item()
+    assert not attacker.has_item()
+
+
 def test_ゆきだま_たんじゅんで2段階上昇():
     """ゆきだま: たんじゅん所持者はこうげきランクが2段階上がる"""
     battle = t.start_battle(
