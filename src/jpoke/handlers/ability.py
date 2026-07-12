@@ -2325,13 +2325,20 @@ def ダウンロード_raise_stat(battle: Battle, ctx: EventContext, value: Any)
 
 
 def だっぴ_cure_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """だっぴ特性: ターン終了時に30%で状態異常を回復する。"""
+    """だっぴ特性: ターン終了時に30%で状態異常を回復する。
+
+    この30%は技の追加効果確率ではなく特性自身の発動確率であり、りんぷん・
+    おんみつマント・ちからずく・てんのめぐみ等の影響を受けない（一次情報:
+    docs/spec/abilities/だっぴ.md にこれらとの相互作用の記載はない）ため、
+    ON_MODIFY_SECONDARY_CHANCE（attacker/defender前提のAttackContext用イベント）
+    を経由する resolve_secondary_chance は使わず battle.random.random() で
+    直接判定する。
+    """
     mon = ctx.source
     if not mon.ailment.is_active:
         return HandlerReturn(value=value)
 
-    chance = battle.resolve_secondary_chance(ctx, 0.3)
-    if chance < 1 and battle.random.random() >= chance:
+    if battle.random.random() >= 0.3:
         return HandlerReturn(value=value)
     result = HandlerReturn(value=battle.ailment_manager.remove(mon))
     if result.value:
