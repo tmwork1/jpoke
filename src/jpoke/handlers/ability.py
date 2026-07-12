@@ -3713,8 +3713,20 @@ def プレッシャー_announce(battle: Battle, ctx: EventContext, value: Any) -
     return HandlerReturn(value=value)
 
 
-def プレッシャー_extra_pp(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
-    """プレッシャー特性: こちらを対象にした技のPPを1多く消費させる。"""
+def プレッシャー_extra_pp(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """プレッシャー特性: こちらを対象にした技のPPを1多く消費させる。
+
+    自分を対象にする技（つるぎのまい等）は基本的にプレッシャーの影響を受けない。
+    ただし以下は例外:
+    - ふういん: 自分を対象にする技だが、相手のプレッシャーの影響を受ける。
+    - のろい: ゴーストタイプが使う"呪い"のときのみ影響を受け、
+      それ以外のタイプが使う"鈍い"は影響を受けない（どちらも target="foe"）。
+    """
+    move_name = ctx.move.name
+    if move_name == "のろい" and not ctx.attacker.has_type("ゴースト"):
+        return HandlerReturn(value=value)
+    if ctx.move.target not in ("foe", "foe_side", "field") and move_name != "ふういん":
+        return HandlerReturn(value=value)
     return HandlerReturn(value=value + 1)
 
 
