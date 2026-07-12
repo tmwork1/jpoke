@@ -1984,12 +1984,16 @@ def test_ふしょくガス_相手の持ち物を消失させる():
 
 
 def test_ふみつけ_ひるみが発動する():
-    """ふみつけ: 30%でひるみを付与する。"""
+    """ふみつけ: 30%でひるみを付与する。
+
+    追加効果は相手を瀕死にした場合は発動しないため、ダメージを固定して相手を生存させる。
+    """
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", move_names=["ふみつけ"])],
         team1=[Pokemon("ピカチュウ")],
         accuracy=100,
     )
+    t.fix_damage(battle, 1)
     t.fix_random(battle, 0.0)
     t.run_move(battle, 0)
     assert battle.actives[1].has_volatile("ひるみ")

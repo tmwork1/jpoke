@@ -8,13 +8,17 @@ from .. import test_utils as t
 
 
 def test_3ぼんのや_ひるみが発動する():
-    """3ぼんのや: 30%でひるみを付与する。"""
+    """3ぼんのや: 30%でひるみを付与する。
+
+    追加効果は相手を瀕死にした場合は発動しないため、ダメージを固定して相手を生存させる。
+    """
     battle = t.start_battle(
         team0=[Pokemon("カイリキー", move_names=["3ぼんのや"])],
         team1=[Pokemon("カビゴン")],
         accuracy=100,
         secondary_chance=1.0,
     )
+    t.fix_damage(battle, 1)
     t.run_move(battle, 0)
     assert battle.actives[1].has_volatile("ひるみ")
 
