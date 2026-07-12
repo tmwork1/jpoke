@@ -566,8 +566,10 @@ class Pokemon:
     def terastallize(self):
         """テラスタルする。
 
-        Returns:
-            テラスタルに成功した場合True、失敗した場合False
+        `is_terastallized` を立てるだけの内部メソッドで、戻り値は常に `None`。
+        `Event.ON_TERASTALLIZE` の発火や `can_terastallize()` の判定は行わないため、
+        単体で呼び出さず `TurnController` がコマンド（`Command.get_terastal_command()`）を
+        解決する経路（`Battle.step()` 等）から使うこと。
         """
         self.is_terastallized = True
 
@@ -586,8 +588,11 @@ class Pokemon:
     def megaevolve(self):
         """メガシンカする。
 
-        Returns:
-            メガシンカに成功した場合True、失敗した場合False
+        フォルムを切り替えるだけの内部メソッドで、戻り値は常に `None`。
+        メガシンカ前後の特性ハンドラの付け替えや `Event.ON_ABILITY_ENABLED` の発火、
+        `can_megaevolve()` の判定は行わないため、単体で呼び出さず `TurnController` が
+        コマンド（`Command.get_megaevol_command()`）を解決する経路（`Battle.step()` 等）
+        から使うこと。
         """
         mega_name = MEGA_STONES[self.item.name][-1]
         self.set_form(mega_name, set_default_ability=True)
