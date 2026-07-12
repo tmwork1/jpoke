@@ -2070,6 +2070,57 @@ def test_ふしょく_相手のどくのトゲには効果がない():
     assert not battle.actives[1].ailment.is_active
 
 
+def test_ふとうのけん_初登場でAが1段階上がる():
+    battle = t.start_battle(
+        team0=[Pokemon("ザシアン(れきせん)", ability_name="ふとうのけん")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    assert mon.boosts["atk"] == 1
+
+
+def test_ふとうのけん_かがくへんかガス中は発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かがくへんかガス")],
+        team1=[Pokemon("ザシアン(れきせん)", ability_name="ふとうのけん")],
+    )
+    mon = battle.actives[1]
+    assert not mon.ability.enabled
+    assert mon.boosts["atk"] == 0
+
+
+def test_ふとうのけん_かがくへんかガス解除後に発動する():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かがくへんかガス"), Pokemon("ライチュウ")],
+        team1=[Pokemon("ザシアン(れきせん)", ability_name="ふとうのけん")],
+    )
+    mon = battle.actives[1]
+    assert mon.boosts["atk"] == 0
+
+    t.run_switch(battle, 0, 1)
+    assert mon.boosts["atk"] == 1
+
+
+def test_ふとうのけん_Aが既に最大でも特性は消費される():
+    """ふとうのけん: こうげきが既に最大まで上がっているため特性が不発した場合でも、
+    その戦闘で特性を再度発動させることはできなくなる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("ザシアン(れきせん)", ability_name="ふとうのけん")],
+        team1=[Pokemon("カビゴン")],
+    )
+    bench = battle.get_team(battle.players[0])[1]
+    battle.modify_stats(bench, {"atk": +6})
+
+    t.run_switch(battle, 0, 1)
+    mon = battle.actives[0]
+    assert mon.boosts["atk"] == 6
+    assert not mon.ability.enabled
+
+    t.run_switch(battle, 0, 0)
+    t.run_switch(battle, 0, 1)
+    assert mon.boosts["atk"] == 0
+
+
 def test_ふゆう_かたやぶりでじめん技が通る():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ふゆう")],
