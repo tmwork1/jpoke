@@ -1245,18 +1245,6 @@ def きゅうばん_block_blow(battle: Battle, ctx: AttackContext, value: Any) -
     return HandlerReturn(value=False, stop_event=True)
 
 
-def ばんけん_block_blow(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ばんけん特性: 強制交代技・レッドカードによる交代を防ぐ。
-
-    きゅうばんと異なり、特性バーやメッセージは流れないまま交代のみが
-    無効化される（一次情報: docs/wiki/abilities/ばんけん.html 特性の仕様節）。
-    ほえる/ふきとばしの「しかし うまく 決まらなかった!!」表示は on_blow_apply /
-    _force_switch_random 側の MOVE_IMMUNED ログで別途処理されるため、
-    ここでは特性の発動演出（_announce_ability_triggered）を行わない。
-    """
-    return HandlerReturn(value=False, stop_event=True)
-
-
 def きょううん_modify_critical_rank(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """きょううん特性: 攻撃側の急所ランクを+1する。"""
     return HandlerReturn(value=value + 1)
@@ -3075,6 +3063,40 @@ def はらぺこスイッチ_on_turn_end(battle: Battle, ctx: EventContext, valu
     return HandlerReturn(value=value)
 
 
+def はりきり_modify_accuracy(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """はりきり特性: 物理技（一撃必殺・必中技除外）の命中率を0.8倍にする。"""
+    if (
+        ctx.move.category == "physical"
+        and not ctx.move.has_flag("ohko")  # 一撃必殺技は命中率ペナルティなし
+        and ctx.move.accuracy is not None  # 必中技は命中率ペナルティなし
+    ):
+        value = apply_fixed_modifier(value, 3277)
+    return HandlerReturn(value=value)
+
+
+def はりきり_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """はりきり特性: 物理技の攻撃補正を1.5倍にする。"""
+    if ctx.move.category == "physical":
+        value = apply_fixed_modifier(value, 6144)
+    return HandlerReturn(value=value)
+
+
+def はりこみ_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """はりこみ特性: 交代直後の相手に対する攻撃補正を2倍にする。
+
+    初手で繰り出された相手（1ターン目の初期交代は次ターン開始時に
+    has_switched がリセットされるため自然に除外される）や、死に出しで
+    繰り出された相手には発動しない（switched_in_by_faint で除外）。
+    """
+    if ctx.defender is None:
+        return HandlerReturn(value=value)
+
+    defender_state = battle.player_states[battle.get_player(ctx.defender)]
+    if defender_state.has_switched and not defender_state.switched_in_by_faint:
+        value = apply_fixed_modifier(value, 8192)
+    return HandlerReturn(value=value)
+
+
 def はんすう_on_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """はんすう特性: ターン終了時の判定でカウントを1減らし、0になったら同じきのみを再度食べる。
 
@@ -3124,40 +3146,6 @@ def はんすう_start_counter(battle: Battle, ctx: EventContext, value: Any) ->
     mon = ctx.source
     mon.ability.cud_chew_item = ctx.item_name
     mon.ability.cud_chew_turns = 2
-    return HandlerReturn(value=value)
-
-
-def はりきり_modify_accuracy(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """はりきり特性: 物理技（一撃必殺・必中技除外）の命中率を0.8倍にする。"""
-    if (
-        ctx.move.category == "physical"
-        and not ctx.move.has_flag("ohko")  # 一撃必殺技は命中率ペナルティなし
-        and ctx.move.accuracy is not None  # 必中技は命中率ペナルティなし
-    ):
-        value = apply_fixed_modifier(value, 3277)
-    return HandlerReturn(value=value)
-
-
-def はりきり_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """はりきり特性: 物理技の攻撃補正を1.5倍にする。"""
-    if ctx.move.category == "physical":
-        value = apply_fixed_modifier(value, 6144)
-    return HandlerReturn(value=value)
-
-
-def はりこみ_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """はりこみ特性: 交代直後の相手に対する攻撃補正を2倍にする。
-
-    初手で繰り出された相手（1ターン目の初期交代は次ターン開始時に
-    has_switched がリセットされるため自然に除外される）や、死に出しで
-    繰り出された相手には発動しない（switched_in_by_faint で除外）。
-    """
-    if ctx.defender is None:
-        return HandlerReturn(value=value)
-
-    defender_state = battle.player_states[battle.get_player(ctx.defender)]
-    if defender_state.has_switched and not defender_state.switched_in_by_faint:
-        value = apply_fixed_modifier(value, 8192)
     return HandlerReturn(value=value)
 
 
@@ -3236,6 +3224,18 @@ def バリアフリー_remove_screens(battle: Battle, ctx: EventContext, value: 
     if triggered:
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
+
+
+def ばんけん_block_blow(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ばんけん特性: 強制交代技・レッドカードによる交代を防ぐ。
+
+    きゅうばんと異なり、特性バーやメッセージは流れないまま交代のみが
+    無効化される（一次情報: docs/wiki/abilities/ばんけん.html 特性の仕様節）。
+    ほえる/ふきとばしの「しかし うまく 決まらなかった!!」表示は on_blow_apply /
+    _force_switch_random 側の MOVE_IMMUNED ログで別途処理されるため、
+    ここでは特性の発動演出（_announce_ability_triggered）を行わない。
+    """
+    return HandlerReturn(value=False, stop_event=True)
 
 
 def ばんけん_boost_atk_on_intimidate(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
