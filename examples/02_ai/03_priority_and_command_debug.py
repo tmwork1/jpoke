@@ -39,6 +39,10 @@ class DebugPlayer(TreeSearchPlayer):
 
     evaluate_commands()は探索本体の状態を変更しない副作用なしのメソッドなので、
     表示を挟んでもchoose_command()自体の判断には影響しない。
+    ただしevaluate_commands()はmax_nodesによるノード数上限を無視して全合法手を
+    評価するため、このサンプルのように毎ターン（choose_command()の呼び出しごと）
+    呼び出す構成をそのまま学習ループの可視化等に転用する場合、max_plies次第では
+    探索コストが無制限に膨らみうる点に注意する。
     """
 
     def choose_command(self, battle: Battle):
