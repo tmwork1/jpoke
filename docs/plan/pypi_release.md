@@ -219,6 +219,11 @@ package-check:
 - `import jpoke` の初期化コスト削減（実測 約460ms。pokedex.json 544KB と
   全ハンドラテーブルを import 時に無条件ロードしている。遅延 import の余地あり）
 - CONTRIBUTING.md / SECURITY.md の整備
+- 実施済み: `CONTRIBUTING.md`（開発環境セットアップ・テスト実行・コードスタイル・
+  ハンドラ追加の流れ・ブランチ/PRの流れ・対象範囲の注意）と `SECURITY.md`
+  （サポート対象は0.x系のPyPI最新版のみ・GitHub Security Advisories経由の非公開報告を
+  推奨・ローカル実行のみでアタックサーフェスが限定的である旨）をリポジトリルートに
+  新設。README.md の「ドキュメント」節に両ファイルへの導線を追加
 - 実施済み: 導入・AI学習資料向けサンプルスクリプトを `examples/` に新設（6本、公開APIのみ依存・
   `pip install jpoke` だけで実行可能）。`examples/README.md` と `tests/test_examples_smoke.py`
   （壊れたサンプルの放置防止）を追加し、CI/README の ruff 対象にも `examples/` を追加。

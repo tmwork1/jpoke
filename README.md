@@ -94,6 +94,9 @@ battle.print_logs()                 # このターンのログを表示
 | `docs/progress/` | カテゴリ別の実装追跡（`ability.md`, `item.md`, `move.md` 等） |
 | `docs/tests/` | テスト一覧（`scripts/generate_test_list.py` で生成） |
 
+開発への貢献方法は [CONTRIBUTING.md](https://github.com/tmwork1/jpoke/blob/main/CONTRIBUTING.md)、
+脆弱性の報告方法は [SECURITY.md](https://github.com/tmwork1/jpoke/blob/main/SECURITY.md) を参照。
+
 ## 実装状況
 
 `docs/progress/*.md` に基づく件数（データ定義済みの実数、内部用の空エントリ等を除く）:
