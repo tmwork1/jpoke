@@ -107,6 +107,17 @@ def test_ゆうばく_非接触KOでは発動しない():
     assert foe.hp == foe.max_hp
 
 
+def test_ようりょくそ_おおひでり中も素早さ2倍():
+    """ようりょくそ: おおひでり状態でもはれと同様に素早さが2倍になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ようりょくそ")],
+        team1=[Pokemon("カビゴン")],
+        weather=("おおひでり", 99),
+    )
+    mon = battle.actives[0]
+    assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["spe"] * 2
+
+
 def test_よちむ_場に出たとき相手の最高威力の技が公開される():
     """よちむ: 登場時に相手の技のうち最高威力の技が公開される"""
     battle = t.start_battle(
