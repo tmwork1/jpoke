@@ -65,6 +65,11 @@
   ディレクトリに分割、各ディレクトリ内で独立して連番を振り直した
   （例: `examples/01_quickstart.py` → `examples/01_basics/01_quickstart.py`）。
   独立した作業が同じ番号を取り合う衝突事故を防ぐための変更
+- **破壊的変更**: `Battle.consume_item()` / `ItemManager.consume_item()` の第1引数名を
+  `mon` から `target` にリネームした（`gain_item` / `remove_item` / `take_item` 等、
+  他のアイテム系メソッドとの引数名を統一するための変更）。キーワード引数で
+  `mon=...` と呼び出している箇所は `target=...` に変更する必要がある
+  （リポジトリ内の既存呼び出しはすべて位置引数のため影響なし）
 - **破壊的変更**: `Pokemon.modify_hp()` を `Pokemon._modify_hp_raw()` にリネームした。
   従来のdocstringで「内部用。外部からは`battle.modify_hp()`を使用」と警告して
   いたにもかかわらず、アンダースコアなしのメソッド名のままトップレベル
