@@ -149,7 +149,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         accuracy=90,
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.サイコブースト_sharply_lower_spa_C,
+                ha.サイコブースト_sharply_lower_attacker_spa,
             )
         },
         lethal_handlers={
@@ -405,7 +405,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.しっぽをふる_modify_defender_stats,
+                hs.しっぽをふる_lower_defender_def,
             )
         }
     ),
@@ -580,7 +580,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.しんぴのちから_boost_spa_C,
+                ha.しんぴのちから_boost_attacker_spa,
             )
         },
         lethal_handlers={
@@ -742,7 +742,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.じならし_lower_defender_spd,
+                ha.じならし_lower_defender_spe,
             ),
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
                 ha.reduce_damage_in_double_battle,
@@ -776,7 +776,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
                 hs.じばそうさ_can_apply,
             ),
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.じばそうさ_modify_attacker_stats,
+                hs.じばそうさ_boost_attacker_def_spd,
             ),
         }
     ),
@@ -1085,7 +1085,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.すなかけ_modify_defender_stats,
+                hs.すなかけ_lower_defender_accuracy,
             )
         }
     ),
@@ -1216,7 +1216,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.せいちょう_modify_attacker_stats,
+                hs.せいちょう_boost_attacker_atk_spa,
             ),
         }
     ),
@@ -1300,7 +1300,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ソウルクラッシュ_lower_spa_C,
+                ha.ソウルクラッシュ_lower_defender_spa,
             )
         }
     ),
@@ -1316,7 +1316,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
                 priority=100,
             ),
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.ソウルビート_pay_hp_and_modify_attacker_stats,
+                hs.ソウルビート_pay_hp_and_boost_all_stats,
             ),
         }
     ),

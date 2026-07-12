@@ -100,7 +100,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.はいよるいちげき_lower_spa_C,
+                ha.はいよるいちげき_lower_defender_spa,
             )
         }
     ),
@@ -125,7 +125,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.はがねのつばさ_boost_attacker_B,
+                ha.はがねのつばさ_boost_attacker_def,
             )
         }
     ),
@@ -448,7 +448,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         flags={"contact"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.ばかぢから_lower_attacker_def,
+                ha.ばかぢから_lower_attacker_atk_def,
             )
         },
         lethal_handlers={
@@ -505,7 +505,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.バブルこうせん_lower_defender_spd,
+                ha.バブルこうせん_lower_defender_spe,
             )
         }
     ),
@@ -518,7 +518,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.バリアーラッシュ_boost_attacker_B,
+                ha.バリアーラッシュ_boost_attacker_def,
             )
         }
     ),
@@ -541,7 +541,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         flags={"secondary_effect", "sound"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.バークアウト_lower_spa_C,
+                ha.バークアウト_lower_defender_spa,
             ),
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
                 ha.reduce_damage_in_double_battle,
@@ -775,7 +775,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.ビルドアップ_modify_attacker_stats,
+                hs.ビルドアップ_boost_attacker_atk_def,
             ),
         }
     ),
@@ -867,7 +867,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         flags={"dance"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.フェザーダンス_modify_defender_stats,
+                hs.フェザーダンス_lower_defender_atk,
             )
         }
     ),
@@ -1051,7 +1051,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.ふるいたてる_modify_attacker_stats,
+                hs.ふるいたてる_boost_attacker_atk_spa,
             ),
         }
     ),
@@ -1063,7 +1063,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         accuracy=90,
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.フルールカノン_sharply_lower_spa_C,
+                ha.フルールカノン_sharply_lower_attacker_spa,
             )
         },
         lethal_handlers={
@@ -1079,7 +1079,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         flags={"sound", "secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.フレアソング_boost_spa_C,
+                ha.フレアソング_boost_attacker_spa,
             )
         },
         lethal_handlers={
@@ -1501,7 +1501,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.ほたるび_modify_attacker_stats,
+                hs.ほたるび_boost_attacker_spa,
             )
         }
     ),
@@ -1575,7 +1575,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         flags={"dance", "secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.ほのおのまい_boost_spa_C,
+                ha.ほのおのまい_boost_attacker_spa,
             )
         },
         lethal_handlers={
@@ -1620,7 +1620,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.ぼうぎょしれい_modify_attacker_stats,
+                hs.ぼうぎょしれい_boost_attacker_def_spd,
             ),
         }
     ),

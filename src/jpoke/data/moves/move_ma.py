@@ -89,7 +89,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.マジカルフレイム_lower_spa_C,
+                ha.マジカルフレイム_lower_defender_spa,
             )
         }
     ),
@@ -121,7 +121,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.マッドショット_lower_defender_spd,
+                ha.マッドショット_lower_defender_spe,
             )
         }
     ),
@@ -309,7 +309,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         flags={"bullet", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ミストボール_lower_spa_C,
+                ha.ミストボール_lower_defender_spa,
             )
         }
     ),
@@ -495,7 +495,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ミラーショット_lower_acc,
+                ha.ミラーショット_lower_defender_accuracy,
             )
         }
     ),
@@ -585,7 +585,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.むしのていこう_lower_spa_C,
+                ha.むしのていこう_lower_defender_spa,
             ),
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
                 ha.reduce_damage_in_double_battle,
@@ -612,7 +612,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ムーンフォース_lower_spa_C,
+                ha.ムーンフォース_lower_defender_spa,
             )
         }
     ),
@@ -623,7 +623,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.めいそう_modify_attacker_stats,
+                hs.めいそう_boost_attacker_spa_spd,
             ),
         }
     ),
@@ -685,7 +685,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.メタルクロー_boost_attacker_A,
+                ha.メタルクロー_boost_attacker_atk,
             )
         }
     ),
