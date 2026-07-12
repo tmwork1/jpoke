@@ -1178,19 +1178,6 @@ def test_天候依存素早さ上昇(ability: str, weather: WeatherName, expecte
 
 
 @pytest.mark.parametrize(
-    "ability",
-    ["すなかき", "すいすい", "ようりょくそ", "ゆきかき"],
-)
-def test_天候依存素早さ上昇_非対応天候は据え置き(ability: str):
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name=ability)],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    mon = battle.actives[0]
-    assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["spe"]
-
-
-@pytest.mark.parametrize(
     "ability, weather",
     [
         ("すなかき", "すなあらし"),
@@ -1207,6 +1194,19 @@ def test_天候依存素早さ上昇_ノーてんきエアロックで無効化(
         team0=[Pokemon("ピカチュウ", ability_name=ability)],
         team1=[Pokemon("ピカチュウ", ability_name=suppressor_ability)],
         weather=(weather, 999),
+    )
+    mon = battle.actives[0]
+    assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["spe"]
+
+
+@pytest.mark.parametrize(
+    "ability",
+    ["すなかき", "すいすい", "ようりょくそ", "ゆきかき"],
+)
+def test_天候依存素早さ上昇_非対応天候は据え置き(ability: str):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability)],
+        team1=[Pokemon("ピカチュウ")],
     )
     mon = battle.actives[0]
     assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["spe"]
