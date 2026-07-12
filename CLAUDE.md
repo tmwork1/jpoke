@@ -118,8 +118,8 @@ data/ability.py  →  handlers/ability.py に実装  →  data/ability.py に登
 
 ### ブランチ・PR
 
-- **`.loop/` 経由の自動作業以外は main への直接コミット禁止**。作業前に必ず `feature/<内容>` などの
-  作業ブランチを切る
+- **main への直接コミット・マージは禁止**（`.loop/` 経由の自動作業を含む）。手動作業では作業前に
+  必ず `feature/<内容>` などの作業ブランチを切る。`.loop/` 系フローの反映方法は後述
 - 完了したら `gh pr create` でPRを作成し、確認のうえ `gh pr merge` でmainに取り込む（`--no-verify` は使わない）
 - リポジトリは `delete_branch_on_merge` が有効。PRマージ後、**リモートブランチは自動削除されるが
   ローカルブランチは残るので `git branch -d <branch>` で必ず削除する**（残したまま気づかず同じ
@@ -130,8 +130,10 @@ data/ability.py  →  handlers/ability.py に実装  →  data/ability.py に登
   事故につながる
 - 既存ブランチで作業を再開する前に、そのブランチが既にmainへマージ済みでないか
   （`git log <branch>..main`、`gh pr list --state merged`）を確認する
-- `.loop/` 系フロー（impl / review / todo / lethal / fuzz / replay_fuzz / fuzz_log / flaky）は対象外。既存の
-  分離済みブランチ（`loop/{flow}` / `loop/{flow}/integration`）で作業し、ローカルテストを通過した
+- `.loop/` 系フロー（impl / review / todo / lethal / fuzz / replay_fuzz / fuzz_log / flaky）は上記の「手動で
+  feature ブランチを切り、確認のうえ `gh pr merge`」という手順の対象外だが、main への直接コミット・
+  マージ禁止自体は同様に適用される。既存の分離済みブランチ（`loop/{flow}` / `loop/{flow}/integration`）
+  で作業し、ローカルテストを通過した
   単位（`fuzz`/`replay_fuzz`/`fuzz_log`/`flaky`は1件ごと、`todo`は5件ごと、`lethal`は10件ごと、`impl`/`review`
   は §共通5 のバッチ整形ごと）でディスパッチャーが `_common.md` §共通6 の手順に従い GitHub PR経由
   （`gh pr create` → 即 `gh pr merge`、人間レビュー待ちはしない）で自動的にmainへ反映する。
@@ -152,6 +154,10 @@ data/ability.py  →  handlers/ability.py に実装  →  data/ability.py に登
   ディレクトリが残ることがある）
 - 作業の節目や `.loop` 以外のセッション終了時には `git status` / `git worktree list` /
   `git stash list` で放置物がないか確認する
+- `.loop/` 系フローの永続 worktree・統合 worktree は稼働中は残したままでよいが、フローが
+  バックログを使い切り完全終了（各指示書の「終了チェック」で全件完了を報告するケース）した時点で、
+  ディスパッチャー自身が `.claude/loop/_common.md` §共通7「完全終了」の手順に従い worktree・
+  ブランチ（ローカル・リモート）を削除する
 
 ## 開発ルール
 
