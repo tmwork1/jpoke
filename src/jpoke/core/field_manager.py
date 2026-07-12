@@ -204,11 +204,27 @@ class ExclusiveFieldManager(BaseFieldManager[T]):
     def tick_down_current(self) -> None:
         """現在のフィールド効果のカウントを1減らす。
 
+        カウントが0になった場合は remove() と同様に current_name をリセットし
+        ON_FIELD_CHANGE を発火する。これにより、はれ/エレキフィールドなどが
+        自然消滅したときにも、こだいかっせい/クォークチャージ/ぎたい/てんきやなど
+        ON_FIELD_CHANGE を契機に再判定する特性が確実に反応する
+        （docs/spec/abilities/こだいかっせい.md「にほんばれ状態の効果が切れると
+        『こだいかっせいの効果が切れた!』とメッセージが出て補正が消える」
+        「にほんばれ状態が消滅すると一旦特性の効果が消えるが、即座に
+        ブーストエナジーを消費して特性を再発動させる」を参照）。
+
         Notes:
             基底の tick_down(name) とは引数の有無が異なるため、
             LSP 違反（mypy override エラー）を避けるために別名にしている。
         """
-        self.tick_down(self.current_name)
+        field = self.current
+        if not field.is_active:
+            return
+        field.count -= 1
+        if not field.count:
+            self._deactivate_field(field)
+            self.current_name = self.inactive_name
+            self._events.emit(Event.ON_FIELD_CHANGE)
 
 
 class StackableFieldManager(BaseFieldManager[T]):

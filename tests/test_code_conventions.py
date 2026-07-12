@@ -69,6 +69,29 @@ def test_consume_itemの引数名がtargetにリネームされている():
         battle.consume_item(mon=battle.actives[0])  # type: ignore[call-arg]
 
 
+def test_examplesがteam_append_Pokemon経由でチームを構築していない():
+    """`Player.add_pokemon()` が jpoke の正規のチーム追加ルートであり、
+    `team.append(Pokemon(...))`（`Pokemon` を直接構築して `team` に追加する書き方）は
+    使うべきではないという規約になっている。かつて
+    `examples/04_research/03_janken_nash_fictitious_play.py` と `04_janken_nash_cfr.py` の
+    `build_pokemon()` が `Pokemon(...)` を直接構築し `team.append()` で追加しており、他の
+    examples の `add_pokemon()` と統一方針から逸脱していた（id: r5-5）。再発防止のため
+    examples/ 配下に `.team.append(Pokemon(` の使用が無いことを確認する。
+    """
+    violations = []
+    for path in EXAMPLES_ROOT.rglob("*.py"):
+        text = path.read_text(encoding="utf-8")
+        for lineno, line in enumerate(text.splitlines(), start=1):
+            if ".team.append(Pokemon(" in line:
+                rel_path = path.relative_to(EXAMPLES_ROOT).as_posix()
+                violations.append(f"{rel_path}:{lineno}: {line.strip()}")
+
+    assert not violations, (
+        "examples/ 配下で team.append(Pokemon(...)) の使用を検出"
+        "（Player.add_pokemon() に置き換えること）:\n" + "\n".join(violations)
+    )
+
+
 def test_examplesがtest_option経由で命中率等を固定していない():
     """`battle.test_option` はテストコード専用の内部低レベルAPIで、ユーザー向けサンプルである
     `examples/` から使うべきではないという規約になっている。命中率を固定したい場合は公開APIの
