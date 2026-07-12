@@ -1313,6 +1313,45 @@ def test_びんじょう_相手のランク低下はコピーしない():
     assert binjou_mon.rank["atk"] == 0
 
 
+def test_びんじょう_複数の能力の上昇を同時にコピーする():
+    """びんじょう: 相手がめいそうなどで複数の能力を同時に上げたとき、全てコピーする"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="びんじょう")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    binjou_mon, foe = battle.actives
+
+    assert battle.modify_stats(foe, {"spa": 1, "spd": 1}, source=foe)
+    assert binjou_mon.rank["spa"] == 1
+    assert binjou_mon.rank["spd"] == 1
+
+
+def test_びんじょう_自分がすでに最大なら発動しない():
+    """びんじょう: 自分の該当ランクがすでに最大(+6)のときは発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="びんじょう")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    binjou_mon, foe = battle.actives
+    binjou_mon.rank["atk"] = 6
+
+    assert battle.modify_stats(foe, {"atk": 2}, source=foe)
+    assert binjou_mon.rank["atk"] == 6
+
+
+def test_びんじょう_味方のランク上昇はコピーしない():
+    """びんじょう: 味方（自分自身）のランク上昇では発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="びんじょう")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    binjou_mon, foe = battle.actives
+
+    assert battle.modify_stats(binjou_mon, {"def": 2}, source=binjou_mon)
+    assert binjou_mon.rank["def"] == 2
+    assert foe.rank["def"] == 0
+
+
 def test_ビーストブースト_ワンダールーム下では防御と特防の実数値を入れ替えて比較する():
     """フシギダネは特攻・特防が同値で最も高い（通常なら特攻が上がる）。
 
