@@ -3885,9 +3885,9 @@ def ぼうだん_block_bullet(battle: Battle, ctx: AttackContext, value: bool) -
 
 
 def ポイズンヒール_modify_poison_damage(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
-    """ポイズンヒール特性: どく/もうどく由来のHP変化を最大HPの1/8回復に置き換える。"""
+    """ポイズンヒール特性: どく/もうどく由来のHP変化を最大HPの1/8回復に置き換える（切り捨て、最低1）。"""
     if value < 0:
-        value = ctx.target.max_hp // 8
+        value = max(1, ctx.target.max_hp // 8)
     return HandlerReturn(value=value)
 
 
