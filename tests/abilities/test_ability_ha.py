@@ -1819,5 +1819,116 @@ def test_ポイズンヒール_どく状態で1_8回復する(ailment_name: Ailm
     assert mon.hp == 1 + mon.max_hp // 8
 
 
+def test_ひらいしん_でんきタイプの変化技も無効化する():
+    """ひらいしん: でんじはのようなでんきタイプの変化技を受けても無効化し、まひにならない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんじは"])],
+        team1=[Pokemon("カビゴン", ability_name="ひらいしん")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.rank["spa"] == 1
+    assert defender.ailment.name == ""
+
+
+def test_ひらいしん_無効化時にじゅうでんちは発動しない():
+    """ひらいしん: じゅうでんちのようなでんき被弾で発動するアイテムは、
+    ひらいしんで無効化されたときは発動しない（ダメージ処理自体が行われないため）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
+        team1=[Pokemon("カビゴン", ability_name="ひらいしん", item_name="じゅうでんち")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.hp == defender.max_hp
+    assert defender.rank["spa"] == 1
+    assert defender.rank["atk"] == 0
+    assert defender.has_item()
+
+
+def test_ひらいしん_まもるで防がれたときは発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
+        team1=[Pokemon("カビゴン", ability_name="ひらいしん")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "まもる", count=1)
+    t.run_move(battle, 0)
+    assert defender.rank["spa"] == 0
+    assert not defender.ability.revealed
+
+
+def test_ひらいしん_マジックコートで跳ね返された変化技を受けるととくこうが上がる():
+    """ひらいしん: 自分が使ったでんきタイプの変化技が相手のマジックコートで跳ね返され、
+    跳ね返った技を自分自身が受けた場合はひらいしんが発動してとくこうが上がる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ひらいしん", move_names=["でんじは"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 0)
+    assert mon.rank["spa"] == 1
+    assert mon.ailment.name == ""
+
+
+def test_ひらいしん_マジックコート状態では変化技を跳ね返しとくこうが上がらない():
+    """ひらいしん: マジックコート状態のひらいしん持ちがでんきタイプの変化技を受けても、
+    先に跳ね返されるためひらいしんは発動せずとくこうは上がらない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんじは"])],
+        team1=[Pokemon("カビゴン", ability_name="ひらいしん")],
+        volatile1={"マジックコート": 1},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.rank["spa"] == 0
+    assert not defender.ability.revealed
+
+
+def test_ひらいしん_みがわり状態の攻撃技でも発動する():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
+        team1=[Pokemon("カビゴン", ability_name="ひらいしん")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", count=defender.max_hp // 4)
+    t.run_move(battle, 0)
+    assert defender.rank["spa"] == 1
+    assert defender.has_volatile("みがわり")
+
+
+def test_ひらいしん_エレキフィールドなど場を対象とするでんき技には発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["エレキフィールド"])],
+        team1=[Pokemon("カビゴン", ability_name="ひらいしん")],
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert battle.terrain.name == "エレキフィールド"
+    assert defender.rank["spa"] == 0
+    assert not defender.ability.revealed
+
+
+def test_ひらいしん_じゅうでんなど自分自身を対象とするでんき技には発動しない():
+    """ひらいしん: じゅうでんは自分自身が対象の技のため、自分のひらいしんには発動しない
+    （じゅうでん自体の効果＝とくぼう+1は通常どおり発生する）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ひらいしん", move_names=["じゅうでん"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 0)
+    assert mon.has_volatile("じゅうでん")
+    assert mon.rank["spd"] == 1
+    assert mon.rank["spa"] == 0
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
