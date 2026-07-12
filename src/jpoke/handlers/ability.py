@@ -3407,8 +3407,14 @@ def ファーコート_boost_B(battle: Battle, ctx: AttackContext, value: int) -
 
 
 def ふうりょくでんき_on_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ふうりょくでんき特性: 風技のダメージを受けたときじゅうでん状態になる。"""
+    """ふうりょくでんき特性: 風技のダメージを受けたときじゅうでん状態になる。
+
+    こらえるでHP1のまま耐えたときなど（実HPダメージ0）も発動するが、
+    みがわりに攻撃を防がれたとき（実HPダメージ0）は発動しない。
+    """
     if not ctx.move.has_flag("wind"):
+        return HandlerReturn(value=value)
+    if ctx.substitute_damage:
         return HandlerReturn(value=value)
     mon = ctx.defender
     battle.volatile_manager.apply(mon, "じゅうでん")
