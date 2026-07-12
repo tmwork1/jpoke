@@ -188,7 +188,6 @@ def _chunk_total(args: tuple[
     row_probs, col_probs, start_seed, chunk_trials, max_turns = args
     total = 0.0
     for offset in range(chunk_trials):
-        # seed をずらしながら独立した試行を積み上げ、平均が勝率の推定値になる
         total += play_game(row_probs, col_probs, seed=start_seed + offset, max_turns=max_turns)
     return total
 
@@ -285,7 +284,6 @@ def approximate_nash(candidates: list[tuple[float, float, float]],
     col_avg = (1 / 3, 1 / 3, 1 / 3)
 
     for t in range(1, iterations + 1):
-        # 相手の「これまでの平均戦略」に対する最適反応を、行側・列側それぞれ求める
         row_br, row_br_val = best_response_to_col(
             col_avg,
             candidates,
@@ -303,7 +301,6 @@ def approximate_nash(candidates: list[tuple[float, float, float]],
             executor,
         )
 
-        # 今回の最適反応を積算し、平均戦略を更新する
         row_sum = add_vec(row_sum, row_br)
         col_sum = add_vec(col_sum, col_br)
         row_avg = div_vec(row_sum, float(t))
@@ -343,7 +340,6 @@ def main() -> None:
             executor=executor,
         )
 
-    # 最終出力は重複しないように1回ずつ簡潔に表示
     print(f"row_mix: {strategy_text(x)}")
     print(f"col_mix: {strategy_text(y)}")
     print(f"value={value:.4f}, exploitability={exploit_gap:.4f}")

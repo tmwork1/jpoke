@@ -28,8 +28,7 @@ def main() -> None:
     winner = battle.winner
     print(f"元の対戦の勝者: {winner.username if winner else '引き分け（ターン上限）'}（{battle.turn}ターン）")
 
-    # build_replay_data() は対戦の途中でも呼べるが、ここでは決着後に呼んで
-    # 対戦全体（チーム・シード・選出・コマンド列）をまとめて記録する
+    # build_replay_data() は対戦の途中でも呼べるが、ここでは決着後に呼ぶ
     replay_data = battle.build_replay_data()
 
     # to_dict()/from_dict() で辞書化・復元できる。json.dumps()/json.loads() を
@@ -37,8 +36,6 @@ def main() -> None:
     serialized = replay_data.to_dict()
     restored = type(replay_data).from_dict(serialized)
 
-    # replay_battle() は記録済みデータから ReplayPlayer（記録済みの選出・コマンドを
-    # そのまま払い出すだけの方策）を組み立て、対戦を最後まで再現する
     replayed_battle = replay_battle(restored)
 
     replayed_winner = replayed_battle.winner

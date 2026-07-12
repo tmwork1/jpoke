@@ -22,8 +22,7 @@ class StrongestMovePlayer(Player):
             if not command.is_regular_move:
                 return -1
             move = battle.command_to_move(self, command)
-            # 変化技は base_power が None。move.is_attack で直接判定できる
-            # （move.base_power or 0 でも同じ結果になるが、意図が読み取りにくい）
+            # 変化技は base_power が None。move.is_attack で判定する
             return move.base_power if move.is_attack else 0
 
         return max(commands, key=move_power)
