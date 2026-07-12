@@ -319,6 +319,19 @@ class Pokemon:
         self.memory["battle"]["last_lost_item_name"] = value
 
     @property
+    def last_lost_item_turn(self) -> int:
+        """直近で `last_lost_item_name` が更新されたターン数（ものひろい用）。
+
+        しゅうかく等はターンをまたいでも last_lost_item_name を参照するため、
+        こちらは battle スコープで保持しつつ「そのターンに限定する」判定にのみ使う。
+        """
+        return self.memory["battle"].get("last_lost_item_turn", -1)
+
+    @last_lost_item_turn.setter
+    def last_lost_item_turn(self, value: int):
+        self.memory["battle"]["last_lost_item_turn"] = value
+
+    @property
     def paradox_boost_stat(self) -> Stat | None:
         """パラドックス特性で強化されているステータス。登場・退場時にリセットされる。"""
         return self.memory["switch"].get("paradox_boost_stat")

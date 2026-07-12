@@ -3346,7 +3346,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_TURN_END: h.AbilityHandler(
                 h.ものひろい_pickup_foe_item,
                 subject_spec="source:self",
-                priority=30,
+                priority=150,
             ),
         }
     ),
