@@ -2775,6 +2775,44 @@ def test_へんしょく_既に同タイプなら発動しない():
     assert defender.types == ["でんき"]
 
 
+def test_へんしょく_ひんし時は発動しない():
+    """へんしょく: 攻撃技でひんしになったときはタイプ変化しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["10まんボルト"])],
+        team1=[Pokemon("カクレオン", ability_name="へんしょく")],
+        accuracy=100,
+    )
+    _, defender = battle.actives
+    defender.hp = 1
+    t.run_move(battle, 0)
+    assert defender.fainted
+    assert defender.types == ["ノーマル"]
+
+
+def test_へんしょく_わるあがきでは発動しない():
+    """へんしょく: わるあがき（type == ""）を受けてもタイプ変化しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["わるあがき"])],
+        team1=[Pokemon("カクレオン", ability_name="へんしょく")],
+        accuracy=100,
+    )
+    _, defender = battle.actives
+    t.run_move(battle, 0)
+    assert defender.types == ["ノーマル"]
+
+
+def test_へんしょく_特性によるタイプ変換後の技タイプになる():
+    """へんしょく: フェアリースキン等でタイプ変換された技を受けた場合、最終タイプに変化する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="フェアリースキン", move_names=["ハイパーボイス"])],
+        team1=[Pokemon("カクレオン", ability_name="へんしょく")],
+        accuracy=100,
+    )
+    _, defender = battle.actives
+    t.run_move(battle, 0)
+    assert defender.types == ["フェアリー"]
+
+
 @pytest.mark.parametrize("attacker_name, random_val, expected_ailment", [
     ("ピカチュウ", 0.0, "どく"),
     ("フシギダネ", 0.09, "まひ"),
