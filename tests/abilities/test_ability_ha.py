@@ -2208,13 +2208,75 @@ def test_フラワーベール_くさタイプでないと保護しない():
     ["どく", "もうどく", "まひ", "やけど", "ねむり", "こおり"],
 )
 def test_フラワーベール_くさタイプへの状態異常を防ぐ(ailment_name: AilmentName):
+    # くさ単タイプのチコリータを使い、どく等の複合タイプによる免疫と混同しないようにする
     battle = t.start_battle(
-        team0=[Pokemon("フシギダネ", ability_name="フラワーベール")],
+        team0=[Pokemon("チコリータ", ability_name="フラワーベール")],
         team1=[Pokemon("カビゴン")],
     )
     mon = battle.actives[0]
     battle.ailment_manager.apply(mon, ailment_name)
     assert not mon.ailment.is_active
+
+
+def test_フラワーベール_かたやぶりで状態異常を防げない():
+    battle = t.start_battle(
+        team0=[Pokemon("チコリータ", ability_name="フラワーベール")],
+        team1=[Pokemon("カビゴン", ability_name="かたやぶり", move_names=["どくどく"])],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 1)
+    assert mon.ailment.name == "もうどく"
+
+
+def test_フラワーベール_あくびのねむけを防ぐ():
+    battle = t.start_battle(
+        team0=[Pokemon("フシギダネ", ability_name="フラワーベール")],
+        team1=[Pokemon("ピカチュウ", move_names=["あくび"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)
+    assert not battle.actives[0].has_volatile("ねむけ")
+
+
+def test_フラワーベール_相手由来の能力低下を防ぐ():
+    battle = t.start_battle(
+        team0=[Pokemon("フシギダネ", ability_name="フラワーベール")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon0, mon1 = battle.actives
+    stats = {"atk": -1, "def": +1, "spa": -3, "spd": +3, "spe": -5, "accuracy": +5, "evasion": -6}
+    expected = {k: v for k, v in stats.items() if v > 0}
+
+    assert expected == battle.modify_stats(mon0, stats, source=mon1)
+
+
+def test_フラワーベール_自己による能力低下は防げない():
+    battle = t.start_battle(
+        team0=[Pokemon("フシギダネ", ability_name="フラワーベール")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon0, _ = battle.actives
+    stats = {"atk": -1, "def": +1, "spa": -3, "spd": +3, "spe": -5, "accuracy": +5, "evasion": -6}
+
+    assert stats == battle.modify_stats(mon0, stats, source=mon0)
+
+
+def test_フラワーベール_いかくによる能力低下を防ぐ():
+    battle = t.start_battle(
+        team0=[Pokemon("フシギダネ", ability_name="フラワーベール")],
+        team1=[Pokemon("ピカチュウ", ability_name="いかく")],
+    )
+    assert battle.actives[0].boosts["atk"] == 0
+
+
+def test_フラワーベール_かたやぶりで能力低下を防げない():
+    battle = t.start_battle(
+        team0=[Pokemon("フシギダネ", ability_name="フラワーベール")],
+        team1=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["なきごえ"])],
+    )
+    t.run_move(battle, 1)
+    assert battle.actives[0].boosts["atk"] == -1
 
 
 def test_ぶきよう_アイテムが無効():

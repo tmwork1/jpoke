@@ -2869,6 +2869,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.フラワーベール_prevent_stat_drop,
                 subject_spec="target:self",
             ),
+            Event.ON_BEFORE_APPLY_VOLATILE: h.AbilityHandler(
+                h.フラワーベール_prevent_volatile,
+                subject_spec="target:self",
+            ),
         }
     ),
     "フリーズスキン": AbilityData(

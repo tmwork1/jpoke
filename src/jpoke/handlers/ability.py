@@ -3645,19 +3645,30 @@ def フラワーベール_prevent_ailment(battle: Battle, ctx: EventContext, val
     target = ctx.target
     if target is None or "くさ" not in target.types:
         return HandlerReturn(value=value)
-    _announce_ability_triggered(battle, target)
-    return HandlerReturn(value=False, stop_event=True)
+    return _prevent_ailment(battle, ctx, value)
 
 
 def フラワーベール_prevent_stat_drop(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
-    """フラワーベール特性: くさタイプへの能力低下を防ぐ。"""
+    """フラワーベール特性: くさタイプへの相手由来の能力ランク低下を防ぐ。
+
+    リーフストーム・からをやぶる・くだけるよろい・ムラっけなど自分自身の技/特性
+    による自発的なランク低下は防がない。
+    """
     target = ctx.target
     if target is None or "くさ" not in target.types:
         return HandlerReturn(value=value)
-    filtered = {s: v for s, v in value.items() if v >= 0}
+    filtered = _block_stat_drop_by_foe(value, ctx)
     if filtered != value:
         _announce_ability_triggered(battle, target)
     return HandlerReturn(value=filtered)
+
+
+def フラワーベール_prevent_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """フラワーベール特性: くさタイプのねむけ状態を防ぐ。"""
+    target = ctx.target
+    if target is None or "くさ" not in target.types:
+        return HandlerReturn(value=value)
+    return _prevent_volatile(battle, ctx, value, blocked_volatiles=["ねむけ"])
 
 
 def フリーズスキン_modify_move_type(battle: Battle, ctx: AttackContext, value: Type) -> HandlerReturn:
