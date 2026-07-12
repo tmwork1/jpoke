@@ -432,10 +432,17 @@ print(mon.fainted, mon.hp, mon.max_hp)
 | `Command.SWITCH_0` 〜 `Command.SWITCH_9` | 交代コマンド（インデックスは `Player.team` の順） |
 | `Command.TERASTAL_0` 〜 `Command.TERASTAL_9` | テラスタル＋技使用コマンド |
 | `Command.MEGAEVOL_0` 〜 `Command.MEGAEVOL_9` | メガシンカ＋技使用コマンド |
-| `Command.GIGAMAX_0` 〜 `Command.GIGAMAX_9` | ダイマックス＋技使用コマンド |
-| `Command.ZMOVE_0` 〜 `Command.ZMOVE_9` | Zワザ使用コマンド |
+| `Command.GIGAMAX_0` 〜 `Command.GIGAMAX_9` | ダイマックス＋技使用コマンド（**未実装**、下記注記参照） |
+| `Command.ZMOVE_0` 〜 `Command.ZMOVE_9` | Zワザ使用コマンド（**未実装**、下記注記参照） |
 | `Command.STRUGGLE` | わるあがき（技のPPが全て0の場合に強制される） |
 | `Command.FORCED` | 強制再行動（きゅうしょにあたる等、選択の余地がない行動） |
+
+> **注記**: `GIGAMAX_*` / `ZMOVE_*` はダイマックス・Zワザに対応するための定義だが、本プロジェクトの
+> 対象範囲（[README.md 対象範囲](../../README.md#対象範囲)参照）であるポケモンチャンピオンズの
+> シングルバトルにダイマックス・Zワザは存在しないため未実装。`get_available_commands()` が
+> これらのコマンドを選択肢として返すことはなく、`battle.step()` に明示的に渡した場合も常に
+> わるあがき扱いになる（`command_manager.py` の `resolve_move_from_command()` を参照）。将来的な
+> 拡張やAPIとしての完全性のために `Command` の定義自体は残しているが、現時点では使用しないこと。
 
 ```python
 from jpoke.enums import Command
@@ -454,8 +461,8 @@ battle.step({player1: Command.MOVE_0, player2: Command.SWITCH_1})
 | `Command.get_switch_command(index)` | 指定インデックスの交代コマンドを取得 |
 | `Command.get_terastal_command(index)` | 指定インデックスのテラスタルコマンドを取得 |
 | `Command.get_megaevol_command(index)` | 指定インデックスのメガシンカコマンドを取得 |
-| `Command.get_gigamax_command(index)` | 指定インデックスのダイマックスコマンドを取得 |
-| `Command.get_zmove_command(index)` | 指定インデックスのZワザコマンドを取得 |
+| `Command.get_gigamax_command(index)` | 指定インデックスのダイマックスコマンドを取得（**未実装**、上記注記参照） |
+| `Command.get_zmove_command(index)` | 指定インデックスのZワザコマンドを取得（**未実装**、上記注記参照） |
 
 ```python
 from jpoke.enums import Command
@@ -476,8 +483,8 @@ battle.step({player: switch_command, opponent: Command.MOVE_0})
 | `is_switch()` | 交代コマンド（`SWITCH_*`）かどうか |
 | `is_terastal` (property) | テラスタルコマンドかどうか |
 | `is_megaevol` (property) | メガシンカコマンドかどうか |
-| `is_gigamax` (property) | ダイマックスコマンドかどうか |
-| `is_zmove` (property) | Zワザコマンドかどうか |
+| `is_gigamax` (property) | ダイマックスコマンドかどうか（**未実装**、上記注記参照） |
+| `is_zmove` (property) | Zワザコマンドかどうか（**未実装**、上記注記参照） |
 | `index` (property) | コマンドのインデックス（特殊コマンドは0） |
 
 ```python
