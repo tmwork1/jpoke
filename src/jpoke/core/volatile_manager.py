@@ -67,7 +67,13 @@ class VolatileManager:
 
         Note:
             - 既に同じ揮発性状態があれば失敗
+            - targetが瀕死（HP0）の場合は付与しない。技の追加効果等でダメージにより
+              瀕死になった相手には揮発性状態が付与されないため（実機仕様）
         """
+        # 瀕死のポケモンには揮発性状態を付与しない
+        if target.fainted:
+            return False
+
         # 既に同じ揮発性状態がある場合は失敗
         if target.has_volatile(name):
             return False

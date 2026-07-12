@@ -49,7 +49,11 @@ class BaseContext:
 
         Returns:
             解決されたポケモン。ロールに対応するポケモンが存在しない場合（例:
-            AttackContext.defender が None）は None
+            AttackContext.defender が None）、または side="foe" でロール側の
+            ポケモンが場に出ていない場合（例: さいきのいのりで復活する瀕死の
+            控えポケモンに対する ON_MODIFY_HEAL）は None。後者は「相手」という
+            関係自体が定義できない（＝どのハンドラの所有者とも一致し得ない）
+            ことを表し、該当するハンドラが単に不適用になる。
 
         Raises:
             ValueError: role がこのコンテキスト型に定義されていない場合（例:
@@ -74,6 +78,8 @@ class BaseContext:
             )
         mon = getattr(self, role)
         if mon is not None and side == "foe":
+            if mon not in battle.actives:
+                return None
             mon = battle.foe(mon)
         return mon
 

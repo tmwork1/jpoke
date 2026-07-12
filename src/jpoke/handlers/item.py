@@ -226,6 +226,9 @@ def _heal_berry(battle: Battle,
                 confuse_natures: tuple[str, ...] | None = None) -> HandlerReturn:
     mon = ctx.target
     assert mon is not None
+    # ひんし(HP0)になったときは発動しない（設置技等で先にHPが0になった場合を含む）
+    if mon.fainted:
+        return HandlerReturn(value=value)
     denominator = _gluttony_denominator(mon, denominator)
     # value >= mon.max_hp はほおばる等による強制発動（HP閾値チェックを無視する）
     forced = value >= mon.max_hp
@@ -300,6 +303,9 @@ def _boost_on_quarter_hp(battle: Battle,
     """
     mon = ctx.target
     assert mon is not None
+    # ひんし(HP0)になったときは発動しない
+    if mon.fainted:
+        return HandlerReturn(value=value)
     forced = value >= mon.max_hp
     denominator = _gluttony_denominator(mon, 4)
     if not forced:
@@ -541,6 +547,9 @@ def イバンのみ_set_priority_flag(battle: Battle, ctx: EventContext, value: 
     """
     mon = ctx.target
     assert mon is not None
+    # ひんし(HP0)になったときは発動しない
+    if mon.fainted:
+        return HandlerReturn(value=value)
     if ctx.hp_change_reason == "self_attack":
         return HandlerReturn(value=value)
     denominator = _gluttony_denominator(mon, 4)
@@ -997,6 +1006,9 @@ def サンのみ_apply_focus_energy(battle: Battle, ctx: EventContext, value: An
     """
     mon = ctx.target
     assert mon is not None
+    # ひんし(HP0)になったときは発動しない
+    if mon.fainted:
+        return HandlerReturn(value=value)
     denominator = _gluttony_denominator(mon, 4)
     if mon.hp * denominator <= mon.max_hp or value >= mon.max_hp:
         if battle.volatile_manager.apply(mon, "きゅうしょアップ", count=2):
@@ -1110,6 +1122,9 @@ def スターのみ_random_boost(battle: Battle, ctx: EventContext, value: Any) 
     """
     mon = ctx.target
     assert mon is not None
+    # ひんし(HP0)になったときは発動しない
+    if mon.fainted:
+        return HandlerReturn(value=value)
     forced = value >= mon.max_hp
     denominator = _gluttony_denominator(mon, 4)
     if not forced:
@@ -1378,6 +1393,9 @@ def ナゾのみ_heal_on_super_effective(battle: Battle, ctx: AttackContext, val
     """
     mon = ctx.defender
     assert mon is not None
+    # ひんし(HP0)になったときは発動しない
+    if mon.fainted:
+        return HandlerReturn(value=value)
     if ctx.move.has_flag("fixed_damage"):
         return HandlerReturn(value=value)
     # 相手のきんちょうかん・じんばいったいの影響下では発動しない
@@ -1803,6 +1821,9 @@ def ミクルのみ_set_accuracy_flag(battle: Battle, ctx: EventContext, value: 
     """
     mon = ctx.target
     assert mon is not None
+    # ひんし(HP0)になったときは発動しない
+    if mon.fainted:
+        return HandlerReturn(value=value)
     if ctx.hp_change_reason == "self_attack":
         return HandlerReturn(value=value)
     denominator = _gluttony_denominator(mon, 4)
