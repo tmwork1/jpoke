@@ -434,6 +434,10 @@ class MoveExecutor:
         hit_count = self._resolve_hit_count(ctx)
         ctx.hit_count = hit_count
 
+        # 開始時点で既にねむり状態か（ねごとで眠ったまま行動する場合等）を記録しておく。
+        # ほうし等でヒット中に新たにねむり状態になった場合のみ中断対象とするため。
+        was_asleep_before_hits = ctx.attacker.has_ailment("ねむり")
+
         # ヒットごとに命中判定を行うかどうか（いかさまダイス等で上書き可能）
         check_hit_each_time = self._events.emit(
             Event.ON_MODIFY_HIT_CHECK_EACH_TIME,
@@ -474,6 +478,11 @@ class MoveExecutor:
 
             # ひんしになったら中断
             if ctx.defender.fainted or ctx.attacker.fainted:
+                break
+
+            # 連続攻撃技の途中で新たにねむり状態になった場合（ほうし等）は直ちに中断。
+            # 開始時点で既にねむり状態だった場合（ねごとで眠ったまま行動する場合）は対象外。
+            if not was_asleep_before_hits and ctx.attacker.has_ailment("ねむり"):
                 break
 
         # 技実行完了後の処理（状態管理・撤去など）

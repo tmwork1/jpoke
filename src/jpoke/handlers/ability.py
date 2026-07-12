@@ -3791,10 +3791,13 @@ def ほうし_maybe_inflict_ailment_on_contact(battle: Battle, ctx: AttackContex
     """ほうし特性: 接触技を受けたとき30%でどく/まひ/ねむりのいずれかを付与。
 
     Note:
-        攻撃側がぼうじんゴーグルを持っている場合は無効（ぼうじんゴーグルの仕様）。
+        攻撃側がくさタイプ・特性ぼうじん・アイテムぼうじんゴーグルのいずれかを
+        持っている場合は無効（粉・胞子技と同様の耐性）。
     """
     if (
         not battle.query.is_contact_reaction(ctx)
+        or ctx.attacker.has_type("くさ")
+        or ctx.attacker.ability.name == "ぼうじん"
         or ctx.attacker.has_item("ぼうじんゴーグル")
     ):
         return HandlerReturn(value=value)
