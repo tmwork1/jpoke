@@ -97,7 +97,14 @@ class EventContext(BaseContext):
     失敗する特性の判定に使う（はたきおとす等の一方的な除去では立てない）。
     """
     item_name: ItemName = ""
-    """Event.ON_BERRY_CONSUMED で消費されたきのみ名を伝える（はんすう用）。"""
+    """Event.ON_BERRY_CONSUMED で消費されたきのみ名を伝える（はんすう・ほおぶくろ用）。"""
+    is_self_fling: bool = False
+    """Event.ON_BERRY_CONSUMED専用: なげつけるの使用者が自分の持ち物のきのみを投げて
+    手放したことによる消費の場合True。はんすうはこの経路でも消費として扱うが、
+    ほおぶくろは「きのみを食べる」ことが発動条件のため、この経路では発動しない
+    （一次情報: ほおぶくろの一次情報 特性の仕様節「なげつける/ギフトパスで自分のきのみを
+    手放したとき」）。
+    """
 
     def is_foe_target(self) -> bool:
         """source と target が異なるポケモンかを返す。"""

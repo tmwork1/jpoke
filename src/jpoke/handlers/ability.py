@@ -3809,6 +3809,27 @@ def ほうし_maybe_inflict_ailment_on_contact(battle: Battle, ctx: AttackContex
     return HandlerReturn(value=value)
 
 
+def ほおぶくろ_heal_on_berry_consumed(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ほおぶくろ特性: きのみを食べたとき、きのみ本来の効果に加えて最大HPの1/3を回復する
+    (端数切り捨て、Event.ON_BERRY_CONSUMED / subject_spec="source:self")。
+
+    battle.modify_hp() が内部で Event.ON_MODIFY_HEAL を発火するため、かいふくふうじ状態や
+    HPが満タンの場合は自動的に回復量が0になり発動しない。きんちょうかん・かがくへんかガス等
+    による発動抑制も、きのみ消費自体を止める上流のフロー／特性ハンドラの共通ディスパッチで
+    処理済みのためここでは判定不要。
+
+    なげつけるで自分のきのみを投げて手放した場合（ctx.is_self_fling=True）は「食べる」に
+    該当しないため発動しない（はんすうはこの経路でも対象になるが、ほおぶくろは対象外）。
+    """
+    if ctx.is_self_fling:
+        return HandlerReturn(value=value)
+    mon = ctx.source
+    assert mon is not None
+    if battle.modify_hp(mon, r=1 / 3):
+        _announce_ability_triggered(battle, mon)
+    return HandlerReturn(value=value)
+
+
 def ほのおのからだ_maybe_burn_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ほのおのからだ特性: 直接攻撃を受けた相手を30%でやけどにする。"""
     return _apply_contact_counter_ailment(battle, ctx, value, ailment="やけど", chance=0.3)

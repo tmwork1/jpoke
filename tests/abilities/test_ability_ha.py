@@ -3037,6 +3037,151 @@ def test_ほうし_連続攻撃技でねむりが発動すると中断される(
     assert defender.hits_taken == 1
 
 
+def test_ほおぶくろ_HPが満タンのときは発動しない():
+    """ほおぶくろ: HPが満タンのときにきのみを食べても回復しない
+    （battle.modify_hp が最大HPでクランプされ変化量0になるため自然に満たされる）。
+    自動発動条件を持たないオッカのみを使い、consume_item呼び出し以外できのみが
+    消費されないようにする。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="ほおぶくろ", item_name="オッカのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    hp_before = mon.hp
+    assert hp_before == mon.max_hp
+
+    battle.item_manager.consume_item(mon)
+    assert mon.hp == hp_before
+    assert not mon.has_item()
+
+
+def test_ほおぶくろ_かいふくふうじ状態では回復しない():
+    """ほおぶくろ: かいふくふうじ状態のときはきのみを食べても回復しない。
+    自動発動条件を持たないオッカのみを使い、consume_item呼び出し以外できのみが
+    消費されないようにする。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="ほおぶくろ", item_name="オッカのみ")],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"かいふくふうじ": 99},
+    )
+    mon = battle.actives[0]
+    battle.modify_hp(mon, v=-round(mon.max_hp * 0.5))
+    hp_before = mon.hp
+
+    battle.item_manager.consume_item(mon)
+    assert mon.hp == hp_before
+    assert not mon.has_item()
+
+
+def test_ほおぶくろ_かがくへんかガス中は発動しない():
+    """ほおぶくろ: かがくへんかガスが発動している間はきのみを食べても発動しない。
+    自動発動条件を持たないオッカのみを使い、consume_item呼び出し以外できのみが
+    消費されないようにする。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="ほおぶくろ", item_name="オッカのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.modify_hp(mon, v=-round(mon.max_hp * 0.5))
+    hp_before = mon.hp
+
+    battle.add_ability_disabled_reason(mon, "かがくへんかガス")
+    battle.item_manager.consume_item(mon)
+    assert mon.hp == hp_before
+    assert not mon.has_item()
+
+
+def test_ほおぶくろ_きのみを食べると最大HPの1_3を回復する():
+    """ほおぶくろ: きのみを食べたとき、最大HPの1/3を回復する（端数切り捨て）。
+    自動発動条件を持たないオッカのみを使い、consume_item呼び出し以外できのみが
+    消費されないようにする（オボンのみ等HP割合条件で自動発動するきのみだと、
+    HPを減らす準備操作自体でほおぶくろの発動条件が絡み合ってしまうため）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="ほおぶくろ", item_name="オッカのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.modify_hp(mon, v=-round(mon.max_hp * 0.5))
+    hp_before = mon.hp
+
+    battle.item_manager.consume_item(mon)
+    assert mon.hp == hp_before + mon.max_hp // 3
+    assert not mon.has_item()
+
+
+def test_ほおぶくろ_なげつけるで相手から効果のあるきのみを受けると発動する():
+    """ほおぶくろ: なげつけるで相手から投げつけられたきのみの効果が発動したとき、
+    その効果に加えてほおぶくろも発動する（例: 状態異常のときにラムのみを受ける）。
+    なげつける自体のダメージを0に固定し、ほおぶくろの回復量だけを検証する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="ラムのみ", move_names=["なげつける"])],
+        team1=[Pokemon("ピカチュウ", ability_name="ほおぶくろ")],
+        ailment1=("どく", None),
+    )
+    t.fix_damage(battle, 0)
+    defender = battle.actives[1]
+    defender.hp = defender.max_hp // 2
+    hp_before = defender.hp
+
+    t.run_move(battle, 0)
+    assert not defender.ailment.is_active
+    assert defender.hp == hp_before + defender.max_hp // 3
+
+
+def test_ほおぶくろ_なげつけるで相手から効果の無いきのみを受けても発動しない():
+    """ほおぶくろ: なげつけるで受け取ったきのみの追加効果が発動しなかった場合
+    （状態異常でないときにラムのみを受ける等）はほおぶくろも発動しない。
+    なげつける自体のダメージを0に固定し、ほおぶくろの回復量だけを検証する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="ラムのみ", move_names=["なげつける"])],
+        team1=[Pokemon("ピカチュウ", ability_name="ほおぶくろ")],
+    )
+    t.fix_damage(battle, 0)
+    defender = battle.actives[1]
+    defender.hp = defender.max_hp // 2
+    hp_before = defender.hp
+
+    t.run_move(battle, 0)
+    assert not defender.ailment.is_active
+    assert defender.hp == hp_before
+
+
+def test_ほおぶくろ_なげつけるで自分のきのみを投げて手放しても発動しない():
+    """ほおぶくろ: なげつけるで自分の持ち物のきのみを投げて手放した場合は
+    「食べる」に該当しないため発動しない（はんすうはこの経路でも対象になる点と異なる）。"""
+    battle = t.start_battle(
+        team0=[Pokemon(
+            "カビゴン", ability_name="ほおぶくろ", item_name="オボンのみ",
+            move_names=["なげつける"],
+        )],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    battle.modify_hp(attacker, v=-round(attacker.max_hp * 0.5))
+    hp_before = attacker.hp
+
+    t.run_move(battle, 0)
+    assert not attacker.has_item()
+    assert attacker.hp == hp_before
+
+
+def test_ほおぶくろ_むしくいで奪ったきのみでも発動する():
+    """ほおぶくろ: むしくい・ついばむで相手のきのみを奪って食べたときも発動する
+    （オッカのみのように即時効果の無いきのみでも、消費自体でほおぶくろが発動する）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="ほおぶくろ", move_names=["むしくい"])],
+        team1=[Pokemon("ピカチュウ", item_name="オッカのみ")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    battle.modify_hp(attacker, v=-round(attacker.max_hp * 0.6))
+    hp_before = attacker.hp
+
+    t.run_move(battle, 0)
+    assert not defender.has_item()
+    assert attacker.hp == hp_before + attacker.max_hp // 3
+
+
 def test_ほろびのボディ_すでにほろびのうた状態なら追加しない():
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", ability_name="ほろびのボディ")],
