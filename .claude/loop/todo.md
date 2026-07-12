@@ -18,12 +18,16 @@
   },
   "todo_queue": ["TODO コメントの文言をそのまま"],
   "completed":  ["..."],
-  "failed":     ["..."]
+  "failed":     ["..."],
+  "pending_main_merges": 0
 }
 ```
 
 `todo_queue` の各エントリは **TODO コメントの文言**（`# TODO: ` 以降のテキスト）。
 ファイルパスや行番号は含めない（実装時に Grep で現在位置を探す）。
+
+`pending_main_merges`: 前回 main 反映（PR マージ）以降にコミットが成立した件数。「main への反映」
+節（5件ごと）で使う。`lethal`（§共通2、10件ごと）と同様、整形処理を伴わない単純なカウンタ。
 
 ---
 
@@ -51,7 +55,8 @@ Grep pattern="# TODO" glob="**/*.py" path="." output_mode="content"
 
 ### 2. 終了チェック
 
-`todo_queue` が空なら「{config.category} 全件完了: {completed}」と報告してループ終了。
+`todo_queue` が空なら → `pending_main_merges > 0` の場合は「main への反映」の手順に従い
+残りを先に main へ反映してから、「{config.category} 全件完了: {completed}」と報告してループ終了。
 
 ### 3. エントリ取り出し
 
@@ -102,9 +107,9 @@ jpoke {config.category} レビュー・テストタスク: {entry}
 {config.review_extra}
 ```
 
-成功: `completed` に追加。失敗: `failed` に追加。
-
-> main へのマージは行わない（§共通2）。コミットは `loop/todo` に積むだけでよい。
+成功: `completed` に追加し、`pending_main_merges += 1`。`pending_main_merges >= 5` になったら
+「main への反映」の手順に従いその場で main へ反映し、`pending_main_merges = 0` に戻す。
+失敗: `failed` に追加（`pending_main_merges` は変更しない）。
 
 ### 6. 状態保存・終了
 
@@ -114,7 +119,9 @@ jpoke {config.category} レビュー・テストタスク: {entry}
 
 ## main への反映
 
-§共通6 を適用する（`{branch}` = `loop/todo`）。
+**5件の修正が review-test で成功・コミットされるたびに**、ディスパッチャーがその場で §共通6 の
+手順に従い、まとめて main へ反映する（`{branch}` = `loop/todo`）。ループ終了時（TODO を
+消化しきった場合）は、`pending_main_merges` が5件未満でも1件以上残っていれば反映してから終える。
 
 ## エラーハンドリング
 
@@ -127,12 +134,14 @@ jpoke {config.category} レビュー・テストタスク: {entry}
 {
   "config": {
     "category":     "TODO修正",
+    "scan_glob":    "**/*.py",
     "test_files":   ["tests/test_move.py"],
     "review_extra": "",
     "worktree":     "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-loop\\todo"
   },
   "todo_queue": ["ひるみ確率の適用を実装する", "追加効果フラグを追加する"],
   "completed": [],
-  "failed":    []
+  "failed":    [],
+  "pending_main_merges": 0
 }
 ```
