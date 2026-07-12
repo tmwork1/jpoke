@@ -20,7 +20,7 @@
 
 | モード | Player | 特徴 | 既定 n_pokemon / max_turns / batch |
 |---|---|---|---|
-| `random` | RandomPlayer | 安価。広い状態空間を広く浅く掘る | 6 / 100 / 200 |
+| `random` | RandomPlayer | 安価。広い状態空間を広く浅く掘る | 6 / 100 / 500 |
 | `tree_search` | TreeSearchFuzzPlayer（1手先ミニマックス） | 高コスト。実戦的な行動でのみ出るバグを狙う | 3 / 20 / 40 |
 
 `batch_size` は `--search` で worker プロセスに分散して並列実行される件数（打ち切りなし）。
@@ -47,7 +47,7 @@
   "modes": {
     "random": {
       "player": "random",
-      "max_turns": 100, "n_pokemon": 6, "batch_size": 200, "workers": 4,
+      "max_turns": 100, "n_pokemon": 6, "batch_size": 500, "workers": 4,
       "failure_dir": "fuzz_failures",
       "next_seed": 0, "total_battles": 0
     },
@@ -230,6 +230,14 @@ review-test 失敗 → 手順4.4の失敗時と同様に `failed_bugs` を更新
 
 1件の修正が review-test で成功・コミットされるたびに、ディスパッチャーがその場で §共通6 の
 手順に従い直ちに main へ反映する（`{branch}` = `loop/fuzz`）。両モードの修正がここに積まれる。
+
+## ループの実行間隔
+
+`/loop fuzz` の動的セルフペーシング（`ScheduleWakeup`）では、`/loop` スキルの汎用ガイド
+（1200〜1800秒）ではなく **固定10分間隔（`delaySeconds=600`）** を使う。バグ対応で impl /
+review-test エージェントを foreground 起動した場合はそのターン内で完結するため、次回起動も
+同様に600秒後とする。バックグラウンドエージェント（§共通7-1）の完了通知を受けて再開した
+ターンでも、次のスケジュールは同じく600秒後にする。
 
 ## エラーハンドリング
 
