@@ -517,7 +517,11 @@ class MoveExecutor:
         ctx.defender.hits_taken += 1
         # カウンター・ミラーコートは「最後に受けた1回分」のダメージを参照するため、
         # 連続技で複数回ヒットした場合も合算せず直近のヒット量で上書きする。
-        category = "physical" if self.battle.query.deals_physical_damage(ctx.attacker, ctx.move) else "special"
+        # 技のカテゴリは run_move 実行時に既に確定済み（ctx.move.category）のため、
+        # ここで再度 resolve_move_category（battle.foe(attacker) を参照）を呼ばない。
+        # ON_HIT イベント（レッドカード等）で attacker が既に交代済みの場合、
+        # battle.foe(attacker) が例外を送出するため。
+        category = "physical" if (ctx.move.category == "physical" or ctx.move.has_flag("physical_damage")) else "special"
         ctx.defender.last_damage_taken = {"damage": actual_damage, "category": category}
 
         self._events.emit(Event.ON_DAMAGE_HIT, ctx, actual_damage)

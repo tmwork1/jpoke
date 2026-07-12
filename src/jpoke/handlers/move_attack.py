@@ -3653,11 +3653,16 @@ def わるあがき_self_damage(battle: Battle, ctx: AttackContext, value: Any) 
     与えたダメージ量に依存しない固定割合の反動であり、特性いしあたま・マジックガード
     のどちらでも無効化されない特殊な性質を持つため、reason="self_cost" を用いて
     一般的な反動ダメージ（reason="recoil"）向けの無効化ハンドラの対象から外す。
+
+    ON_HIT の value（相手への実ダメージ量）は他のON_HITハンドラ（レッドカード等）に
+    引き継がれるため、他の反動技用ハンドラ（_recoil）と同様に自身の modify_hp の
+    戻り値ではなく元の value をそのまま返す必要がある。誤って modify_hp の戻り値
+    （自傷ダメージ量）を返すと、後続ハンドラが「相手への実ダメージが0以下だった」
+    と誤認識してしまう。
     """
     recoil = max(1, round_half_down(ctx.attacker.max_hp / 4))
-    return HandlerReturn(
-        value=battle.modify_hp(ctx.attacker, v=-recoil, reason="self_cost", source=ctx.attacker)
-    )
+    battle.modify_hp(ctx.attacker, v=-recoil, reason="self_cost", source=ctx.attacker)
+    return HandlerReturn(value=value)
 
 
 def ワンダースチーム_apply_confusion_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
