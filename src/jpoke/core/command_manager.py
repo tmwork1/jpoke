@@ -66,16 +66,14 @@ class CommandManager:
         ):
             if not self.battle.query.can_switch(player):
                 return []
-        bench_alive = any(
-            mon is not state.active and mon.alive
-            for mon in state.team
-        )
+        bench = state.bench
+        bench_alive = any(mon.alive for mon in bench)
         if not bench_alive:
             return []
         return [
             Command.get_switch_command(i)
             for i, mon in enumerate(state.team)
-            if mon is not state.active and mon.alive
+            if mon in bench and mon.alive
         ]
 
     def get_available_action_commands(self, player: Player) -> list[Command]:

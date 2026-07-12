@@ -148,10 +148,11 @@ def get_forced_switch_commands(battle: Battle, player: Player) -> list[Command]:
     `Event.ON_TRY_BLOW` を通して別途判定する。
     """
     state = battle.player_states[player]
+    bench = state.bench
     return [
         Command.get_switch_command(i)
         for i, mon in enumerate(state.team)
-        if mon is not state.active and mon.alive
+        if mon in bench and mon.alive
     ]
 
 
