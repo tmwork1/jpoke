@@ -1621,6 +1621,24 @@ def test_ファーコート_物理技の防御が2倍になる(move_name: str, e
     assert battle.damage_calculator.def_modifier == expected_modifier
 
 
+def test_フィルター_かたやぶりで無効():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["じしん"])],
+        team1=[Pokemon("コイル", ability_name="フィルター")],
+    )
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.damage_modifier
+
+
+def test_フィルター_効果抜群ダメージを0_75倍():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["じしん"])],
+        team1=[Pokemon("コイル", ability_name="フィルター")],
+    )
+    t.run_move(battle, 0)
+    assert 3072 == battle.damage_calculator.damage_modifier
+
+
 def test_ふうりょくでんき_おいかぜ発生でじゅうでん():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ")],
@@ -1628,6 +1646,37 @@ def test_ふうりょくでんき_おいかぜ発生でじゅうでん():
     )
     battle.side_managers[1].activate("おいかぜ", 4)
     assert battle.actives[1].has_volatile("じゅうでん")
+
+
+def test_ふうりょくでんき_こらえるでHP1のまま耐えたときも発動する():
+    """ふうりょくでんき: こらえるでHP1のまま耐えた（実HPダメージ0）ときも発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["かぜおこし"])],
+        team1=[Pokemon("カビゴン", ability_name="ふうりょくでんき")],
+    )
+    defender = battle.actives[1]
+    defender.hp = 1
+    battle.volatile_manager.apply(defender, "こらえる")
+    t.fix_damage(battle, 9999)
+
+    t.run_move(battle, 0)
+
+    assert defender.hp == 1
+    assert defender.has_volatile("じゅうでん")
+
+
+def test_ふうりょくでんき_みがわりに阻まれたときは発動しない():
+    """ふうりょくでんき: みがわりに風技を防がれたとき（実HPダメージ0）は発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["かぜおこし"])],
+        team1=[Pokemon("カビゴン", ability_name="ふうりょくでんき")],
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+
+    t.run_move(battle, 0)
+
+    assert not defender.has_volatile("じゅうでん")
 
 
 def test_ふうりょくでんき_相手のおいかぜには反応しない():
@@ -1646,6 +1695,8 @@ def test_ふうりょくでんき_相手のおいかぜには反応しない():
     [
         ("かぜおこし", True),
         ("たいあたり", False),
+        ("あやしいかぜ", False),  # 名前に「かぜ」を含むが風技ラベルは無い
+        ("ぎんいろのかぜ", False),  # 同上
     ]
 )
 def test_ふうりょくでんき_風技を受けるとじゅうでん(move_name: str, result: bool):
@@ -1655,6 +1706,52 @@ def test_ふうりょくでんき_風技を受けるとじゅうでん(move_name
     )
     t.run_move(battle, 0)
     assert battle.actives[1].has_volatile("じゅうでん") == result
+
+
+def test_フェアリーオーラ_かたやぶりでも威力補正は無効化されない():
+    """現行世代ではかたやぶりの効果がある技はフェアリーオーラの影響を受ける（無視されない）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="フェアリーオーラ")],
+        team1=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["ムーンフォース"])],
+    )
+    t.run_move(battle, 1)
+    assert 5448 == battle.damage_calculator.power_modifier
+
+
+def test_フェアリーオーラ_フェアリー技以外には効果がない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="フェアリーオーラ", move_names=["でんきショック"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.power_modifier
+
+
+def test_フェアリーオーラ_登場時に特性開示():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="フェアリーオーラ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    assert battle.actives[0].ability.revealed is True
+
+
+def test_フェアリーオーラ_相手のフェアリー技威力も5448_4096倍になる():
+    """フェアリーオーラの効果対象は場にいるポケモン全員のため、敵のフェアリー技威力も上がる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="フェアリーオーラ")],
+        team1=[Pokemon("ピカチュウ", move_names=["ムーンフォース"])],
+    )
+    t.run_move(battle, 1)
+    assert 5448 == battle.damage_calculator.power_modifier
+
+
+def test_フェアリーオーラ_自分のフェアリー技威力が5448_4096倍になる():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="フェアリーオーラ", move_names=["ムーンフォース"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    t.run_move(battle, 0)
+    assert 5448 == battle.damage_calculator.power_modifier
 
 
 @pytest.mark.parametrize(

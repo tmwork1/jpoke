@@ -2149,7 +2149,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
         handlers={
             Event.ON_BEFORE_APPLY_VOLATILE: h.AbilityHandler(
                 h.どんかん_prevent_volatile,
-                "target:self",
+                subject_spec="target:self",
             ),
             Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
                 h.どんかん_block_intimidate,
@@ -2692,10 +2692,13 @@ ABILITIES: dict[AbilityName, AbilityData] = {
     ),
     "ふうりょくでんき": AbilityData(
         handlers={
-            Event.ON_DAMAGE_HIT: h.AbilityHandler(
+            # ON_DAMAGE_HIT は actual_damage<=0 のとき発火しないため採用しない。こらえるで
+            # HP1のまま耐えたときなど（実HPダメージ0）も発動する仕様
+            # （docs/spec/abilities/ふうりょくでんき.md）を満たすため、常に発火する Event.ON_HIT
+            # を使用する（みがわりに阻まれた場合はハンドラ内で ctx.substitute_damage を見て除外する）。
+            Event.ON_HIT: h.AbilityHandler(
                 h.ふうりょくでんき_on_damage,
                 subject_spec="defender:self",
-                priority=20,
             ),
             Event.ON_FIELD_ACTIVATE: h.AbilityHandler(
                 h.ふうりょくでんき_on_field_activate,
@@ -2704,10 +2707,15 @@ ABILITIES: dict[AbilityName, AbilityData] = {
         }
     ),
     "フェアリーオーラ": AbilityData(
-        flags={
-            "mold_breaker_ignorable",
-        },
         handlers={
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                h.announce_ability_triggered,
+                subject_spec="source:self",
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.announce_ability_triggered,
+                subject_spec="source:self",
+            ),
             Event.ON_CALC_POWER_MODIFIER: [
                 h.AbilityHandler(
                     h.フェアリーオーラ_boost_power,
