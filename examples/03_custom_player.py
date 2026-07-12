@@ -28,6 +28,27 @@ class StrongestMovePlayer(Player):
 
         return max(commands, key=move_power)
 
+    def choose_command_poke_env_style(self, battle: Battle) -> Command:
+        """poke-env経験者向け: choose_command() と同じ判断の代替実装（未使用）。
+
+        choose_command() に渡される battle は観測用コピーで、battle.observer が
+        呼び出し元プレイヤー自身に設定されているため、poke-env互換プロパティ
+        （battle.active_pokemon / battle.opponent_active_pokemon / battle.available_moves /
+        battle.available_switches / battle.side_conditions / battle.team）がそのまま
+        自分視点の情報として使える。get_available_commands() + command_to_move() の
+        組み合わせをこちらに置き換えても同じ結果になる
+        """
+        moves = battle.available_moves  # get_available_commands()を技だけ取り出しMoveに変換したもの
+        if not moves:
+            # わるあがきのみの場合。available_moves はこのときわるあがきを1件返す
+            return battle.get_available_commands(self)[0]
+        move_commands = [c for c in battle.get_available_commands(self) if c.is_regular_move]
+        best_index = max(
+            range(len(moves)),
+            key=lambda i: moves[i].base_power if moves[i].is_attack else 0,
+        )
+        return move_commands[best_index]
+
 
 def main() -> None:
     player1 = StrongestMovePlayer("StrongestMovePlayer")

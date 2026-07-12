@@ -12,7 +12,10 @@ from jpoke import Player
 def build_player(username: str, item_name: str) -> Player:
     """アイテムだけが異なるガブリアスを1体持つプレイヤーを作る。"""
     player = Player(username)
-    player.add_pokemon("ガブリアス", item_name=item_name, move_names=["ドラゴンクロー"])
+    # add_pokemon() は追加したPokemonインスタンスを返すので、team[0]を辿らなくても
+    # そのまま追加設定（ここではこうげき努力値を最大まで振る）に使える
+    mon = player.add_pokemon("ガブリアス", item_name=item_name, move_names=["ドラゴンクロー"])
+    mon.set_evs([0, 32, 0, 0, 0, 0])
     return player
 
 
@@ -37,9 +40,11 @@ def main() -> None:
         player.battle_against(build_opponent(), n_battles=n_battles, seed=1)
 
         print(
-            f"{item_name}: {player.n_won_battles}/{player.n_finished_battles} 勝"
+            f"{item_name}: {player.n_won_battles}勝{player.n_lost_battles}敗/{player.n_finished_battles}戦"
             f"（勝率 {player.win_rate:.1%}）"
         )
+        # n_tied_battles はpoke-env互換のため用意されているが、jpokeに引き分けは
+        # 存在しないため常に0（n_lost_battles = n_finished_battles - n_won_battles - n_tied_battles）
 
     # 試してみよう: n_battles を増やして勝率を安定させたり、
     # 比較するアイテム・技の組み合わせを変えてみる
