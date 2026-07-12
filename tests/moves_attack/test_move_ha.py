@@ -1178,6 +1178,9 @@ def test_ばくれつパンチ_こんらんが発動する():
         team1=[Pokemon("カビゴン")],
         accuracy=100,
     )
+    # ダメージロールの上振れでカビゴンが瀕死になるとこんらんの付与判定ができなくなるため、
+    # ダメージを安全な値に固定する
+    t.fix_damage(battle, 50)
     t.run_move(battle, 0)
     assert battle.actives[1].has_volatile("こんらん")
 
@@ -1537,10 +1540,14 @@ def test_ひのこ_やけどが発動する():
 
 
 def test_ひゃっきやこう_やけどが発動する():
-    """ひゃっきやこう: 30%でやけどを付与する。"""
+    """ひゃっきやこう: 30%でやけどを付与する。
+
+    防御側はバンギラス（高耐久）にする。防御側がフーディン等の低耐久だと、まれに発生する
+    急所判定でその一撃により瀕死になり、やけどが付与されず flaky になるため。
+    """
     battle = t.start_battle(
         team0=[Pokemon("ゲンガー", move_names=["ひゃっきやこう"])],
-        team1=[Pokemon("フーディン")],
+        team1=[Pokemon("バンギラス")],
         accuracy=100,
         secondary_chance=1.0,
     )
@@ -2006,6 +2013,7 @@ def test_ふみつけ_ひるみが発動する():
         accuracy=100,
         secondary_chance=1.0,
     )
+    battle.random.random = lambda: 0.99  # 急所が発生しない乱数（急所で瀕死になりひるみが付与されなくなるのを防ぐ。1.0だとaccuracy=100の命中判定も外れるため使わない）
     t.run_move(battle, 0)
     assert battle.actives[1].has_volatile("ひるみ")
 

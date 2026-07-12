@@ -431,6 +431,7 @@ def test_タイプ半減系_かたやぶりで無効(ability_name: str, move_nam
     [
         ("いわはこび", "いわなだれ", 6144),
         ("はがねつかい", "アイアンヘッド", 6144),
+        ("ほのおのたてがみ", "ひのこ", 6144),
         ("りゅうのあぎと", "りゅうのはどう", 6144),
         ("トランジスタ", "でんきショック", 5325),
     ],
@@ -1374,15 +1375,16 @@ def test_状態異常無効(ability: str, ailment: AilmentName):
         ("ねつこうかん", "やけど", "おにび", False),
         # スイートベールは無視して状態異常にしても回復しない
         ("スイートベール", "ねむり", "ねむりごな", True),
-        # ("マグマのよろい", "こおり", "", False),
+        ("マグマのよろい", "こおり", "いてつくしせん", False),
     ],
 )
 def test_状態異常無効_かたやぶりで無効(ability: str, ailment: AilmentName, move: str, still_active: bool):
-    # カビゴン（ノーマル）はまひ・ねむり・やけど・どく全てのタイプ耐性を持たないため使用
+    # カビゴン（ノーマル）はまひ・ねむり・やけど・どく・こおり全てのタイプ耐性を持たないため使用
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", ability_name=ability)],
         team1=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=[move])],
         accuracy=100,
+        secondary_chance=1.0,
     )
     t.run_move(battle, 1)
     assert battle.actives[0].ailment.is_active == still_active

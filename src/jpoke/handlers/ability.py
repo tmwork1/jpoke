@@ -3814,9 +3814,41 @@ def ほうし_maybe_inflict_ailment_on_contact(battle: Battle, ctx: AttackContex
     return HandlerReturn(value=value)
 
 
+def ほおぶくろ_heal_on_berry_consumed(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ほおぶくろ特性: きのみを食べたとき、きのみ本来の効果に加えて最大HPの1/3を回復する
+    (端数切り捨て、Event.ON_BERRY_CONSUMED / subject_spec="source:self")。
+
+    battle.modify_hp() が内部で Event.ON_MODIFY_HEAL を発火するため、かいふくふうじ状態や
+    HPが満タンの場合は自動的に回復量が0になり発動しない。きんちょうかん・かがくへんかガス等
+    による発動抑制も、きのみ消費自体を止める上流のフロー／特性ハンドラの共通ディスパッチで
+    処理済みのためここでは判定不要。
+
+    なげつけるで自分のきのみを投げて手放した場合（ctx.is_self_fling=True）は「食べる」に
+    該当しないため発動しない（はんすうはこの経路でも対象になるが、ほおぶくろは対象外）。
+    """
+    if ctx.is_self_fling:
+        return HandlerReturn(value=value)
+    mon = ctx.source
+    assert mon is not None
+    if battle.modify_hp(mon, r=1 / 3):
+        _announce_ability_triggered(battle, mon)
+    return HandlerReturn(value=value)
+
+
 def ほのおのからだ_maybe_burn_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ほのおのからだ特性: 直接攻撃を受けた相手を30%でやけどにする。"""
+    """ほのおのからだ特性: 直接攻撃を受けた相手を30%でやけどにする。
+
+    こらえるでHP1のまま耐えたときやみねうちを受けたとき（実HPダメージ0）も発動するが、
+    みがわりに攻撃を防がれたとき（実HPダメージ0）は発動しない。
+    """
+    if ctx.substitute_damage:
+        return HandlerReturn(value=value)
     return _apply_contact_counter_ailment(battle, ctx, value, ailment="やけど", chance=0.3)
+
+
+def ほのおのたてがみ_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """ほのおのたてがみ特性: ほのお技の攻撃補正を1.5倍にする。"""
+    return _modify_by_move_condition(ctx.move, value, modifier=6144, move_type="ほのお")
 
 
 def ほろびのボディ_apply_perish_song_on_contact(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -3831,7 +3863,7 @@ def ほろびのボディ_apply_perish_song_on_contact(battle: Battle, ctx: Atta
     defender = ctx.defender
     triggered = False
     for mon in (defender, attacker):
-        if battle.volatile_manager.apply(mon, "ほろびのうた", source=defender):
+        if battle.volatile_manager.apply(mon, "ほろびのうた", count=3, source=defender):
             triggered = True
     if triggered:
         _announce_ability_triggered(battle, defender)
@@ -3915,7 +3947,8 @@ def マイティチェンジ_change_form(battle: Battle, ctx: EventContext, valu
     """マイティチェンジ特性: ナイーブフォルムで引っ込むとマイティフォルムへ変化する。"""
     mon = ctx.source
     if mon.name == PALAFIN_ZERO and mon.alive:
-        mon.set_form(PALAFIN_HERO)
+        if mon.set_form(PALAFIN_HERO):
+            _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
 
 
@@ -3946,20 +3979,50 @@ def マグマのよろい_cure_freeze_on_enable(battle: Battle, ctx: EventContex
     return _cure_ailment_on_enable(battle, ctx, blocked_ailments=["こおり"])
 
 
-def まけんき_boost_atk_on_stat_drop(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
-    """まけんき特性: 敵から能力を下げられたときこうげきが2段階上昇する。"""
-    if (
-        any(v < 0 for v in value.values())
-        and ctx.source != ctx.target
-    ):
-        battle.modify_stats(ctx.target, {"atk": +2}, source=ctx.source)
-        _announce_ability_triggered(battle, ctx.target)
+def まけんき_boost_atk_on_stat_drop(battle: Battle, ctx: EventContext, value: dict[Stat, int]) -> HandlerReturn:
+    """まけんき特性: 敵から能力を下げられるとこうげきが2段階上昇する。下がった能力の数だけ発動する。
+
+    くすぐる・おきみやげのように一度に複数の能力を下げる技を受けた場合、
+    下がった能力の数だけまけんきが発動する（一次情報: docs/wiki/abilities/まけんき.html
+    特性の仕様節）。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト (ON_MODIFY_STAT)
+            - target: 能力変化の対象（自分）
+            - source: 能力変化の原因
+        value: 能力変化の辞書 {stat: change}
+
+    Returns:
+        HandlerReturn: (処理実行フラグ)
+            - 能力が下がり、自分以外が原因の場合はこうげき上昇
+    """
+    # 下がった能力の数を数える
+    negative_count = sum(1 for v in value.values() if v < 0)
+    # 自分以外が原因で能力が下がった場合、下がった数だけこうげきを2段階上昇
+    if negative_count and ctx.source != ctx.target:
+        for _ in range(negative_count):
+            if battle.modify_stats(ctx.target, {"atk": +2}, source=ctx.source):
+                _announce_ability_triggered(battle, ctx.target)
     return HandlerReturn(value=value)
 
 
+# マジシャンが発動しない技（docs/spec/abilities/マジシャン.md「技の仕様」）。
+# なげつける: 使用者自身のアイテムを消費して攻撃するため、通常のダメージ処理を経由するが
+# マジシャンは発動しない。しぜんのめぐみ/みらいよち/はめつのねがいは本プロジェクトでは
+# 通常のON_DAMAGE_HITを経由しない実装（しぜんのめぐみは未実装、みらいよち/はめつのねがいは
+# ON_MOVE_CHARGEでの遅延ダメージ処理）のため、構造的にこの集合へ含める必要がない。
+_MAGICIAN_EXCLUDED_MOVES: frozenset[str] = frozenset({"なげつける"})
+
+
 def マジシャン_steal_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """マジシャン特性: 攻撃成功後に相手のアイテムを奪う。"""
-    battle.item_manager.take_item(ctx.defender)
+    """マジシャン特性: 攻撃成功後に相手のアイテムを奪う。
+
+    技で相手をひんしにさせた場合は、相手の特性ねんちゃくによる阻止も無視して奪える。
+    """
+    if ctx.move.name in _MAGICIAN_EXCLUDED_MOVES:
+        return HandlerReturn(value=value)
+    battle.item_manager.take_item(ctx.defender, ignore_sticky_hold=ctx.defender.fainted)
     return HandlerReturn(value=value)
 
 
@@ -3980,8 +4043,14 @@ def マジックミラー_reflect(battle: Battle, ctx: AttackContext, value: boo
 
 
 def マルチスケイル_reduce_damage(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """防御側特性: HP満タン時の被ダメージを0.5倍にする。"""
-    if ctx.defender.hp == ctx.defender.max_hp:
+    """防御側特性: HP満タン時の被ダメージを0.5倍にする。
+
+    こんらんの自傷ダメージ（"_こんらん"）は攻撃技扱いではないため半減しない。
+    """
+    if (
+        ctx.defender.hp == ctx.defender.max_hp
+        and ctx.move.name != "_こんらん"
+    ):
         value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
 

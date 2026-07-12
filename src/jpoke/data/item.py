@@ -776,6 +776,11 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_DAMAGE_HIT: h.ItemHandler(
                 h.ゴツゴツメット_chip_contact_attacker,
                 subject_spec="defender:self",
+                # docs/spec/abilities/マジシャン.md: 「きあいのハチマキ/きあいのタスキ/ゴツゴツメット/
+                # じゃくてんほけん/じゅうでんち/ゆきだま/きゅうこん/ひかりごけ/ふうせんの効果が発動する場合、
+                # マジシャンで奪う前に発動する」。マジシャン特性ハンドラ(priority=100)より確実に先に
+                # 発動させるため、素早さに依存しないpriority=90を指定する。
+                priority=90,
             )
         }
     ),
@@ -923,6 +928,11 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_DAMAGE_HIT: h.ItemHandler(
                 h.じゃくてんほけん_boost_on_super_effective,
                 subject_spec="defender:self",
+                # docs/spec/abilities/マジシャン.md: 「きあいのハチマキ/きあいのタスキ/ゴツゴツメット/
+                # じゃくてんほけん/じゅうでんち/ゆきだま/きゅうこん/ひかりごけ/ふうせんの効果が発動する場合、
+                # マジシャンで奪う前に発動する」。マジシャン特性ハンドラ(priority=100)より確実に先に
+                # 発動させるため、素早さに依存しないpriority=90を指定する。
+                priority=90,
             )
         }
     ),
@@ -945,6 +955,11 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_DAMAGE_HIT: h.ItemHandler(
                 h.じゅうでんち_boost_atk_on_electric_hit,
                 subject_spec="defender:self",
+                # docs/spec/abilities/マジシャン.md: 「きあいのハチマキ/きあいのタスキ/ゴツゴツメット/
+                # じゃくてんほけん/じゅうでんち/ゆきだま/きゅうこん/ひかりごけ/ふうせんの効果が発動する場合、
+                # マジシャンで奪う前に発動する」。マジシャン特性ハンドラ(priority=100)より確実に先に
+                # 発動させるため、素早さに依存しないpriority=90を指定する。
+                priority=90,
             )
         }
     ),
@@ -1323,6 +1338,10 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_DAMAGE_HIT: h.ItemHandler(
                 h.ナゾのみ_heal_on_super_effective,
                 subject_spec="defender:self",
+                # docs/spec/abilities/マジシャン.md: 「弱点半減のきのみ/ナゾのみ/ジャポのみ/
+                # レンブのみはマジシャンより先に発動する」。マジシャン特性ハンドラ(priority=100)
+                # より確実に先に発動させるため、素早さに依存しないpriority=90を指定する。
+                priority=90,
             )
         }
     ),
@@ -1874,6 +1893,11 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_DAMAGE_HIT: h.ItemHandler(
                 h.ゆきだま_boost_attack_on_ice_hit,
                 subject_spec="defender:self",
+                # docs/spec/abilities/マジシャン.md: 「きあいのハチマキ/きあいのタスキ/ゴツゴツメット/
+                # じゃくてんほけん/じゅうでんち/ゆきだま/きゅうこん/ひかりごけ/ふうせんの効果が発動する場合、
+                # マジシャンで奪う前に発動する」。マジシャン特性ハンドラ(priority=100)より確実に先に
+                # 発動させるため、素早さに依存しないpriority=90を指定する。
+                priority=90,
             )
         }
     ),
