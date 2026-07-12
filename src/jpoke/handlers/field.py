@@ -352,7 +352,12 @@ def トリックルーム_tick(battle: Battle, ctx: EventContext, value: Any) ->
 
 
 def どくびし_apply_poison(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """どくびしの毒付与"""
+    """どくびしの毒付与
+
+    どくびしは付与元の特性ふしょくによるタイプ無効貫通の対象外であり、繰り出した
+    ポケモン自身がふしょく持ちのはがね・どくタイプ（テラスタル含む）であっても
+    どく・もうどく状態にはならない（allow_type_immunity_bypass=False）。
+    """
     # 対象のサイドのどくびしフィールドを取得
     side = battle.get_side(ctx.source)
     field = side.get("どくびし")
@@ -372,7 +377,9 @@ def どくびし_apply_poison(battle: Battle, ctx: EventContext, value: Any) -> 
 
     # 層数に応じて「どく」または「もうどく」を付与
     ailment = "もうどく" if field.count >= 2 else "どく"
-    battle.ailment_manager.apply(ctx.source, ailment, source=ctx.source)
+    battle.ailment_manager.apply(
+        ctx.source, ailment, source=ctx.source, allow_type_immunity_bypass=False
+    )
     return HandlerReturn(value=value)
 
 

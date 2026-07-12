@@ -53,7 +53,8 @@ class AilmentManager:
               name: AilmentName,
               count: int | None = None,
               source: Pokemon | None = None,
-              overwrite: bool = False) -> bool:
+              overwrite: bool = False,
+              allow_type_immunity_bypass: bool = True) -> bool:
         """状態異常を付与する。
 
         Args:
@@ -62,6 +63,10 @@ class AilmentManager:
             count: 継続ターン数（ねむりは省略時に Champions 仕様で自動決定）
             source: 状態異常の原因となったポケモン
             overwrite: Trueの場合、既存の状態異常を上書き
+            allow_type_immunity_bypass: Falseの場合、source の特性（ふしょく等）による
+                どく/はがねタイプへのどく・もうどく無効貫通を無効化する。どくびしのように
+                「付与元は存在するが特性によるタイプ無効貫通の対象ではない」経路で使う
+                （どくびしはふしょく持ちが自分自身に踏んでも、はがねタイプ等ならどく状態にはならない）。
         Returns:
             付与に成功したTrue
 
@@ -87,7 +92,8 @@ class AilmentManager:
             return False
 
         # タイプによる無効化をチェック
-        if not self._can_apply_by_type(name, target, source):
+        type_immunity_source = source if allow_type_immunity_bypass else None
+        if not self._can_apply_by_type(name, target, type_immunity_source):
             return False
 
         # ON_BEFORE_APPLY_AILMENT イベントを発火して特性などによる無効化をチェック
