@@ -2529,6 +2529,32 @@ def test_ヘドロえき_通常の回復には影響しない():
     assert attacker.hp == attacker.max_hp
 
 
+def test_ヘヴィメタル_かたやぶりで無効化されおもさが基本値になる():
+    """ヘヴィメタル: かたやぶり持ちの技を受けると特性が無視され、
+    おもさを参照する技（くさむすび）の威力が基本のおもさ基準になる。
+    ドータクン(187.0kg)はヘヴィメタルで374.0kg扱いとなり本来威力120だが、
+    かたやぶりを受けると187.0kgのまま(威力100)で計算される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギバナ", ability_name="かたやぶり", move_names=["くさむすび"])],
+        team1=[Pokemon("ドータクン", ability_name="ヘヴィメタル")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 100
+
+
+def test_ヘヴィメタル_おもさが基本値の2倍になる():
+    """ヘヴィメタル: 通常時はおもさを2倍にする。
+    ドータクン(187.0kg)は374.0kgとなり、くさむすびの威力は120になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギバナ", move_names=["くさむすび"])],
+        team1=[Pokemon("ドータクン", ability_name="ヘヴィメタル")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 120
+
+
 def test_へんげんじざい_交代でリセットされ再発動できる():
     battle = t.start_battle(
         team0=[
