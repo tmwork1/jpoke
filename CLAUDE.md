@@ -124,6 +124,10 @@ data/ability.py  →  handlers/ability.py に実装  →  data/ability.py に登
 - リポジトリは `delete_branch_on_merge` が有効。PRマージ後、**リモートブランチは自動削除されるが
   ローカルブランチは残るので `git branch -d <branch>` で必ず削除する**（残したまま気づかず同じ
   ブランチに追いコミットしてしまう事故を防ぐ）
+- **PRマージ後は、作業していたworktree（work1等）だけでなく、リポジトリルートも含めて main を
+  必ず `git pull`（または `git fetch` + `checkout`）で最新化する**。worktreeだけ最新化してリポジトリ
+  ルート側の `git pull` を忘れると、後続作業がマージ済みの変更に気づかないまま古い状態で進んでしまう
+  事故につながる
 - 既存ブランチで作業を再開する前に、そのブランチが既にmainへマージ済みでないか
   （`git log <branch>..main`、`gh pr list --state merged`）を確認する
 - `.loop/` 系フロー（impl / review / todo / lethal / fuzz / replay_fuzz）は対象外。既存の分離済みブランチ
