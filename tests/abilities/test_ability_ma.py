@@ -985,6 +985,30 @@ def test_メタルプロテクト_かたやぶりで無効化されない():
     assert battle.actives[0].boosts["atk"] == 0
 
 
+def test_メタルプロテクト_自己低下は防げない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="メタルプロテクト")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon0, _ = battle.actives
+    stats = {"atk": -1, "def": +1, "spa": -3, "spd": +3, "spe": -5, "accuracy": +5, "evasion": -6}
+    expected = stats
+
+    assert expected == battle.modify_stats(mon0, stats, source=mon0)
+
+
+def test_メタルプロテクト_能力低下を防ぐ():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="メタルプロテクト")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon0, mon1 = battle.actives
+    stats = {"atk": -1, "def": +1, "spa": -3, "spd": +3, "spe": -5, "accuracy": +5, "evasion": -6}
+    expected = {k: v for k, v in stats.items() if v > 0}
+
+    assert expected == battle.modify_stats(mon0, stats, source=mon1)
+
+
 def test_メロメロボディ_接触攻撃30パーセントでメロメロ():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="メロメロボディ", gender="female")],
