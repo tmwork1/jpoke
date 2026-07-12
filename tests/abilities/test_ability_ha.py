@@ -1646,6 +1646,8 @@ def test_ふうりょくでんき_相手のおいかぜには反応しない():
     [
         ("かぜおこし", True),
         ("たいあたり", False),
+        ("あやしいかぜ", False),  # 名前に「かぜ」を含むが風技ラベルは無い
+        ("ぎんいろのかぜ", False),  # 同上
     ]
 )
 def test_ふうりょくでんき_風技を受けるとじゅうでん(move_name: str, result: bool):
@@ -1655,6 +1657,37 @@ def test_ふうりょくでんき_風技を受けるとじゅうでん(move_name
     )
     t.run_move(battle, 0)
     assert battle.actives[1].has_volatile("じゅうでん") == result
+
+
+def test_ふうりょくでんき_こらえるでHP1のまま耐えたときも発動する():
+    """ふうりょくでんき: こらえるでHP1のまま耐えた（実HPダメージ0）ときも発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["かぜおこし"])],
+        team1=[Pokemon("カビゴン", ability_name="ふうりょくでんき")],
+    )
+    defender = battle.actives[1]
+    defender.hp = 1
+    battle.volatile_manager.apply(defender, "こらえる")
+    t.fix_damage(battle, 9999)
+
+    t.run_move(battle, 0)
+
+    assert defender.hp == 1
+    assert defender.has_volatile("じゅうでん")
+
+
+def test_ふうりょくでんき_みがわりに阻まれたときは発動しない():
+    """ふうりょくでんき: みがわりに風技を防がれたとき（実HPダメージ0）は発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["かぜおこし"])],
+        team1=[Pokemon("カビゴン", ability_name="ふうりょくでんき")],
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+
+    t.run_move(battle, 0)
+
+    assert not defender.has_volatile("じゅうでん")
 
 
 @pytest.mark.parametrize(
