@@ -1160,6 +1160,70 @@ def せいれいプレート_modify_power_by_type(battle: Battle, ctx: AttackCon
     return _modify_power_by_type(ctx.move, value, type_="フェアリー", modifier=4915)
 
 
+def ひのたまプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="ほのお", modifier=4915)
+
+
+def もりのプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="くさ", modifier=4915)
+
+
+def しずくプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="みず", modifier=4915)
+
+
+def いかずちプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="でんき", modifier=4915)
+
+
+def つららのプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="こおり", modifier=4915)
+
+
+def こぶしのプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="かくとう", modifier=4915)
+
+
+def もうどくプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="どく", modifier=4915)
+
+
+def だいちのプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="じめん", modifier=4915)
+
+
+def あおぞらプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="ひこう", modifier=4915)
+
+
+def ふしぎのプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="エスパー", modifier=4915)
+
+
+def たまむしのプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="むし", modifier=4915)
+
+
+def がんせきプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="いわ", modifier=4915)
+
+
+def もののけプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="ゴースト", modifier=4915)
+
+
+def りゅうのプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="ドラゴン", modifier=4915)
+
+
+def こわもてプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="あく", modifier=4915)
+
+
+def こうてつのプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="はがね", modifier=4915)
+
+
 def せんせいのツメ_priority_boost(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """せんせいのツメ: 20%の確率で先制ティアを+1する。
 
