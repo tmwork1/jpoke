@@ -1621,6 +1621,24 @@ def test_ファーコート_物理技の防御が2倍になる(move_name: str, e
     assert battle.damage_calculator.def_modifier == expected_modifier
 
 
+def test_フィルター_かたやぶりで無効():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["じしん"])],
+        team1=[Pokemon("コイル", ability_name="フィルター")],
+    )
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.damage_modifier
+
+
+def test_フィルター_効果抜群ダメージを0_75倍():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["じしん"])],
+        team1=[Pokemon("コイル", ability_name="フィルター")],
+    )
+    t.run_move(battle, 0)
+    assert 3072 == battle.damage_calculator.damage_modifier
+
+
 def test_ふうりょくでんき_おいかぜ発生でじゅうでん():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ")],
@@ -1804,24 +1822,6 @@ def test_ふゆう_浮いている():
     assert battle.query.is_floating(battle.actives[0])
 
 
-def test_フィルター_かたやぶりで無効():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["じしん"])],
-        team1=[Pokemon("コイル", ability_name="フィルター")],
-    )
-    t.run_move(battle, 0)
-    assert 4096 == battle.damage_calculator.damage_modifier
-
-
-def test_フィルター_効果抜群ダメージを0_75倍():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["じしん"])],
-        team1=[Pokemon("コイル", ability_name="フィルター")],
-    )
-    t.run_move(battle, 0)
-    assert 3072 == battle.damage_calculator.damage_modifier
-
-
 def test_フラワーギフト_晴れ中攻撃が1_5倍になる():
     battle = t.start_battle(
         team0=[Pokemon("チェリム", ability_name="フラワーギフト", move_names=["たいあたり"])],
@@ -1879,6 +1879,32 @@ def test_ぶきよう_アイテムが無効():
     mon.hp = 1
     t.end_turn(battle)
     assert mon.hp == 1
+
+
+def test_ぶきよう_くろいてっきゅうの効果を無視する():
+    """ぶきよう: くろいてっきゅうの浮遊無効化・すばやさ半減の効果をともに無視する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピジョット", ability_name="ぶきよう", item_name="くろいてっきゅう")],
+        team1=[Pokemon("ピカチュウ", move_names=["じしん"])],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    base_speed = mon.stats["spe"]
+    assert battle.speed_calculator.calc_effective_speed(mon) == base_speed
+
+    # くろいてっきゅうの浮遊無効化を受けないため、ひこうタイプの免疫が残りじしんが無効
+    t.run_move(battle, 1)
+    assert mon.hp == mon.max_hp
+
+
+def test_ぶきよう_フォルムチェンジアイテムの効果が発動しない():
+    """ぶきよう: だいこんごうだまを持っていてもディアルガはオリジンフォルムにならない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ディアルガ", ability_name="ぶきよう", item_name="だいこんごうだま")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    assert mon.name == "ディアルガ"
 
 
 def test_ブレインフォース_効果抜群のとき強化():
