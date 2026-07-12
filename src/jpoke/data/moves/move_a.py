@@ -154,8 +154,13 @@ MOVES_A: dict[MoveName, MoveData] = {
         accuracy=100,
         flags={"contact", "secondary_effect"},
         handlers={
+            # みずがため等（priority=20）より先に発動させる必要があるため priority=10
+            # を明示（docs/spec/turn.md ON_DAMAGE priority=10「追加効果（特殊なもの除く）」、
+            # docs/spec/abilities/みずがため.md「アクアブレイク/シェルブレードを受けた場合、
+            # 追加効果の後にみずがためが発動する」）
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.アクアブレイク_lower_defender_def,
+                priority=10,
             )
         }
     ),

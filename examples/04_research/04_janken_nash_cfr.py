@@ -167,7 +167,7 @@ class CFRMovePlayer(Player):
 
 def result_point(battle: Battle, p0: Player, p1: Player) -> float:
     """決着済みのバトルから、p0視点のポイント（1.0/0.5/0.0）を求める。"""
-    winner = battle.judge_winner()
+    winner = battle.winner
     if winner is p0:
         return 1.0
     if winner is p1:
@@ -197,7 +197,7 @@ def rollout_value(battle: Battle,
     """
     fork = battle.copy(reseed=True)
     fork.step({p0: cmd0, p1: cmd1})
-    while fork.judge_winner() is None and fork.turn <= max_turns:
+    while not fork.finished and fork.turn <= max_turns:
         fork.step()
     return result_point(fork, p0, p1)
 
@@ -221,7 +221,7 @@ def play_training_episode(regrets: dict[tuple[int, int], list[float]],
     battle = Battle(p0, p1, seed=seed, accuracy_fix_threshold=0)
     battle.start()  # Turn 0: 初期繰り出し
 
-    while battle.judge_winner() is None and battle.turn <= max_turns:
+    while not battle.finished and battle.turn <= max_turns:
         info0 = p0.info_set(battle)
         info1 = p1.info_set(battle)
 

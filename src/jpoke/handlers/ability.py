@@ -4062,8 +4062,14 @@ def マルチタイプ_apply_type(battle: Battle, ctx: EventContext, value: Any)
 
 
 def マルチタイプ_block_item_change(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
-    """マルチタイプ特性: プレートの奪取・交換を防ぐ。"""
+    """マルチタイプ特性: プレートの奪取・交換を防ぐ。
+
+    自分の持つプレートの奪取・交換を防ぐだけでなく、トリック/すりかえ等の
+    道具交換では相手がプレートを持っている場合も交換自体が失敗する。
+    """
     mon = getattr(ctx, "target", None) or getattr(ctx, "defender", None)
+    if getattr(ctx, "is_exchange", False) and battle.foe(mon).item.name in PLATE_TO_TYPE:
+        return HandlerReturn(value=False, stop_event=True)
     return _block_item_change(mon, list(PLATE_TO_TYPE.keys()))
 
 
@@ -4073,13 +4079,20 @@ def _overwrite_ability_on_contact(battle: Battle,
                                   new_ability: AbilityName) -> bool:
     """直接攻撃でダメージを受けたとき攻撃者の特性を書き換える共通処理。
 
+    かがくへんかガスは通常uncopyableで上書きできないが、いえき/コアパニッシャー等で
+    自身の特性がとくせいなし状態になっている場合は例外的に上書きできる
+    （docs/spec/abilities/ミイラ.md「特性の仕様」）。
+
     Returns:
         書き換えに成功した場合True
     """
     attacker = ctx.attacker
     if not battle.query.is_contact_reaction(ctx):
         return False
-    if attacker.ability.has_flag("uncopyable"):
+    if attacker.ability.has_flag("uncopyable") and not (
+        attacker.ability.base_name == "かがくへんかガス"
+        and attacker.has_volatile("とくせいなし")
+    ):
         return False
     if attacker.ability.name == new_ability:
         return False
@@ -4112,6 +4125,11 @@ def みずのベール_cure_burn_on_enable(battle: Battle, ctx: EventContext, va
     """みずのベール特性: 特性が有効化された時点ですでにやけど状態なら即座に回復する。
 
     かがくへんかガス・かたやぶりの効果が終わって特性が再び有効になった場合などに発動する。
+    ON_SWITCH_INにも同じ関数を登録しており、すでにやけど状態のみずのベールの
+    ポケモンを場に出した場合にも即座に回復する（docs/spec/turn.md の
+    ON_SWITCH_IN priority=100「みずのベール（特性）による状態異常回復」に対応。
+    どくびしのどく付与判定も同じpriority=100だが、どくびしの方が先に
+    ハンドラ登録されているため実行順は保たれる）。
     """
     return _cure_ailment_on_enable(battle, ctx, blocked_ailments=["やけど"])
 
@@ -4134,9 +4152,14 @@ def ミラーアーマー_reflect_stat_drop(battle: Battle, ctx: EventContext, v
     drops = {stat: v for stat, v in value.items() if v < 0}
     if drops:
         # 低下を source（相手）側へ反射（source を ctx.target にすることで「相手から下げられた」扱いになりまけんき等が正常発動）
-        battle.modify_stats(ctx.source, drops, source=ctx.target, reason="ミラーアーマー")
+        changed = battle.modify_stats(ctx.source, drops, source=ctx.target, reason="ミラーアーマー")
         # 自分側の低下分を除去（上昇分は残す）
         value = {stat: v for stat, v in value.items() if v > 0}
+
+        # 相手が既に最低ランクで実際には何も変化しなかった場合は特性バーを出さない
+        # （一次情報: docs/wiki/abilities/ミラーアーマー.html 特性の仕様「相手のランクがすでに最低で…」）。
+        if changed:
+            _announce_ability_triggered(battle, ctx.target)
 
         # だっしゅつパック: 自身のランクは実際には変化しないが、跳ね返した時点で発動する
         mon = ctx.target

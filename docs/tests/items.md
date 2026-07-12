@@ -1,6 +1,6 @@
 # items
 
-テスト数: 643
+テスト数: 659
 
 - [x] あかいいと_アイテム消費されない
 - [x] あかいいと_アロマベール持ちには付与されない
@@ -510,25 +510,41 @@
 - [x] タイプ半減実(item_name=ナモのみ, type_name=あく, defender_name=エーフィ)
 - [x] タイプ半減実(item_name=ハバンのみ, type_name=ドラゴン, defender_name=ミニリュウ)
 - [x] タイプ半減実(item_name=ロゼルのみ, type_name=フェアリー, defender_name=ミニリュウ)
+- [x] タイプ強化アイテム(item_name=あおぞらプレート, type_name=ひこう)
+- [x] タイプ強化アイテム(item_name=いかずちプレート, type_name=でんき)
 - [x] タイプ強化アイテム(item_name=かたいいし, type_name=いわ)
+- [x] タイプ強化アイテム(item_name=がんせきプレート, type_name=いわ)
 - [x] タイプ強化アイテム(item_name=きせきのたね, type_name=くさ)
 - [x] タイプ強化アイテム(item_name=ぎんのこな, type_name=むし)
 - [x] タイプ強化アイテム(item_name=くろいメガネ, type_name=あく)
 - [x] タイプ強化アイテム(item_name=くろおび, type_name=かくとう)
+- [x] タイプ強化アイテム(item_name=こうてつのプレート, type_name=はがね)
+- [x] タイプ強化アイテム(item_name=こぶしのプレート, type_name=かくとう)
+- [x] タイプ強化アイテム(item_name=こわもてプレート, type_name=あく)
 - [x] タイプ強化アイテム(item_name=じしゃく, type_name=でんき)
+- [x] タイプ強化アイテム(item_name=しずくプレート, type_name=みず)
 - [x] タイプ強化アイテム(item_name=シルクのスカーフ, type_name=ノーマル)
 - [x] タイプ強化アイテム(item_name=しんぴのしずく, type_name=みず)
 - [x] タイプ強化アイテム(item_name=するどいくちばし, type_name=ひこう)
 - [x] タイプ強化アイテム(item_name=せいれいプレート, type_name=フェアリー)
+- [x] タイプ強化アイテム(item_name=だいちのプレート, type_name=じめん)
+- [x] タイプ強化アイテム(item_name=たまむしのプレート, type_name=むし)
+- [x] タイプ強化アイテム(item_name=つららのプレート, type_name=こおり)
 - [x] タイプ強化アイテム(item_name=どくバリ, type_name=どく)
 - [x] タイプ強化アイテム(item_name=とけないこおり, type_name=こおり)
 - [x] タイプ強化アイテム(item_name=のろいのおふだ, type_name=ゴースト)
+- [x] タイプ強化アイテム(item_name=ひのたまプレート, type_name=ほのお)
+- [x] タイプ強化アイテム(item_name=ふしぎのプレート, type_name=エスパー)
 - [x] タイプ強化アイテム(item_name=まがったスプーン, type_name=エスパー)
 - [x] タイプ強化アイテム(item_name=メタルコート, type_name=はがね)
+- [x] タイプ強化アイテム(item_name=もうどくプレート, type_name=どく)
 - [x] タイプ強化アイテム(item_name=もくたん, type_name=ほのお)
+- [x] タイプ強化アイテム(item_name=もののけプレート, type_name=ゴースト)
+- [x] タイプ強化アイテム(item_name=もりのプレート, type_name=くさ)
 - [x] タイプ強化アイテム(item_name=やわらかいすな, type_name=じめん)
 - [x] タイプ強化アイテム(item_name=ようせいのハネ, type_name=フェアリー)
 - [x] タイプ強化アイテム(item_name=りゅうのキバ, type_name=ドラゴン)
+- [x] タイプ強化アイテム(item_name=りゅうのプレート, type_name=ドラゴン)
 - [x] たつじんのおび_効果抜群で1_2倍
 - [x] たつじんのおび_等倍では補正なし
 - [x] たべのこし

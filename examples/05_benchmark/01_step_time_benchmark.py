@@ -86,7 +86,7 @@ def run_benchmark(n_battles: int, max_turns: int, seed: int) -> tuple[list[float
 
         battle_step_times: list[float] = []
         try:
-            while battle.judge_winner() is None and battle.turn < max_turns:
+            while not battle.finished and battle.turn < max_turns:
                 t0 = time.perf_counter()
                 battle.step()
                 battle_step_times.append(time.perf_counter() - t0)
