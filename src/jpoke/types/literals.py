@@ -4,8 +4,8 @@ from typing import Literal
 BattlePhase = Literal["", "selection", "action", "switch"]
 CommandType = Literal["any", "move", "switch"]
 
-CriticalMode = Literal["通常", "確定のみ"]
-DamageRollMode = Literal["通常", "平均", "最大", "最小"]
+CriticalMode = Literal["normal", "always"]
+DamageRollMode = Literal["normal", "average", "max", "min"]
 
 HpPolicy = Literal["keep_absolute", "keep_ratio", "reset"]
 # 最大HP変化時のhpの追従方法
@@ -18,7 +18,7 @@ LethalSubject = Literal["attacker", "defender"]
 
 AbilityDisabledReason = Literal[
     "consumed", "かがくへんかガス", "かたやぶり", "シャドーレイ", "とくせいなし", "フォトンゲイザー", "メテオドライブ",
-    "リーサル計算",
+    "lethal_calculation",
 ]
 
 ItemDisabledReason = Literal[

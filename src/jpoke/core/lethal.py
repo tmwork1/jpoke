@@ -316,11 +316,11 @@ def _calc_damage_dist(battle: Battle, ctx: LethalContext, hp_dist: StateDist) ->
     full_damages = battle.calc_damages(ctx.attacker, ctx.defender, ctx.move, critical=ctx.critical)
     ctx.defender.hp = saved_hp
 
-    ctx.defender.ability.add_disable_reason("リーサル計算")
+    ctx.defender.ability.add_disable_reason("lethal_calculation")
     try:
         damages = battle.calc_damages(ctx.attacker, ctx.defender, ctx.move, critical=ctx.critical)
     finally:
-        ctx.defender.ability.remove_disable_reason("リーサル計算")
+        ctx.defender.ability.remove_disable_reason("lethal_calculation")
 
     ctx.damage_dist = to_dist(damages)
     ctx.damage_dist_full = to_dist(full_damages) if full_damages != damages else None

@@ -21,8 +21,8 @@ def test_ReplayPlayerはコマンド不足の場合に例外を送出する():
         seed=1,
         n_selected=1,
         battle_option={
-            "mega_evolution": True, "terastal": True, "critical_mode": "通常",
-            "damage_roll": "通常", "accuracy_fix_threshold": None,
+            "mega_evolution": True, "terastal": True, "critical_mode": "normal",
+            "damage_roll": "normal", "accuracy_fix_threshold": None,
             "effect_chance_threshold": None,
         },
         teams=(
