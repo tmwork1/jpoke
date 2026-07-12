@@ -57,9 +57,13 @@ def _mask(battle: Battle, player: Player):
 
     state = battle.player_states[player]
 
+    # 場に出ているポケモンを特定する（交代前など active_index が未設定の局面もあるため
+    # battle.actives/get_active は使わない。両者とも未設定なら例外を送出する仕様のため）。
+    active_mon = state.team[state.active_index] if state.active_index is not None else None
+
     # チームのポケモンの情報を隠蔽する
     for mon in state.team:
-        _mask_pokemon(mon)
+        _mask_pokemon(battle, mon, mon is active_mon)
 
     # 選出されているポケモンのインデックスを、公開されているポケモンのみに更新する
     state.selected_indexes = [
@@ -73,11 +77,13 @@ def _mask(battle: Battle, player: Player):
     return
 
 
-def _mask_pokemon(mon: Pokemon) -> Pokemon:
+def _mask_pokemon(battle: Battle, mon: Pokemon, is_active: bool) -> Pokemon:
     """Pokemon インスタンスの情報を隠蔽する。
 
     Args:
+        battle: Battle インスタンス（特性・アイテムのハンドラ登録の同期に使う）
         mon: Pokemon インスタンス
+        is_active: mon が現在場に出ているかどうか
     """
     # ステータス情報を隠蔽する
     # 相手に見えるのはHP割合（HPバー）であって絶対量ではないため、
@@ -90,10 +96,10 @@ def _mask_pokemon(mon: Pokemon) -> Pokemon:
         mon.tera_type = mon.base_types[0]
 
     # 特性の情報を隠蔽する
-    _mask_ability(mon)
+    _mask_ability(battle, mon, is_active)
 
     # アイテムの情報を隠蔽する
-    _mask_item(mon)
+    _mask_item(battle, mon, is_active)
 
     # 技の情報を隠蔽する
     _mask_move(mon)
@@ -101,27 +107,57 @@ def _mask_pokemon(mon: Pokemon) -> Pokemon:
     return mon
 
 
-def _mask_ability(mon: Pokemon):
+def _mask_ability(battle: Battle, mon: Pokemon, is_active: bool):
     """特性情報を隠蔽する。
 
     Args:
+        battle: Battle インスタンス（特性ハンドラ登録の同期に使う）
         mon: Pokemon インスタンス
+        is_active: mon が現在場に出ているかどうか
+
+    Note:
+        mon が場に出ている場合、既に mon.ability の特性ハンドラが
+        EventManager に登録されている。ここで mon.ability を新しい
+        （無特性の）インスタンスに差し替えるだけだと、EventManager 側の
+        登録は古い特性のハンドラを参照したまま残ってしまい、後で交代処理が
+        mon.ability.unregister_handlers() を呼んでも（差し替え後の無特性
+        インスタンスにはハンドラが無いため）何も解除されず、退場済みの
+        ポケモンの特性ハンドラが発火し続けるバグになる
+        （例: ものひろいのターン終了時ハンドラが交代後も残り続け、
+        battle.foe() が「場に出ていない」で例外を送出する）。
+        差し替え前に登録済みハンドラを解除し、差し替え後の（無特性の
+        ＝ハンドラを持たない）インスタンスで登録し直すことで、
+        EventManager の登録内容と mon.ability を一致させる。
     """
     if (
         not mon.ability.revealed
         and len(mon.data.abilities) > 1
     ):
+        if is_active:
+            mon.ability.unregister_handlers(battle.events, mon)
         mon.ability = Ability()
+        if is_active:
+            mon.ability.register_handlers(battle.events, mon)
 
 
-def _mask_item(mon: Pokemon):
+def _mask_item(battle: Battle, mon: Pokemon, is_active: bool):
     """アイテム情報を隠蔽する。
 
     Args:
+        battle: Battle インスタンス（アイテムハンドラ登録の同期に使う）
         mon: Pokemon インスタンス
+        is_active: mon が現在場に出ているかどうか
+
+    Note:
+        _mask_ability と同様の理由で、mon が場に出ている場合は
+        差し替え前後で EventManager の登録を同期させる必要がある。
     """
     if not mon.item.revealed:
+        if is_active:
+            mon.item.unregister_handlers(battle.events, mon)
         mon.item = Item()
+        if is_active:
+            mon.item.register_handlers(battle.events, mon)
 
 
 def _mask_move(mon: Pokemon):
