@@ -3393,8 +3393,14 @@ def ビーストブースト_boost_best_stat_on_ko(battle: Battle, ctx: AttackCo
 
 
 def ファーコート_boost_B(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """ファーコート特性: 物理技に対する防御補正を2倍にする。"""
-    if battle.query.deals_physical_damage(ctx.attacker, ctx.move):
+    """ファーコート特性: 物理技に対する防御補正を2倍にする。
+
+    こんらんの自傷ダメージ（"_こんらん"）には効果が無い。
+    """
+    if (
+        ctx.move.name != "_こんらん"
+        and battle.query.deals_physical_damage(ctx.attacker, ctx.move)
+    ):
         value = apply_fixed_modifier(value, 8192)
     return HandlerReturn(value=value)
 

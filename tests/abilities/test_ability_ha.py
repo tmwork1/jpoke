@@ -1447,7 +1447,8 @@ def test_ファーコート_かたやぶりで無効():
     "move_name, expected_modifier",
     [
         ("たいあたり", 8192),
-        ("でんきショック", 4096)
+        ("でんきショック", 4096),
+        ("サイコショック", 8192),  # 特殊技だがぼうぎょを参照するため発動する
     ],
 )
 def test_ファーコート_物理技の防御が2倍になる(move_name: str, expected_modifier: int):
@@ -1457,6 +1458,42 @@ def test_ファーコート_物理技の防御が2倍になる(move_name: str, e
     )
     t.run_move(battle, 0)
     assert battle.damage_calculator.def_modifier == expected_modifier
+
+
+def test_ファーコート_こんらんの自傷ダメージには発動しない():
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ", ability_name="ファーコート")],
+        team0=[Pokemon("ピカチュウ")],
+        volatile1={"こんらん": 2},
+    )
+    battle.test_option.trigger_volatile = True
+    t.run_move(battle, 1)
+    assert 4096 == battle.damage_calculator.def_modifier
+
+
+def test_ファーコート_ボディプレス使用時は自分の防御実数値を2倍にしない():
+    """ファーコート: ボディプレスを使用するときは特性の効果は発動せず、
+    自分の防御（攻撃力として参照される実数値）を2倍にすることは無い。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ファーコート", move_names=["ボディプレス"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.atk_modifier
+
+
+def test_ファーコート_ワンダールームでとくぼうが2倍になる():
+    """ワンダールーム中は物理技でも防御と特防が入れ替わり参照されるため、
+    ファーコートの効果は実質的に特防を2倍にする形になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", ability_name="ファーコート")],
+        field={"ワンダールーム": 5},
+    )
+    defender = battle.actives[1]
+    before = defender.stats["spd"]
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_defense == before * 2
 
 
 def test_ふうりょくでんき_おいかぜ発生でじゅうでん():
