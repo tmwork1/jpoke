@@ -3942,7 +3942,8 @@ def マイティチェンジ_change_form(battle: Battle, ctx: EventContext, valu
     """マイティチェンジ特性: ナイーブフォルムで引っ込むとマイティフォルムへ変化する。"""
     mon = ctx.source
     if mon.name == PALAFIN_ZERO and mon.alive:
-        mon.set_form(PALAFIN_HERO)
+        if mon.set_form(PALAFIN_HERO):
+            _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
 
 
