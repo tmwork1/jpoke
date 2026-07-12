@@ -32,6 +32,7 @@ def test_Vジェネレート_相手を撃破した場合でも自己ランク低
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", move_names=["Vジェネレート"])],
         team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
     )
     attacker, defender = battle.actives
     defender.hp = 1
