@@ -130,6 +130,56 @@ def test_いかく_交代フェーズの割り込み連鎖でValueErrorや残留
     assert battle.turn == 3  # 例外なく3ターン目が完了したことを確認
 
 
+def test_ききかいひ_とんぼがえりのPIVOT割り込みと同時発生してもだっしゅつパック交代処理が無限ループしない():
+    """examples/05_benchmark/01_step_time_benchmark.py の完全ランダム編成ベンチマークで、
+    PYTHONHASHSEED（プロセスごとに変わる文字列ハッシュのランダム化シード）に依存して
+    特定のバトルが終了しなくなる不具合の回帰テスト。
+
+    SwitchManager._process_events_after_switch の交代後リクエスト処理ループは、
+    `battle.has_interrupt()`（全プレイヤーの割り込み種別を問わず判定）をループ条件に
+    使っていた。しかしこのループの本体が実際に解決できるのは
+    Interrupt.EJECTPACK_REQUESTED（だっしゅつパックの連鎖交代）のみで、それ以外の
+    割り込み種別（Interrupt.PIVOT等）が残っていても解消する手段を持たない。
+
+    とんぼがえりを撃った側は自分自身にInterrupt.PIVOTを立てるが、そのターンの
+    TurnController._run_move_phase では Interrupt.PIVOT の処理より先に
+    Interrupt.EMERGENCY（ききかいひ等の緊急交代）の処理が実行される。とんぼがえりの
+    一撃で相手をHP半分以下に追い込みききかいひを誘発すると、EMERGENCY割り込み処理内の
+    交代後処理（_process_events_after_switch）が、まだ処理されていない自分自身の
+    Interrupt.PIVOTを検知してループ条件が永久に真になり、無限ループしていた
+    （ハッシュ乱数を用いる処理の関係で、どのランダム編成のバトルでこの状況が
+    再現するかはPYTHONHASHSEEDに依存していた）。
+
+    修正後はループ条件をInterrupt.EJECTPACK_REQUESTEDの有無に限定したため、
+    自分自身のInterrupt.PIVOTが残っていてもこのループはすぐに終了し、
+    呼び出し元のTurnController._run_move_phaseへ処理が戻ってPIVOT割り込みが
+    正しく処理されることを確認する。
+    """
+    battle = t.start_battle(
+        team0=[
+            Pokemon("ゲッコウガ", move_names=["とんぼがえり"]),
+            Pokemon("コイキング"),
+        ],
+        team1=[
+            Pokemon("カビゴン", ability_name="ききかいひ"),
+            Pokemon("ポッポ"),
+        ],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    t.fix_damage(battle, defender.max_hp // 2 + 1)
+    player0, player1 = battle.players
+
+    # 修正前はここで無限ループしていた
+    battle.step(commands={player0: Command.MOVE_0, player1: Command.MOVE_0})
+
+    assert battle.turn == 1
+    assert battle.actives[0].name == "コイキング"  # とんぼがえりで交代
+    assert battle.actives[1].name == "ポッポ"  # ききかいひの緊急交代
+    assert battle.player_states[player0].interrupt == Interrupt.NONE
+    assert battle.player_states[player1].interrupt == Interrupt.NONE
+
+
 def test_ききかいひ_割り込み交代で使われなかった行動コマンドが次のターンに誤って使われない():
     """seed=214 (IndexError@command_manager.py:resolve_move_from_command:133) の回帰テスト。
 
