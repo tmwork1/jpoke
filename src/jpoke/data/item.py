@@ -45,6 +45,15 @@ ITEMS: dict[ItemName, ItemData] = {
     "アイスメモリ": ItemData(
         fling_power=50,
     ),
+    "あおぞらプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.あおぞらプレート_modify_power_by_type,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "あかいいと": ItemData(
         fling_power=10,
         handlers={
@@ -114,6 +123,15 @@ ITEMS: dict[ItemName, ItemData] = {
                 h.いかさまダイス_modify_hit_check_each_time,
                 subject_spec="attacker:self",
             ),
+        }
+    ),
+    "いかずちプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.いかずちプレート_modify_power_by_type,
+                subject_spec="attacker:self",
+            )
         }
     ),
     "いしずえのめん": ItemData(
@@ -428,6 +446,15 @@ ITEMS: dict[ItemName, ItemData] = {
     "かるいし": ItemData(
         fling_power=30,
     ),
+    "がんせきプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.がんせきプレート_modify_power_by_type,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "きあいのタスキ": ItemData(
         fling_power=10,
         handlers={
@@ -713,6 +740,15 @@ ITEMS: dict[ItemName, ItemData] = {
             )
         }
     ),
+    "こうてつのプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.こうてつのプレート_modify_power_by_type,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "こころのしずく": ItemData(
         fling_power=30,
         handlers={
@@ -759,6 +795,24 @@ ITEMS: dict[ItemName, ItemData] = {
                 h.こだわり_lock_move,
                 subject_spec="attacker:self",
             ),
+        }
+    ),
+    "こぶしのプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.こぶしのプレート_modify_power_by_type,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
+    "こわもてプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.こわもてプレート_modify_power_by_type,
+                subject_spec="attacker:self",
+            )
         }
     ),
     "こんごうだま": ItemData(
@@ -823,6 +877,15 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_HP_CHANGED: h.ItemHandler(
                 h.サンのみ_apply_focus_energy,
                 subject_spec="target:self",
+            )
+        }
+    ),
+    "しずくプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.しずくプレート_modify_power_by_type,
+                subject_spec="attacker:self",
             )
         }
     ),
@@ -1070,6 +1133,15 @@ ITEMS: dict[ItemName, ItemData] = {
             )
         }
     ),
+    "たまむしのプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.たまむしのプレート_modify_power_by_type,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "タラプのみ": ItemData(
         fling_power=10,
         handlers={
@@ -1154,6 +1226,15 @@ ITEMS: dict[ItemName, ItemData] = {
                     subject_spec="target:foe",
                 ),
             ],
+        }
+    ),
+    "だいちのプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.だいちのプレート_modify_power_by_type,
+                subject_spec="attacker:self",
+            )
         }
     ),
     "だいはっきんだま": ItemData(
@@ -1260,6 +1341,15 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_MODIFY_DURATION: h.ItemHandler(
                 h.つめたいいわ_resolve_field_count,
                 subject_spec="source:self",
+            )
+        }
+    ),
+    "つららのプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.つららのプレート_modify_power_by_type,
+                subject_spec="attacker:self",
             )
         }
     ),
@@ -1556,6 +1646,15 @@ ITEMS: dict[ItemName, ItemData] = {
             ),
         }
     ),
+    "ひのたまプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.ひのたまプレート_modify_power_by_type,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "ヒメリのみ": ItemData(
         fling_power=10,
         handlers={
@@ -1647,6 +1746,15 @@ ITEMS: dict[ItemName, ItemData] = {
         handlers={
             Event.ON_MODIFY_ACCURACY: h.ItemHandler(
                 h.フォーカスレンズ_boost_accuracy_second,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
+    "ふしぎのプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.ふしぎのプレート_modify_power_by_type,
                 subject_spec="attacker:self",
             )
         }
@@ -1802,6 +1910,15 @@ ITEMS: dict[ItemName, ItemData] = {
             )
         }
     ),
+    "もうどくプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.もうどくプレート_modify_power_by_type,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "もくたん": ItemData(
         fling_power=30,
         handlers={
@@ -1816,6 +1933,15 @@ ITEMS: dict[ItemName, ItemData] = {
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
                 h.ものしりメガネ_boost_special,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
+    "もののけプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.もののけプレート_modify_power_by_type,
                 subject_spec="attacker:self",
             )
         }
@@ -1852,6 +1978,15 @@ ITEMS: dict[ItemName, ItemData] = {
                 subject_spec="source:self",
                 priority=50,
             ),
+        }
+    ),
+    "もりのプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.もりのプレート_modify_power_by_type,
+                subject_spec="attacker:self",
+            )
         }
     ),
     "ヤタピのみ": ItemData(
@@ -1974,6 +2109,15 @@ ITEMS: dict[ItemName, ItemData] = {
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
                 h.りゅうのキバ_modify_power_by_type,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
+    "りゅうのプレート": ItemData(
+        fling_power=90,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.りゅうのプレート_modify_power_by_type,
                 subject_spec="attacker:self",
             )
         }

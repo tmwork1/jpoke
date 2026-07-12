@@ -3198,7 +3198,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.ミストメイカー_activate_terrain,
                 "source:self",
-            )
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.ミストメイカー_activate_terrain,
+                "source:self",
+            ),
         }
     ),
     "みずがため": AbilityData(
@@ -3218,6 +3222,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.prevent_burn_ailment,
                 "target:self",
+            ),
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                h.みずのベール_cure_burn_on_enable,
+                subject_spec="source:self",
             ),
             Event.ON_ABILITY_ENABLED: h.AbilityHandler(
                 h.みずのベール_cure_burn_on_enable,
@@ -3242,12 +3250,13 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             "mold_breaker_ignorable"
         },
         handlers={
+            # priority=140: クリアチャーム(既定100)やしろいきり(130)の無効化ハンドラより
+            # 後に判定し、それらで既にランク低下が無効化されている場合は反射しないようにする
+            # （一次情報: docs/wiki/abilities/ミラーアーマー.html 特性の仕様）。
             Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
                 h.ミラーアーマー_reflect_stat_drop,
                 subject_spec="target:self",
-                # クリアチャームを持っている場合はアイテムの無効化が先に発動し
-                # 反射できなくなるため、アイテムの既定優先度(100)より後に実行する
-                priority=110,
+                priority=140,
             )
         }
     ),
