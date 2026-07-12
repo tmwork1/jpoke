@@ -4,18 +4,19 @@
 
 `08_janken_nash_fictitious_play.py` は「毎ターン同じ確率で技を選び続ける」固定の混合戦略の
 Nash均衡を求めた。しかし実戦の読み合いはもっと現実的で、「自分のHPが少ない
-ときはリスクを避けて確実なマッハパンチを選ぶ」「相手を追い詰めたら一発逆転の
-きあいパンチを警戒してはやてがえしを増やす」といった、局面（HP状況）に応じて
-確率を変える適応的な戦略の方が強くなりうる。このサンプルは、その「状態に
-応じた戦略」を自己対戦から学習する。
+ときはリスクを避けて手堅い技を選ぶ」「相手を追い詰めたら一発逆転を警戒して
+別の技を増やす」といった、局面（HP状況）に応じて確率を変える適応的な戦略の
+方が強くなりうる。このサンプルは、その「状態に応じた戦略」を自己対戦から
+学習する。対戦するポケモン・技3つはファイル先頭の「対戦相手の構成」で指定する
+（08と同じ既定値・同じ制約。詳細は08のモジュールdocstring「題材」を参照）。
 
 ## 状態（information set）の定義
 
 状態は `(自分のHP割合バケット, 相手のHP割合バケット)` の組で表す
 （`HP_BUCKETS` 段階に離散化。既定は3段階 = 「多い/中/少ない」）。
 ターン数などは状態に含めない単純化をしている（詳しくは `hp_bucket()` 参照）。
-この状態ごとに「マッハパンチ/はやてがえし/きあいパンチをそれぞれ何%選ぶか」
-という戦略テーブルを学習する。
+この状態ごとに「MOVES の3つの技をそれぞれ何%選ぶか」という戦略テーブルを
+学習する。
 
 ## アルゴリズム: ロールアウトベースのregret matching（CFR風）
 
@@ -63,7 +64,16 @@ from collections import defaultdict
 from jpoke import Battle, Player, Pokemon
 from jpoke.enums import Command
 
+# ---- 対戦相手の構成 ----
+# ここを書き換えるだけで、別のポケモン・技3つの読み合いに変更できる
+# （MOVES はちょうど3つ指定する。08と同じ制約）
+SPECIES_NAME = "エビワラー"
+ABILITY_NAME = "てつのこぶし"
+NATURE = "いじっぱり"
 MOVES = ["マッハパンチ", "はやてがえし", "きあいパンチ"]
+EVS = [0, 0, 0, 0, 0, 0]
+IVS = [31, 31, 31, 31, 31, 31]
+
 MOVE_COMMANDS = (Command.MOVE_0, Command.MOVE_1, Command.MOVE_2)
 
 # ---- 実行設定 ----
@@ -115,16 +125,11 @@ def add_vec(a: tuple[float, float, float], b: tuple[float, float, float]) -> tup
     return (a[0] + b[0], a[1] + b[1], a[2] + b[2])
 
 
-def make_hitmonchan() -> Pokemon:
-    """3すくみの技だけを覚えたエビワラーを1体構築する。"""
-    mon = Pokemon(
-        "エビワラー",
-        ability_name="てつのこぶし",  # パンチ技（マッハパンチ）の威力を1.2倍にする特性
-        nature="いじっぱり",
-        move_names=MOVES,
-    )
-    mon.set_evs([0, 0, 0, 0, 0, 0])
-    mon.set_ivs([31, 31, 31, 31, 31, 31], hp_policy="reset")  # 新規構築なので満タンにする
+def build_pokemon() -> Pokemon:
+    """「対戦相手の構成」から対戦用ポケモンを1体構築する。"""
+    mon = Pokemon(SPECIES_NAME, ability_name=ABILITY_NAME, nature=NATURE, move_names=MOVES)
+    mon.set_evs(EVS)
+    mon.set_ivs(IVS, hp_policy="reset")  # 新規構築なので満タンにする
     return mon
 
 
@@ -199,8 +204,8 @@ def play_training_episode(regrets: dict[tuple[int, int], list[float]],
     """
     p0 = CFRMovePlayer(regrets, username="p0")
     p1 = CFRMovePlayer(regrets, username="p1")
-    p0.team.append(make_hitmonchan())
-    p1.team.append(make_hitmonchan())
+    p0.team.append(build_pokemon())
+    p1.team.append(build_pokemon())
 
     battle = Battle(p0, p1, seed=seed)
     battle.test_option.accuracy = 100  # 命中率のブレを消し、技選択の駆け引きだけを見る
@@ -254,7 +259,7 @@ def main() -> None:
     strategy_sums: dict[tuple[int, int], tuple[float, float, float]] = defaultdict(lambda: (0.0, 0.0, 0.0))
     visit_counts: dict[tuple[int, int], int] = defaultdict(int)
 
-    print("=== Hitmonchan Janken CFR-style Self-play ===")
+    print(f"=== {SPECIES_NAME} Janken CFR-style Self-play ({'/'.join(MOVES)}) ===")
     print(f"episodes={N_EPISODES}, hp_buckets={HP_BUCKETS}, max_turns={MAX_TURNS}")
 
     row_wins = 0.0
@@ -278,8 +283,8 @@ def main() -> None:
     # 試してみよう:
     # * HP_BUCKETS を増やす、または状態にターン数を加えると、より細かい読み合いを
     #   学習できるが、その分エピソード数(N_EPISODES)を増やさないと学習が安定しない
-    # * 08_janken_nash_fictitious_play.py の固定混合戦略の結果と比較し、「HPが少ないときだけ
-    #   マッハパンチに偏る」といった適応的な傾向が出ているか観察する
+    # * 08_janken_nash_fictitious_play.py の固定混合戦略の結果と比較し、「own（自分HP）が
+    #   少ない状態だけ特定の技に偏る」といった適応的な傾向が出ているか観察する
     # * rollout_value() の呼び出しを毎回1回ではなく複数回平均するようにすると、
     #   反実仮想価値の推定分散が減り学習が安定するが、実行時間は増える
 

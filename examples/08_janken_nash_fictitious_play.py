@@ -1,29 +1,19 @@
 """jpoke で学べること: 実際のバトルシミュレーションからNash均衡（混合戦略）を近似する。
 
-## 題材: エビワラー（てつのこぶし）の「技の三すくみ」
+## 題材
 
-このサンプルは、エビワラーに以下の3つの技だけを覚えさせ、毎ターンどの技を
-選ぶかという読み合いを扱う。
+1体・3つの技だけで対戦させ、「毎ターンどの技を何%の確率で選ぶか」という
+混合戦略（mixed strategy）のNash均衡を近似する。3つの技がじゃんけんのような
+三すくみの関係にある場合、単一の技を固定で使い続ける戦略は必ず弱点を突かれるため、
+確率配分の設計が課題になる。両者がこれ以上一方的に得をする変更をする余地がない
+状態を Nash均衡 と呼ぶ。
 
-* マッハパンチ（優先度+1）: 先制で殴る。追加効果なし
-* はやてがえし（優先度+3）: 相手が「先制攻撃技」を選んでいるときだけ成功し、
-  それより先に動いてひるませる。相手が優先度の低い技（きあいパンチ等）を
-  選んでいた場合は不発に終わる
-* きあいパンチ（優先度-3）: 通常は最後に動くが、行動前にダメージを受けなければ
-  威力150の一撃が確定する。逆に行動前にダメージを受けると不発になる
-
-この3つは、じゃんけんのような三すくみの関係になる:
-
-* マッハパンチ は きあいパンチ に勝つ（先制で殴ってしまうため、きあいパンチが
-  「行動前にダメージを受けた」扱いになり不発する）
-* はやてがえし は マッハパンチ に勝つ（マッハパンチも先制技なので、はやてがえし
-  の判定条件を満たし、より優先度の高いはやてがえしが先にひるませてしまう）
-* きあいパンチ は はやてがえし に勝つ（はやてがえしは非先制技には不発するので、
-  きあいパンチ側はダメージを受けずに行動でき、そのまま全力の一撃を通せる）
-
-じゃんけんと同様、単一の技を固定で使い続ける戦略は必ず弱点を突かれるため、
-「どの技を何%の確率で選ぶか」という混合戦略（mixed strategy）の設計が課題になる。
-両者がこれ以上一方的に得をする変更をする余地がない状態を Nash均衡 と呼ぶ。
+対戦するポケモン・技3つはファイル先頭の「対戦相手の構成」で指定する。既定値
+（マッハパンチ/はやてがえし/きあいパンチを覚えたエビワラー）が三すくみになる
+理由など技の仕様の詳細は `docs/spec/moves/` の各技の仕様書を参照。ここを別の
+ポケモン・技3つに書き換えれば、そちらの読み合いでも同じように均衡を近似できる
+（アルゴリズム自体は技の内容に依存しない。ただし戦略を3次元の確率分布として
+扱うため、技はちょうど3つである必要がある）。
 
 ## このスクリプトのアプローチ
 
@@ -64,13 +54,21 @@ from typing import Iterable
 from jpoke import Battle, Player, Pokemon
 from jpoke.enums import Command
 
+# ---- 対戦相手の構成 ----
+# ここを書き換えるだけで、別のポケモン・技3つの読み合いに変更できる
+# （MOVES はちょうど3つ指定する）
+SPECIES_NAME = "エビワラー"
+ABILITY_NAME = "てつのこぶし"
+NATURE = "いじっぱり"
 MOVES = ["マッハパンチ", "はやてがえし", "きあいパンチ"]
+EVS = [0, 0, 0, 0, 0, 0]
+IVS = [31, 31, 31, 31, 31, 31]
 
 # ---- 実行設定 ----
 # 実行時間を抑えつつ動作を確認できる値にしてある。本格的な精度が欲しい場合は
 # モジュールdocstringの「精度とデータ量のトレードオフ」を参照して値を大きくする
 BASE_SEED = 20260323
-MAX_TURNS = 10  # 1ゲームあたりの最大ターン数（この技構成なら大抵は数ターンで決着する）
+MAX_TURNS = 10  # 1ゲームあたりの最大ターン数
 
 EVAL_TRIALS = 15  # 戦略ペアの勝率を推定する試行回数。大きいほど精密だが計算量が増える
 GRID_STEP = 0.25  # 混合戦略の候補を生成するグリッドの刻み幅。小さいほど精密だが計算量が増える
@@ -91,7 +89,7 @@ class MixedMovePlayer(Player):
 
     def __init__(self, probs: tuple[float, float, float], username: str = ""):
         super().__init__(username)
-        self.probs = probs  # (マッハパンチ, はやてがえし, きあいパンチ) を選ぶ確率
+        self.probs = probs  # MOVES の3つの技を選ぶ確率（順に対応）
 
     def choose_command(self, battle: Battle) -> Command:
         r = battle.decision_random.random()
@@ -100,19 +98,14 @@ class MixedMovePlayer(Player):
             return Command.MOVE_0
         if r < p0 + p1:
             return Command.MOVE_1
-        return Command.MOVE_2  # 残りの確率（1 - p0 - p1）はきあいパンチ
+        return Command.MOVE_2  # 残りの確率（1 - p0 - p1）
 
 
-def make_hitmonchan() -> Pokemon:
-    """3すくみの技だけを覚えたエビワラーを1体構築する。"""
-    mon = Pokemon(
-        "エビワラー",
-        ability_name="てつのこぶし",  # パンチ技（マッハパンチ）の威力を1.2倍にする特性
-        nature="いじっぱり",
-        move_names=MOVES,
-    )
-    mon.set_evs([0, 0, 0, 0, 0, 0])
-    mon.set_ivs([31, 31, 31, 31, 31, 31], hp_policy="reset")  # 新規構築なので満タンにする
+def build_pokemon() -> Pokemon:
+    """「対戦相手の構成」から対戦用ポケモンを1体構築する。"""
+    mon = Pokemon(SPECIES_NAME, ability_name=ABILITY_NAME, nature=NATURE, move_names=MOVES)
+    mon.set_evs(EVS)
+    mon.set_ivs(IVS, hp_policy="reset")  # 新規構築なので満タンにする
     return mon
 
 
@@ -129,8 +122,8 @@ def play_game(row_probs: tuple[float, float, float],
     """
     p0 = MixedMovePlayer(row_probs, username="p0")
     p1 = MixedMovePlayer(col_probs, username="p1")
-    p0.team.append(make_hitmonchan())
-    p1.team.append(make_hitmonchan())
+    p0.team.append(build_pokemon())
+    p1.team.append(build_pokemon())
 
     battle = Battle(p0, p1, seed=seed)
     battle.test_option.accuracy = 100  # 命中率のブレを消し、技選択の駆け引きだけを見る
@@ -337,7 +330,7 @@ def main() -> None:
     workers = N_WORKERS if N_WORKERS is not None else max(1, (os.cpu_count() or 1) - 1)
 
     candidates = simplex_grid(GRID_STEP)
-    print("=== Hitmonchan Janken Nash Approx ===")
+    print(f"=== {SPECIES_NAME} Janken Nash Approx ({'/'.join(MOVES)}) ===")
     print(f"candidates={len(candidates)}, step={GRID_STEP}, iter={ITERATIONS}, trials={EVAL_TRIALS}, workers={workers}")
 
     with ProcessPoolExecutor(max_workers=workers) as executor:
@@ -357,8 +350,9 @@ def main() -> None:
 
     # 試してみよう:
     # * GRID_STEP / EVAL_TRIALS / ITERATIONS を大きくして、結果がどれだけ安定するか比較する
-    # * MOVES の並び順や技構成を変えて、別の三すくみ・じゃんけんにならない組み合わせで
-    #   どう均衡が変わるか（あるいは支配戦略が生まれるか）を観察する
+    # * ファイル先頭の「対戦相手の構成」で別のポケモン・技3つに変えて、
+    #   三すくみになる組み合わせ・ならない組み合わせでどう均衡が変わるか
+    #   （あるいは支配戦略が生まれるか）を観察する
     # * 他のNash均衡の求め方との比較:
     #   このスクリプトは「候補戦略を格子状に列挙し、反復最適反応で均衡へ近づける」という
     #   汎用的だが計算量の大きい方法を使っている。もし「1ターンだけの技同士の勝率」が
