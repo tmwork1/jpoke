@@ -301,6 +301,32 @@ def test_よわき_HP半分以下で攻撃補正0_5倍(move_name: str):
     assert 2048 == battle.damage_calculator.atk_modifier
 
 
+def test_よわき_HP半分超では攻撃補正が変化しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="よわき", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    attacker.hp = attacker.max_hp // 2 + 1
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.atk_modifier
+
+
+def test_よわき_こんらん自傷ダメージには補正なし():
+    """こんらんの自傷ダメージには第五世代以降の仕様で特性の効果が無い。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="よわき", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"こんらん": 2},
+    )
+    attacker = battle.actives[0]
+    attacker.hp = attacker.max_hp // 2
+    battle.test_option.trigger_volatile = True
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.atk_modifier == 4096
+    assert attacker.hp < attacker.max_hp // 2
+
+
 def test_リベロ_へんげんじざいと同様に技実行直前にタイプが変化する():
     """リベロはへんげんじざいと同一効果（共通ハンドラ）を持ち、技実行直前に技タイプへ変化する。"""
     battle = t.start_battle(
