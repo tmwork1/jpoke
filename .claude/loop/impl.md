@@ -12,9 +12,13 @@
 同じ entry ブランチにコミットする。ディスパッチャーがその entry ブランチを
 `loop/impl/integration` にマージする（impl と review の両変更がまとめて入る）。
 
-**ローリング・ディスパッチ**: `review_in_progress` / `plan_queue` の全件完了を待たず、1 件完了する
-たびにその場で収穫し、空いた分だけ即座に補充する（§3・§4・§7）。常に `review_parallel_max` /
-`planning_slots_max` 件が稼働している状態を維持する。
+**review-test は同時 1 件まで**: レビュー worktree は使い捨てだが固定単一パス
+（`{config.worktree_base}\review`）のため、review.md のような `slot{N}` 分離が無い。
+2 件以上を同時起動すると worktree パスが衝突するため、並列化はしない。
+
+**ローリング・ディスパッチ**: `plan_queue` の全件完了を待たず、1 件完了するたびにその場で収穫し、
+空いた分だけ即座に補充する（§3・§4・§7）。常に `planning_slots_max` 件の planner が稼働している
+状態を維持する（review-test は上記の通り同時 1 件）。
 
 ---
 
@@ -32,8 +36,7 @@
     "impl_extra":         "",
     "review_extra":       "",
     "planning_slots_max": 1,
-    "review_parallel_max": 1,
-    "worktree_base":      "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-loop\\impl"
+    "worktree_base":      "{ROOTの親}\\jpoke-loop\\impl"
   },
   "plan_queue":          ["..."],
   "impl_queue":          ["..."],
@@ -46,7 +49,10 @@
 }
 ```
 
-- `review_queue`: impl 完了・review-test 待ちの件 / `review_in_progress`: review-test が background 実行中の件。
+`{ROOTの親}` は `$ROOT`（プロジェクトルート、§共通1 参照）の親ディレクトリ。初回状態ファイル
+作成時に実際の絶対パスへ置き換える（他端末の具体例をそのままコピーしない）。
+
+- `review_queue`: impl 完了・review-test 待ちの件 / `review_in_progress`: review-test が background 実行中の件（同時1件まで）。
 - `unformatted_merges` / `last_format_commit`: §共通5（10 件ごとの一括整形）で使う。統合 worktree を
   初回作成した直後は `last_format_commit` をそのときの HEAD で初期化する。
 
@@ -99,7 +105,7 @@ fi
   4. `review_in_progress` から除き `failed` に追加
 - どちらも存在しない → 実行中のまま維持
 
-non-fast-forward 衝突時は §共通8 に従う。
+non-fast-forward 衝突時は §共通14 の自律解消を試みる（解消できなければ §共通8 に従う）。
 
 #### 3.5 一括整形（未整形マージが 10 件たまったら）
 
@@ -109,7 +115,7 @@ non-fast-forward 衝突時は §共通8 に従う。
 
 ### 4. review-test の起動（background）
 
-`review_queue` にエントリがあり、かつ `len(review_in_progress) < config.review_parallel_max` の場合、
+`review_queue` にエントリがあり、かつ `review_in_progress` が空の場合（同時1件まで）、
 `review_queue` 先頭の entry を取り出し:
 
 1. レビュー worktree を作成（既存の entry ブランチを checkout）:
@@ -144,8 +150,8 @@ jpoke {config.category} レビュー・テストタスク: {entry}
    git commit -m "review: {entry}"
 
 完了後、結果ファイルを書き込む（パスは作業ディレクトリ外の固定絶対パス）:
-  成功: C:\Users\tmtmp\Documents\pokemon\jpoke\.loop\review_results\{entry}.ok を Write で作成（内容は空でよい）
-  失敗: C:\Users\tmtmp\Documents\pokemon\jpoke\.loop\review_results\{entry}.fail を Write で作成（失敗理由を記述）
+  成功: $ROOT\.loop\review_results\{entry}.ok を Write で作成（内容は空でよい）
+  失敗: $ROOT\.loop\review_results\{entry}.fail を Write で作成（失敗理由を記述、$ROOTは§共通1参照）
 {config.review_extra}
 ```
 
@@ -241,8 +247,8 @@ jpoke {config.category} 計画書作成タスク: {entry}
     "spec_hint": "docs/spec/ の対応仕様書を参照（volatiles/, moves/, side_fields/, global_fields/ 以下も確認）",
     "progress_file": "docs/progress/move.md", "test_files": ["tests/test_move.py"],
     "impl_extra": "- data/move.py の MoveData に技が未登録なら追加する", "review_extra": "",
-    "planning_slots_max": 2, "review_parallel_max": 1,
-    "worktree_base": "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-loop\\impl"
+    "planning_slots_max": 2,
+    "worktree_base": "{ROOTの親}\\jpoke-loop\\impl"
   },
   "plan_queue": ["からをやぶる", "ガードシェア"], "impl_queue": ["いばる"],
   "review_queue": ["あくまのキッス"], "review_in_progress": ["あくび"],

@@ -208,6 +208,13 @@ review-test 失敗 → 手順4.4の失敗時と同様に `failed_bugs` を更新
 1件の修正が review-test で成功・コミットされるたびに、ディスパッチャーがその場で §共通6 の
 手順に従い直ちに main へ反映する（`{branch}` = `loop/replay_fuzz`）。
 
+## ループの実行間隔
+
+`/loop replay_fuzz` の動的セルフペーシング（`ScheduleWakeup`）では、`/loop` スキルの汎用ガイド
+（1200〜1800秒）ではなく **固定1分間隔（`delaySeconds=60`）** を使う（`fuzz`/`fuzz_log` と共通）。
+impl / review-test エージェントは常に foreground 起動でそのターン内に完結するため、次回起動も
+同様に60秒後とする。
+
 ## エラーハンドリング
 
 - impl / review-test 失敗 → `failed_bugs` に記録してループ継続（`pending_failures` の残りがあれば続行）。

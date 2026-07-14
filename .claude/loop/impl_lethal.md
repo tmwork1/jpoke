@@ -23,13 +23,16 @@
     "spec_hint":      "docs/spec/ 以下の仕様書を参照",
     "test_files":     ["tests/test_lethal.py"],
     "progress_files": ["docs/progress/item.md", "docs/progress/ability.md", "..."],
-    "worktree":       "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-loop\\impl_lethal"
+    "worktree":       "{ROOTの親}\\jpoke-loop\\impl_lethal"
   },
   "completed": [{"name": "...", "type": "item|ability|ailment|volatile|global_field|move"}],
   "failed":    [{"name": "...", "type": "..."}],
   "pending_main_merges": 0
 }
 ```
+
+`{ROOTの親}` は `$ROOT`（プロジェクトルート、§共通1 参照）の親ディレクトリ。初回状態ファイル
+作成時に実際の絶対パスへ置き換える（他端末の具体例をそのままコピーしない）。
 
 `pending_main_merges`: 前回 main 反映（PR マージ）以降にコミットが成立した件数。「main への反映」
 節（10件ごと）で使う。統合ブランチ方式の `unformatted_merges`（§共通5）と違い、整形処理を伴わない
@@ -80,27 +83,20 @@ jpoke リーサル計算ハンドラ実装タスク: {name}（{type}）
 8. python -m pytest tests/ -v を実行し全テストが通ることを確認する
    （今回の実装と無関係な既存テストが flaky と判明した場合は `.claude/loop/_common.md` §共通13 に
    従いその場で修正する）
-9. 変更をすべてコミットする（作業は `loop/impl_lethal` ブランチ上で行う）:
-   git add src/ tests/ docs/
-   git commit -m "impl: impl_lethal/{name}"
+9. 対象行がある progress ファイル（`config.progress_files` のいずれか）の「リーサル実装」
+   「リーサルテスト」列を `-` → `x` に更新する（自分の行だけ）
+10. 変更をすべてコミットする（作業は `loop/impl_lethal` ブランチ上で行う）:
+    git add -A
+    git commit -m "impl: impl_lethal/{name}"
 
 {config.spec_hint}
 ```
 
 > 注: このフローは単一ブランチ・単一エージェントのため、ソートはエージェント側で実行する
-> （統合ブランチ方式の §共通5「マージ後一括整形」は適用しない）。
+> （統合ブランチ方式の §共通5「マージ後一括整形」は適用しない）。実装・テスト・進捗更新は
+> 1コミットにまとめる（進捗ファイル更新だけを別コミットに分けない）。
 
-### 4. 進捗ファイルを更新する
-
-実装・テストが成功した場合のみ。対象行の「リーサル実装」「リーサルテスト」列を `-` → `x` に更新し、
-worktree 内でコミットする:
-
-```bash
-# {config.worktree} 配下の progress_file を Edit で修正後:
-git -C "{config.worktree}" commit -am "docs: impl_lethal/{name} progress"
-```
-
-### 5. 状態保存・終了
+### 4. 状態保存・終了
 
 成功: `completed` に `{"name": "{name}", "type": "{type}"}` を追加し、`pending_main_merges += 1`。
 `pending_main_merges >= 10` になったら「main への反映」の手順に従いその場で main へ反映し、

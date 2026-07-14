@@ -170,7 +170,8 @@ jpoke fuzz バグ修正タスク: seed={seed} player={mode} (signature: {signatu
 1. 上記コマンドで再現することを確認する
 2. traceback とバトルログから原因箇所を特定する
    （CLAUDE.md の実装時参照順を参照。handlers/ の個別ハンドラのバグか、core/ のエンジン共通ロジックのバグかを見極める）
-   ※ player=tree_search の場合、scripts/tree_search/framework.py 側（探索フレームワーク固有）の
+   ※ player=tree_search の場合、`scripts/fuzz_battle.py` の `TreeSearchFuzzPlayer` および
+     `src/jpoke/players/tree_search_player.py` の `TreeSearchPlayer`（探索フレームワーク固有）の
      バグの可能性も観点に加える。
    ※ 別 player で同一 signature が既出の場合（手順4.2）は、エンジン共通ロジックのバグである可能性が高い。
 3. 以降は `.claude/loop/_common.md` §共通10「impl エージェントの共通ステップ」の 3〜7 に従う
@@ -234,10 +235,9 @@ review-test 失敗 → 手順4.4の失敗時と同様に `failed_bugs` を更新
 ## ループの実行間隔
 
 `/loop fuzz` の動的セルフペーシング（`ScheduleWakeup`）では、`/loop` スキルの汎用ガイド
-（1200〜1800秒）ではなく **固定5分間隔（`delaySeconds=300`）** を使う。バグ対応で impl /
-review-test エージェントを foreground 起動した場合はそのターン内で完結するため、次回起動も
-同様に300秒後とする。バックグラウンドエージェント（§共通7-1）の完了通知を受けて再開した
-ターンでも、次のスケジュールは同じく300秒後にする。
+（1200〜1800秒）ではなく **固定1分間隔（`delaySeconds=60`）** を使う（`replay_fuzz`/`fuzz_log`
+と共通）。impl / review-test エージェントは常に foreground 起動でそのターン内に完結するため、
+次回起動も同様に60秒後とする。
 
 ## エラーハンドリング
 

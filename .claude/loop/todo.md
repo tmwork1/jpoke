@@ -14,7 +14,7 @@
     "scan_glob":     "**/*.py",  // .claude/ 除外、プロジェクト全体
     "test_files":    ["tests/"],
     "review_extra":  "",
-    "worktree":      "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-loop\\todo"
+    "worktree":      "{ROOTの親}\\jpoke-loop\\todo"
   },
   "todo_queue": ["TODO コメントの文言をそのまま"],
   "completed":  ["..."],
@@ -22,6 +22,9 @@
   "pending_main_merges": 0
 }
 ```
+
+`{ROOTの親}` は `$ROOT`（プロジェクトルート、§共通1 参照）の親ディレクトリ。初回状態ファイル
+作成時に実際の絶対パスへ置き換える（他端末の具体例をそのままコピーしない）。
 
 `todo_queue` の各エントリは **TODO コメントの文言**（`# TODO: ` 以降のテキスト）。
 ファイルパスや行番号は含めない（実装時に Grep で現在位置を探す）。
@@ -137,7 +140,7 @@ jpoke {config.category} レビュー・テストタスク: {entry}
     "scan_glob":    "**/*.py",
     "test_files":   ["tests/test_move.py"],
     "review_extra": "",
-    "worktree":     "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-loop\\todo"
+    "worktree":     "{ROOTの親}\\jpoke-loop\\todo"
   },
   "todo_queue": ["ひるみ確率の適用を実装する", "追加効果フラグを追加する"],
   "completed": [],
