@@ -15,8 +15,8 @@ import argparse
 import statistics
 import time
 from random import Random
+from typing import Callable, get_args
 
-# TODO: import文をまとめられないか。
 from jpoke import Battle, Pokemon
 from jpoke.data.ability import ABILITIES
 from jpoke.data.item import ITEMS
@@ -24,7 +24,6 @@ from jpoke.data.move import MOVES
 from jpoke.data.pokedex import POKEDEX
 from jpoke.players import RandomPlayer
 from jpoke.types import Gender, Nature, Type
-from typing import Callable, get_args
 
 GENDERS = list(get_args(Gender))
 NATURES = list(get_args(Nature))
