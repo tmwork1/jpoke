@@ -475,7 +475,7 @@ def test_タイプ無効バフ系(ability: str, move: str, stat: Stat, rank: int
         ("そうしょく", "このは", "atk", 1),
         ("でんきエンジン", "でんきショック", "spe", 1),
         ("ひらいしん", "でんきショック", "spa", 1),
-        ("よびみず", "でんきショック", "spa", 1),
+        ("よびみず", "みずでっぽう", "spa", 1),
     ],
 )
 def test_タイプ無効バフ系_かたやぶりで無効(ability: str, move: str, stat: Stat, rank: int):
