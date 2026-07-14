@@ -1,4 +1,4 @@
-"""jpoke で学べること: choose_selection() のオーバーライドによる選出順のカスタマイズ。
+"""choose_selection() をオーバーライドして選出順をカスタマイズする方法を示す。
 
 choose_command とは別に choose_selection(battle) をオーバーライドすると、
 対戦開始前の選出番号（n_selected件）を自分で決められる。デフォルト実装は

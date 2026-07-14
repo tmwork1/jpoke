@@ -1,5 +1,5 @@
-"""jpoke で学べること: TreeSearchPlayer.configure_sim() のオーバーライドによる、
-探索中だけ確率的要素を固定する木探索AIの拡張例。
+"""TreeSearchPlayer.configure_sim() をオーバーライドして、
+探索中だけ確率的要素を固定する木探索AIの拡張例を示す。
 
 木探索は各分岐で battle.copy() した sim 上で技を実際に発動させて評価する
 （tree_search_player.py の _worst_case_over_opponent() 参照）ため、命中判定・

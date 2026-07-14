@@ -1,5 +1,5 @@
-"""jpoke で学べること: TreeSearchPlayer.fallback() のオーバーライドによる、
-探索できない局面での代替方策のカスタマイズ。
+"""TreeSearchPlayer.fallback() をオーバーライドして、
+探索できない局面での代替方策をカスタマイズする方法を示す。
 
 fallback() は (1) 相手の合法手が未公開で opponent_estimator でも推定できない
 局面（実対戦の初手など）、(2) 探索中に発生した割り込み交代（瀕死交代等）による
