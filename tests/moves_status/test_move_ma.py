@@ -182,6 +182,19 @@ def test_まねっこ_ゲップはコピーできない():
     assert not battle.move_executor.move_applied
 
 
+def test_まねっこ_スケッチはコピーできない():
+    """まねっこ: 直前の技がスケッチ（non_copycatフラグ持ち）の場合は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まねっこ"])],
+        team1=[Pokemon("ドーブル", move_names=["スケッチ"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)  # ドーブル: スケッチ（実装保留のため空振りだが技自体は使用される）
+    t.run_move(battle, 0)  # ピカチュウ: まねっこ → 失敗するはず
+
+    assert not battle.move_executor.move_applied
+
+
 def test_まねっこ_スターモービル専用技はコピーできない():
     """まねっこ: 直前の技がスターモービル専用技（アクセル技）の場合は失敗する"""
     battle = t.start_battle(
