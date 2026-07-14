@@ -216,6 +216,102 @@ def test_アイスハンマー_ちからずくは無関係で発動する():
     assert battle.damage_calculator.power_modifier == 4096
 
 
+def test_アイススピナー_まもるで防がれたときフィールドを解除しない():
+    """アイススピナー: まもるで無効化された場合はフィールドを解除しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フリーザー", move_names=["アイススピナー"])],
+        team1=[Pokemon("カビゴン")],
+        terrain=("グラスフィールド", 5),
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+    assert battle.terrain.is_active
+
+
+def test_アイススピナー_みがわりに肩代わりされてもフィールドを解除する():
+    """アイススピナー: 対象がみがわり状態でダメージを肩代わりしても、フィールドは解除される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フリーザー", move_names=["アイススピナー"])],
+        team1=[Pokemon("カビゴン")],
+        terrain=("グラスフィールド", 5),
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    # みがわりが肩代わりするため本体HPは変化しない
+    assert defender.hp == hp_before
+    assert defender.has_volatile("みがわり")
+    assert not battle.terrain.is_active
+
+
+def test_アイススピナー_ばけのかわに肩代わりされてもフィールドを解除する():
+    """アイススピナー: 対象の特性ばけのかわにダメージを肩代わりされても、フィールドは解除される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フリーザー", move_names=["アイススピナー"])],
+        team1=[Pokemon("ピカチュウ", ability_name="ばけのかわ")],
+        terrain=("グラスフィールド", 5),
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.ability.enabled is False
+    assert not battle.terrain.is_active
+
+
+def test_アイススピナー_いのちのたまの反動でひんしになったときフィールドを解除しない():
+    """アイススピナー: いのちのたまの反動で使用者がひんしになった場合、フィールドを解除しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フリーザー", item_name="いのちのたま", move_names=["アイススピナー"])],
+        team1=[Pokemon("カビゴン")],
+        terrain=("グラスフィールド", 5),
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    battle.modify_hp(attacker, v=-(attacker.hp - 1))
+    t.run_move(battle, 0)
+    assert attacker.fainted
+    assert battle.terrain.is_active
+
+
+def test_アイススピナー_みがわりに肩代わりされてもいのちのたまの反動でひんしになったときフィールドを解除しない():
+    """アイススピナー: 対象がみがわりで肩代わりした場合でも、いのちのたまの反動で
+    使用者がひんしになったときはフィールドを解除しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フリーザー", item_name="いのちのたま", move_names=["アイススピナー"])],
+        team1=[Pokemon("カビゴン")],
+        terrain=("グラスフィールド", 5),
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    battle.modify_hp(attacker, v=-(attacker.hp - 1))
+    t.run_move(battle, 0)
+    assert attacker.fainted
+    assert battle.terrain.is_active
+
+
+def test_アイススピナー_ゴツゴツメットの反動でひんしになったときフィールドを解除しない():
+    """アイススピナー: 対象の持ち物ゴツゴツメットの反動で使用者がひんしになった場合、
+    フィールドを解除しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フリーザー", move_names=["アイススピナー"])],
+        team1=[Pokemon("カビゴン", item_name="ゴツゴツメット")],
+        terrain=("グラスフィールド", 5),
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    battle.modify_hp(attacker, v=-(attacker.hp - 1))
+    t.run_move(battle, 0)
+    assert attacker.fainted
+    assert battle.terrain.is_active
+
+
 def test_アイスハンマー_相手にダメージを与える():
     """アイスハンマー: こおりタイプの物理技で相手にダメージを与える。"""
     battle = t.start_battle(
