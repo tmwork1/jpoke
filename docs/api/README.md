@@ -131,12 +131,18 @@ move = battle.command_to_move(player1, commands[0])
 | `can_use_last_resort(pokemon)` | とっておきの発動条件を満たしているか判定する |
 | `get_forced_move_name(pokemon)` | 強制行動中のポケモンが実行すべき技名を返す（固定されていなければ`None`） |
 | `is_first_actor(player)` / `is_second_actor(player)` | このターンでplayerが先攻/後攻かどうかを判定する（1vs1想定、行動順未確定なら`None`） |
+| `calc_move_priority(attacker, move)` | 指定した `Pokemon`/`Move` オブジェクトで技を発動したときの優先度（ON_MODIFY_MOVE_PRIORITYイベントによる補正込み）を計算する。`jpoke.testing.calc_move_priority(battle, player_index, move_index=0)` はインデックス指定の薄いラッパーで、内部でこちらを呼ぶ |
+| `resolve_speed_order()` | 現在の実効素早さでソートしたポケモンのリストを返す（引数なし）。行動順そのものが必要な場合は予約済みコマンドを考慮する `resolve_action_order()` を使う |
 
 ```python
 active = battle.get_active(player1)
 if battle.can_switch(player1):
     ...
 print(battle.is_floating(active), battle.can_use_last_resort(active))
+
+# 優先度・素早さ順の確認
+priority = battle.calc_move_priority(active, active.moves[0])
+speed_order = battle.resolve_speed_order()
 ```
 
 ### ダメージ計算系
@@ -636,7 +642,7 @@ print(results[-1].lethal_probability)
 | `reserve_command(battle, command0=None, command1=None)` | `step()` を介さずコマンド予約状態だけを作る（行動順・優先度だけを検証したい場合） |
 | `build_context(battle, atk_idx, move_idx=0)` | `AttackContext` を組み立てる |
 | `calc_lethal(battle, atk_idx, moves, critical=False, secondary=False, max_attack=10)` | `Battle.calc_lethal()` のインデックス指定版 |
-| `calc_move_priority(battle, player_index, move_index=0)` | 指定インデックスの技を使ったときの優先度を返す |
+| `calc_move_priority(battle, player_index, move_index=0)` | 指定インデックスの技を使ったときの優先度を返す。`Battle.calc_move_priority(pokemon, move)` のインデックス指定版 |
 | `end_turn(battle)` | `Battle.end_turn()` のラッパー |
 | `fix_damage(battle, damage)` | ダメージ計算を固定値にする（デバッグ専用モンキーパッチ） |
 | `fix_random(battle, value)` | `battle.random.random()` を固定値にする（デバッグ専用モンキーパッチ） |
