@@ -3570,5 +3570,25 @@ def test_ポイズンヒール_どく状態で1_8回復する(ailment_name: Ailm
     assert mon.hp == 1 + mon.max_hp // 8
 
 
+def test_ポイズンヒール_同ターンに瀕死になったポケモンは回復しない():
+    """ポイズンヒール: 同ターン中の攻撃で先にHPが0になったポケモンは、
+    どく状態のターン終了時処理（ポイズンヒールによる回復への変換）で
+    回復・蘇生されずに瀕死のままとなる"""
+    battle = t.start_battle(
+        team0=[Pokemon("グライオン", ability_name="ポイズンヒール"), Pokemon("コラッタ")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        ailment0=("どく", None),
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.run_move(battle, 1)
+    assert mon.hp == 0
+    assert mon.fainted
+    t.end_turn(battle)
+    assert mon.hp == 0
+    assert mon.fainted
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

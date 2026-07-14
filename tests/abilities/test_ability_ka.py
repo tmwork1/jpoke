@@ -448,6 +448,25 @@ def test_かんそうはだ_みず技を無効化してHPが減っていれば1_
     assert mon.ability.revealed
 
 
+def test_かんそうはだ_同ターンに瀕死になったポケモンは回復しない():
+    """かんそうはだ: 同ターン中の攻撃で先にHPが0になったポケモンは、
+    あめ中でもターン終了時のかんそうはだ回復を受けずに瀕死のままとなる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かんそうはだ"), Pokemon("コラッタ")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        weather=("あめ", 5),
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.run_move(battle, 1)
+    assert mon.hp == 0
+    assert mon.fainted
+    t.end_turn(battle)
+    assert mon.hp == 0
+    assert mon.fainted
+
+
 def test_かんろなミツ_みがわり状態の相手には無効():
     battle = t.start_battle(
         team0=[Pokemon("コラッタ"), Pokemon("ピカチュウ", ability_name="かんろなミツ")],

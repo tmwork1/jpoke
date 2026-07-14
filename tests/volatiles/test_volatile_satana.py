@@ -588,6 +588,24 @@ def test_にげられない_ゴーストタイプは交代できる():
     assert battle.query.can_switch(battle.players[0])
 
 
+def test_にげられない_はいすいのじん起因は相手が交代しても解除されない():
+    """にげられない: はいすいのじんによる自己付与の場合、相手が交代しても解除されない。
+
+    はいすいのじんは自分自身をにげられない状態にする（source=自分）ため、
+    とおせんぼう等の相手起因のにげられない状態とは異なり、相手が交代しても
+    にげられない状態は継続する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["はいすいのじん"])],
+        team1=[Pokemon("コラッタ"), Pokemon("ズバット")],
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[0].has_volatile("にげられない")
+
+    t.run_switch(battle, 1, 1)
+    assert battle.actives[0].has_volatile("にげられない")
+
+
 def test_にげられない_交代不可():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
@@ -607,24 +625,6 @@ def test_にげられない_発生源が交代すると解除():
     )
     t.run_switch(battle, 0, 1)
     assert not battle.actives[1].has_volatile("にげられない")
-
-
-def test_にげられない_はいすいのじん起因は相手が交代しても解除されない():
-    """にげられない: はいすいのじんによる自己付与の場合、相手が交代しても解除されない。
-
-    はいすいのじんは自分自身をにげられない状態にする（source=自分）ため、
-    とおせんぼう等の相手起因のにげられない状態とは異なり、相手が交代しても
-    にげられない状態は継続する。
-    """
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["はいすいのじん"])],
-        team1=[Pokemon("コラッタ"), Pokemon("ズバット")],
-    )
-    t.run_move(battle, 0)
-    assert battle.actives[0].has_volatile("にげられない")
-
-    t.run_switch(battle, 1, 1)
-    assert battle.actives[0].has_volatile("にげられない")
 
 
 def test_ねむけ_ターン経過でねむりになる():
@@ -688,6 +688,16 @@ def test_ねをはる_かいふくふうじ中は回復しない():
     assert mon.hp == 1
 
 
+def test_ねをはる_ゴーストタイプは交代できる():
+    """ねをはる: ゴーストタイプはねをはる状態の効果を無視して交代できる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー"), Pokemon("ライチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"ねをはる": 1},
+    )
+    assert battle.query.can_switch(battle.players[0])
+
+
 def test_ねをはる_交代不可():
     """ねをはる: 通常ポケモンは交代できない"""
     battle = t.start_battle(
@@ -698,14 +708,23 @@ def test_ねをはる_交代不可():
     assert not battle.query.can_switch(battle.players[0])
 
 
-def test_ねをはる_ゴーストタイプは交代できる():
-    """ねをはる: ゴーストタイプはねをはる状態の効果を無視して交代できる"""
+def test_ねをはる_同ターンに瀕死になったポケモンは回復しない():
+    """ねをはる: 同ターン中の攻撃で先にHPが0になったポケモンは、
+    ターン終了時のねをはる回復を受けずに瀕死のままとなる"""
     battle = t.start_battle(
-        team0=[Pokemon("ゲンガー"), Pokemon("ライチュウ")],
-        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ"), Pokemon("コラッタ")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
         volatile0={"ねをはる": 1},
+        accuracy=100,
     )
-    assert battle.query.can_switch(battle.players[0])
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.run_move(battle, 1)
+    assert mon.hp == 0
+    assert mon.fainted
+    t.end_turn(battle)
+    assert mon.hp == 0
+    assert mon.fainted
 
 
 def test_ねをはる_回復():

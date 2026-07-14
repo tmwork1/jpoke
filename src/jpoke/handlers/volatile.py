@@ -144,6 +144,9 @@ def restrict_commands(battle: Battle,
 def アクアリング_self_heal(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """アクアリング状態のターン終了時回復（最大HPの1/16、最小1）。"""
     mon = ctx.source
+    # ひんし(HP0)になったときは発動しない（同ターンの攻撃等で先にHPが0になった場合を含む）
+    if mon.fainted:
+        return HandlerReturn(value=value)
     heal = max(1, mon.max_hp // 16)
     heal = battle.events.emit(Event.ON_CALC_DRAIN, ctx, heal)
     return HandlerReturn(value=battle.modify_hp(mon, v=heal, source=mon))
@@ -972,6 +975,9 @@ def ねをはる_self_heal(battle: Battle, ctx: EventContext, value: Any) -> Han
 
     かいふくふうじ状態では ON_MODIFY_HEAL 経由でブロックされる。
     """
+    # ひんし(HP0)になったときは発動しない（同ターンの攻撃等で先にHPが0になった場合を含む）
+    if ctx.source.fainted:
+        return HandlerReturn(value=value)
     heal = max(1, ctx.source.max_hp // 16)
     heal = battle.events.emit(Event.ON_CALC_DRAIN, ctx, heal)
     return HandlerReturn(value=battle.modify_hp(ctx.source, v=heal, source=ctx.source))

@@ -416,6 +416,39 @@ def test_じゅうりょく_ノーガード相手への攻撃でNoneのままTyp
     assert battle.move_executor.accuracy is None  # 倍率は適用されない
 
 
+def test_ターン終了処理_同ターンに瀕死になったポケモンへのON_TURN_END回復が適用されない():
+    """seed=38 (LogInconsistency@handlers/volatile.py:ねをはる_self_heal:970) の回帰テスト。
+
+    Event.ON_TURN_END は瀕死ポケモンの交代処理（run_faint_switch）より前に発火するため、
+    同ターンの攻撃で先にHPが0になったポケモンが、まだ場に残ったまま ON_TURN_END の
+    自己回復系ハンドラ（ねをはる等）を受けてしまい、瀕死のまま蘇生されて戦闘を継続して
+    しまうバグがあった（元のバグではザシアンがねをはるのターン終了時回復で毎ターン
+    蘇生され続け、退場せずに戦闘を継続していた）。
+
+    ねをはる状態のポケモンが、そのターンの相手の攻撃で瀕死になった場合、ON_TURN_END の
+    ねをはる回復では蘇生されず、正しく瀕死のまま退場・交代することを確認する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんこうせっか"]), Pokemon("コラッタ")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        volatile0={"ねをはる": 1},
+        accuracy=100,
+    )
+    player0, player1 = battle.players
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.fix_damage(battle, 1)
+
+    battle.step(commands={player0: Command.MOVE_0, player1: Command.MOVE_0})
+
+    # ねをはる状態のポケモンは、同ターンの攻撃で瀕死になった後、
+    # ON_TURN_END のねをはる回復で蘇生されず、正しく退場・交代している
+    assert mon.fainted
+    assert mon.hp == 0
+    assert battle.actives[0] is not mon
+    assert battle.actives[0].name == "コラッタ"
+
+
 def test_ターン終了処理_決着ターンでは継続ダメージのON_TURN_ENDが処理されない():
     """seed=24 (LogInconsistency@turn_controller.py:_run_end_phase:422) の回帰テスト。
 

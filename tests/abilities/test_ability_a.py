@@ -231,6 +231,25 @@ def test_アイスボディ_ゆき以外では発動しない():
     assert mon.hp == 1
 
 
+def test_アイスボディ_同ターンに瀕死になったポケモンは回復しない():
+    """アイスボディ: 同ターン中の攻撃で先にHPが0になったポケモンは、
+    ターン終了時のアイスボディ回復を受けずに瀕死のままとなる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヤドン", ability_name="アイスボディ"), Pokemon("コラッタ")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        weather=("ゆき", 5),
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.run_move(battle, 1)
+    assert mon.hp == 0
+    assert mon.fainted
+    t.end_turn(battle)
+    assert mon.hp == 0
+    assert mon.fainted
+
+
 def test_あくしゅう_一撃必殺技には効果がない():
     """あくしゅう: 一撃必殺技には効果が無い（追加の乱数判定が発生しないことで確認する）
 
@@ -484,6 +503,25 @@ def test_あめうけざら_ばんのうがさ所持時は発動しない():
     mon.hp = 1
     t.end_turn(battle)
     assert mon.hp == 1
+
+
+def test_あめうけざら_同ターンに瀕死になったポケモンは回復しない():
+    """あめうけざら: 同ターン中の攻撃で先にHPが0になったポケモンは、
+    ターン終了時のあめうけざら回復を受けずに瀕死のままとなる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヤドン", ability_name="あめうけざら"), Pokemon("コラッタ")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        weather=("あめ", 5),
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.run_move(battle, 1)
+    assert mon.hp == 0
+    assert mon.fainted
+    t.end_turn(battle)
+    assert mon.hp == 0
+    assert mon.fainted
 
 
 def test_アロマベール_あくびは防がない():
