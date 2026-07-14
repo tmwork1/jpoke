@@ -4659,8 +4659,13 @@ def わざわいのうつわ_reduce_C(battle: Battle, ctx: AttackContext, value:
     サイコショック/サイコブレイク/しんぴのつるぎ等の分類が変わる技は、
     ON_CALC_ATK_MODIFIER到達時点で分類が確定済みのため、ここでの
     ctx.move.category判定だけで正しく扱える。
+    攻撃側自身がわざわいのうつわを持つ場合（コピー・交換等による取得を含む）は対象外。
     """
-    if ctx.attacker is not ctx.defender and ctx.move.category == "special":
+    if (
+        ctx.attacker is not ctx.defender
+        and ctx.move.category == "special"
+        and ctx.attacker.ability.name != "わざわいのうつわ"
+    ):
         value = apply_fixed_modifier(value, 3072)
     return HandlerReturn(value=value)
 
