@@ -66,6 +66,10 @@ def remove_volatile(battle: Battle,
                     reason: str = "") -> HandlerReturn:
     """揮発状態の解除処理
 
+    Note:
+        ログ記録は battle.volatile_manager.remove() 内で行われるため、
+        ここで重複してログを記録しない（reason はそちらへ渡す）。
+
     Args:
         battle: バトルインスタンス
         ctx: コンテキスト
@@ -74,12 +78,7 @@ def remove_volatile(battle: Battle,
         reason: 解除理由
     """
     mon = getattr(ctx, "source", None) or getattr(ctx, "attacker", None)
-    if battle.volatile_manager.remove(mon, volatile):
-        battle.add_event_log(
-            mon,
-            LogCode.VOLATILE_REMOVED,
-            payload=VolatilePayload(volatile=volatile, display_reason=reason)
-        )
+    battle.volatile_manager.remove(mon, volatile, reason=reason)
     return HandlerReturn(value=value)
 
 def force_command(battle: Battle, ctx: EventContext, value: list[Command]) -> HandlerReturn:

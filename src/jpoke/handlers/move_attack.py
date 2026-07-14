@@ -497,7 +497,12 @@ def エレクトロビーム_charge(battle: Battle, ctx: AttackContext, value: A
     """
     attacker = ctx.attacker
     if not attacker.has_volatile("エレクトロビーム"):
-        battle.volatile_manager.apply(attacker, "エレクトロビーム", count=1, source=attacker)
+        # move_name には実際に使用した技名（ctx.move.name）を渡す。これにより
+        # 2ターン目の強制続行時（Command.FORCED → get_forced_move_name）に
+        # 正しい技名が解決される（未設定だとわるあがきにフォールバックしてしまう）。
+        battle.volatile_manager.apply(
+            attacker, "エレクトロビーム", count=1, source=attacker, move_name=ctx.move.name
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -1674,7 +1679,12 @@ def ソーラービーム系_charge(
     """
     attacker = ctx.attacker
     if not attacker.has_volatile(volatile_name):
-        battle.volatile_manager.apply(attacker, volatile_name, count=1, source=attacker)
+        # move_name には実際に使用した技名（ctx.move.name）を渡す。これにより
+        # 2ターン目の強制続行時（Command.FORCED → get_forced_move_name）に
+        # 正しい技名が解決される（未設定だとわるあがきにフォールバックしてしまう）。
+        battle.volatile_manager.apply(
+            attacker, volatile_name, count=1, source=attacker, move_name=ctx.move.name
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -3551,7 +3561,12 @@ def メテオビーム_charge(battle: Battle, ctx: AttackContext, value: Any) ->
     """
     attacker = ctx.attacker
     if not attacker.has_volatile("メテオビーム"):
-        battle.volatile_manager.apply(attacker, "メテオビーム", count=1, source=attacker)
+        # move_name には実際に使用した技名（ctx.move.name）を渡す。これにより
+        # 2ターン目の強制続行時（Command.FORCED → get_forced_move_name）に
+        # 正しい技名が解決される（未設定だとわるあがきにフォールバックしてしまう）。
+        battle.volatile_manager.apply(
+            attacker, "メテオビーム", count=1, source=attacker, move_name=ctx.move.name
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
