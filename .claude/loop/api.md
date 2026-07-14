@@ -49,7 +49,7 @@
 
 ```json
 {
-  "worktree": "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-loop\\api",
+  "worktree": "{ROOTの親}\\jpoke-loop\\api",
   "round": 5,
   "pending_findings": [
     {"id": "r5-1", "source": "developer", "summary": "一言要約", "detail": "該当ファイル:行、根拠、対応案"}
@@ -63,6 +63,9 @@
   "failed": [{"summary": "一言要約（正規化）", "attempts": 1, "last_id": "r5-1"}]
 }
 ```
+
+`{ROOTの親}` は `$ROOT`（プロジェクトルート、§共通1 参照）の親ディレクトリ。初回状態ファイル
+作成時に実際の絶対パスへ置き換える（他端末の具体例をそのままコピーしない）。
 
 - `round`: 現在処理中（未処理なら次に開始する）のラウンド番号。初回起動時は
   `docs/api_feedback/loop_rounds/round*.md` のファイル名から最大の番号を拾い、その番号を
@@ -362,7 +365,7 @@ impl エージェントが jpoke API改善指摘（第{round}ラウンド、{fin
 
 ```json
 {
-  "worktree": "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-loop\\api",
+  "worktree": "{ROOTの親}\\jpoke-loop\\api",
   "round": 5,
   "pending_findings": [
     {"id": "r5-2", "source": "beginner", "summary": "◯◯の引数名が分かりにくい", "detail": "..."}
