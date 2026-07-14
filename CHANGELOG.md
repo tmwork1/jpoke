@@ -121,6 +121,12 @@
 
 ### Fixed
 
+- README.md の「クイックスタート」節が `while battle.judge_winner() is None and
+  battle.turn < 100:` / `winner = battle.judge_winner()` という旧パターンのままで、
+  `examples/01_basics/02_quickstart.py`（docstringで「READMEのクイックスタートと
+  同内容」と明記）や `docs/api/README.md` が採用している `while not battle.finished
+  and battle.turn < 100:` / `winner = battle.winner` という表記と食い違っていたため
+  修正し、表記を統一した（`judge_winner()` 自体は引き続き公開APIとして利用可能）
 - `Battle(seed=None)` のフォールバックが `int(time.time())`（秒精度）だったため、
   短時間に複数の `Battle` を生成すると同一シードになり、`Player.battle_against()`
   などの多数回対戦がすべて同じ展開になってしまう問題を修正。OSの乱数源から

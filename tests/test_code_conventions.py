@@ -15,6 +15,7 @@ from . import test_utils as t
 
 SRC_ROOT = Path(__file__).resolve().parent.parent / "src" / "jpoke"
 EXAMPLES_ROOT = Path(__file__).resolve().parent.parent / "examples"
+README_PATH = Path(__file__).resolve().parent.parent / "README.md"
 
 # 直接代入が許可されているファイル（相対パス、"/" 区切り）
 # - model/pokemon.py: hp の実体を保持するクラス自身の実装
@@ -48,6 +49,33 @@ def test_Pokemon_modify_hpが公開APIとして露出していない():
     """
     assert not hasattr(Pokemon, "modify_hp")
     assert hasattr(Pokemon, "_modify_hp_raw")
+
+
+def test_READMEがjudge_winnerのis_None比較を使っていない():
+    """`battle.judge_winner()` は決着判定のたびにTOD判定込みで再計算する重い遅延判定APIで、
+    決着したかどうかのチェックには軽量な `battle.finished`（キャッシュされた `battle.winner`
+    を経由）を使うべきという規約になっている。`judge_winner() is None` / `is not None` の
+    直接比較は `battle.finished` への置き換え漏れの兆候である。examples/ 配下は
+    `test_examplesがjudge_winnerのis_None比較を使っていない`（id: r6-4）で既に検査対象だが、
+    ルート `README.md` の「クイックスタート」節は対象外で、`while battle.judge_winner() is
+    None and battle.turn < 100:` / `winner = battle.judge_winner()` という旧パターンが
+    `examples/01_basics/02_quickstart.py` や `docs/api/README.md` の表記と食い違ったまま
+    長期間残っていた（id: r7-4）。再発防止のため README.md に `judge_winner()` の
+    `is None` / `is not None` 直接比較が無いことを確認する（`judge_winner()` 自体は
+    勝者取得APIとして今後も使われてよく、禁止対象は None との直接比較のみ）。
+    """
+    pattern = re.compile(r"judge_winner\(\)\s*is\s*(not\s+)?None")
+    text = README_PATH.read_text(encoding="utf-8")
+    violations = [
+        f"README.md:{lineno}: {line.strip()}"
+        for lineno, line in enumerate(text.splitlines(), start=1)
+        if pattern.search(line)
+    ]
+
+    assert not violations, (
+        "README.md で judge_winner() の is None / is not None 直接比較を検出"
+        "（battle.finished / battle.winner に置き換えること）:\n" + "\n".join(violations)
+    )
 
 
 def test_consume_itemの引数名がtargetにリネームされている():

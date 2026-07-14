@@ -70,3 +70,22 @@
   既存の`tests/test_battle_option.py`（`resolve_secondary_chance`関連19件）が引き続き通ることを
   確認した。`python -m pytest tests/ -v`で5764件全件パス（既存件数のまま、flaky testの新規発生
   なし）を確認した。
+
+- [x] README.mdのクイックスタートだけ`judge_winner() is None`の旧パターンのまま残っている
+  （beginner視点、id: r7-4） → 対応内容 (2026-07-14): ルート`README.md`の「クイックスタート」節が
+  `while battle.judge_winner() is None and battle.turn < 100:` / `winner = battle.judge_winner()`
+  という旧パターンのままで、`examples/01_basics/02_quickstart.py`（docstringで「READMEの
+  クイックスタートと同内容」と明記）や`docs/api/README.md`が採用している`while not
+  battle.finished and battle.turn < 100:` / `winner = battle.winner`という表記と食い違って
+  いた。`README.md`を後者の表記に修正し、`CHANGELOG.md`にも明記した。`docs/api/README.md`は
+  既に`while not battle.finished` / `battle.winner`を使用しており矛盾がないため更新不要と
+  判断した。回帰テストとして`tests/test_code_conventions.py`に
+  `test_READMEがjudge_winnerのis_None比較を使っていない`を追加した。既存の
+  `test_examplesがjudge_winnerのis_None比較を使っていない`（id: r6-4）は`examples/`配下のみを
+  検査対象としており、リポジトリルートの`README.md`は検査範囲外だったため、同様の正規表現
+  （`judge_winner\(\)\s*is\s*(not\s+)?None`）でREADME.md単体を検査する専用テストを追加し、
+  同種の表記揺れが再発した場合に検出できるようにした。修正前の旧パターンに一時的に戻して
+  新規テストが失敗することを確認したうえで修正版に戻し、
+  `python scripts/sort_tests.py tests/test_code_conventions.py`・
+  `python scripts/generate_test_list.py`を実行し、`python -m pytest tests/ -v`で5765件全件
+  パス（既存の5764件+新規テスト1件、flaky testの新規発生なし）を確認した。
