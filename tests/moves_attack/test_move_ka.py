@@ -1438,6 +1438,22 @@ def test_きょけんとつげき_命中時に自身へ状態を付与する():
     assert attacker.has_volatile("きょけんとつげき")
 
 
+def test_きょけんとつげき_相手のりんぷんでも状態は付与される():
+    """きょけんとつげき: 自分自身への効果（きょけんとつげき状態の付与）は、相手の
+    りんぷんでは防げない（一次情報: りんぷんの特性の仕様「チャージビームなど、追加
+    効果で使用者の能力が変化する技の効果は、自分を使用したときも、相手から受けた
+    ときも発動する」と同種の使用者自身への効果）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("セグレイブ", move_names=["きょけんとつげき"])],
+        team1=[Pokemon("カビゴン", ability_name="りんぷん")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.has_volatile("きょけんとつげき")
+
+
 def test_きょけんとつげき_外れたとき状態は付与されない():
     """きょけんとつげき: 技が外れた場合、状態は付与されない。"""
     battle = t.start_battle(
@@ -3207,6 +3223,26 @@ def test_コメットパンチ_こうげき1段階上昇が発動する():
         accuracy=100,
         secondary_chance=1.0,
     )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.boosts["atk"] == 1
+
+
+def test_コメットパンチ_相手のりんぷんでもこうげき上昇は発動する():
+    """コメットパンチ: 自分自身への追加効果（こうげき上昇）は、相手のりんぷんでは
+    防げない（一次情報: りんぷんの特性の仕様「チャージビームなど、追加効果で使用者の
+    能力が変化する技の効果は、自分を使用したときも、相手から受けたときも発動する」）。
+
+    test_option.secondary_chance はON_MODIFY_SECONDARY_CHANCE自体を経由せず確率を
+    固定してしまい、りんぷんによる誤ブロックを検出できないため、battle.random.random
+    を直接制御して確認する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("メタグロス", move_names=["コメットパンチ"])],
+        team1=[Pokemon("カビゴン", ability_name="りんぷん")],
+        accuracy=100,
+    )
+    battle.random.random = lambda: 0.1
     attacker = battle.actives[0]
     t.run_move(battle, 0)
     assert attacker.boosts["atk"] == 1

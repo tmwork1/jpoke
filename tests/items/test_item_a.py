@@ -830,5 +830,21 @@ def test_おんみつマント_追加効果を無効化():
     assert battle.actives[1].ailment.name != "まひ"
 
 
+def test_おんみつマント_使用者自身への追加効果は防げない():
+    """おんみつマント: コメットパンチのように使用者自身の能力が変化する追加効果は、
+    所持者が使用したときも所持者に対して使われたときも発動する（一次情報:
+    「自分のランクを上げる追加効果は、所持者が使用したときも、所持者に対して
+    使われたときも発動する」）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("メタグロス", move_names=["コメットパンチ"])],
+        team1=[Pokemon("カビゴン", item_name="おんみつマント")],
+        accuracy=100,
+    )
+    battle.random.random = lambda: 0.1
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.boosts["atk"] == 1
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

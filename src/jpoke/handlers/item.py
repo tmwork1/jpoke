@@ -638,11 +638,17 @@ def オレンのみ_heal_on_half_hp(battle: Battle, ctx: EventContext, value: An
     return _heal_berry(battle, ctx, value, denominator=2, heal_v=10)
 
 
-def おんみつマント_negate_secondary(_battle: Battle, _ctx: AttackContext, _value: Any) -> HandlerReturn:
+def おんみつマント_negate_secondary(_battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """おんみつマント: 技の追加効果の確率を0にする。
 
     りんぷん特性と同様に、他のハンドラに上書きされないよう stop_event=True で確定させる。
+    コメットパンチなど、使用者自身の能力が変化する追加効果（ctx.secondary_effect_target
+    == "attacker"）は、所持者が使用したときも所持者に対して使われたときも発動するため
+    防げない（一次情報: 「自分のランクを上げる追加効果は、所持者が使用したときも、
+    所持者に対して使われたときも発動する」）。
     """
+    if ctx.secondary_effect_target != "defender":
+        return HandlerReturn(value=value)
     return HandlerReturn(value=0, stop_event=True)
 
 

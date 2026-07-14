@@ -52,8 +52,11 @@ def modify_attacker_stats(battle: Battle,
     ON_STATUS_HIT（変化技、value=bool の成否フラグ）では、ランク変化が完全に
     阻まれた（結果が空の dict）場合に技を失敗させるため、従来通り
     battle.modify_stats() の戻り値を value として返す。
+
+    自分自身への効果（target="attacker"）はりんぷん・おんみつマントで防げないため、
+    resolve_secondary_chance に target="attacker" を指定する。
     """
-    chance = battle.resolve_secondary_chance(ctx, chance)
+    chance = battle.resolve_secondary_chance(ctx, chance, target="attacker")
     if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn(value=value)
     result = battle.modify_stats(ctx.attacker, stats, source=ctx.attacker)
@@ -102,7 +105,10 @@ def apply_volatile_to_attacker(battle: Battle,
                                count: int | None = None,
                                chance: float = 1,
                                **kwargs) -> HandlerReturn:
-    chance = battle.resolve_secondary_chance(ctx, chance)
+    """自分自身への効果（target="attacker"）はりんぷん・おんみつマントで防げないため、
+    resolve_secondary_chance に target="attacker" を指定する。
+    """
+    chance = battle.resolve_secondary_chance(ctx, chance, target="attacker")
     if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn(value=value)
     return HandlerReturn(value=battle.volatile_manager.apply(

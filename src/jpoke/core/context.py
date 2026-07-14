@@ -6,7 +6,7 @@ BaseContext / EventContext / AttackContext を提供する。
 
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 import dataclasses
 
 if TYPE_CHECKING:
@@ -135,6 +135,14 @@ class AttackContext(BaseContext):
     defender_hp_before_move: int = 0
     """技開始時点（ON_BEGIN_MOVE）の防御側HP。とびだすなかみ等、多段技の最初のヒット前HPを
     基準とする効果で使用する。"""
+    secondary_effect_target: Literal["attacker", "defender"] = "defender"
+    """Event.ON_MODIFY_SECONDARY_CHANCE で判定する追加効果の対象ロール。
+    "defender"（既定）は相手（防御側）に対する追加効果、"attacker" は自分自身に対する
+    追加効果（例: コメットパンチの自分のこうげき上昇）を表す。りんぷん・おんみつマント
+    （'defender:self' で登録）は "attacker" のときは反応しない（一次情報どおり、使用者
+    自身の能力変化はりんぷん・おんみつマントで防げないため）。ちからずく・てんのめぐみ
+    （'attacker:self' で登録）はこの値に関わらず常に反応する。
+    battle.resolve_secondary_chance() 経由でのみ設定される。"""
 
     def is_foe_target(self) -> bool:
         """attacker と defender が異なるポケモンかを返す。"""
