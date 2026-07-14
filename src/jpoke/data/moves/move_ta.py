@@ -1617,7 +1617,10 @@ MOVES_TA: dict[MoveName, MoveData] = {
         accuracy=100,
         flags={"contact", "punch", "heal"},
         handlers={
-            Event.ON_HIT: h.MoveHandler(ha.ドレインパンチ_drain, priority=20)
+            Event.ON_HIT: h.MoveHandler(
+                ha.ドレインパンチ_drain,
+                priority=20,  # turn.md: ON_HIT priority 20 (HP吸収技による回復)
+            )
         }
     ),
     "どろかけ": MoveData(

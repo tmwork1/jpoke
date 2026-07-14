@@ -3356,6 +3356,25 @@ def test_ドレインパンチ_使用後に攻撃者のHPが回復する():
     assert attacker.hp > hp_before
 
 
+def test_ドレインパンチ_回復量の端数は四捨五入で切り上げになる():
+    """ドレインパンチ: 与ダメが奇数のとき、回復量の端数は四捨五入（0.5は切り上げ）になる。
+
+    第五世代以降の仕様（公式Wiki「技の仕様」節）に基づき、
+    与ダメ101のときは round_half_up(101 * 0.5) = 51 になる
+    （単純な切り捨て(int())なら50になってしまうバグを検出する）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["ドレインパンチ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.fix_damage(battle, 101)
+    attacker.hp = 1
+    t.run_move(battle, 0)
+    assert attacker.hp == 1 + 51
+
+
 def test_どろかけ_命中率1段階低下が発動する():
     """どろかけ: 100%の確率で相手の命中率を1段階下げる。"""
     battle = t.start_battle(
