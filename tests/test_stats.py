@@ -5,6 +5,39 @@ from jpoke import Pokemon
 from jpoke.model.stats import chmp_to_legacy_effort
 
 
+def test_ステータス実数値設定_set_statsで6項目に満たない辞書を渡すと他のステータスは変化しない():
+    mon = Pokemon("ピカチュウ")
+    ref = Pokemon("ピカチュウ")
+    ref.set_evs([0, 0, 0, 0, 0, 32])
+    target_spe = ref.stats["spe"]
+    before = dict(mon.stats)
+
+    mon.set_stats({"spe": target_spe})
+
+    assert mon.stats["spe"] == target_spe
+    for key in ("hp", "atk", "def", "spa", "spd"):
+        assert mon.stats[key] == before[key]
+
+
+def test_ステータス実数値設定_set_statsでキー順が典型順と異なる辞書でも正しく反映される():
+    """set_statsは辞書のキーで対象ステータスを引くため、キー順が
+    典型順（hp, atk, def, spa, spd, spe）と異なっても正しく反映される。"""
+    mon = Pokemon("ピカチュウ")
+    ref = Pokemon("ピカチュウ")
+    ref.set_evs([0, 32, 20, 0, 0, 0])
+    target_def = ref.stats["def"]
+    target_atk = ref.stats["atk"]
+    hp_before = mon.stats["hp"]
+    spa_before = mon.stats["spa"]
+
+    mon.set_stats({"def": target_def, "atk": target_atk})  # 典型順（atk→def）と逆順
+
+    assert mon.stats["def"] == target_def
+    assert mon.stats["atk"] == target_atk
+    assert mon.stats["hp"] == hp_before
+    assert mon.stats["spa"] == spa_before
+
+
 def test_努力値_keep_ratioを指定するとHP割合が維持される():
     mon = Pokemon("ピカチュウ")
     max_hp_before = mon.max_hp

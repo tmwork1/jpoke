@@ -115,7 +115,10 @@ move = battle.command_to_move(player1, commands[0])
 
 `battle.query`（`PokemonQuery`）には他にも判定用メソッドがあるが、そのうち `Pokemon`/`Player`
 単体の引数で完結するものは以下の通り `Battle` 直下からも呼べる（`AttackContext`/`EventContext`
-を要求する内部専用メソッドは委譲していない）。
+を要求する内部専用メソッドは委譲していない）。`resolve_secondary_chance(ctx, chance, ...)` など
+`AttackContext`/`EventContext` を引数に取る `Battle` のメソッドは、`handlers/*.py` のハンドラ
+関数が受け取った ctx をそのまま渡す用途を想定した内部専用API。両型は
+`from jpoke.core import EventContext, AttackContext` でインポートできる。
 
 | API | 概要 |
 |---|---|
@@ -128,12 +131,18 @@ move = battle.command_to_move(player1, commands[0])
 | `can_use_last_resort(pokemon)` | とっておきの発動条件を満たしているか判定する |
 | `get_forced_move_name(pokemon)` | 強制行動中のポケモンが実行すべき技名を返す（固定されていなければ`None`） |
 | `is_first_actor(player)` / `is_second_actor(player)` | このターンでplayerが先攻/後攻かどうかを判定する（1vs1想定、行動順未確定なら`None`） |
+| `calc_move_priority(attacker, move)` | 指定した `Pokemon`/`Move` オブジェクトで技を発動したときの優先度（ON_MODIFY_MOVE_PRIORITYイベントによる補正込み）を計算する。`jpoke.testing.calc_move_priority(battle, player_index, move_index=0)` はインデックス指定の薄いラッパーで、内部でこちらを呼ぶ |
+| `resolve_speed_order()` | 現在の実効素早さでソートしたポケモンのリストを返す（引数なし）。行動順そのものが必要な場合は予約済みコマンドを考慮する `resolve_action_order()` を使う |
 
 ```python
 active = battle.get_active(player1)
 if battle.can_switch(player1):
     ...
 print(battle.is_floating(active), battle.can_use_last_resort(active))
+
+# 優先度・素早さ順の確認
+priority = battle.calc_move_priority(active, active.moves[0])
+speed_order = battle.resolve_speed_order()
 ```
 
 ### ダメージ計算系
@@ -226,6 +235,19 @@ critical_hits = [
     for log in logs
     if log.log is LogCode.CRITICAL_HIT
 ]
+```
+
+### 複製系
+
+| API | 概要 |
+|---|---|
+| `copy(reseed=False, copy_logs=True)` | `Battle` インスタンスを複製する。`reseed=True` にすると複製側の `random`/`decision_random` を派生シードで再初期化し、木探索で兄弟ノード間の乱数系列が相関するのを避けられる（複製元の乱数系列は消費されない）。`copy_logs=False` にすると `event_logger`/`command_log`（対戦開始からの全履歴）をdeepcopyせず、複製先に空の新規ログを持たせる（複製元のログには影響しない）。木探索の内部シミュレーションのようにログを参照しない用途では、ターン数に比例して増える全履歴コピーのコストを避けられる |
+
+```python
+sim = battle.copy(reseed=True, copy_logs=False)
+sim.step({player1: command1, player2: command2})
+# sim.get_event_logs() は copy() 以降に発生したログのみを返す
+# （複製元 battle の履歴は sim には含まれない）
 ```
 
 ### poke-env互換プロパティ
@@ -350,6 +372,17 @@ player1.battle_against(player2, n_battles=100, seed=1)
 print(f"{player1.username} 勝率: {player1.win_rate:.1%}")
 ```
 
+`on_battle_end` を指定すると、各対戦の `play_out()` 完了直後にその対戦の `Battle` インスタンスを
+受け取れる（poke-envにはないjpoke独自の拡張）。自己対戦のリプレイ・観測データ収集（強化学習用
+など）に使う。`battle_against()` 自身は各対戦の `Battle` をループ内で使い捨てるため、これを
+指定しない限り対戦後の `Battle` にアクセスする手段はない。ターン上限で決着がつかず戦績に
+数えられなかった対戦でも呼び出される点に注意する。
+
+```python
+replays = []
+player1.battle_against(player2, n_battles=100, seed=1, on_battle_end=replays.append)
+```
+
 ## Pokemon
 
 `src/jpoke/model/pokemon.py`。ポケモン1体の全状態（種族値・技・特性・アイテム・状態異常など）を
@@ -419,6 +452,23 @@ print(mon.status, mon.has_ailment("どく"), mon.has_volatile("こんらん"))
 print(mon.fainted, mon.hp, mon.max_hp)
 ```
 
+### シナリオ構築系（フォルム変化）
+
+| API | 概要 |
+|---|---|
+| `set_form(name, hp_policy="keep_absolute", set_default_ability=False)` | フォルムをエイリアス（図鑑上の別名）指定で切り替える。種族値・タイプ・特性候補が変更先のものに差し替わる（ロトムの姿、ザシアン/ザマゼンタの剣王/盾王、ディアルガ等のオリジンフォルムなど）。既に同じフォルムなら何もせず `False` を返す。`hp_policy` は最大HPが変化したときの現在HPの追従方法（`set_evs`/`set_ivs`と共通）。`set_default_ability=True` の場合、特性を変更先の先頭特性にリセットする |
+
+```python
+mon = Pokemon("ロトム")           # でんき/ゴースト
+mon.set_form("ヒートロトム")       # でんき/ほのお に切り替わる（種族値・タイプ込み）
+print(mon.types, mon.stats)
+```
+
+`Battle` の「シナリオ構築系」（`modify_hp`/`set_ailment`等、[上記参照](#シナリオ構築系)）と
+同じく対戦を進行させずに状態を直接組み立てるためのメソッドだが、`set_form` は `Pokemon`
+自身のメソッドである点に注意（`Battle` 側に委譲ラッパーは無く、`mon.set_form(...)` の形で
+直接呼ぶ）。
+
 ## Command
 
 `src/jpoke/enums/command.py`。プレイヤーの1回の行動（技使用・交代・テラスタル等）を表す
@@ -483,6 +533,7 @@ battle.step({player: switch_command, opponent: Command.MOVE_0})
 
 | API | 概要 |
 |---|---|
+| `is_type(command_type)` | 指定した種別（`"any"` / `"move"` / `"switch"`）かどうか。`"move"` は通常技コマンドに加え、テラスタル・メガシンカ・ダイマックス・Zワザを伴う技コマンドも含む（`is_regular_move` は通常技コマンドのみ） |
 | `is_regular_move` (property) | 技コマンド（`MOVE_*`）かどうか |
 | `is_switch()` | 交代コマンド（`SWITCH_*`）かどうか |
 | `is_terastal` (property) | テラスタルコマンドかどうか |
@@ -615,7 +666,7 @@ print(results[-1].lethal_probability)
 | `reserve_command(battle, command0=None, command1=None)` | `step()` を介さずコマンド予約状態だけを作る（行動順・優先度だけを検証したい場合） |
 | `build_context(battle, atk_idx, move_idx=0)` | `AttackContext` を組み立てる |
 | `calc_lethal(battle, atk_idx, moves, critical=False, secondary=False, max_attack=10)` | `Battle.calc_lethal()` のインデックス指定版 |
-| `calc_move_priority(battle, player_index, move_index=0)` | 指定インデックスの技を使ったときの優先度を返す |
+| `calc_move_priority(battle, player_index, move_index=0)` | 指定インデックスの技を使ったときの優先度を返す。`Battle.calc_move_priority(pokemon, move)` のインデックス指定版 |
 | `end_turn(battle)` | `Battle.end_turn()` のラッパー |
 | `fix_damage(battle, damage)` | ダメージ計算を固定値にする（デバッグ専用モンキーパッチ） |
 | `fix_random(battle, value)` | `battle.random.random()` を固定値にする（デバッグ専用モンキーパッチ） |

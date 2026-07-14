@@ -4,7 +4,7 @@
 選出、交代、行動の選択などプレイヤー固有の処理を提供します。
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Callable, TYPE_CHECKING
 if TYPE_CHECKING:
     from jpoke.core import Battle
     from jpoke.model import Pokemon
@@ -136,7 +136,13 @@ class Player:
         commands = battle.get_available_commands(self)
         return commands[0]
 
-    def battle_against(self, *opponents: "Player", n_battles: int = 1, **battle_kwargs) -> None:
+    def battle_against(
+        self,
+        *opponents: "Player",
+        n_battles: int = 1,
+        on_battle_end: Callable[["Battle"], None] | None = None,
+        **battle_kwargs,
+    ) -> None:
         """poke-env 互換: 各 opponent と n_battles 回ずつ対戦し、双方の戦績を更新する。
 
         poke-env と同じシグネチャ。ただしネットワーク I/O がないため同期メソッド
@@ -145,6 +151,13 @@ class Player:
         Args:
             *opponents: 対戦相手のPlayerインスタンス（複数指定可）
             n_battles: 各opponentと対戦する回数（デフォルト1）
+            on_battle_end: poke-envにはないjpoke独自の拡張。各対戦の
+                `play_out()` 完了直後に、その対戦の `Battle` インスタンスを
+                引数として呼び出されるコールバック。自己対戦のリプレイ・
+                観測データ収集（強化学習用など）に使う。ターン上限で決着が
+                つかず戦績に数えられなかった対戦（`winner is None`）でも
+                呼び出される。`None`（デフォルト）の場合は呼び出さず、
+                各対戦の `Battle` は `play_out()` 完了後に破棄される
             **battle_kwargs: `Battle.__init__` へ素通しするキーワード引数
                 （`n_selected`, `seed`, `mega_evolution` 等）。poke-envにはない
                 jpoke独自の拡張。`seed` を指定すると対戦ごとに `seed + 対戦通番`
@@ -174,6 +187,8 @@ class Player:
                 battle = Battle(self, opponent, seed=seed, **battle_kwargs)
                 battle.start()
                 winner = battle.play_out(max_turns=MAX_TURNS)
+                if on_battle_end is not None:
+                    on_battle_end(battle)
                 if winner is None:
                     # ターン上限で決着しなかった対戦は不成立として戦績に数えない
                     continue

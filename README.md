@@ -50,12 +50,12 @@ player2.add_pokemon("フシギダネ", move_names=["たいあたり"])
 battle = Battle(player1, player2)
 battle.start()
 
-while battle.judge_winner() is None and battle.turn < 100:
+while not battle.finished and battle.turn < 100:
     # commands=None の場合は各 Player.choose_command() が使われる
     # （デフォルト実装は利用可能な最初のコマンドを選ぶだけの単純なプレイヤー）
     battle.step()
 
-winner = battle.judge_winner()
+winner = battle.winner
 print(winner.username if winner else "引き分け")   # 勝者の名前（決着しなかった場合はNone）
 battle.print_logs()                 # このターンのログを表示
 ```

@@ -792,12 +792,12 @@ MOVES_MA: dict[MoveName, MoveData] = {
         pp=8,
         power=130,
         accuracy=100,
-        flags={"thaw"},
+        flags={"thaw", "self_thaw"},
         handlers={
             Event.ON_TRY_ACTION: [
                 h.MoveHandler(
                     ha.もえつきる_thaw_attacker,
-                    priority=5,
+                    priority=170,
                 ),
                 h.MoveHandler(
                     ha.もえつきる_fail_if_no_fire_type,

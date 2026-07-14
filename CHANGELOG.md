@@ -53,6 +53,32 @@
   委譲として追加。`can_switch()` 以外は `battle.query.<method>()` の直接呼び出しが
   必要で `docs/api/README.md` にも未掲載だったための対応（`AttackContext`/
   `EventContext` を要求する内部専用メソッドは対象外のまま）
+- `docs/api/README.md`（Pokemon「シナリオ構築系（フォルム変化）」）に
+  `Pokemon.set_form(name, hp_policy="keep_absolute", set_default_ability=False)` を追記。
+  実装済み（ロトム・ザシアン/ザマゼンタ・オリジンフォルム等の切り替えに内部で使用）
+  ながら `docs/api/README.md`・`examples/` のどちらにも未掲載だったための対応。
+  合わせて `examples/03_damage_calc/10_form_change_comparison.py` を新設し、
+  `set_form()` によるロトムのフォルム変化がタイプ・種族値を通じてダメージ・致死率に
+  与える影響を比較するサンプルを追加
+- `docs/api/README.md`（Battle「状態取得系」）に `Battle.calc_move_priority(attacker, move)` /
+  `Battle.resolve_speed_order()` を追記。`examples/02_ai/04_priority_and_command_debug.py`
+  で使用されているが実装済みメソッド自体は `docs/api/README.md` に未掲載で、
+  「テストユーティリティ」節のインデックス指定版 `jpoke.testing.calc_move_priority(battle,
+  player_index, move_index=0)` のみが記載されていたための対応。両者の違い
+  （`Pokemon`/`Move` オブジェクト指定かインデックス指定か）を相互に明記した
+- `Battle.copy(copy_logs=False)` — `event_logger`/`command_log`（対戦開始からの
+  全履歴）をdeepcopyせず、複製先に空の新規ログを持たせるオプション引数を追加。
+  `copy_logs=False` を指定すると、複製元のログには影響を与えずにコピー負荷を
+  抑えられる。既定は `True` で従来通りの挙動を維持する。`TreeSearchPlayer`
+  の内部シミュレーション（`evaluate()` の既定実装はログを一切参照しない）で
+  `copy_logs=False` を使うように変更し、探索ノードごとに発生していた
+  全履歴の無駄なdeepcopyを削減した
+- `Player.battle_against()` に `on_battle_end: Callable[[Battle], None] | None = None`
+  引数を追加。従来は `n_battles` ループ内で各対戦の `Battle` を勝敗判定にのみ使い
+  破棄しており、自己対戦データ収集（強化学習用リプレイ等）のために `battle_against()`
+  を使わず `seed + 対戦通番` の派生シード規約を手動で再実装する必要があった。
+  各対戦の `play_out()` 完了直後に `Battle` を受け取れるコールバックを追加し、
+  この重複を解消した。既定値 `None` のため既存呼び出しの挙動は変わらない
 
 ### Changed
 
@@ -114,6 +140,17 @@
 
 ### Fixed
 
+- `docs/api/README.md` の `Command` 章「インスタンスプロパティ・メソッド」表に
+  `is_type(command_type)`（`examples/02_ai/01_custom_player.py` で使用している、
+  `"any"` / `"move"` / `"switch"` を指定できる汎用の種別判定メソッド）が掲載されて
+  いなかったため追記。`is_regular_move` との違い（`"move"` は通常技コマンドに加え、
+  テラスタル・メガシンカ・ダイマックス・Zワザを伴う技コマンドも含む）も明記した
+- README.md の「クイックスタート」節が `while battle.judge_winner() is None and
+  battle.turn < 100:` / `winner = battle.judge_winner()` という旧パターンのままで、
+  `examples/01_basics/02_quickstart.py`（docstringで「READMEのクイックスタートと
+  同内容」と明記）や `docs/api/README.md` が採用している `while not battle.finished
+  and battle.turn < 100:` / `winner = battle.winner` という表記と食い違っていたため
+  修正し、表記を統一した（`judge_winner()` 自体は引き続き公開APIとして利用可能）
 - `Battle(seed=None)` のフォールバックが `int(time.time())`（秒精度）だったため、
   短時間に複数の `Battle` を生成すると同一シードになり、`Player.battle_against()`
   などの多数回対戦がすべて同じ展開になってしまう問題を修正。OSの乱数源から
@@ -150,6 +187,21 @@
   `build_observation()` は `decision_random` だけを本体と共有し（無限交代ループ対策を
   維持）、ゲーム進行用の `random` は元通りdeepcopyによる独立コピーに戻すことで
   先読みを不可能にした
+- `TreeSearchPlayer._worst_case_over_opponent()` 内の `sim = battle.copy()` が
+  `reseed` 引数を省略（既定 `False`）していたため、同じ `my_cmd` に対する各
+  `opp_cmd` 分岐・各 `my_cmd` 分岐が複製元の `random`/`decision_random` の状態を
+  そのまま共有し、探索木の兄弟ノード間で乱数系列が相関していた
+  （`examples/04_research/03_janken_nash_cfr.py` の自作ロールアウトは既に
+  `reseed=True` を使っており対象外）。`battle.copy(reseed=True)` に変更し、
+  各分岐が派生シードで独立に再初期化された乱数系列を使うようにした。
+  `configure_sim` で命中判定・ダメージ乱数等の確率的要素を固定している場合は
+  探索結果（選ばれるコマンド）に変化はないが、固定していない場合は評価値の
+  相関が解消されることで変わりうる
+- `Pokemon.set_stats(stats)` が辞書のキー（`Stat`）を無視し、`enumerate()` による
+  挿入順を暗黙の固定順（0=HP, 1=攻撃, 2=防御, ...）とみなして書き込んでいたため、
+  `{"atk": 150, "def": 100}` のようにキー順が典型順と異なる辞書や6項目に満たない
+  辞書を渡すと、例外を出さずに意図と異なるステータスへ書き込まれる不具合を修正。
+  `stats.items()` からキーで対象インデックスを引くように変更した
 
 ## [0.1.0] - 2026-07-11
 

@@ -323,7 +323,7 @@ class Battle:
                     if hasattr(item, "update_reference"):
                         item.update_reference(self)
 
-    def copy(self, reseed: bool = False) -> Battle:
+    def copy(self, reseed: bool = False, copy_logs: bool = True) -> Battle:
         """Battleの複製を作成する。
 
         Args:
@@ -331,8 +331,35 @@ class Battle:
                 木探索で複数の枝が同一の乱数系列を引いて相関するのを避けたいときに使う。
                 派生シードは元のシードと派生回数から決定的に生成されるため、
                 元の乱数系列は消費されず再現性も保たれる。
+            copy_logs: Falseの場合、event_logger/command_log（対戦開始からの
+                全履歴）をdeepcopyせず、複製先に空の新規ログを持たせる
+                （複製元のログは変更されない。共有参照ではなく独立した新規の
+                空ログなので、複製先が以降 sim.step() 等で書き込んでも複製元を
+                汚染しない）。全履歴のdeepcopyはターン数に比例してコストが
+                増えるため、木探索の内部シミュレーションのようにログを
+                参照しない用途で使うとコピー負荷を削減できる。既定は
+                Trueで、従来通り履歴を引き継いだ複製を作る。
+
+        Warning:
+            copy_logs=Falseの場合、deepcopy実行中に複製元のevent_logger/command_logを
+            一時的に空へ差し替える（完了後は直ちに元へ復元する）。この間に別スレッドが
+            同じ複製元Battleのevent_logger/command_logへ読み書きすると競合しうる。
+            build_observation()と同様、このコードベースはスレッドセーフを前提として
+            いない。並列化する場合はProcessPoolExecutor等のプロセス並列を使うこと。
         """
-        new = deepcopy(self)
+        if copy_logs:
+            new = deepcopy(self)
+        else:
+            # 複製元のログを一時的に空へ差し替えてからdeepcopyすることで、
+            # 複製先には独立した空の新規ログを持たせつつ、対戦開始からの
+            # 全履歴コピーのコストを避ける。deepcopy完了後は直ちに複製元の
+            # ログを復元するため、複製元のログは変更されない。
+            saved_event_logger, saved_command_log = self.event_logger, self.command_log
+            self.event_logger, self.command_log = EventLogger(), []
+            try:
+                new = deepcopy(self)
+            finally:
+                self.event_logger, self.command_log = saved_event_logger, saved_command_log
         if reseed:
             self._reseed_count += 1
             new.seed = hash((self.seed, self._reseed_count)) & 0xFFFFFFFF
@@ -1357,6 +1384,13 @@ class Battle:
         target: Literal["attacker", "defender"] = "defender",
     ) -> float:
         """追加効果補正後の実効確率を返す。
+
+        主に `handlers/*.py`（追加効果の実装）から、ハンドラ関数の引数として
+        受け取った ctx をそのまま渡して呼び出す想定の API。ctx の型
+        （`EventContext` / `AttackContext`）はいずれも `jpoke.core` から
+        `from jpoke.core import EventContext, AttackContext` でインポートできる
+        （`jpoke.core.__init__` で再エクスポート済み）。自作のハンドラ関数に
+        型注釈を付けたい場合はこの経路を使う。
 
         Args:
             ctx: コンテキスト（攻撃フローの場合は通常 AttackContext）

@@ -459,11 +459,11 @@ MOVES_SA: dict[MoveName, MoveData] = {
         pp=16,
         power=80,
         accuracy=90,
-        flags={"heal", "secondary_effect", "thaw"},
+        flags={"heal", "secondary_effect", "thaw", "self_thaw"},
         handlers={
             Event.ON_TRY_ACTION: h.MoveHandler(
                 ha.シャカシャカほう_thaw_attacker,
-                priority=5,
+                priority=170,
             ),
             Event.ON_HIT: h.MoveHandler(ha.シャカシャカほう_drain, priority=20),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
@@ -1009,11 +1009,11 @@ MOVES_SA: dict[MoveName, MoveData] = {
         pp=8,
         power=110,
         accuracy=95,
-        flags={"secondary_effect", "thaw"},
+        flags={"secondary_effect", "thaw", "self_thaw"},
         handlers={
             Event.ON_TRY_ACTION: h.MoveHandler(
                 ha.スチームバースト_thaw_attacker,
-                priority=5,
+                priority=170,
             ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.スチームバースト_apply_burn_to_defender,
@@ -1255,11 +1255,11 @@ MOVES_SA: dict[MoveName, MoveData] = {
         pp=5,
         power=100,
         accuracy=95,
-        flags={"secondary_effect", "thaw"},
+        flags={"secondary_effect", "thaw", "self_thaw"},
         handlers={
             Event.ON_TRY_ACTION: h.MoveHandler(
                 ha.せいなるほのお_thaw_attacker,
-                priority=5,
+                priority=170,
             ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.せいなるほのお_apply_burn_to_defender,

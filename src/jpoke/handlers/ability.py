@@ -3099,6 +3099,10 @@ def はやおき_extra_decrement(battle: Battle, ctx: AttackContext, value: Any)
         return HandlerReturn(value=value)
     if not mon.has_ailment("ねむり"):
         return HandlerReturn(value=value)
+    if ctx.move.name not in ["いびき", "ねごと"] and mon.has_volatile("こんらん"):
+        # こんらん状態のときはねむり_check_action側でカウント消費自体を行わないため、
+        # 追加消費も行わない（docs/spec/ailments/ねむり.md 参照）。
+        return HandlerReturn(value=value)
     # ねむり_check_action より先 (priority=9) に追加tickを実行
     battle.ailment_manager.tick(mon)
     return HandlerReturn(value=value)

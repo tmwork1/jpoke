@@ -18,7 +18,7 @@ from jpoke.data.type_chart import TYPE_MODIFIER
 from jpoke.data.pokedex import POKEDEX
 from jpoke.data.signature_items import PLATE_TO_TYPE
 from .ability import WISHIWASHI_SOLO, WISHIWASHI_SCHOOL
-from .item import berry_heal_amount, himeri_pp_restore_cap, is_ripen
+from .item import berry_heal_amount, himeri_pp_restore_cap, himeri_select_move_to_restore, is_ripen
 from .move import (
     apply_ailment_to_defender,
     apply_confusion_to_defender,
@@ -552,9 +552,10 @@ def かえんぐるま_apply_burn_to_defender(battle: Battle, ctx: AttackContext
 def かえんぐるま_thaw_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """かえんぐるま: こおり状態でも使用可能にし、こおりを解凍する。
 
-    こおり_action (priority=10) より先に発火させる (priority=5) ことで、
-    ailment が除去された状態で こおり_action の validity check が走り、
-    こおり_action がスキップされる。
+    self_thawフラグを持つ技のため、こおり_action（priority=10）は確率判定を行わず素通りする。
+    このハンドラは行動不能判定の終盤（priority=170、こんらん等の判定より後）で発火し、
+    それまでに行動が阻害されなかった場合に限りこおりを解凍する
+    （docs/spec/turn.md Event.ON_TRY_ACTION参照）。
     """
     mon = ctx.attacker
     if mon.ailment.name == "こおり":
@@ -577,9 +578,10 @@ def かえんボール_apply_burn_to_defender(battle: Battle, ctx: AttackContext
 def かえんボール_thaw_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """かえんボール: こおり状態でも使用可能にし、こおりを解凍する。
 
-    こおり_action (priority=10) より先に発火させる (priority=5) ことで、
-    ailment が除去された状態で こおり_action の validity check が走り、
-    こおり_action がスキップされる。
+    self_thawフラグを持つ技のため、こおり_action（priority=10）は確率判定を行わず素通りする。
+    このハンドラは行動不能判定の終盤（priority=170、こんらん等の判定より後）で発火し、
+    それまでに行動が阻害されなかった場合に限りこおりを解凍する
+    （docs/spec/turn.md Event.ON_TRY_ACTION参照）。
     """
     mon = ctx.attacker
     if mon.ailment.name == "こおり":
@@ -1036,9 +1038,10 @@ def クロスフレイム_record_hit(battle: Battle, ctx: AttackContext, value: 
 def クロスフレイム_thaw_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """クロスフレイム: こおり状態でも使用可能にし、こおりを解凍する。
 
-    こおり_action (priority=10) より先に発火させる (priority=5) ことで、
-    ailment が除去された状態で こおり_action の validity check が走り、
-    こおり_action がスキップされる。
+    self_thawフラグを持つ技のため、こおり_action（priority=10）は確率判定を行わず素通りする。
+    このハンドラは行動不能判定の終盤（priority=170、こんらん等の判定より後）で発火し、
+    それまでに行動が阻害されなかった場合に限りこおりを解凍する
+    （docs/spec/turn.md Event.ON_TRY_ACTION参照）。
     """
     mon = ctx.attacker
     if mon.ailment.name == "こおり":
@@ -1366,9 +1369,10 @@ def シャカシャカほう_drain(battle: Battle, ctx: AttackContext, value: in
 def シャカシャカほう_thaw_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """シャカシャカほう: こおり状態でも使用可能にし、こおりを解凍する。
 
-    こおり_action (priority=10) より先に発火させる (priority=5) ことで、
-    ailment が除去された状態で こおり_action の validity check が走り、
-    こおり_action がスキップされる。
+    self_thawフラグを持つ技のため、こおり_action（priority=10）は確率判定を行わず素通りする。
+    このハンドラは行動不能判定の終盤（priority=170、こんらん等の判定より後）で発火し、
+    それまでに行動が阻害されなかった場合に限りこおりを解凍する
+    （docs/spec/turn.md Event.ON_TRY_ACTION参照）。
     """
     mon = ctx.attacker
     if mon.ailment.name == "こおり":
@@ -1508,9 +1512,10 @@ def スチームバースト_apply_burn_to_defender(battle: Battle, ctx: AttackC
 def スチームバースト_thaw_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """スチームバースト: こおり状態でも使用可能にし、こおりを解凍する。
 
-    こおり_action (priority=10) より先に発火させる (priority=5) ことで、
-    ailment が除去された状態で こおり_action の validity check が走り、
-    こおり_action がスキップされる。
+    self_thawフラグを持つ技のため、こおり_action（priority=10）は確率判定を行わず素通りする。
+    このハンドラは行動不能判定の終盤（priority=170、こんらん等の判定より後）で発火し、
+    それまでに行動が阻害されなかった場合に限りこおりを解凍する
+    （docs/spec/turn.md Event.ON_TRY_ACTION参照）。
     """
     mon = ctx.attacker
     if mon.ailment.name == "こおり":
@@ -1557,9 +1562,10 @@ def せいなるほのお_apply_burn_to_defender(battle: Battle, ctx: AttackCont
 def せいなるほのお_thaw_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """せいなるほのお: こおり状態でも使用可能にし、こおりを解凍する。
 
-    こおり_action (priority=10) より先に発火させる (priority=5) ことで、
-    ailment が除去された状態で こおり_action の validity check が走り、
-    こおり_action がスキップされる。
+    self_thawフラグを持つ技のため、こおり_action（priority=10）は確率判定を行わず素通りする。
+    このハンドラは行動不能判定の終盤（priority=170、こんらん等の判定より後）で発火し、
+    それまでに行動が阻害されなかった場合に限りこおりを解凍する
+    （docs/spec/turn.md Event.ON_TRY_ACTION参照）。
     """
     mon = ctx.attacker
     if mon.ailment.name == "こおり":
@@ -2194,7 +2200,7 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
         effect_applied = battle.volatile_manager.remove(ctx.defender, "こんらん")
     elif item_name == "ヒメリのみ":
         defender = ctx.defender
-        move = next((m for m in defender.moves if m.pp == 0), None)
+        move = himeri_select_move_to_restore(defender)
         if move is not None:
             move.pp = min(himeri_pp_restore_cap(defender), move.data.pp)
             effect_applied = True
@@ -2411,9 +2417,10 @@ def ねっさのだいち_apply_burn_to_defender(battle: Battle, ctx: AttackCont
 def ねっさのだいち_thaw_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ねっさのだいち: こおり状態でも使用可能にし、こおりを解凍する。
 
-    こおり_action (priority=10) より先に発火させる (priority=5) ことで、
-    ailment が除去された状態で こおり_action の validity check が走り、
-    こおり_action がスキップされる。
+    self_thawフラグを持つ技のため、こおり_action（priority=10）は確率判定を行わず素通りする。
+    このハンドラは行動不能判定の終盤（priority=170、こんらん等の判定より後）で発火し、
+    それまでに行動が阻害されなかった場合に限りこおりを解凍する
+    （docs/spec/turn.md Event.ON_TRY_ACTION参照）。
     """
     mon = ctx.attacker
     if mon.ailment.name == "こおり":
@@ -2428,9 +2435,10 @@ def ねっとう_apply_burn_to_defender(battle: Battle, ctx: AttackContext, valu
 def ねっとう_thaw_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ねっとう: こおり状態でも使用可能にし、こおりを解凍する。
 
-    こおり_action (priority=10) より先に発火させる (priority=5) ことで、
-    ailment が除去された状態で こおり_action の validity check が走り、
-    こおり_action がスキップされる。
+    self_thawフラグを持つ技のため、こおり_action（priority=10）は確率判定を行わず素通りする。
+    このハンドラは行動不能判定の終盤（priority=170、こんらん等の判定より後）で発火し、
+    それまでに行動が阻害されなかった場合に限りこおりを解凍する
+    （docs/spec/turn.md Event.ON_TRY_ACTION参照）。
     """
     mon = ctx.attacker
     if mon.ailment.name == "こおり":
@@ -2479,9 +2487,10 @@ def ハイドロスチーム_power_modifier(battle: Battle, ctx: AttackContext, 
 def ハイドロスチーム_thaw_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ハイドロスチーム: こおり状態でも使用可能にし、こおりを解凍する。
 
-    こおり_action (priority=10) より先に発火させる (priority=5) ことで、
-    ailment が除去された状態で こおり_action の validity check が走り、
-    こおり_action がスキップされる。
+    self_thawフラグを持つ技のため、こおり_action（priority=10）は確率判定を行わず素通りする。
+    このハンドラは行動不能判定の終盤（priority=170、こんらん等の判定より後）で発火し、
+    それまでに行動が阻害されなかった場合に限りこおりを解凍する
+    （docs/spec/turn.md Event.ON_TRY_ACTION参照）。
     """
     mon = ctx.attacker
     if mon.ailment.name == "こおり":
@@ -2981,9 +2990,10 @@ def フレアドライブ_recoil(battle: Battle, ctx: AttackContext, value: Any)
 def フレアドライブ_thaw_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """フレアドライブ: こおり状態でも使用可能にし、こおりを解凍する。
 
-    こおり_action (priority=10) より先に発火させる (priority=5) ことで、
-    ailment が除去された状態で こおり_action の validity check が走り、
-    こおり_action がスキップされる。
+    self_thawフラグを持つ技のため、こおり_action（priority=10）は確率判定を行わず素通りする。
+    このハンドラは行動不能判定の終盤（priority=170、こんらん等の判定より後）で発火し、
+    それまでに行動が阻害されなかった場合に限りこおりを解凍する
+    （docs/spec/turn.md Event.ON_TRY_ACTION参照）。
     """
     mon = ctx.attacker
     if mon.ailment.name == "こおり":
@@ -3030,7 +3040,17 @@ def ぶきみなじゅもん_reduce_defender_pp(battle: Battle, ctx: AttackConte
         return HandlerReturn(value=value)
     mon = ctx.defender
     if mon.pp_consumed_move is not None:
-        mon.pp_consumed_move.modify_pp(-3)
+        move = mon.pp_consumed_move
+        move.modify_pp(-3)
+        # move.modify_pp は通常のPP消費経路（move_executor._consume_pp）を経由しないため、
+        # ここで改めて Event.ON_PP_CONSUMED を発火し、ヒメリのみ等の「PPが0になったとき」
+        # 反応する効果を反応させる（一次情報: ヒメリのみは「うらみ/ぶきみなじゅもんの効果で
+        # PPが0になったときは発動する」）。
+        battle.events.emit(
+            Event.ON_PP_CONSUMED,
+            ctx.derive(attacker=mon, defender=battle.foe(mon), move=move),
+            move.pp,
+        )
     return HandlerReturn(value=value)
 
 
@@ -3528,9 +3548,10 @@ def もえつきる_thaw_attacker(battle: Battle, ctx: AttackContext, value: Any
     """もえつきる: ほのおタイプを持つ場合のみ、こおり状態でも使用可能にし、こおりを解凍する。
 
     自分がほのおタイプでない場合は技自体が失敗するため、こおり状態は解凍されない。
-    こおり_action (priority=10) より先に発火させる (priority=5) ことで、
-    ailment が除去された状態で こおり_action の validity check が走り、
-    こおり_action がスキップされる。
+    self_thawフラグを持つ技のため、こおり_action（priority=10）は確率判定を行わず素通りする。
+    このハンドラは行動不能判定の終盤（priority=170、こんらん等の判定より後）で発火し、
+    それまでに行動が阻害されなかった場合に限りこおりを解凍する
+    （docs/spec/turn.md Event.ON_TRY_ACTION参照）。
     """
     mon = ctx.attacker
     if mon.ailment.name == "こおり" and mon.has_type("ほのお"):

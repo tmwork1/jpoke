@@ -1,8 +1,9 @@
 # test_code_conventions
 
-テスト数: 7
+テスト数: 8
 
 - [x] Pokemon_modify_hpが公開APIとして露出していない
+- [x] READMEがjudge_winnerのis_None比較を使っていない
 - [x] consume_itemの引数名がtargetにリネームされている
 - [x] docs_examplesがjpoke_testingモジュールに言及している
 - [x] examplesがjudge_winnerのis_None比較を使っていない

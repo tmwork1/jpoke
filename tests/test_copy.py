@@ -3,6 +3,7 @@ import enum
 
 import pytest
 
+import jpoke.core.battle as battle_module
 from jpoke.core.handler import Handler
 from jpoke.core.player import Player
 from jpoke.enums import Event, Interrupt
@@ -85,6 +86,98 @@ def _find_shared_mutables(old, new, path="battle", seen=None, findings=None):
                     old_vars[key], new_vars[key], f"{path}.{key}", seen, findings
                 )
     return findings
+
+
+def test_copy_logsFalseでdeepcopy中に例外が発生しても複製元のログが復元される():
+    """copy_logs=False の実装は deepcopy 実行前に複製元の event_logger/command_log を
+    一時的に空へ差し替え、完了後に finally で復元する。deepcopy 自体が例外を送出した
+    場合でも、finally によって複製元のログが元通り復元されることを確認する（r7-8回帰）。"""
+    old = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("フシギダネ")],
+        accuracy=100,
+    )
+    t.run_move(old, 0)
+    orig_event_logger = old.event_logger
+    orig_command_log = old.command_log
+    orig_logs = list(old.event_logger.logs)
+    assert orig_logs
+
+    def boom(*args, **kwargs):
+        raise RuntimeError("deepcopy failure (test)")
+
+    real_deepcopy = battle_module.deepcopy
+    battle_module.deepcopy = boom
+    try:
+        with pytest.raises(RuntimeError):
+            old.copy(copy_logs=False)
+    finally:
+        battle_module.deepcopy = real_deepcopy
+
+    # 複製元のログは同一オブジェクトのまま、内容も変わっていない
+    assert old.event_logger is orig_event_logger
+    assert old.command_log is orig_command_log
+    assert old.event_logger.logs == orig_logs
+
+
+def test_copy_logsFalseで複製元のログが変更されずかつ複製先への書き込みが波及しない():
+    """copy_logs=False で複製した後、複製元のログ内容が変わらないこと、
+    かつ複製先へ書き込んでも複製元へ波及しないことを確認する（r7-8回帰）。"""
+    old = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("フシギダネ")],
+        accuracy=100,
+    )
+    t.run_move(old, 0)
+    old_logs_before = list(old.event_logger.logs)
+
+    new = old.copy(copy_logs=False)
+
+    # 複製直後、複製元のログは変更されていない
+    assert old.event_logger.logs == old_logs_before
+
+    # 複製先へ書き込んでも複製元は汚染されない
+    t.run_move(new, 0)
+    assert new.event_logger.logs
+    assert old.event_logger.logs == old_logs_before
+
+
+def test_copy_logsFalseで複製先のログが空になる():
+    """copy_logs=False の場合、複製先の event_logger/command_log は
+    対戦開始からの履歴を引き継がず空で始まることを確認する（r7-8回帰）。"""
+    old = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("フシギダネ")],
+        accuracy=100,
+    )
+    t.run_move(old, 0)
+    assert old.event_logger.logs
+
+    new = old.copy(copy_logs=False)
+
+    assert new.event_logger.logs == []
+    assert new.command_log == []
+    # 複製先は複製元と独立した新規のログオブジェクトを持つ（共有参照ではない）
+    assert new.event_logger is not old.event_logger
+    assert new.command_log is not old.command_log
+
+
+def test_copy_logsTrueで従来通りログの全履歴が引き継がれる():
+    """copy_logs=True（既定）の場合、event_logger/command_log の
+    対戦開始からの全履歴が複製先に引き継がれることを確認する（r7-8回帰）。"""
+    old = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("フシギダネ")],
+        accuracy=100,
+    )
+    t.run_move(old, 0)
+    assert old.event_logger.logs
+
+    new = old.copy()
+
+    assert len(new.event_logger.logs) == len(old.event_logger.logs)
+    assert new.event_logger is not old.event_logger
+    assert new.event_logger.logs == old.event_logger.logs
 
 
 def test_mon():
