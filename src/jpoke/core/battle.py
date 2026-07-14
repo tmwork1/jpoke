@@ -1093,6 +1093,19 @@ class Battle:
         意味が効果ごとに大きく異なる（`data/field/side_field.py` を参照）。単一の既定値を
         設けると誤った値でシナリオを構築してしまう恐れがあるため、呼び出し側に明示を求めている。
 
+        既知の制約: 内部では `SideFieldManager.activate()`（`core/field_manager.py`
+        `StackableFieldManager.activate()`）を使う。まきびし・どくびし等の重ね掛け
+        （既にアクティブでも `max_count` 未満なら `count` を+1する挙動）に対応するため
+        意図的にこちらを使っており、`SideFieldManager.apply()` （`Event.ON_MODIFY_DURATION`
+        を発火し「ひかりのねんど」等による壁技の持続ターン延長を反映できるが、既にアクティブ
+        な場合は無条件で失敗し重ね掛けに対応しない）は使っていない。そのため、リフレクター・
+        ひかりのかべ・オーロラベールを「ひかりのねんど」持ちが張った状態を再現したい場合、
+        `activate_side_field()` だけでは延長後のターン数を反映できない。実戦の壁技ハンドラ
+        （`handlers/move_status.py` の `オーロラベール_set_side_field` 等）は `apply()` を
+        使っており、この延長を反映する。延長後の挙動を検証したい場合は、延長後のターン数を
+        呼び出し側で計算して `count` に渡すか、`run_move` 等で実際に技を使わせてシナリオを
+        構築すること。
+
         Args:
             player: 発動対象のサイドを持つプレイヤー
             name: サイドフィールド効果名
