@@ -36,3 +36,19 @@
   ロジック変更を伴う公開APIの追加・変更は無いため`docs/api/README.md`の更新は不要と判断した。
   `python -m pytest tests/ -v`で5848件全件パス・1件skip（既存件数のまま、flaky testの新規発生なし）
   を確認した。
+- [x] `examples/01_basics/03_team_battle.py`に残っていた
+  「TODO: battle.finished(max_turn=30)のように、ターン上限を指定してfinished判定できるようにする」
+  （id: r9-3） → 対応内容 (2026-07-15): 調査の結果、TODOが要求していたAPI相当は
+  `Battle.play_out(max_turns=)`として既に実装・文書化済みと判明したため、新規API追加は不要と判断した。
+  `03_team_battle.py`のTODOコメントは、`battle.play_out(max_turns=30)`も使えるが本ファイルの目的が
+  ターンごとの`battle.print_logs()`による経過観察であるため手動`while`ループを維持している旨の説明
+  コメントに置き換えた（ループ自体は変更なし）。一方、`04_log_and_pokedex_lookup.py`と
+  `02_ai/03_tree_search_ai.py`はループ内で`print_logs()`等の観察を行っておらず
+  `battle.play_out(max_turns=...)`と完全に等価な`while not battle.finished and battle.turn < N:
+  battle.step()`を素朴に書いていただけだったため、`play_out()`呼び出しに置き換えて重複例を整理した。
+  `play_out()`の実装（`src/jpoke/core/battle.py`）と突き合わせ、境界条件（`<`）・返り値
+  （`self.winner`）が置き換え前後で完全一致することを確認した上で、置き換え前後のコードを
+  それぞれ実行し標準出力が完全一致すること（diffなし）を確認した。ロジック変更を伴う公開APIの
+  追加・変更は無いため`docs/api/README.md`の更新は不要と判断した。
+  `python -m pytest tests/ -v`で5848件全件パス・1件skip（既存件数のまま、flaky testの新規発生なし）
+  を確認した。
