@@ -140,6 +140,9 @@ dmypy.json
 # Ignore generated wiki directory
 docs/wiki/
 
+# ps-champ-ja からダウンロードした外部データ（scripts/ps_champ_ja/download.py で再取得可能）
+/ps-champ-ja/
+
 # .loop はループのローカルスクラッチ（状態・ログ・完了印）。git 管理外にする
 # （統合ブランチ方式では main / jpoke/ にコミットしないため状態を git に載せる必要がない）
 .loop/
