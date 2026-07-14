@@ -849,6 +849,36 @@ def test_わざわい_相手防御補正を0_75倍(ability_name: str, move_name:
     assert 3072 == battle.damage_calculator.def_modifier
 
 
+def test_わざわいのつるぎ_かたやぶりで無効化されない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="わざわいのつるぎ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", ability_name="かたやぶり")],
+    )
+    t.run_move(battle, 0)
+    assert 3072 == battle.damage_calculator.def_modifier
+
+
+def test_わざわいのつるぎ_自分自身が防御側のときは防御が下がらない():
+    """わざわいのつるぎ所持ポケモン自身が防御側のとき、自分の防御は補正されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="わざわいのつるぎ")],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+    )
+    t.run_move(battle, 1)
+    assert 4096 == battle.damage_calculator.def_modifier
+
+
+def test_わざわいのつるぎ_持ち同士では互いの防御が下がらない():
+    """場に複数体わざわいのつるぎ持ちがいても、わざわいのつるぎを持つポケモン同士は
+    互いにこの特性の効果を受けず、防御が下がらない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="わざわいのつるぎ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", ability_name="わざわいのつるぎ")],
+    )
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.def_modifier
+
+
 def test_わざわいのおふだ_かたやぶりで無効化されない():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["たいあたり"])],
