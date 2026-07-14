@@ -522,9 +522,21 @@ def うらみ_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> Handl
 
 
 def うらみ_deplete_pp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """うらみの効果: 相手が最後にPPを消費した技のPPを4減らす。"""
-    move = ctx.defender.pp_consumed_move
+    """うらみの効果: 相手が最後にPPを消費した技のPPを4減らす。
+
+    move.modify_pp は通常のPP消費経路（move_executor._consume_pp）を経由しないため、
+    ここで改めて Event.ON_PP_CONSUMED を発火し、ヒメリのみ等の「PPが0になったとき」
+    反応する効果を反応させる（一次情報: ヒメリのみは「うらみ/ぶきみなじゅもんの効果で
+    PPが0になったときは発動する」）。
+    """
+    defender = ctx.defender
+    move = defender.pp_consumed_move
     move.modify_pp(-4)
+    battle.events.emit(
+        Event.ON_PP_CONSUMED,
+        ctx.derive(attacker=defender, defender=battle.foe(defender), move=move),
+        move.pp,
+    )
     return HandlerReturn(value=value)
 
 

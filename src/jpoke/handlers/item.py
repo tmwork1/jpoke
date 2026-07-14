@@ -1638,6 +1638,19 @@ def himeri_pp_restore_cap(mon: Pokemon) -> int:
     """ヒメリのみ: 回復するPP量（じゅくせい所持時は2倍の20）。"""
     return 20 if is_ripen(mon) else 10
 
+def himeri_select_move_to_restore(mon: Pokemon) -> Move | None:
+    """ヒメリのみ: PPが0の技が複数ある場合に回復対象を選ぶ（なげつける・むしくい・
+    ついばむ・ほおばる・おちゃかい等、使用中の技以外から発動する経路で使う）。
+
+    最後にPPを消費した技（pp_consumed_move）がPP0であればそれを優先し、
+    なければ技リストの先頭にあるPP0の技を対象にする
+    （一次情報 docs/spec/items/ヒメリのみ.md「第五世代以降」の優先順位）。
+    """
+    move = mon.pp_consumed_move
+    if move is not None and move.pp == 0:
+        return move
+    return next((m for m in mon.moves if m.pp == 0), None)
+
 
 def ヒメリのみ_restore_pp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ヒメリのみ: 使用した技のPPが0になったときPPを回復する。"""
@@ -1648,11 +1661,18 @@ def ヒメリのみ_restore_pp(battle: Battle, ctx: AttackContext, value: Any) -
     return HandlerReturn(value=value)
 
 
-def ヒメリのみ_restore_pp_on_item_enabled(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """アイテムが有効になったときにPPが0の技のPPを回復する"""
+def ヒメリのみ_restore_pp_if_any_move_empty(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ヒメリのみ: PPが0の技があれば回復する。
+
+    Event.ON_SWITCH_IN（場に出た直後にPPが0の技を持っていた場合）・
+    Event.ON_ITEM_ENABLED（マジックルーム・ぶきよう等でアイテムが無効化されていた間に
+    PPが0になり、無効化解除後もPPが0のままだった場合）・
+    Event.ON_FORCE_BERRY_TRIGGER（むしくい・ついばむ・ほおばる・おちゃかいで
+    強制発動する場合）から呼ばれる共通ロジック。
+    """
     mon = ctx.source
     assert mon is not None
-    move = next((m for m in mon.moves if m.pp == 0), None)
+    move = himeri_select_move_to_restore(mon)
     if move is not None:
         move.pp = min(himeri_pp_restore_cap(mon), move.data.pp)
         _announce_and_consume_item(battle, mon)
