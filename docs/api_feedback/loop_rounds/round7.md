@@ -219,3 +219,34 @@
   `python scripts/sort_tests.py tests/test_copy.py`・`python scripts/generate_test_list.py`を
   実行し、`python -m pytest tests/ -v`で5783件全件パス・1件skip（既存の5779件+新規テスト4件、
   flaky testの新規発生なし）を確認した。
+
+- [x] `Player.battle_against()`/`n_battles`が勝敗集計のみで、各対戦の`Battle`（リプレイ・
+  観測データ）を回収するフックがない（ai_developer視点、id: r7-9） → 対応内容 (2026-07-14):
+  `src/jpoke/core/player.py:139`の`battle_against()`は`for opponent in opponents: for i in
+  range(n_battles):`ループ内で`Battle`を生成し`play_out()`を呼んだ後、`winner`の判定・戦績更新
+  にのみ使い、各対戦の`Battle`インスタンスはループを抜けるたびに参照が失われ破棄されていた。
+  自己対戦のリプレイ・観測データ収集（強化学習用など）をしたい場合、`battle_against()`を使わず
+  `Battle`生成・`seed + 対戦通番`の派生シード規約・戦績更新ロジックを利用者側で手動再実装する
+  必要があった。`battle_against(*opponents, n_battles=1, on_battle_end:
+  Callable[[Battle], None] | None = None, **battle_kwargs)`とキーワード専用引数
+  `on_battle_end`を追加し、既定値`None`のため既存呼び出しの挙動・シグネチャ互換性は変わらない。
+  各対戦の`battle.play_out(max_turns=MAX_TURNS)`完了直後・勝敗判定/戦績更新より前に
+  `on_battle_end is not None`なら`on_battle_end(battle)`を呼ぶ実装で、ターン上限で未決着
+  （`winner is None`）で戦績にカウントされない対戦でも呼ばれる。レビューでシグネチャが
+  キーワード専用（`*opponents`の後）で追加されており位置引数として渡せず既存呼び出しに影響しない
+  ことと、docstring・`docs/api/README.md`・`CHANGELOG.md`の記述が実装（呼び出しタイミング・
+  未決着対戦でも呼ばれる点・複数opponent指定時は`opponent × n_battles`回呼ばれる点）と一致して
+  いることを確認した。回帰テストとして`tests/test_poke_env_compat.py`に4件追加した:
+  `test_battle_against_on_battle_endは各対戦ごとにbattleを渡して呼ばれる`は`n_battles=3`で
+  受け取った`Battle`が3件・すべて別インスタンス・すべて`finished`であることを確認する。
+  `test_battle_against_on_battle_end未指定時は従来通り呼ばれず戦績のみ更新される`は
+  `on_battle_end`省略時に既存の戦績更新（`n_finished_battles`/`n_won_battles`）が変わらないことを
+  確認する。`test_battle_against_複数opponent指定時はon_battle_endがopponent数times_n_battles回呼ばれる`
+  は2つのopponent×`n_battles=2`で合計4回呼ばれ、各`Battle.players`の`username`集合から
+  両opponentそれぞれとの対戦が含まれることを確認する。
+  `test_battle_against_on_battle_endはターン上限で未決着の対戦でも呼ばれる`は既存の
+  `MAX_TURNS`monkeypatchパターン（`player_module.MAX_TURNS = 2`）を再利用し、未決着
+  （`battle.finished is False`・`n_finished_battles`が増えない）対戦でも`on_battle_end`が
+  1回呼ばれることを確認する。`python scripts/sort_tests.py tests/test_poke_env_compat.py`・
+  `python scripts/generate_test_list.py`を実行し、`python -m pytest tests/ -v`で5787件全件
+  パス・1件skip（既存の5783件+新規テスト4件、flaky testの新規発生なし）を確認した。

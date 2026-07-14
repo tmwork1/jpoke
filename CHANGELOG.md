@@ -73,6 +73,12 @@
   の内部シミュレーション（`evaluate()` の既定実装はログを一切参照しない）で
   `copy_logs=False` を使うように変更し、探索ノードごとに発生していた
   全履歴の無駄なdeepcopyを削減した
+- `Player.battle_against()` に `on_battle_end: Callable[[Battle], None] | None = None`
+  引数を追加。従来は `n_battles` ループ内で各対戦の `Battle` を勝敗判定にのみ使い
+  破棄しており、自己対戦データ収集（強化学習用リプレイ等）のために `battle_against()`
+  を使わず `seed + 対戦通番` の派生シード規約を手動で再実装する必要があった。
+  各対戦の `play_out()` 完了直後に `Battle` を受け取れるコールバックを追加し、
+  この重複を解消した。既定値 `None` のため既存呼び出しの挙動は変わらない
 
 ### Changed
 
