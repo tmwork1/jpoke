@@ -57,6 +57,33 @@ def test_さいせいりょく_とんぼがえりで交代しても回復する(
     assert mon.hp == 1 + mon.max_hp // 3
 
 
+def test_さいせいりょく_ひんし時は発動せず正しく退場する():
+    """さいせいりょく: 技のダメージでHPが0になって瀕死交代（run_faint_switch経由の
+    ON_SWITCH_OUT）で退場するときは発動せず回復しない。
+
+    修正前は退場処理が瀕死かどうかを問わず無条件にON_SWITCH_OUTを発火するため、
+    さいせいりょくが誤って最大HPの1/3を回復してしまい、Pokemon.faintedがFalseに
+    戻って正式な瀕死処理が成立しなくなっていた（fuzz_log seed=86で検出）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ヤドン", ability_name="さいせいりょく"), Pokemon("ピカチュウ")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.run_move(battle, 1)
+    assert mon.hp == 0
+    assert mon.fainted
+    # 瀕死交代処理（本来のターン進行が行うON_SWITCH_OUT発火経路）を明示的に実行する
+    battle.switch_manager.run_faint_switch()
+    # 回復せず瀕死のまま退場している（さいせいりょくが誤発動していない）
+    assert mon.hp == 0
+    assert mon.fainted
+    # 瀕死交代により控えのピカチュウへ正しく入れ替わっている
+    assert battle.actives[0].name == "ピカチュウ"
+
+
 def test_さいせいりょく_交代で控えに戻ると回復する():
     battle = t.start_battle(
         team0=[Pokemon("ヤドン", ability_name="さいせいりょく"), Pokemon("ピカチュウ")],

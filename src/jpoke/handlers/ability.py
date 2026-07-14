@@ -1606,6 +1606,9 @@ def サイコメイカー_activate_terrain(battle: Battle, ctx: EventContext, va
 def さいせいりょく_heal_on_withdraw(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """さいせいりょく特性: 交代で引っ込んだとき最大HPの1/3を回復する（かいふくふうじ無効）。"""
     mon = ctx.source
+    # ひんし(HP0)になったときは発動しない（瀕死交代でON_SWITCH_OUTが発火した場合を含む）
+    if mon.fainted:
+        return HandlerReturn(value=value)
     if battle.modify_hp(mon, r=1/3, reason="bench_heal"):
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
