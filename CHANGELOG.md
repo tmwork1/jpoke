@@ -60,6 +60,19 @@
   合わせて `examples/03_damage_calc/10_form_change_comparison.py` を新設し、
   `set_form()` によるロトムのフォルム変化がタイプ・種族値を通じてダメージ・致死率に
   与える影響を比較するサンプルを追加
+- `docs/api/README.md`（Battle「状態取得系」）に `Battle.calc_move_priority(attacker, move)` /
+  `Battle.resolve_speed_order()` を追記。`examples/02_ai/04_priority_and_command_debug.py`
+  で使用されているが実装済みメソッド自体は `docs/api/README.md` に未掲載で、
+  「テストユーティリティ」節のインデックス指定版 `jpoke.testing.calc_move_priority(battle,
+  player_index, move_index=0)` のみが記載されていたための対応。両者の違い
+  （`Pokemon`/`Move` オブジェクト指定かインデックス指定か）を相互に明記した
+- `Battle.copy(copy_logs=False)` — `event_logger`/`command_log`（対戦開始からの
+  全履歴）をdeepcopyせず、複製先に空の新規ログを持たせるオプション引数を追加。
+  `copy_logs=False` を指定すると、複製元のログには影響を与えずにコピー負荷を
+  抑えられる。既定は `True` で従来通りの挙動を維持する。`TreeSearchPlayer`
+  の内部シミュレーション（`evaluate()` の既定実装はログを一切参照しない）で
+  `copy_logs=False` を使うように変更し、探索ノードごとに発生していた
+  全履歴の無駄なdeepcopyを削減した
 
 ### Changed
 
@@ -168,6 +181,16 @@
   `build_observation()` は `decision_random` だけを本体と共有し（無限交代ループ対策を
   維持）、ゲーム進行用の `random` は元通りdeepcopyによる独立コピーに戻すことで
   先読みを不可能にした
+- `TreeSearchPlayer._worst_case_over_opponent()` 内の `sim = battle.copy()` が
+  `reseed` 引数を省略（既定 `False`）していたため、同じ `my_cmd` に対する各
+  `opp_cmd` 分岐・各 `my_cmd` 分岐が複製元の `random`/`decision_random` の状態を
+  そのまま共有し、探索木の兄弟ノード間で乱数系列が相関していた
+  （`examples/04_research/03_janken_nash_cfr.py` の自作ロールアウトは既に
+  `reseed=True` を使っており対象外）。`battle.copy(reseed=True)` に変更し、
+  各分岐が派生シードで独立に再初期化された乱数系列を使うようにした。
+  `configure_sim` で命中判定・ダメージ乱数等の確率的要素を固定している場合は
+  探索結果（選ばれるコマンド）に変化はないが、固定していない場合は評価値の
+  相関が解消されることで変わりうる
 - `Pokemon.set_stats(stats)` が辞書のキー（`Stat`）を無視し、`enumerate()` による
   挿入順を暗黙の固定順（0=HP, 1=攻撃, 2=防御, ...）とみなして書き込んでいたため、
   `{"atk": 150, "def": 100}` のようにキー順が典型順と異なる辞書や6項目に満たない

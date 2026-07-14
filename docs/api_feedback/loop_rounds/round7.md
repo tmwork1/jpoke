@@ -117,3 +117,105 @@
   `python scripts/sort_tests.py tests/test_command.py`・`python scripts/generate_test_list.py`を
   実行し、`python -m pytest tests/ -v`で5769件全件パス（既存の5765件+新規テスト4件、flaky testの
   新規発生なし）を確認した。
+
+- [x] `Battle.calc_move_priority()`/`Battle.resolve_speed_order()`が`docs/api/README.md`のBattle章に
+  未掲載で、`jpoke.testing`版と混同しやすい（id: r7-6） → 対応内容 (2026-07-14):
+  `src/jpoke/core/battle.py:749`の`calc_move_priority(self, attacker: Pokemon, move: Move) -> int`
+  （`speed_calculator.calc_move_priority()`への委譲。技本来の優先度に
+  ON_MODIFY_MOVE_PRIORITYイベントによる補正を加えた値を返す）と、同ファイル729行目の
+  `resolve_speed_order(self) -> list[Pokemon]`（`speed_calculator.resolve_speed_order()`への委譲。
+  引数なしで現在の実効素早さ順にソートしたポケモンのリストを返す）は
+  `examples/02_ai/04_priority_and_command_debug.py`で実際に使われている実装済みメソッドだが、
+  `docs/api/README.md`のBattle「状態取得系」テーブルには一度も掲載されておらず、
+  「テストユーティリティ」節の`jpoke.testing.calc_move_priority(battle, player_index,
+  move_index=0)`（インデックス指定の薄いラッパー）のみが記載されていたため、
+  両者が別物であることに気づきにくかった。Battle「状態取得系」テーブルに
+  `calc_move_priority(attacker, move)`/`resolve_speed_order()`の行を追加し、コード例にも
+  `battle.calc_move_priority(active, active.moves[0])`/`battle.resolve_speed_order()`を追記した。
+  `calc_move_priority`の説明には`jpoke.testing.calc_move_priority(battle, player_index,
+  move_index=0)`が内部でこちらを呼ぶインデックス指定版であることを明記し、
+  「テストユーティリティ」節側の`calc_move_priority`の説明にも`Battle.calc_move_priority(pokemon,
+  move)`のインデックス指定版である旨を追記して相互参照できるようにした。`resolve_speed_order()`の
+  説明には、予約済みコマンドを考慮した実際の行動順が必要な場合は`resolve_action_order()`を使う
+  旨も明記した。`CHANGELOG.md`にも明記した。ドキュメントのみの修正でコード変更を伴わないため
+  新規の回帰テストは不要と判断し、`PYTHONUTF8=1 python
+  examples/02_ai/04_priority_and_command_debug.py`を実行してBattle直下の
+  `calc_move_priority()`/`resolve_speed_order()`呼び出しが引き続き動作すること
+  （でんこうせっか=1・のしかかり=0という優先度、通常時/トリックルーム下での素早さ順反転）を
+  確認した。`python -m pytest tests/ -v`で5769件全件パス（既存件数のまま、flaky testの新規発生
+  なし）を確認した。
+
+- [x] `TreeSearchPlayer`の内部シミュレーションが`battle.copy(reseed=...)`を使わず、探索の
+  兄弟ノード間で乱数系列が相関する（ai_developer視点、id: r7-7） → 対応内容 (2026-07-14):
+  `src/jpoke/players/tree_search_player.py:268`の`_worst_case_over_opponent()`内`sim =
+  battle.copy()`が`reseed`引数を省略（既定`False`）していたため、同じ`my_cmd`に対する各
+  `opp_cmd`分岐・各`my_cmd`分岐が複製元battleの`random`/`decision_random`の状態をそのまま
+  共有し、探索木の兄弟ノード間で乱数系列が相関していた（`configure_sim`で命中判定・ダメージ
+  乱数等の確率的要素を固定していない探索では評価値が歪みうる不具合。
+  `examples/04_research/03_janken_nash_cfr.py`の自作ロールアウトは既に`reseed=True`相当の
+  独自シード制御をしており対象外）。`sim = battle.copy(reseed=True)`に変更し、変更理由と
+  `Battle.copy()`のdocstring参照コメントを追記した。`Battle.copy(reseed=True)`は
+  複製元battleの`_reseed_count`をインクリメントしたうえで`new.seed = hash((self.seed,
+  self._reseed_count))`により派生シードを生成する仕様（`src/jpoke/core/battle.py:326`）のため、
+  同一の`battle`引数から呼ばれる兄弟ノード（`_worst_case_over_opponent`内のループ・
+  `_best_command`内の`my_cmd`ループ）はそれぞれ一意な派生シードを持つ。`configure_sim`で
+  確率的要素を固定している場合は探索結果（選ばれるコマンド）に変化はないが、固定していない
+  場合は評価値の相関が解消されることで変わりうる点を`CHANGELOG.md`に明記した。回帰テストとして
+  `tests/test_tree_search_framework.py`に2件追加した:
+  `test_reseedTrueにより兄弟ノード間でsimの乱数系列が独立する`は`configure_sim`未固定
+  （`battle.test_option.accuracy`未設定）の状態でmax_plies=1の各分岐（4×4=16件、テラスタル
+  コマンド込み）の`sim.random`/`sim.decision_random`の内部状態（`getstate()`）を収集し、
+  全て重複しないことを確認する。`test_max_plies2でネストしたsimでも全階層のseedが重複しない`は
+  max_plies=2でトップレベルの分岐からさらに再帰した2手目の分岐まで含めて`configure_sim`が
+  観測する全ての`sim.seed`（実測160件）が階層をまたいで重複しないことを確認し、`_reseed_count`が
+  複製元battle基準で単調増加する派生シード生成がネストした`_worst_case_over_opponent`呼び出しでも
+  正しく機能することを検証する。`python scripts/sort_tests.py
+  tests/test_tree_search_framework.py`・`python scripts/generate_test_list.py`を実行し、
+  `python -m pytest tests/ -v`で5779件全件パス・1件skip（新規テスト2件を含む。main側で他ラウンド
+  由来のテストが追加され件数はr7-6時点の5769件から増えている。flaky testの新規発生なし）を
+  確認した。
+
+- [x] `Battle.copy()`がevent_logger/command_logを毎回まるごとdeepcopyし、木探索のノード数×
+  経過ターン数に比例してコピー負荷が膨張する（ai_developer視点、id: r7-8） → 対応内容
+  (2026-07-14): `src/jpoke/core/battle.py:326`の`copy()`は複製のたびに対戦開始からの全履歴
+  （`event_logger.logs`/`command_log`）を`_EXTRA_DEEPCOPY_KEYS`経由で無条件にdeepcopyしており、
+  `TreeSearchPlayer`の内部シミュレーション（探索ノード1つにつき1回`copy()`が呼ばれる）では
+  ログを一切参照しないにもかかわらずターン経過とともにこのコストだけが線形に増えていた。
+  `copy(reseed=False, copy_logs=True)`に`copy_logs`引数を追加し、`False`指定時は
+  複製元の`event_logger`/`command_log`を一時的に空の新規オブジェクト（`EventLogger()`/`[]`）に
+  差し替えたうえで`deepcopy(self)`を行い、`finally`節で直ちに複製元へ復元する方式にした
+  （`fast_copy()`は`_EXTRA_DEEPCOPY_KEYS`に列挙されたキーを`deepcopy(val)`するだけなので、
+  差し替え後は空オブジェクトをdeepcopyするだけになり、全履歴コピーのコストを避けつつ複製先には
+  複製元と独立した新規の空ログを持たせられる）。レビューで実装方式を精査し、(1)
+  `deepcopy(self)`実行中に例外が発生しても`finally`で複製元のログが確実に復元されること、
+  (2) `event_logger`/`command_log`を参照する属性が`Battle`自身以外に存在しない
+  （`grep`で確認）ため、一時差し替えによる意図しない波及がないこと、(3) 複製先への書き込みが
+  複製元を汚染しないこと（実測で確認）、(4) `TreeSearchPlayer`以外に`event_logger`/
+  `command_log`を参照するコードが`_worst_case_over_opponent()`内に無いため`copy_logs=False`が
+  安全なこと、を確認した。スレッドセーフではない点は`build_observation()`と同様のためdocstringに
+  `Warning`として明記した。`CHANGELOG.md`の一覧記載に`copy_logs=True`という誤記
+  （実際に新規挙動を有効化するのは`copy_logs=False`）を見つけ`copy_logs=False`に修正し、
+  直前の箇条書きとの間に紛れ込んでいた余分な空行も削除した。`docs/api/README.md`の「複製系」
+  節・コード例は実装と一致していることを確認した。`src/jpoke/players/tree_search_player.py:268`の
+  `_worst_case_over_opponent()`内`sim = battle.copy(reseed=True)`は`sim = battle.copy(reseed=True,
+  copy_logs=False)`に変更済みで、既定の`evaluate()`実装がログを参照しないことと整合する。
+  回帰テストとして`tests/test_copy.py`に4件追加した:
+  `test_copy_logsTrueで従来通りログの全履歴が引き継がれる`は既定（`copy_logs`省略）で複製先の
+  `event_logger.logs`が複製元と同一件数・同一内容になることを確認する。
+  `test_copy_logsFalseで複製先のログが空になる`は`copy_logs=False`で複製先の`event_logger.logs`/
+  `command_log`が空リストになり、かつ複製元とは別オブジェクト（共有参照でない）であることを
+  確認する。`test_copy_logsFalseで複製元のログが変更されずかつ複製先への書き込みが波及しない`は
+  複製直後に複製元のログ内容が変化しないこと、複製先へ`run_move()`で書き込んでも複製元の
+  ログ件数が変わらないことを確認する。
+  `test_copy_logsFalseでdeepcopy中に例外が発生しても複製元のログが復元される`は
+  `jpoke.core.battle.deepcopy`を一時的に例外を送出する関数へ差し替えたうえで
+  `battle.copy(copy_logs=False)`を呼び、`RuntimeError`が伝播したうえで複製元の
+  `event_logger`/`command_log`が同一オブジェクトのまま内容も変化していないことを確認する
+  （`finally`による復元の直接検証）。`TreeSearchPlayer`の探索結果への影響は
+  `tests/test_tree_search_framework.py`の既存テスト（`test_reseedTrueにより兄弟ノード間で
+  simの乱数系列が独立する`・`test_max_plies2でネストしたsimでも全階層のseedが重複しない`等、
+  `battle.copy(reseed=True, copy_logs=False)`を経由する経路）が引き続き通ることで確認した
+  （評価値の計算はログを参照しないため`copy_logs`の値に依存しない）。
+  `python scripts/sort_tests.py tests/test_copy.py`・`python scripts/generate_test_list.py`を
+  実行し、`python -m pytest tests/ -v`で5783件全件パス・1件skip（既存の5779件+新規テスト4件、
+  flaky testの新規発生なし）を確認した。
