@@ -1,3 +1,4 @@
+# TODO: 合法手の評価値を確認するだけなのに、コードの量が多すぎる。choose_command()内でevaluate_commands()を呼んでexitするだけの簡易サンプルに置き換えるべき
 """jpoke で学べること: 優先度技・素早さ操作技（トリックルーム）が行動順に与える影響、
 TreeSearchPlayer.evaluate_commands() によるコマンド候補・評価値のデバッグ確認。
 

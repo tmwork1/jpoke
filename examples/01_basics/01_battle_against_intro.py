@@ -1,3 +1,4 @@
+# TODO: すべてのサンプルコードに共通で、jpoke で学べること: という表現はおかしい。書かなくてよい。
 """jpoke で学べること: Player.battle_against() を使った最小構成のバトル実行。
 
 Battle / Player を手動で管理してターンを1つずつ進める方法（02のquickstart）も
@@ -17,8 +18,11 @@ def main() -> None:
     player2.add_pokemon("フシギダネ", move_names=["たいあたり"])
 
     # seed: 乱数シードを固定し、命中判定・急所判定などを再現可能にする
+    # TODO: battle_against()ではon_battle_end を渡す代わりに、Battleインスタンスのリストを返したほうがよいのではないか。
     player1.battle_against(player2, seed=1)
 
+    # TODO: battle.print_logs("all") でログを表示する
+    # TODO: print文を短くまとめる
     print(f"player1: {player1.n_won_battles}勝{player1.n_lost_battles}敗/{player1.n_finished_battles}戦")
 
     # 試してみよう: n_battles=10 のように指定すると、同じ相手と複数回対戦させて

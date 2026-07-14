@@ -25,6 +25,7 @@ class StrongestMovePlayer(Player):
             # is_type("move") は通常技に加えメガシンカ・テラスタルコマンドも含む
             # （is_regular_move だと通常技コマンドのみになり、メガシンカ・テラスタルを
             # 伴う技コマンドが除外されてしまう）
+            # TODO: is_move() のような名前のほうがわかりやすいのではないか
             if not command.is_type("move"):
                 return -1
             move = battle.command_to_move(self, command)
@@ -34,6 +35,7 @@ class StrongestMovePlayer(Player):
         return max(commands, key=move_power)
 
     def choose_command_poke_env_style(self, battle: Battle) -> Command:
+        # TODO: 戻り値も poke-env のように create_order() で作った Command オブジェクトにすべき。poke-env の仕様を確認せよ。
         """poke-env経験者向け: choose_command() と同じ判断の代替実装（未使用）。
 
         choose_command() に渡される battle は観測用コピーで、battle.observer が
@@ -66,6 +68,7 @@ def main() -> None:
     battle.start()
 
     winner = battle.play_out(max_turns=100)
+    # TODO: print_logs()のあとに追加のprint()を入れないと見づらい。他のサンプルコードも同様。
     print(f"勝者: {winner.username if winner else '引き分け（ターン上限）'}")
     battle.print_logs("all")
 

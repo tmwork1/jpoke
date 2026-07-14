@@ -22,6 +22,7 @@ def main() -> None:
     battle = Battle(player1, player2, seed=1)
     battle.start()
     # 手動でstep()するループの定型は01で学んだので、ここではplay_out()で一括して進める
+    # TODO: 対戦を実行する系のメソッドの返り値を Battle インスタンスに統一するか、勝者だけ返すか、どちらがよいか検討する
     winner = battle.play_out(max_turns=100)
     print(f"元の対戦の勝者: {winner.username if winner else '引き分け（ターン上限）'}（{battle.turn}ターン）")
 
@@ -33,8 +34,10 @@ def main() -> None:
     serialized = replay_data.to_dict()
     restored = type(replay_data).from_dict(serialized)
 
+    # TODO: リプレイを再生する箇所にも説明を追加する。
     replayed_battle = replay_battle(restored)
 
+    # TODO: 勝者だけを確認するのではなく、print_logs()の出力が元の対戦と同じになることを確認できるようにする
     replayed_winner = replayed_battle.winner
     print(
         f"再生した対戦の勝者: "

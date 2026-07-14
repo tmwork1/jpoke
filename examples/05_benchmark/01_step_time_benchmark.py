@@ -1,3 +1,4 @@
+# TODO: 計算途中の進捗がわかるようにする。
 """jpoke で学べること: 完全ランダムな3vs3全選出バトルを繰り返し、
 `Battle.step()` 1回あたりの所要時間を計測する計算速度ベンチマーク。
 
@@ -16,6 +17,7 @@ import statistics
 import time
 from random import Random
 
+# TODO: import文をまとめられないか。
 from jpoke import Battle, Pokemon
 from jpoke.data.ability import ABILITIES
 from jpoke.data.item import ITEMS
