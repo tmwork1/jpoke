@@ -61,6 +61,11 @@ MOVES_A: dict[MoveName, MoveData] = {
                 subject_spec="attacker:self",
                 priority=180,
             ),
+            Event.ON_HIT: h.MoveHandler(
+                ha.アイアンローラー_clear_terrain_on_zero_damage,
+                subject_spec="attacker:self",
+                priority=180,
+            ),
         }
     ),
     "アイススピナー": MoveData(
@@ -84,7 +89,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         pp=12,
         power=100,
         accuracy=90,
-        flags={"contact", "punch", "secondary_effect"},
+        flags={"contact", "punch"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 ha.アイスハンマー_lower_attacker_spe,
