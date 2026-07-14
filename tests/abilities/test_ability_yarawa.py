@@ -366,6 +366,45 @@ def test_よびみず_連続技を受けてもとくこう上昇は1回のみ():
 
 
 @pytest.mark.parametrize(
+    "move_name, expected_modifier",
+    [
+        ("たいあたり", 8192),
+        ("でんきショック", 4096),
+    ]
+)
+def test_ヨガパワー_物理技で攻撃補正2倍(move_name: str, expected_modifier: int):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ヨガパワー", move_names=[move_name])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    t.run_move(battle, 0)
+    assert expected_modifier == battle.damage_calculator.atk_modifier
+
+
+def test_ヨガパワー_イカサマで攻撃するときも2倍():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ヨガパワー", move_names=["イカサマ"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    t.run_move(battle, 0)
+    assert 8192 == battle.damage_calculator.atk_modifier
+
+
+def test_ヨガパワー_こんらん自傷ダメージには補正なし():
+    """ヨガパワー: こんらんの自傷ダメージには攻撃補正がかからない（ちからもちと同一仕様）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ヨガパワー")],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"こんらん": 2},
+    )
+    attacker = battle.actives[0]
+    battle.test_option.trigger_volatile = True
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.atk_modifier == 4096
+    assert attacker.hp < attacker.max_hp
+
+
+@pytest.mark.parametrize(
     "move_name",
     ["でんきショック", "たいあたり"]
 )
