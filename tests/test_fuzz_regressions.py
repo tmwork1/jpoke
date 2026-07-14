@@ -416,6 +416,57 @@ def test_じゅうりょく_ノーガード相手への攻撃でNoneのままTyp
     assert battle.move_executor.accuracy is None  # 倍率は適用されない
 
 
+def test_ターン終了処理_ON_TURN_END発火中に決着した場合別個体の継続ダメージ処理が打ち切られる():
+    """seed=42 (LogInconsistency@event_manager.py:emit:154) の回帰テスト。
+
+    test_ターン終了処理_決着ターンでは継続ダメージのON_TURN_ENDが処理されない
+    （seed=24）は、ターン中の技実行など Event.ON_TURN_END を発火する「前」に
+    既に決着しているケース（_run_end_phase 側のフェーズ開始時ガード）の
+    回帰テストだった。
+
+    今回のバグはそれとは異なり、Event.ON_TURN_END の発火「中」に決着するケース。
+    EventManager.emit は1回の呼び出しの中で、どく・やけど等の異なる個体を対象と
+    する複数のハンドラを素早さ順（速い個体が先）にまとめて処理する。修正前は、
+    先に処理された個体（速い側）の継続ダメージで瀕死になり battle.judge_winner()
+    により決着が確定しても、同じ emit() 呼び出し内の後続ハンドラ（遅い側の
+    継続ダメージ）がチェックされずそのまま実行され、決着後にもかかわらず
+    無関係な個体へのダメージ・HP変化ログが記録されてしまっていた。
+
+    速いピカチュウ・遅いカビゴンの両者をどく状態にし、技のダメージを0に固定して
+    ターン終了時の毒ダメージのみで決着させる。ピカチュウは素早さが速いため
+    ON_TURN_ENDの毒ダメージ処理が先に実行されて瀕死になり決着するが、修正前は
+    その直後に処理されるカビゴン側の毒ダメージも実行されてしまっていた。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        ailment0=("どく", None),
+        ailment1=("どく", None),
+        accuracy=100,
+    )
+    player0, player1 = battle.players
+    attacker, defender = battle.actives
+    attacker.hp = 1
+    t.fix_damage(battle, 0)  # 技のダメージを0に固定し、毒ダメージのみで決着させる
+
+    # Turn1: 技は互いに0ダメージ。ターン終了時、速いピカチュウの毒ダメージが
+    # 先に処理されて瀕死になり決着する。修正前は続けて遅いカビゴンの毒ダメージも
+    # 処理されてしまっていた。
+    battle.step(commands={player0: Command.MOVE_0, player1: Command.MOVE_0})
+
+    assert attacker.fainted
+    assert battle.winner is player1
+    # カビゴンのHPは変化しない（技は0ダメージ、決着後の毒ダメージも処理されない）
+    assert defender.hp == defender.max_hp
+
+    logs = [log for log in battle.event_logger.logs if log.turn == battle.turn]
+    defender_hp_changed_logs = [
+        log for log in logs
+        if log.log == LogCode.HP_CHANGED and log.pokemon == defender.name
+    ]
+    assert len(defender_hp_changed_logs) == 0  # カビゴン側のHP変化ログは一切記録されない
+
+
 def test_ターン終了処理_同ターンに瀕死になったポケモンへのON_TURN_END回復が適用されない():
     """seed=38 (LogInconsistency@handlers/volatile.py:ねをはる_self_heal:970) の回帰テスト。
 
