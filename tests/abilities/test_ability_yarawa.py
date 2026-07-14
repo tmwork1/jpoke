@@ -646,6 +646,36 @@ def test_リミットシールド_交代するとコアの姿に戻る():
     assert mon.name == "メテノ(コア)"
 
 
+def test_リミットシールド_りゅうせいのすがたであくびのねむけを防ぐ():
+    """りゅうせいのすがたでは状態異常だけでなくねむけ状態にもならない"""
+    battle = t.start_battle(
+        team0=[Pokemon("メテノ(コア)", ability_name="リミットシールド")],
+        team1=[Pokemon("カビゴン", move_names=["あくび"])],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    assert mon.name == "メテノ(りゅうせい)"
+    t.run_move(battle, 1)
+    assert not mon.has_volatile("ねむけ")
+
+
+def test_リミットシールド_設置技のダメージでHP1_2以下になった場合はコアの姿のまま():
+    """設置技のダメージ判定(priority=100)はリミットシールドの発動判定(priority=120)より先に
+    行われるため、登場前は半分より多いHPでもステルスロックで半分以下になった場合は
+    コアの姿のままフォルムチェンジしない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("メテノ(コア)", ability_name="リミットシールド")],
+        team1=[Pokemon("ピカチュウ")],
+        side0={"ステルスロック": 1},
+    )
+    mon = battle.player_states[battle.players[0]].team[1]
+    mon.hp = mon.max_hp * 7 // 10  # 半分より多いHP
+    t.run_switch(battle, 0, 1)
+    active = battle.actives[0]
+    assert active.hp <= active.max_hp // 2
+    assert active.name == "メテノ(コア)"
+
+
 def test_りんぷん_かたやぶりで無効化():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["ほっぺすりすり"])],

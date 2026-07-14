@@ -4605,6 +4605,13 @@ def リミットシールド_prevent_ailment(battle: Battle, ctx: EventContext, 
     return _prevent_ailment(battle, ctx, value)
 
 
+def リミットシールド_prevent_drowsy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """リミットシールド特性: りゅうせいのすがた時にねむけ状態を無効化する。"""
+    if ctx.target.name != METEONO_METEOR:
+        return HandlerReturn(value=value)
+    return _prevent_volatile(battle, ctx, value, blocked_volatiles=["ねむけ"])
+
+
 def リミットシールド_revert_form(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """リミットシールド特性: 交代時にりゅうせいのすがたからコアの姿へ戻す。"""
     mon = ctx.source

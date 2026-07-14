@@ -3528,6 +3528,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.リミットシールド_prevent_ailment,
                 subject_spec="target:self",
             ),
+            Event.ON_BEFORE_APPLY_VOLATILE: h.AbilityHandler(
+                h.リミットシールド_prevent_drowsy,
+                subject_spec="target:self",
+            ),
             Event.ON_SWITCH_OUT: h.AbilityHandler(
                 h.リミットシールド_revert_form,
                 subject_spec="source:self",
