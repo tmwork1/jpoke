@@ -1,5 +1,5 @@
-"""jpoke で学べること: TreeSearchPlayer.opponent_estimator() のオーバーライドによる、
-相手の見えていない情報（未公開の技構成）の推定。
+"""TreeSearchPlayer.opponent_estimator() をオーバーライドして、
+相手の見えていない情報（未公開の技構成）を推定する方法を示す。
 
 対戦開始直後（実対戦の初手など）は相手の技が1つも公開されておらず、既定の
 TreeSearchPlayerは相手の合法手を求められないため探索を行わず fallback() に

@@ -1,5 +1,5 @@
-"""jpoke で学べること: jpoke.testing のヘルパーで、これまでのサンプルで繰り返し書いてきた
-Battle(...).start() + Player.add_pokemon() の定型処理を1呼び出しにまとめる方法。
+"""jpoke.testing のヘルパーを使い、これまでのサンプルで繰り返し書いてきた
+Battle(...).start() + Player.add_pokemon() の定型処理を1呼び出しにまとめる方法を示す。
 
 jpoke.testing は tests/test_utils.py にあった内部テスト専用ヘルパーが本体パッケージへ
 昇格したもので、`pip install jpoke` だけで（リポジトリを clone せずに）使える。

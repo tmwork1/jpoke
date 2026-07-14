@@ -1,5 +1,5 @@
 # TODO: りゅうせいぐんによるC低下のほうが実践的で、例としてはより適切
-"""jpoke で学べること: calc_lethal(secondary=True) による追加効果込みの確定数計算。
+"""calc_lethal(secondary=True) を使って追加効果込みの確定数を計算する。
 
 calc_lethal(secondary=True) は技本体の追加効果（状態異常付与等）のうち、致死率計算に
 組み込まれている技に限り自動的に加味する（かえんほうしゃのやけど等、組み込まれて

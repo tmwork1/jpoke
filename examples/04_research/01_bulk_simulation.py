@@ -1,4 +1,4 @@
-"""jpoke で学べること: Player.battle_against() を使った多数回対戦による構成比較。
+"""Player.battle_against() を使い、多数回対戦させて構成を比較する。
 
 同じポケモンでアイテムだけを変えた2つの構成を、共通の対戦相手と多数回戦わせて
 勝率を比較する。poke-env 互換 API（battle_against）を使った、戦術研究ユースケース

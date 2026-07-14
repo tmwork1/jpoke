@@ -8,6 +8,18 @@ pip install jpoke
 python examples/01_basics/01_battle_against_intro.py
 ```
 
+Windows環境では、標準出力の既定エンコーディングの都合で日本語のログが文字化けする
+ことがある。その場合は `PYTHONUTF8=1` を指定して実行する。
+
+```powershell
+$env:PYTHONUTF8 = "1"
+python examples/01_basics/01_battle_against_intro.py
+```
+
+```bash
+PYTHONUTF8=1 python examples/01_basics/01_battle_against_intro.py
+```
+
 サンプルはユースケース別のディレクトリに分かれており、各ディレクトリ内で独立して
 連番（`01_`, `02_`, ...）を振っている。新しいサンプルを追加する際は、対応する
 ディレクトリ内の連番を延長するだけでよく、他ディレクトリの番号と衝突しない。
