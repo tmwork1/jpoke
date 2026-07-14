@@ -174,3 +174,48 @@
   `python -m pytest tests/ -v`で5779件全件パス・1件skip（新規テスト2件を含む。main側で他ラウンド
   由来のテストが追加され件数はr7-6時点の5769件から増えている。flaky testの新規発生なし）を
   確認した。
+
+- [x] `Battle.copy()`がevent_logger/command_logを毎回まるごとdeepcopyし、木探索のノード数×
+  経過ターン数に比例してコピー負荷が膨張する（ai_developer視点、id: r7-8） → 対応内容
+  (2026-07-14): `src/jpoke/core/battle.py:326`の`copy()`は複製のたびに対戦開始からの全履歴
+  （`event_logger.logs`/`command_log`）を`_EXTRA_DEEPCOPY_KEYS`経由で無条件にdeepcopyしており、
+  `TreeSearchPlayer`の内部シミュレーション（探索ノード1つにつき1回`copy()`が呼ばれる）では
+  ログを一切参照しないにもかかわらずターン経過とともにこのコストだけが線形に増えていた。
+  `copy(reseed=False, copy_logs=True)`に`copy_logs`引数を追加し、`False`指定時は
+  複製元の`event_logger`/`command_log`を一時的に空の新規オブジェクト（`EventLogger()`/`[]`）に
+  差し替えたうえで`deepcopy(self)`を行い、`finally`節で直ちに複製元へ復元する方式にした
+  （`fast_copy()`は`_EXTRA_DEEPCOPY_KEYS`に列挙されたキーを`deepcopy(val)`するだけなので、
+  差し替え後は空オブジェクトをdeepcopyするだけになり、全履歴コピーのコストを避けつつ複製先には
+  複製元と独立した新規の空ログを持たせられる）。レビューで実装方式を精査し、(1)
+  `deepcopy(self)`実行中に例外が発生しても`finally`で複製元のログが確実に復元されること、
+  (2) `event_logger`/`command_log`を参照する属性が`Battle`自身以外に存在しない
+  （`grep`で確認）ため、一時差し替えによる意図しない波及がないこと、(3) 複製先への書き込みが
+  複製元を汚染しないこと（実測で確認）、(4) `TreeSearchPlayer`以外に`event_logger`/
+  `command_log`を参照するコードが`_worst_case_over_opponent()`内に無いため`copy_logs=False`が
+  安全なこと、を確認した。スレッドセーフではない点は`build_observation()`と同様のためdocstringに
+  `Warning`として明記した。`CHANGELOG.md`の一覧記載に`copy_logs=True`という誤記
+  （実際に新規挙動を有効化するのは`copy_logs=False`）を見つけ`copy_logs=False`に修正し、
+  直前の箇条書きとの間に紛れ込んでいた余分な空行も削除した。`docs/api/README.md`の「複製系」
+  節・コード例は実装と一致していることを確認した。`src/jpoke/players/tree_search_player.py:268`の
+  `_worst_case_over_opponent()`内`sim = battle.copy(reseed=True)`は`sim = battle.copy(reseed=True,
+  copy_logs=False)`に変更済みで、既定の`evaluate()`実装がログを参照しないことと整合する。
+  回帰テストとして`tests/test_copy.py`に4件追加した:
+  `test_copy_logsTrueで従来通りログの全履歴が引き継がれる`は既定（`copy_logs`省略）で複製先の
+  `event_logger.logs`が複製元と同一件数・同一内容になることを確認する。
+  `test_copy_logsFalseで複製先のログが空になる`は`copy_logs=False`で複製先の`event_logger.logs`/
+  `command_log`が空リストになり、かつ複製元とは別オブジェクト（共有参照でない）であることを
+  確認する。`test_copy_logsFalseで複製元のログが変更されずかつ複製先への書き込みが波及しない`は
+  複製直後に複製元のログ内容が変化しないこと、複製先へ`run_move()`で書き込んでも複製元の
+  ログ件数が変わらないことを確認する。
+  `test_copy_logsFalseでdeepcopy中に例外が発生しても複製元のログが復元される`は
+  `jpoke.core.battle.deepcopy`を一時的に例外を送出する関数へ差し替えたうえで
+  `battle.copy(copy_logs=False)`を呼び、`RuntimeError`が伝播したうえで複製元の
+  `event_logger`/`command_log`が同一オブジェクトのまま内容も変化していないことを確認する
+  （`finally`による復元の直接検証）。`TreeSearchPlayer`の探索結果への影響は
+  `tests/test_tree_search_framework.py`の既存テスト（`test_reseedTrueにより兄弟ノード間で
+  simの乱数系列が独立する`・`test_max_plies2でネストしたsimでも全階層のseedが重複しない`等、
+  `battle.copy(reseed=True, copy_logs=False)`を経由する経路）が引き続き通ることで確認した
+  （評価値の計算はログを参照しないため`copy_logs`の値に依存しない）。
+  `python scripts/sort_tests.py tests/test_copy.py`・`python scripts/generate_test_list.py`を
+  実行し、`python -m pytest tests/ -v`で5783件全件パス・1件skip（既存の5779件+新規テスト4件、
+  flaky testの新規発生なし）を確認した。

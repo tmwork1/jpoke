@@ -265,7 +265,13 @@ class TreeSearchPlayer(Player):
                 # ノード数上限に達した。この my_cmd の残りの相手コマンドは
                 # 展開せず、ここまでに評価済みの分だけで worst を確定する。
                 break
-            sim = battle.copy(reseed=True)
+            # copy_logs=False: 既定のevaluate()はログを一切参照せず、内部
+            # シミュレーションのたびに対戦開始からの全履歴（event_logger/
+            # command_log）をdeepcopyするのはターン数に比例して無駄なコストが
+            # 増える。複製先には空の新規ログが渡るだけで、sim.step()以降に
+            # 追加されるログ（get_event_logs()等）は通常通り参照できる
+            # （Battle.copy()のdocstring参照）。
+            sim = battle.copy(reseed=True, copy_logs=False)
             # reseed=True により、同じ my_cmd に対する各 opp_cmd 分岐・各 my_cmd 分岐が
             # 複製元の random/decision_random の状態をそのまま共有せず、分岐ごとに
             # 派生シードで再初期化された独立の乱数系列を使う（Battle.copy() のdocstring

@@ -237,6 +237,19 @@ critical_hits = [
 ]
 ```
 
+### 複製系
+
+| API | 概要 |
+|---|---|
+| `copy(reseed=False, copy_logs=True)` | `Battle` インスタンスを複製する。`reseed=True` にすると複製側の `random`/`decision_random` を派生シードで再初期化し、木探索で兄弟ノード間の乱数系列が相関するのを避けられる（複製元の乱数系列は消費されない）。`copy_logs=False` にすると `event_logger`/`command_log`（対戦開始からの全履歴）をdeepcopyせず、複製先に空の新規ログを持たせる（複製元のログには影響しない）。木探索の内部シミュレーションのようにログを参照しない用途では、ターン数に比例して増える全履歴コピーのコストを避けられる |
+
+```python
+sim = battle.copy(reseed=True, copy_logs=False)
+sim.step({player1: command1, player2: command2})
+# sim.get_event_logs() は copy() 以降に発生したログのみを返す
+# （複製元 battle の履歴は sim には含まれない）
+```
+
 ### poke-env互換プロパティ
 
 `observer`（プレイヤー視点）が設定されている前提のプロパティ群。方策実装（`choose_command()`）に

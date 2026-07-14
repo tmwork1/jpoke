@@ -66,6 +66,13 @@
   「テストユーティリティ」節のインデックス指定版 `jpoke.testing.calc_move_priority(battle,
   player_index, move_index=0)` のみが記載されていたための対応。両者の違い
   （`Pokemon`/`Move` オブジェクト指定かインデックス指定か）を相互に明記した
+- `Battle.copy(copy_logs=False)` — `event_logger`/`command_log`（対戦開始からの
+  全履歴）をdeepcopyせず、複製先に空の新規ログを持たせるオプション引数を追加。
+  `copy_logs=False` を指定すると、複製元のログには影響を与えずにコピー負荷を
+  抑えられる。既定は `True` で従来通りの挙動を維持する。`TreeSearchPlayer`
+  の内部シミュレーション（`evaluate()` の既定実装はログを一切参照しない）で
+  `copy_logs=False` を使うように変更し、探索ノードごとに発生していた
+  全履歴の無駄なdeepcopyを削減した
 
 ### Changed
 
