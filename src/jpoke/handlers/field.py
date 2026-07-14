@@ -442,8 +442,8 @@ def はれ_power_modifier(battle: Battle, ctx: AttackContext, value: Any) -> Han
 
 
 def はれ_prevent_freeze(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """晴れ状態でこおり無効"""
-    if value == "こおり":
+    """晴れ状態でこおり無効。対象がばんのうがさを持つ場合は晴れの影響を受けず、こおり状態になる。"""
+    if value == "こおり" and battle.weather_for(ctx.target).sunny:
         value = ""
     return HandlerReturn(value=value)
 
