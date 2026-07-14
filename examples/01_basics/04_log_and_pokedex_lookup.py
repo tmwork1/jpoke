@@ -54,8 +54,7 @@ def main() -> None:
 
     battle = Battle(player1, player2, seed=1)
     battle.start()
-    while not battle.finished and battle.turn < 30:
-        battle.step()
+    battle.play_out(max_turns=30)
 
     show_critical_hit_logs(battle)
     print("-" * 50)

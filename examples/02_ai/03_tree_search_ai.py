@@ -40,10 +40,7 @@ def main() -> None:
     battle.start()
 
     max_turns = 20
-    while not battle.finished and battle.turn < max_turns:
-        battle.step()
-
-    winner = battle.winner
+    winner = battle.play_out(max_turns=max_turns)
     if winner is None:
         print(f"結果: 決着つかず（{max_turns}ターン経過）")
     else:
