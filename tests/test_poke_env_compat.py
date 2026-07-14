@@ -517,7 +517,7 @@ def test_変換マップの値は対応するliteral型の値に含まれる(map
 def test_無限交代ループの再現条件下でもコマンドが技を含んで決着する():
     """バグ報告の再現条件（3体チーム・両陣営RandomPlayer）で無限交代ループが解消し、
     技コマンドが実際に選ばれた上で規定ターン数以内に決着することを確認する
-    （`docs/plan/examples_api_feedback.md` 4度目のレビュー指摘の回帰テスト）。
+    （`docs/api_feedback/pre_loop/04_sonnet_investigation.md` 4度目のレビュー指摘の回帰テスト）。
 
     修正前は `seed=1,2,3,5` で技コマンドが一度も選ばれないまま交代コマンドだけが
     ターン上限まで選ばれ続けた。

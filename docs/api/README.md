@@ -115,7 +115,10 @@ move = battle.command_to_move(player1, commands[0])
 
 `battle.query`（`PokemonQuery`）には他にも判定用メソッドがあるが、そのうち `Pokemon`/`Player`
 単体の引数で完結するものは以下の通り `Battle` 直下からも呼べる（`AttackContext`/`EventContext`
-を要求する内部専用メソッドは委譲していない）。
+を要求する内部専用メソッドは委譲していない）。`resolve_secondary_chance(ctx, chance, ...)` など
+`AttackContext`/`EventContext` を引数に取る `Battle` のメソッドは、`handlers/*.py` のハンドラ
+関数が受け取った ctx をそのまま渡す用途を想定した内部専用API。両型は
+`from jpoke.core import EventContext, AttackContext` でインポートできる。
 
 | API | 概要 |
 |---|---|
@@ -419,6 +422,23 @@ print(mon.status, mon.has_ailment("どく"), mon.has_volatile("こんらん"))
 print(mon.fainted, mon.hp, mon.max_hp)
 ```
 
+### シナリオ構築系（フォルム変化）
+
+| API | 概要 |
+|---|---|
+| `set_form(name, hp_policy="keep_absolute", set_default_ability=False)` | フォルムをエイリアス（図鑑上の別名）指定で切り替える。種族値・タイプ・特性候補が変更先のものに差し替わる（ロトムの姿、ザシアン/ザマゼンタの剣王/盾王、ディアルガ等のオリジンフォルムなど）。既に同じフォルムなら何もせず `False` を返す。`hp_policy` は最大HPが変化したときの現在HPの追従方法（`set_evs`/`set_ivs`と共通）。`set_default_ability=True` の場合、特性を変更先の先頭特性にリセットする |
+
+```python
+mon = Pokemon("ロトム")           # でんき/ゴースト
+mon.set_form("ヒートロトム")       # でんき/ほのお に切り替わる（種族値・タイプ込み）
+print(mon.types, mon.stats)
+```
+
+`Battle` の「シナリオ構築系」（`modify_hp`/`set_ailment`等、[上記参照](#シナリオ構築系)）と
+同じく対戦を進行させずに状態を直接組み立てるためのメソッドだが、`set_form` は `Pokemon`
+自身のメソッドである点に注意（`Battle` 側に委譲ラッパーは無く、`mon.set_form(...)` の形で
+直接呼ぶ）。
+
 ## Command
 
 `src/jpoke/enums/command.py`。プレイヤーの1回の行動（技使用・交代・テラスタル等）を表す
@@ -483,6 +503,7 @@ battle.step({player: switch_command, opponent: Command.MOVE_0})
 
 | API | 概要 |
 |---|---|
+| `is_type(command_type)` | 指定した種別（`"any"` / `"move"` / `"switch"`）かどうか。`"move"` は通常技コマンドに加え、テラスタル・メガシンカ・ダイマックス・Zワザを伴う技コマンドも含む（`is_regular_move` は通常技コマンドのみ） |
 | `is_regular_move` (property) | 技コマンド（`MOVE_*`）かどうか |
 | `is_switch()` | 交代コマンド（`SWITCH_*`）かどうか |
 | `is_terastal` (property) | テラスタルコマンドかどうか |

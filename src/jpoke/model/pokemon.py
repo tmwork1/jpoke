@@ -704,8 +704,9 @@ class Pokemon:
         Note:
             設定後、ステータスを自動再計算する。
         """
-        for i, value in enumerate(stats.values()):
-            self._set_stat_from_value(i, value)
+        for stat, value in stats.items():
+            idx = STATS.index(stat)
+            self._set_stat_from_value(idx, value)
         self.update_stats(hp_policy)
 
     def get_raw_stat(self, idx: int) -> int:

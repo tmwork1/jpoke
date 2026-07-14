@@ -53,6 +53,13 @@
   委譲として追加。`can_switch()` 以外は `battle.query.<method>()` の直接呼び出しが
   必要で `docs/api/README.md` にも未掲載だったための対応（`AttackContext`/
   `EventContext` を要求する内部専用メソッドは対象外のまま）
+- `docs/api/README.md`（Pokemon「シナリオ構築系（フォルム変化）」）に
+  `Pokemon.set_form(name, hp_policy="keep_absolute", set_default_ability=False)` を追記。
+  実装済み（ロトム・ザシアン/ザマゼンタ・オリジンフォルム等の切り替えに内部で使用）
+  ながら `docs/api/README.md`・`examples/` のどちらにも未掲載だったための対応。
+  合わせて `examples/03_damage_calc/10_form_change_comparison.py` を新設し、
+  `set_form()` によるロトムのフォルム変化がタイプ・種族値を通じてダメージ・致死率に
+  与える影響を比較するサンプルを追加
 
 ### Changed
 
@@ -114,6 +121,17 @@
 
 ### Fixed
 
+- `docs/api/README.md` の `Command` 章「インスタンスプロパティ・メソッド」表に
+  `is_type(command_type)`（`examples/02_ai/01_custom_player.py` で使用している、
+  `"any"` / `"move"` / `"switch"` を指定できる汎用の種別判定メソッド）が掲載されて
+  いなかったため追記。`is_regular_move` との違い（`"move"` は通常技コマンドに加え、
+  テラスタル・メガシンカ・ダイマックス・Zワザを伴う技コマンドも含む）も明記した
+- README.md の「クイックスタート」節が `while battle.judge_winner() is None and
+  battle.turn < 100:` / `winner = battle.judge_winner()` という旧パターンのままで、
+  `examples/01_basics/02_quickstart.py`（docstringで「READMEのクイックスタートと
+  同内容」と明記）や `docs/api/README.md` が採用している `while not battle.finished
+  and battle.turn < 100:` / `winner = battle.winner` という表記と食い違っていたため
+  修正し、表記を統一した（`judge_winner()` 自体は引き続き公開APIとして利用可能）
 - `Battle(seed=None)` のフォールバックが `int(time.time())`（秒精度）だったため、
   短時間に複数の `Battle` を生成すると同一シードになり、`Player.battle_against()`
   などの多数回対戦がすべて同じ展開になってしまう問題を修正。OSの乱数源から
@@ -150,6 +168,11 @@
   `build_observation()` は `decision_random` だけを本体と共有し（無限交代ループ対策を
   維持）、ゲーム進行用の `random` は元通りdeepcopyによる独立コピーに戻すことで
   先読みを不可能にした
+- `Pokemon.set_stats(stats)` が辞書のキー（`Stat`）を無視し、`enumerate()` による
+  挿入順を暗黙の固定順（0=HP, 1=攻撃, 2=防御, ...）とみなして書き込んでいたため、
+  `{"atk": 150, "def": 100}` のようにキー順が典型順と異なる辞書や6項目に満たない
+  辞書を渡すと、例外を出さずに意図と異なるステータスへ書き込まれる不具合を修正。
+  `stats.items()` からキーで対象インデックスを引くように変更した
 
 ## [0.1.0] - 2026-07-11
 
