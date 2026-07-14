@@ -4560,8 +4560,14 @@ def よびみず_absorb_water(battle: Battle, ctx: AttackContext, value: bool) -
 
 
 def よわき_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """よわき特性: HP半分以下で攻撃補正を0.5倍にする。"""
-    if ctx.attacker.hp * 2 <= ctx.attacker.max_hp:
+    """よわき特性: HP半分以下で攻撃補正を0.5倍にする。
+
+    こんらんの自傷ダメージ（"_こんらん"）には効果が無い。
+    """
+    if (
+        ctx.move.name != "_こんらん"
+        and ctx.attacker.hp * 2 <= ctx.attacker.max_hp
+    ):
         value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
 
