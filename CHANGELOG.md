@@ -83,6 +83,12 @@
   int] | None = None` 引数を追加。指定した場合、生成した `Pokemon` に対し内部で
   `set_evs()` / `set_ivs()` を呼ぶ。従来は `add_pokemon()` の戻り値に対して別途
   `set_evs()` / `set_ivs()` を呼ぶ必要があった
+- `Battle.is_struggle_only(player)` — 指定プレイヤーがわるあがきしか選べない状態
+  かどうかを判定する薄いヘルパー。従来は `get_available_commands(player)` が
+  空の技コマンドと交代コマンドを両方含みうるため `get_available_commands(player)[0]`
+  でわるあがきを代用すると、交代コマンドが同時に存在する場合に誤ってそちらを
+  返してしまう罠があった。実際にわるあがきを選ぶ際は `Command.STRUGGLE` を
+  そのまま使えばよい（インデックス解決が不要な固定コマンドのため）
 
 ### Changed
 

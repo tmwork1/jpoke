@@ -47,8 +47,11 @@ class StrongestMovePlayer(Player):
         """
         moves = battle.available_moves  # get_available_commands()を技だけ取り出しMoveに変換したもの
         if not moves:
-            # わるあがきのみの場合。available_moves はこのときわるあがきを1件返す
-            return battle.get_available_commands(self)[0]
+            # わるあがきのみの場合。available_moves はこのときわるあがきを1件返す。
+            # battle.is_struggle_only(self) で判定できる（get_available_commands(self)[0] は
+            # 交代コマンドが同時に存在すると先頭に来てしまい誤ってそちらを返すことがある）
+            assert battle.is_struggle_only(self)
+            return Command.STRUGGLE
         move_commands = [c for c in battle.get_available_commands(self) if c.is_regular_move]
         best_index = max(
             range(len(moves)),

@@ -622,6 +622,26 @@ class Battle:
 
         raise InvalidPhaseError(f"Invalid phase: {self.phase}")
 
+    def is_struggle_only(self, player: Player) -> bool:
+        """指定プレイヤーが現在、わるあがきしか選べない状態かどうかを判定する。
+
+        通常技のPPが尽きている等で技コマンドが1つも無い場合、
+        `get_available_commands()` には `Command.STRUGGLE` が追加される。ただし
+        交代可能な場合は交代コマンドも同時に含まれるため、
+        `get_available_commands(player)[0]` のようにインデックスでわるあがきを
+        代用しようとすると、交代コマンドを誤って取得することがある。わるあがきが
+        選択可能かどうかは本メソッドで判定し、実際に選択する際は `Command.STRUGGLE`
+        をそのまま使う（`SWITCH_i`/`MOVE_i` と異なりインデックス解決が不要な
+        固定コマンドのため、取得専用のメソッドは用意していない）。
+
+        Args:
+            player: 判定するプレイヤー
+
+        Returns:
+            bool: わるあがきコマンドが選択可能ならTrue
+        """
+        return Command.STRUGGLE in self.get_available_commands(player)
+
     def can_switch(self, player: Player) -> bool:
         """指定したプレイヤーが交代可能かどうかを判定する（PokemonQueryへの委譲）。
 
