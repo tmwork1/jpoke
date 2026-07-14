@@ -630,6 +630,79 @@ def test_リーフガード_はれ中に状態異常を防ぐ(weather: WeatherNa
     assert battle.ailment_manager.apply(mon, "どく") is result
 
 
+def test_リーフガード_ねむけからねむりへの移行を防ぐ():
+    """リーフガード: ねむけ状態自体は防げないが、にほんばれ下ではねむけからねむりへの
+    移行を防げる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="リーフガード")],
+        team1=[Pokemon("カビゴン", move_names=["あくび"])],
+        weather=("はれ", 5),
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 1)
+    assert mon.has_volatile("ねむけ")
+    assert not mon.has_ailment("ねむり")
+
+    t.end_turn(battle)
+    t.end_turn(battle)
+    assert not mon.has_volatile("ねむけ")
+    assert not mon.has_ailment("ねむり")
+
+
+def test_リーフガード_かたやぶりの技には防がれない():
+    """リーフガード: かたやぶり持ちの技による状態異常はにほんばれ下でも防げない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="リーフガード")],
+        team1=[Pokemon("カビゴン", ability_name="かたやぶり", move_names=["どくどく"])],
+        weather=("はれ", 5),
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 1)
+    assert mon.has_ailment("もうどく")
+
+
+def test_リーフガード_かたやぶりのあくびはねむけになるが次のターンねむりにならない():
+    """リーフガード: かたやぶりであくびを受けたときはねむけ状態になるが、
+    ねむけ→ねむりへの移行は次ターンのにほんばれ下で防がれる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="リーフガード")],
+        team1=[Pokemon("カビゴン", ability_name="かたやぶり", move_names=["あくび"])],
+        weather=("はれ", 5),
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 1)
+    assert mon.has_volatile("ねむけ")
+    assert not mon.has_ailment("ねむり")
+
+    t.end_turn(battle)
+    t.end_turn(battle)
+    assert not mon.has_volatile("ねむけ")
+    assert not mon.has_ailment("ねむり")
+
+
+def test_リーフガード_ノーてんき下では発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="リーフガード")],
+        team1=[Pokemon("ピカチュウ", ability_name="ノーてんき")],
+        weather=("はれ", 5),
+    )
+    mon = battle.actives[0]
+    assert battle.ailment_manager.apply(mon, "どく") is True
+
+
+def test_リーフガード_ばんのうがさ所持時は効果が発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="リーフガード", item_name="ばんのうがさ")],
+        team1=[Pokemon("ピカチュウ")],
+        weather=("はれ", 5),
+    )
+    mon = battle.actives[0]
+    assert battle.ailment_manager.apply(mon, "どく") is True
+
+
 @pytest.mark.parametrize(
     "ability_name, move_name",
     [
