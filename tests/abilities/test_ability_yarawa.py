@@ -843,6 +843,27 @@ def test_わざわいのおふだ_かたやぶりで無効化されない():
     assert 3072 == battle.damage_calculator.atk_modifier
 
 
+def test_わざわいのおふだ_自分自身の攻撃は下がらない():
+    """わざわいのおふだを持つポケモン自身が攻撃するとき、自分の攻撃は補正されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="わざわいのおふだ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.atk_modifier
+
+
+def test_わざわいのおふだ_持ち同士では互いの攻撃が下がらない():
+    """場に複数体わざわいのおふだ持ちがいても、わざわいのおふだを持つポケモン同士は
+    互いにこの特性の効果を受けず、攻撃が下がらない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="わざわいのおふだ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", ability_name="わざわいのおふだ")],
+    )
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.atk_modifier
+
+
 def test_わたげ_クリアボディではブロックされる():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="わたげ")],
