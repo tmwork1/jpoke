@@ -115,6 +115,47 @@ def test_こおり_3回目行動時に強制解凍():
     assert not mon.ailment.is_active
 
 
+def test_こおり_ほのおタイプの技全般で被弾すると解凍する():
+    """こおり: 「thaw」フラグを持たないほのおタイプの攻撃技でも被弾すると解凍する。
+
+    ほのおタイプの攻撃技（第三世代以降）はタイプ由来で全て解凍対象となるため、
+    個別に「thaw」フラグが付与されていない技（オーバーヒート等）でも解凍されることを確認する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["オーバーヒート"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.ailment_manager.apply(defender, "こおり")
+    t.run_move(battle, 0)
+    assert not defender.ailment.is_active
+
+
+def test_こおり_self_thaw技はこんらんの自傷判定より後に解凍される():
+    """こおり: self_thawフラグを持つ技（ハイドロスチーム等）は、こんらんの自傷判定
+    （Event.ON_TRY_ACTION priority=110）より後のpriority=170で解凍される。
+
+    Champions仕様（第五世代以降）では状態変化の判定の後にこおりが治るため、
+    こんらんの自傷で技が実行されなかった場合はこおりが解凍されない。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カメックス", move_names=["ハイドロスチーム"])],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"こんらん": 2},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    battle.ailment_manager.apply(attacker, "こおり")
+    assert attacker.ailment.name == "こおり"
+    # こんらんの自傷を強制
+    battle.test_option.trigger_volatile = True
+    t.run_move(battle, 0)
+    assert not battle.move_executor.action_success
+    # こんらんの自傷で技が実行されなかったため、こおりは解凍されない
+    assert attacker.ailment.name == "こおり"
+
+
 def test_こおり_thaw技被弾で解凍する():
     """thawラベルを持つ技（ねっとう等）で被弾すると解凍する。
 

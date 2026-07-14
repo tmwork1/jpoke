@@ -4,4 +4,4 @@
 まひ	x	x	x	x	n/a	n/a	-
 やけど	x	x	x	x	x	x	-
 ねむり	x	x	x	x	n/a	n/a	x
-こおり	-	-	x	x	n/a	n/a	-
+こおり	x	x	x	x	n/a	n/a	x
