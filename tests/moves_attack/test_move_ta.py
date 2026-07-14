@@ -260,7 +260,7 @@ def test_タネマシンガン_ヒット数が2から5の範囲で決まる(roll
     )
     battle.random.random = lambda: roll
     hit_count = battle.move_executor._resolve_hit_count(
-        t.build_context(battle, atk_idx=0)
+        t.build_context(battle, player_idx=0)
     )
     assert hit_count == expected
 
@@ -1130,7 +1130,7 @@ def test_つっぱり_複数ヒットする():
         accuracy=100,
     )
     hit_count = battle.move_executor._resolve_hit_count(
-        t.build_context(battle, atk_idx=0)
+        t.build_context(battle, player_idx=0)
     )
     assert 2 <= hit_count <= 5
 
@@ -1219,7 +1219,7 @@ def test_つららばり_複数ヒットする():
         accuracy=100,
     )
     hit_count = battle.move_executor._resolve_hit_count(
-        t.build_context(battle, atk_idx=0)
+        t.build_context(battle, player_idx=0)
     )
     assert 2 <= hit_count <= 5
 
@@ -2680,7 +2680,7 @@ def test_トリプルダイブ_3回固定でヒットする():
         accuracy=100,
     )
     hit_count = battle.move_executor._resolve_hit_count(
-        t.build_context(battle, atk_idx=0)
+        t.build_context(battle, player_idx=0)
     )
     assert hit_count == 3
 

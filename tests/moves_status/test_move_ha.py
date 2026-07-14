@@ -656,7 +656,7 @@ def test_バトンタッチ_ちょうはつは引き継がれない():
     attacker = battle.actives[0]
     battle.volatile_manager.apply(attacker, "ちょうはつ", count=3)
 
-    ctx = t.build_context(battle, atk_idx=0)
+    ctx = t.build_context(battle, player_idx=0)
     ctx.move.register_handlers(battle.events, attacker)
     battle.events.emit(Event.ON_STATUS_HIT, ctx, True)
     ctx.move.unregister_handlers(battle.events, attacker)

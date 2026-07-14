@@ -106,3 +106,31 @@
   非表示になることを確認）、`tests/test_examples_smoke.py`（全examplesをサブプロセス実行し
   returncode==0を確認する既存テスト、24件）を実行して全件パスを確認した。
   `python -m pytest tests/ -v`で5829件全件パス・1件skip（既存のflaky無し）を確認した。
+- [x] `jpoke.testing`のインデックス引数名が`build_context`/`run_move`/`calc_lethal`は
+  `atk_idx`、`apply_ailment`は`active_index`、`calc_move_priority`は`player_index`、
+  `run_switch`/`can_switch`は`player_idx`と4通りに分裂しており、覚えた引数名を
+  別の関数にそのまま使い回すと`TypeError`になる罠だった（developer視点、id: r8-5） →
+  対応内容 (2026-07-14): `src/jpoke/testing.py`の`build_context`/`run_move`/`calc_lethal`の
+  `atk_idx`、`apply_ailment`の`active_index`、`calc_move_priority`の`player_index`を
+  すべて`player_idx`にリネームし、6関数（`build_context`/`run_move`/`calc_lethal`/
+  `run_switch`/`can_switch`/`apply_ailment`/`calc_move_priority`）全てで統一した
+  （`run_switch`/`can_switch`は元から`player_idx`）。呼び出し側のキーワード引数
+  （`tests/abilities/test_ability_sa.py`・`tests/items/test_item_ma.py`・
+  `tests/moves_attack/test_move_{fa,ha,ma,sa,ta,yarawa}.py`・
+  `tests/moves_status/test_move_ha.py`・`tests/test_damage.py`・`tests/test_lethal.py`
+  （138件）・`tests/test_poke_env_compat.py`・
+  `examples/03_damage_calc/09_testing_helpers.py`）を新引数名に一括置換し、
+  `docs/api/README.md`・`README.md`・`tests/CLAUDE.md`のサンプルコード・API表も
+  合わせて更新した。公開APIのシグネチャ変更（引数名変更）に伴う破壊的変更のため
+  `CHANGELOG.md`の`[Unreleased]`/`Changed`に追記した。レビューでリポジトリ全体を
+  再度grepし、`atk_idx=`・`active_index=`（`PlayerState.active_index`属性等の
+  無関係な用途を除く）・`player_index=`（`RecordedCommand.player_index`フィールド等の
+  無関係な用途を除く）でのキーワード呼び出し漏れが無いことを確認した。
+  `tests/test_testing_api.py`を新規作成し、7関数（`build_context`/`run_move`/
+  `run_switch`/`can_switch`/`apply_ailment`/`calc_lethal`/`calc_move_priority`）
+  それぞれを`player_idx=`キーワードで呼び出して正常動作することを検証する回帰テストを
+  追加した。`python scripts/sort_tests.py tests/test_testing_api.py`・
+  `python scripts/generate_test_list.py`を実行し、
+  `python examples/03_damage_calc/09_testing_helpers.py`が従来通り正常終了することを
+  確認した。`python -m pytest tests/ -v`で5836件全件パス・1件skip（既存のflaky無し）を
+  確認した。
