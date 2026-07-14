@@ -4686,8 +4686,17 @@ def わざわいのおふだ_reduce_A(battle: Battle, ctx: AttackContext, value:
 
 
 def わざわいのたま_reduce_D(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """わざわいのたま特性: 自分以外の特防補正を0.75倍にする。"""
-    if ctx.attacker is not ctx.defender:
+    """わざわいのたま特性: 自分以外の特防補正を0.75倍にする。
+
+    とくぼうが参照される技のみが対象（物理技のぼうぎょは参照されないため対象外）。
+    ボディプレス/サイコショック/サイコブレイク等、参照する防御側ステータスが
+    分類と食い違う技は _calc_final_defense と同じ
+    battle.query.deals_physical_damage 判定を使うことで正しく扱える。
+    """
+    if (
+        ctx.attacker is not ctx.defender
+        and not battle.query.deals_physical_damage(ctx.attacker, ctx.move)
+    ):
         value = apply_fixed_modifier(value, 3072)
     return HandlerReturn(value=value)
 
