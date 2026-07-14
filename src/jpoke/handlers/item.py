@@ -903,6 +903,9 @@ def くろいてっきゅう_negate_floating(_battle: Battle, _ctx: EventContext
 def くろいヘドロ_heal_or_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     mon = ctx.source
     assert mon is not None
+    # ひんし(HP0)になったときは発動しない（同ターンの攻撃等で先にHPが0になった場合を含む）
+    if mon.fainted:
+        return HandlerReturn(value=value)
     r = 1/16 if mon.has_type("どく") else -1/8
     if battle.modify_hp(mon, r=r):
         _announce_item_triggered(battle, mon)
@@ -1222,6 +1225,9 @@ def たつじんのおび_boost_super_effective(battle: Battle, ctx: AttackConte
 def たべのこし_heal(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """たべのこし: ターン終了時HP回復"""
     mon = ctx.source
+    # ひんし(HP0)になったときは発動しない（同ターンの攻撃等で先にHPが0になった場合を含む）
+    if mon.fainted:
+        return HandlerReturn(value=value)
     if battle.modify_hp(mon, r=1/16):
         _announce_item_triggered(battle, mon)
     return HandlerReturn(value=value)

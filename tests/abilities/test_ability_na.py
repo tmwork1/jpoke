@@ -167,6 +167,27 @@ def test_にげごし_ちからずくの技のダメージでも発動する():
     assert battle.player_states[player].interrupt == Interrupt.EMERGENCY
 
 
+def test_にげごし_にげられない付与と同時にHP半分以下になっても交代できる():
+    """くらいつくのようにダメージ付与とにげられない付与を同時に行う技を受けた場合でも、
+    docs/spec/abilities/にげごし.md「特性かげふみ/ありじごく/じりょくの影響や、
+    にげられない/バインド/ねをはる/フェアリーロック状態の効果を無視して発動する」の通り
+    緊急交代できる（fuzz seed=3318 で発見された IndexError の回帰確認。実際の再現要因技は
+    かげぬいだが、ダメージとにげられない付与を同時に行う点が同じくらいつくで代替する）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="にげごし"), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン", move_names=["くらいつく"])],
+        accuracy=100,
+    )
+    defender = battle.actives[0]
+    # ひんしにせずHP半分をちょうど跨ぐ量だけダメージを与える（にげごし発動には
+    # 生存が必須のため、ダメージ量を固定して確実に半分超から半分以下へ遷移させる）。
+    defender.hp = defender.max_hp // 2 + 1
+    t.fix_damage(battle, 1)
+    battle.step()
+
+    assert battle.actives[0] is not defender
+
+
 def test_にげごし_はらだいこの自己HP消費では発動しない():
     """はらだいこのHP消費(self_cost)ではにげごしが発動しない。"""
     battle = t.start_battle(
@@ -179,6 +200,24 @@ def test_にげごし_はらだいこの自己HP消費では発動しない():
 
     player = battle.players[0]
     assert battle.player_states[player].interrupt == Interrupt.NONE
+
+
+def test_にげごし_バインド状態でも交代できる():
+    """既にバインド状態でにげごしの発動条件（HP半分以下）を満たした場合も、
+    docs/spec/abilities/にげごし.md の記載通りとらわれ状態を無視して交代が発動する
+    （`_trigger_emergency_switch` が `can_switch` ではなく `has_available_bench` で
+    判定するようにした回帰確認）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="にげごし"), Pokemon("ライチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"バインド": 4},
+    )
+    defender = battle.actives[0]
+    defender.hp = defender.max_hp // 2 + 1
+    battle.modify_hp(defender, v=-1, source=battle.actives[1], reason="move_damage")
+
+    player = battle.players[0]
+    assert battle.player_states[player].interrupt == Interrupt.EMERGENCY
 
 
 def test_にげごし_みがわりの自己HP消費では発動しない():

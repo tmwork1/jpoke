@@ -31,6 +31,25 @@ def test_アクアリング_交代で解除():
     assert not mon.has_volatile("アクアリング")
 
 
+def test_アクアリング_同ターンに瀕死になったポケモンは回復しない():
+    """アクアリング: 同ターン中の攻撃で先にHPが0になったポケモンは、
+    ターン終了時のアクアリング回復を受けずに瀕死のままとなる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("コラッタ")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        volatile0={"アクアリング": 1},
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.run_move(battle, 1)
+    assert mon.hp == 0
+    assert mon.fainted
+    t.end_turn(battle)
+    assert mon.hp == 0
+    assert mon.fainted
+
+
 def test_アクアリング_回復():
     """アクアリング: ターン終了時回復"""
     battle = t.start_battle(

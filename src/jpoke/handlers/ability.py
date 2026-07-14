@@ -188,9 +188,16 @@ def _apply_contact_counter_chip(battle: Battle,
     return HandlerReturn(value=value)
 
 def _trigger_emergency_switch(battle: Battle, mon: Pokemon):
-    """緊急交代を発動する。"""
+    """緊急交代を発動する。
+
+    docs/spec/abilities/にげごし.md の通り、控えのポケモンがいない場合のみ
+    発動しない。特性かげふみ/ありじごく/じりょくの影響や、にげられない/バインド/
+    ねをはる/フェアリーロック状態の効果は無視して発動するため、`can_switch`
+    （とらわれ状態を考慮する）ではなく `has_available_bench`
+    （生存している控えの有無のみを見る）で判定する。
+    """
     player = battle.get_player(mon)
-    if battle.query.can_switch(player):
+    if battle.query.has_available_bench(player):
         battle.player_states[player].interrupt = Interrupt.EMERGENCY
         _announce_ability_triggered(battle, mon=mon)
 
@@ -443,6 +450,9 @@ def アイスフェイス_restore_on_switch_in(battle: Battle, ctx: EventContext
 def アイスボディ_heal(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """アイスボディ特性: ゆき中にターン終了時に最大HPの1/16を回復する。"""
     mon = ctx.source
+    # ひんし(HP0)になったときは発動しない（同ターンの攻撃等で先にHPが0になった場合を含む）
+    if mon.fainted:
+        return HandlerReturn(value=value)
     if (
         battle.weather.name == "ゆき"
         and battle.modify_hp(mon, r=1/16)
@@ -529,6 +539,9 @@ def あめうけざら_heal(battle: Battle, ctx: EventContext, value: Any) -> Ha
     ばんのうがさを持つ場合は雨の恩恵を受けない。
     """
     mon = ctx.source
+    # ひんし(HP0)になったときは発動しない（同ターンの攻撃等で先にHPが0になった場合を含む）
+    if mon.fainted:
+        return HandlerReturn(value=value)
     if not battle.weather_for(mon).rainy:
         return HandlerReturn(value=value)
 
@@ -1089,6 +1102,9 @@ def かんそうはだ_change_hp_by_weather(battle: Battle, ctx: EventContext, v
     ばんのうがさを持つ場合は晴れダメージ・雨回復を受けない。
     """
     mon = ctx.source
+    # ひんし(HP0)になったときは発動しない（同ターンの攻撃等で先にHPが0になった場合を含む）
+    if mon.fainted:
+        return HandlerReturn(value=value)
     weather = battle.weather_for(mon)
 
     # あめ中は最大HPの1/8回復

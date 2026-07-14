@@ -84,6 +84,10 @@ def こおり_cure_by_thaw_move(battle: Battle, ctx: AttackContext, value: Any) 
 def どく_damage(battle: Battle, ctx: EventContext, value: Any):
     """どく状態によるターン終了時ダメージ（最大HPの1/8、最小1）。"""
     mon = ctx.source
+    # ひんし(HP0)になったときは発動しない（同ターンの攻撃等で先にHPが0になった場合を含む。
+    # ポイズンヒール特性はこのダメージを回復に変換するため、瀕死ポケモンの蘇生を防ぐ必要がある）
+    if mon.fainted:
+        return HandlerReturn(value=value)
     damage = max(1, mon.max_hp // 8)
     battle.modify_hp(mon, v=-damage, reason="poison")
     return HandlerReturn(value=value)
@@ -142,8 +146,12 @@ def もうどく_damage(battle: Battle, ctx: EventContext, value: Any):
     ダメージ量: max(1, 最大HP × min(15, 経過ターン数) // 16)
     経過ターン数の上限は15（最大ダメージは最大HP × 15/16）。
     """
-    battle.ailment_manager.tick(ctx.source)
     mon = ctx.source
+    # ひんし(HP0)になったときは発動しない（同ターンの攻撃等で先にHPが0になった場合を含む。
+    # ポイズンヒール特性はこのダメージを回復に変換するため、瀕死ポケモンの蘇生を防ぐ必要がある）
+    if mon.fainted:
+        return HandlerReturn(value=value)
+    battle.ailment_manager.tick(mon)
     turns = min(15, mon.ailment.elapsed_turns)
     damage = max(1, mon.max_hp * turns // 16)
     battle.modify_hp(mon, v=-damage, reason="poison")

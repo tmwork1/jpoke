@@ -118,7 +118,7 @@ def main() -> None:
     if n_skipped:
         print(f"未捕捉例外によりスキップしたバトル数: {n_skipped}（完全ランダム編成のエッジケース。scripts/fuzz_battle.py 参照）")
     print(f"stepサンプル数: {n}")
-    print(f"1step所要時間: {mean * 1000:.3f} ms ± {sigma * 1000:.3f} ms (mean ± σ)")
+    print(f"1step所要時間: ({mean * 1000:.1f} ± {sigma * 1000:.1f}) ms")
     print(f"battles/sec: {n_ok / total:.1f}")
     print(f"turns/sec: {n / total:.1f}")
 

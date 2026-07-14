@@ -39,11 +39,13 @@ def main() -> None:
         print("-" * 50)
 
     winner = battle.winner
+    # TODO: 01_quickstart.py の表示と形式をそろえる。
     if winner is None:
         print(f"結果: 決着つかず（{max_turns}ターン経過）")
     else:
         print(f"結果: {winner.username} 勝利（{battle.turn}ターン）")
 
+    # TODO: ログの解析は別のサンプルコードに分ける。
     # print_logs/get_log_lines は文字列化済みログだが、get_event_logs(turn) は
     # LogCode付きの構造化ログ（EventLog）をそのまま返す。特定の種類のイベント
     # （ここでは急所発生）だけをプログラムで抽出したい場合に使う
@@ -62,12 +64,14 @@ def main() -> None:
     else:
         print("このseedでは急所は発生しなかった")
 
+    # TODO: Tips系は別のサンプルコードに分ける。
     # ポケモンごとに持てる特性は POKEDEX[name].abilities で確認できる
     # （通常特性1・2・隠れ特性の順）。ability_name を省略しても特性は自動設定されず、
     # 空文字のままになる点に注意
     print("-" * 50)
     print(f"ライチュウが持てる特性: {POKEDEX['ライチュウ'].abilities}")
 
+    # TODO: ミニバトルのサンプルコードは必要か？必要だとしても別ファイルに分けるべき。
     # 「ひらいしん」（でんきタイプの技を無効化し、とくこうを1段階上げる）の効果を
     # 決定論的な1ターンのミニバトルで確認する
     ability_player1 = Player("Team A")

@@ -53,15 +53,22 @@ class CommandManager:
             退場処理（バインドなどの揮発性状態解除）より前に交代コマンドを解決するため、
             とらわれ状態の判定に瀕死ポケモン自身のバインド等が残っていても交代を
             妨げてはならない。
+            ききかいひ・にげごしによる緊急交代（EMERGENCY）も同様にスキップする。
+            docs/spec/abilities/にげごし.md「特性かげふみ/ありじごく/じりょくの影響や、
+            にげられない/バインド/ねをはる/フェアリーロック状態の効果を無視して発動する」
+            の通り、ダメージを受けた技自身がにげられない等を同時に付与した場合でも
+            交代先を選べなければならない。
         """
         state = self.battle.player_states[player]
-        # PIVOT（バトンタッチ等）・だっしゅつパック・だっしゅつボタン・瀕死交代発動中や
-        # 強制交代技（force=True）はとらわれ状態に関わらず交代可能
+        # PIVOT（バトンタッチ等）・だっしゅつパック・だっしゅつボタン・瀕死交代・
+        # ききかいひ/にげごしの緊急交代発動中や強制交代技（force=True）は
+        # とらわれ状態に関わらず交代可能
         if (
             not force
             and state.interrupt != Interrupt.PIVOT
             and state.interrupt != Interrupt.EJECTBUTTON
             and state.interrupt != Interrupt.FAINTED
+            and state.interrupt != Interrupt.EMERGENCY
             and not state.interrupt.name.startswith("EJECTPACK")
         ):
             if not self.battle.query.can_switch(player):
