@@ -140,7 +140,9 @@ class Command(Enum):
                 return self.name[:-2] == "SWITCH"
         raise ValueError(f"Invalid command type: {command_type}")
 
+    @property
     def is_switch(self) -> bool:
+        """交代コマンドかどうか"""
         return self.name[:-2] == "SWITCH"
 
     @property

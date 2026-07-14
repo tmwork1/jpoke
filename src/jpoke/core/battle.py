@@ -1561,4 +1561,4 @@ class Battle:
             return []
         commands = self.get_available_commands(self.observer)
         team = self.player_states[self.observer].team
-        return [team[cmd.index] for cmd in commands if cmd.is_switch()]
+        return [team[cmd.index] for cmd in commands if cmd.is_switch]
