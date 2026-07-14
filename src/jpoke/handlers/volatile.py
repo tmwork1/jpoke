@@ -1282,6 +1282,7 @@ def みがわり_block_damage(battle: Battle, ctx: EventContext, value: Any) -> 
     volatile = ctx.defender.volatiles["みがわり"]
     damage = min(volatile.hp, damage)
     volatile.hp -= damage
+    assert volatile.hp >= 0, f"みがわりHPが負値: {volatile.hp}"
 
     # みがわりに与えたダメージをコンテキストに保存しておく（後の処理で使用するため）
     ctx.substitute_damage = damage
