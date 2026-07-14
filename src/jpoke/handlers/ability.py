@@ -4711,8 +4711,13 @@ def わざわいのたま_reduce_D(battle: Battle, ctx: AttackContext, value: in
 
 
 def わざわいのつるぎ_reduce_B(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """わざわいのつるぎ特性: 自分以外の防御補正を0.75倍にする。"""
-    if ctx.attacker is not ctx.defender:
+    """わざわいのつるぎ特性: 自分以外の防御補正を0.75倍にする。
+    防御側自身がわざわいのつるぎを持つ場合（コピー・交換等による取得を含む）は対象外。
+    """
+    if (
+        ctx.attacker is not ctx.defender
+        and ctx.defender.ability.name != "わざわいのつるぎ"
+    ):
         value = apply_fixed_modifier(value, 3072)
     return HandlerReturn(value=value)
 
