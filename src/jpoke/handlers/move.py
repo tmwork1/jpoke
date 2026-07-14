@@ -74,11 +74,18 @@ def modify_defender_stats(battle: Battle,
 
     modify_attacker_stats と同様、value の型（bool か否か）でON_STATUS_HITと
     ON_HITを区別し、ON_HITでは value（実際のダメージ量）を保持したまま返す。
+
+    防御側がこの技のダメージで瀕死になった場合、能力ランク変化の追加効果は
+    適用しない（実機仕様。AilmentManager.apply / VolatileManager.apply の
+    瀕死ガードと同様）。
     """
     chance = battle.resolve_secondary_chance(ctx, chance)
     if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn(value=value)
-    result = battle.modify_stats(ctx.defender, stats, source=ctx.attacker)
+    if ctx.defender.fainted:
+        result = {}
+    else:
+        result = battle.modify_stats(ctx.defender, stats, source=ctx.attacker)
     if isinstance(value, bool):
         return HandlerReturn(value=result)
     return HandlerReturn(value=value)
