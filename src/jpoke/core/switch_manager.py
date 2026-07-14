@@ -125,15 +125,25 @@ class SwitchManager:
             EventContext(source=mon)
         )
 
-        # だっしゅつパックのリクエストがなくなるまで再帰的に交代する。
-        #
-        # Note:
-        #     ループ条件は `Interrupt.EJECTPACK_REQUESTED` の有無に限定する必要がある。
-        #     `battle.has_interrupt()`（全プレイヤーの割り込み状態を問わず判定）を条件に
-        #     使うと、まだ処理順が回ってきていない別プレイヤーの交代技（PIVOT等）による
-        #     割り込みフラグが残っている間、このループが解消不能な条件で回り続けて
-        #     無限ループになる（このループが処理できるのは EJECTPACK_REQUESTED のみで、
-        #     PIVOT 等の他の割り込み種別はここでは解決されないため）。
+        self._resolve_ejectpack_after_switch()
+
+    def _resolve_ejectpack_after_switch(self):
+        """だっしゅつパックのリクエストがなくなるまで再帰的に交代する。
+
+        ON_SWITCH_INイベント発火後（着地処理後）に新たに発生した
+        `Interrupt.EJECTPACK_REQUESTED` を解決する。`_process_events_after_switch`
+        （通常の交代経路）と `run_interrupt_switch` の遅延発火経路
+        （`process_event_on_each_switch=False`、瀕死交代で使用）の両方から
+        呼ばれる共通処理。
+
+        Note:
+            ループ条件は `Interrupt.EJECTPACK_REQUESTED` の有無に限定する必要がある。
+            `battle.has_interrupt()`（全プレイヤーの割り込み状態を問わず判定）を条件に
+            使うと、まだ処理順が回ってきていない別プレイヤーの交代技（PIVOT等）による
+            割り込みフラグが残っている間、このループが解消不能な条件で回り続けて
+            無限ループになる（このループが処理できるのは EJECTPACK_REQUESTED のみで、
+            PIVOT 等の他の割り込み種別はここでは解決されないため）。
+        """
         while any(
             state.interrupt == Interrupt.EJECTPACK_REQUESTED
             for state in self.battle.player_states.values()
@@ -210,6 +220,13 @@ class SwitchManager:
             player = self.battle.get_player(mon)
             if player in switched_players:
                 self._events.emit(Event.ON_SWITCH_IN, EventContext(source=mon))
+
+        # 上記の着地処理（例: ねばねばネットによるすばやさ低下）でだっしゅつパックの
+        # 発動条件が新たに満たされた場合、ここで解決しないと `Interrupt.EJECTPACK_REQUESTED`
+        # が誰にも処理されないまま残留し、次ターンの `is_new_turn()` 判定を壊してしまう
+        # （fuzz seed=23090 で発見）。通常の交代経路（`_process_events_after_switch`）と
+        # 同じ処理を、この遅延発火経路（瀕死交代で使用）でも行う。
+        self._resolve_ejectpack_after_switch()
 
     def run_faint_switch(self, _depth: int = 0):
         """瀕死による交代を実行。

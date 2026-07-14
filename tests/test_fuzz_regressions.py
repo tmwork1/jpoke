@@ -543,6 +543,56 @@ def test_ターン終了処理_決着ターンでは継続ダメージのON_TURN
     assert len(hp_changed_logs) == 1  # たいあたりの反撃分のみ（毒ダメージ分の追加ログが無い）
 
 
+def test_だっしゅつパック_瀕死交代の遅延ON_SWITCH_IN中に発生した割り込みが同一ターン内で解決される():
+    """seed=23090 player=random (InvalidCommandError@battle.py:step:887) の回帰テスト。
+
+    SwitchManager.run_faint_switch() は run_interrupt_switch(Interrupt.FAINTED, False)
+    で瀕死交代を処理する。process_event_on_each_switch=False のこの経路は、
+    通常の交代経路（_process_events_after_switch）と異なり、ON_SWITCH_INの発火を
+    交代したプレイヤー全員分まとめて遅延させる。修正前はこの遅延発火の直後に
+    新たに Interrupt.EJECTPACK_REQUESTED が発生しても誰にも解決されず残留していた。
+
+    瀕死交代で場に出ただっしゅつパック持ちが、入場時効果（ねばねばネットによる
+    すばやさ低下）でだっしゅつパックの発動条件を満たすと、この経路で
+    EJECTPACK_REQUESTEDが立つ。修正前はこれが解決されずに残留し、
+    battle.is_new_turn()（=not has_interrupt()）がFalseのままになり、
+    次のbattle.step()がcommands=Noneで呼ばれてInvalidCommandErrorになっていた。
+
+    修正後は run_interrupt_switch の process_event_on_each_switch=False 分岐でも
+    _resolve_ejectpack_after_switch()（通常経路と共通化した解決処理）が呼ばれるため、
+    だっしゅつパックの強制交代が同一ターン内で解決され、次ターンへ正常に
+    進行することを確認する。
+    """
+    battle = t.start_battle(
+        team0=[
+            Pokemon("ピカチュウ", move_names=["たいあたり"]),
+            Pokemon("コラッタ", item_name="だっしゅつパック"),
+            Pokemon("ポッポ"),
+        ],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        side0={"ねばねばネット": 1},
+        accuracy=100,
+    )
+    player0, player1 = battle.players
+    attacker0 = battle.actives[0]
+    attacker0.hp = 1  # 相手の一撃で確実に瀕死になるようにしておく
+    t.fix_damage(battle, 1)
+
+    # Turn1: ピカチュウが瀕死になり、コラッタ(だっしゅつパック)が瀕死交代で場に出る。
+    # ねばねばネットの入場時すばやさ低下でだっしゅつパックの発動条件を満たし、
+    # ポッポへの強制交代が発生する。修正前はこのEJECTPACK_REQUESTEDが
+    # 解決されずに残留していた。
+    battle.step(commands={player0: Command.MOVE_0, player1: Command.MOVE_0})
+
+    assert battle.actives[0].name == "ポッポ"  # だっしゅつパックで自動的に交代済み
+    assert battle.player_states[player0].interrupt == Interrupt.NONE
+
+    # 修正前はここでInvalidCommandErrorになっていた
+    # （is_new_turn()がFalseのままcommands=Noneでstep()が呼ばれるため）。
+    battle.step()
+    assert battle.turn == 2
+
+
 def test_だっしゅつパック_自分の番より後の割り込み交代で残った予約コマンドが次ターンに持ち越されない():
     """seed=1755 player=random (IndexError@command_manager.py:resolve_move_from_command:149) の回帰テスト。
 
