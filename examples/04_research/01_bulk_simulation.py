@@ -38,8 +38,7 @@ def main() -> None:
         player.battle_against(build_opponent(), n_battles=n_battles, seed=1)
 
         print(
-            f"{item_name}: {player.n_won_battles}勝{player.n_lost_battles}敗/{player.n_finished_battles}戦"
-            f"（勝率 {player.win_rate:.1%}）"
+            f"{item_name}: {player.n_won_battles}勝{player.n_lost_battles}敗 (勝率 {player.win_rate:.0%})"
         )
         # n_tied_battles はpoke-env互換のため用意されているが、jpokeに引き分けは
         # 存在しないため常に0（n_lost_battles = n_finished_battles - n_won_battles - n_tied_battles）

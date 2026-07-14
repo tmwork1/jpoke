@@ -2,6 +2,9 @@
 
 03の3体チームバトルと同じ対戦を題材に、対戦後の調べ物によく使う2つの手段を示す。
 """
+# TODO: POKEDX の使い方だけでひとつのサンプルにまとめる
+# TODO: LogCode の使い方も単一のサンプルにして、すべての LogCode を列挙して説明する
+
 from __future__ import annotations
 
 from jpoke import Battle

@@ -12,10 +12,12 @@ def main() -> None:
     move_name = "ドラゴンテール"
 
     attacker_player = Player("Attacker")
+    # TODO: add_pokemon()でivsやevsなどを一通り設定できるようにする
+    # TODO: add_pokemon()の引数名の_nameは省略してもよいのではないか (Pokemonクラスの引数名と一貫性には注意)。
     attacker_player.add_pokemon("ガブリアス", move_names=[move_name])
 
     defender_player = Player("Defender")
-    defender_player.add_pokemon("カイリュー", item_name="オボンのみ")
+    defender_player.add_pokemon("カイリュー", ability_name="マルチスケイル")
 
     battle = Battle(attacker_player, defender_player, seed=1)
     battle.start()
@@ -36,8 +38,8 @@ def main() -> None:
         max_attack=5,  # 最大5回攻撃するまで計算する（確定数が出た時点で打ち切り）
     )
 
-    print(f"攻撃側: {attacker.name}（{move_name}, こうげき実数値 {attacker.stats['atk']}）")
-    print(f"防御側: {defender.name}（HP {defender.max_hp}, オボンのみ）")
+    print(f"Attacker: {attacker.name} A{attacker.stats['atk']}, ability={attacker.ability.name}, item={attacker.item.name}")
+    print(f"Defender: {defender.name} H{defender.max_hp}/B{defender.stats['def']}/D{defender.stats['spd']}, ability={defender.ability.name}, item={defender.item.name}")
     print("-" * 50)
 
     for result in results:

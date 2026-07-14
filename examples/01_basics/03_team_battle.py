@@ -27,6 +27,7 @@ def main() -> None:
     battle.start()
 
     max_turns = 30
+    # TODO: battle.finished(max_turn=30)のように、ターン上限を指定してfinished判定できるようにする
     while not battle.finished and battle.turn < max_turns:
         battle.step()
         battle.print_logs()

@@ -29,9 +29,11 @@ def main() -> None:
     # max_plies は木探索の深さ（何手先まで読むか）。2にすると相手の応手まで読むが、
     # 分岐が自分の合法手数×相手の合法手数倍に増えるため max_nodes も合わせて調整が必要
     ai_player = KOFocusedPlayer("TreeSearchAI", max_plies=1, max_nodes=50)
+    # TODO: 相手を瀕死にできる技とそうでない技を混ぜて、AIがどの技を選ぶか観察できるようにする
     ai_player.add_pokemon("カビゴン", move_names=["のしかかり", "じしん"])
 
     random_player = RandomPlayer("RandomPlayer")
+    # TODO: 弱点をつける相手ポケモンに変更する。ピカチュウなど。
     random_player.add_pokemon("カビゴン", move_names=["たいあたり", "からげんき"])
 
     battle = Battle(ai_player, random_player, seed=1)
