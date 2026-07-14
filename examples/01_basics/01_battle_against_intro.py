@@ -20,12 +20,15 @@ def main() -> None:
     # battle_against()は各対戦のBattleを内部で使い捨てるため戻り値はNone。
     # 対戦後のBattleインスタンス自体（ログ等）にアクセスしたい場合は
     # on_battle_end コールバックを渡す（docs/api/README.md の battle_against() 節、
-    # 05_benchmark/01_step_time_benchmark.py の進捗表示例を参照）
-    player1.battle_against(player2, seed=1)
+    # 05_benchmark/01_step_time_benchmark.py の進捗表示例を参照）。ここでは
+    # 最小例として対戦ログを1行で表示するだけにとどめる。
+    # lambda battle: ... は「battleを受け取ってbattle.print_logs("all")を実行するだけの
+    # 名前のない小さな関数」を、defで別途定義せずその場に書ける記法
+    player1.battle_against(
+        player2, seed=1, on_battle_end=lambda battle: battle.print_logs("all")
+    )
 
-    # TODO: battle.print_logs("all") でログを表示する
-    # TODO: print文を短くまとめる
-    print(f"player1: {player1.n_won_battles}勝{player1.n_lost_battles}敗/{player1.n_finished_battles}戦")
+    print(f"player1: 勝率{player1.win_rate:.0%}（{player1.n_finished_battles}戦）")
 
     # 試してみよう: n_battles=10 のように指定すると、同じ相手と複数回対戦させて
     # 勝率を見られる（対戦ごとに異なる展開になるようseedが自動的にずらされる）

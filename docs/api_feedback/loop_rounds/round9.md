@@ -21,3 +21,18 @@
   `examples/01_basics/05_hazards_and_explicit_commands.py`を実行し、docstringの説明内容と
   実際の出力が一致することを確認した。`python -m pytest tests/ -v`で5848件全件パス・
   1件skip（既存件数のまま、flaky testの新規発生なし）を確認した。
+- [x] `examples/01_basics/01_battle_against_intro.py`に残っていた
+  「TODO: battle.print_logs("all") でログを表示する」「TODO: print文を短くまとめる」の2件（id: r9-2）
+  → 対応内容 (2026-07-15): `battle_against()`に
+  `on_battle_end=lambda battle: battle.print_logs("all")`を渡して対戦後ログを表示する例に変更し、
+  print文を`player1.win_rate`を使った1行（`勝率{:.0%}（{n_finished_battles}戦）`）に整理した。
+  レビューの過程で、本ファイルが最初の入門サンプルであり、過去のフィードバックで
+  「関数の中に関数」「lambda」がPython初心者には難しいと指摘されていた点を踏まえ、
+  defによる関数定義への置き換え（別途トップレベル関数を増やすことになり概念負担が増える）ではなく、
+  `lambda battle: ...`が「その場で書ける名前のない小さな関数」であることを簡潔に説明する
+  コメントを追加する対応にとどめた。`PYTHONUTF8=1 python
+  examples/01_basics/01_battle_against_intro.py`を実行し、対戦ログの表示と
+  勝率表示（`player1: 勝率100%（1戦）`）が正しく出力されることを確認した。
+  ロジック変更を伴う公開APIの追加・変更は無いため`docs/api/README.md`の更新は不要と判断した。
+  `python -m pytest tests/ -v`で5848件全件パス・1件skip（既存件数のまま、flaky testの新規発生なし）
+  を確認した。
