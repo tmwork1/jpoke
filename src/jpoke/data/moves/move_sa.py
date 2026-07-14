@@ -998,10 +998,14 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "スケッチ": MoveData(
         type="ノーマル",
         category="status",
-        pp=0,
-        accuracy=100,
-        flags={"non_encore", "non_negoto"},
-        handlers={},  # 追加効果なし
+        pp=1,  # champions/moves.mdに記載なし。Gen9本家基準の値をそのまま採用
+               # （ものまね・ゆびをふる等、Championsに記載のない技コピー系の技と同様）。
+        # accuracy省略=必中。潜伏中の相手への失敗はHIDDEN_MOVE_ALLOWED_MOVES側で処理される。
+        flags={"non_encore", "non_negoto", "non_copycat", "unprotectable", "unreflectable"},
+        # 実装保留: 相手が最後に使った技を技スロットへ恒久的に追加する技コピー機構
+        # （ものまねの一時差し替えより復元条件が複雑）が必要なため対応を見送る。
+        # 詳細は docs/plan/moves/スケッチ.md 参照（前例: へんしん・ものまね・ゆびをふる）。
+        handlers={},
     ),
     "スチームバースト": MoveData(
         type="みず",

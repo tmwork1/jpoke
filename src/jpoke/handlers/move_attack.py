@@ -108,8 +108,33 @@ def アイアンローラー_clear_terrain_on_zero_damage(battle: Battle, ctx: A
 
 
 def アイススピナー_clear_terrain(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """アイススピナー: ダメージ後にフィールドを解除する。"""
+    """アイススピナー: ダメージ後にフィールドを解除する。
+
+    使用者がいのちのたまの反動・ゴツゴツメット・さめはだ等、自身へのダメージ処理中に
+    ひんしになった場合はフィールドを解除しない（一次情報: docs/wiki/moves/アイススピナー.html
+    技の仕様節「自分のいのちのたまの反動で使用者がひんしになったときはフィールドを
+    解除できない」）。
+    """
+    if ctx.attacker.fainted:
+        return HandlerReturn(value=value)
     battle.terrain_manager.remove()
+    return HandlerReturn(value=value)
+
+
+def アイススピナー_clear_terrain_on_zero_damage_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """アイススピナー: みがわり/ばけのかわ/アイスフェイスにダメージを肩代わりされた場合、
+    フィールドを解除する。
+
+    これらの場合は実際のダメージが0になり Event.ON_DAMAGE_HIT が発火しないため、
+    ヒット自体は必ず発火する Event.ON_HIT（value=実際のダメージ量）側で
+    value == 0 のときのみ解除処理を行う（一次情報: docs/wiki/moves/アイススピナー.html
+    技の仕様節「対象のみがわり状態や、特性ばけのかわ/アイスフェイスにダメージを
+    肩代わりされたときはフィールドを解除できる」）。
+    使用者がいのちのたまの反動でひんしになった場合はフィールドを解除しない
+    （`アイススピナー_clear_terrain` と同じ理由）。
+    """
+    if value == 0 and not ctx.attacker.fainted:
+        battle.terrain_manager.remove()
     return HandlerReturn(value=value)
 
 
