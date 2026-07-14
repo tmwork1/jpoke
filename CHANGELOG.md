@@ -121,6 +121,11 @@
 
 ### Fixed
 
+- `docs/api/README.md` の `Command` 章「インスタンスプロパティ・メソッド」表に
+  `is_type(command_type)`（`examples/02_ai/01_custom_player.py` で使用している、
+  `"any"` / `"move"` / `"switch"` を指定できる汎用の種別判定メソッド）が掲載されて
+  いなかったため追記。`is_regular_move` との違い（`"move"` は通常技コマンドに加え、
+  テラスタル・メガシンカ・ダイマックス・Zワザを伴う技コマンドも含む）も明記した
 - README.md の「クイックスタート」節が `while battle.judge_winner() is None and
   battle.turn < 100:` / `winner = battle.judge_winner()` という旧パターンのままで、
   `examples/01_basics/02_quickstart.py`（docstringで「READMEのクイックスタートと

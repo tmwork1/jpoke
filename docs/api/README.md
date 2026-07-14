@@ -503,6 +503,7 @@ battle.step({player: switch_command, opponent: Command.MOVE_0})
 
 | API | 概要 |
 |---|---|
+| `is_type(command_type)` | 指定した種別（`"any"` / `"move"` / `"switch"`）かどうか。`"move"` は通常技コマンドに加え、テラスタル・メガシンカ・ダイマックス・Zワザを伴う技コマンドも含む（`is_regular_move` は通常技コマンドのみ） |
 | `is_regular_move` (property) | 技コマンド（`MOVE_*`）かどうか |
 | `is_switch()` | 交代コマンド（`SWITCH_*`）かどうか |
 | `is_terastal` (property) | テラスタルコマンドかどうか |
