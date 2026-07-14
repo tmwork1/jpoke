@@ -64,10 +64,12 @@ PYTHONUTF8=1 python examples/01_basics/01_battle_against_intro.py
 | `03_damage_calc/11_form_change_comparison.py` | `Pokemon.set_form()` によるフォルム変化（ロトムの姿）がタイプ・種族値の違いを通じてダメージ・致死率に与える影響の比較 | ダメージ計算ツール開発 |
 | `04_research/01_bulk_simulation.py` | `Player.battle_against()` による多数回対戦・構成比較 | 戦術研究（構成比較） |
 | `04_research/02_replay.py` | `Battle.build_replay_data()` / `ReplayPlayer` / `replay_battle()` によるリプレイの記録・再生 | 戦術研究（対戦の記録・解析） |
-| `04_research/03_janken_nash_cfr.py` | `Battle.copy()` を使ったロールアウトベースのregret matching（CFR風）による、HP状況に応じた適応的な戦略の自己対戦学習 | 戦術研究（読み合いの定量分析、発展） |
-| `04_research/04_janken_nash_fictitious_play.py` | 実バトルのモンテカルロ推定 + 反復最適反応（fictitious play）によるNash均衡（固定の混合戦略）の近似、`ProcessPoolExecutor` による並列化 | 戦術研究（読み合いの定量分析、発展） |
+| `04_research/03_janken_nash_fictitious_play.py` | 実バトルのモンテカルロ推定 + 反復最適反応（fictitious play）によるNash均衡（固定の混合戦略）の近似、`ProcessPoolExecutor` による並列化 | 戦術研究（読み合いの定量分析、発展） |
+| `04_research/04_janken_nash_cfr.py` | `Battle.copy()` を使ったロールアウトベースのregret matching（CFR風）による、HP状況に応じた適応的な戦略の自己対戦学習 | 戦術研究（読み合いの定量分析、発展） |
 | `05_benchmark/01_step_time_benchmark.py` | 完全ランダムな3vs3全選出バトルを繰り返し実行し、`Battle.step()` 1回あたりの所要時間（mean ± σ）を計測 | 計算速度の計測 |
 
-`04_research/03_janken_nash_cfr.py` / `04_research/04_janken_nash_fictitious_play.py` は
+`04_research/03_janken_nash_fictitious_play.py` / `04_research/04_janken_nash_cfr.py` は
 多数回のバトルシミュレーションを行うため、他のサンプルより実行に時間がかかる
-（手元ではそれぞれ数十秒・十数秒程度）。
+（手元ではそれぞれ十数秒・数十秒程度）。どちらも構文・ゲーム理論用語の両面で
+それまでのexamplesより難易度が上がるため、まず03（固定の混合戦略のNash均衡）を
+読んでから04（HP状況に応じた適応的な戦略）に進むと理解しやすい構成にしてある。
