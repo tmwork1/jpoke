@@ -18,7 +18,7 @@ from jpoke.data.type_chart import TYPE_MODIFIER
 from jpoke.data.pokedex import POKEDEX
 from jpoke.data.signature_items import PLATE_TO_TYPE
 from .ability import WISHIWASHI_SOLO, WISHIWASHI_SCHOOL
-from .item import berry_heal_amount, himeri_pp_restore_cap, is_ripen
+from .item import berry_heal_amount, himeri_pp_restore_cap, himeri_select_move_to_restore, is_ripen
 from .move import (
     apply_ailment_to_defender,
     apply_confusion_to_defender,
@@ -2200,7 +2200,7 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
         effect_applied = battle.volatile_manager.remove(ctx.defender, "こんらん")
     elif item_name == "ヒメリのみ":
         defender = ctx.defender
-        move = next((m for m in defender.moves if m.pp == 0), None)
+        move = himeri_select_move_to_restore(defender)
         if move is not None:
             move.pp = min(himeri_pp_restore_cap(defender), move.data.pp)
             effect_applied = True
@@ -3040,7 +3040,17 @@ def ぶきみなじゅもん_reduce_defender_pp(battle: Battle, ctx: AttackConte
         return HandlerReturn(value=value)
     mon = ctx.defender
     if mon.pp_consumed_move is not None:
-        mon.pp_consumed_move.modify_pp(-3)
+        move = mon.pp_consumed_move
+        move.modify_pp(-3)
+        # move.modify_pp は通常のPP消費経路（move_executor._consume_pp）を経由しないため、
+        # ここで改めて Event.ON_PP_CONSUMED を発火し、ヒメリのみ等の「PPが0になったとき」
+        # 反応する効果を反応させる（一次情報: ヒメリのみは「うらみ/ぶきみなじゅもんの効果で
+        # PPが0になったときは発動する」）。
+        battle.events.emit(
+            Event.ON_PP_CONSUMED,
+            ctx.derive(attacker=mon, defender=battle.foe(mon), move=move),
+            move.pp,
+        )
     return HandlerReturn(value=value)
 
 

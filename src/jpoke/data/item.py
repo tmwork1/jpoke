@@ -1661,7 +1661,21 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_PP_CONSUMED: h.ItemHandler(
                 h.ヒメリのみ_restore_pp,
                 subject_spec="attacker:self",
-            )
+            ),
+            Event.ON_SWITCH_IN: h.ItemHandler(
+                h.ヒメリのみ_restore_pp_if_any_move_empty,
+                subject_spec="source:self",
+            ),
+            Event.ON_ITEM_ENABLED: h.ItemHandler(
+                h.ヒメリのみ_restore_pp_if_any_move_empty,
+                subject_spec="source:self",
+                priority=50,
+            ),
+            Event.ON_FORCE_BERRY_TRIGGER: h.ItemHandler(
+                h.ヒメリのみ_restore_pp_if_any_move_empty,
+                subject_spec="source:self",
+                priority=50,
+            ),
         }
     ),
     "ビアーのみ": ItemData(

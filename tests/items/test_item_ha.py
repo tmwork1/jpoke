@@ -585,6 +585,158 @@ def test_ひかりのねんど_非所持では5ターンのまま():
     assert side.get("リフレクター").count == 5
 
 
+def test_ヒメリのみ_PPが0になった技のPPを回復する():
+    """ヒメリのみ: 自分の技を使ってPPが0になったとき、その技のPPが回復し消費される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ヒメリのみ", move_names=["でんこうせっか"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    mon.moves[0].pp = 1
+    t.run_move(battle, 0)
+    assert mon.moves[0].pp == 10
+    assert not mon.has_item()
+
+
+def test_ヒメリのみ_PPが0でない場合は発動しない():
+    """ヒメリのみ: 技を使ってもPPが0にならない場合は発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ヒメリのみ", move_names=["でんこうせっか"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 0)
+    assert mon.moves[0].pp == 19
+    assert mon.has_item()
+
+
+def test_ヒメリのみ_場に出た直後にPPが0の技があれば発動する():
+    """ヒメリのみ: 場に出た直後にPPが0の技があった場合、即座に発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ヒメリのみ", move_names=["でんこうせっか"]),
+               Pokemon("カイリュー")],
+        team1=[Pokemon("カビゴン")],
+    )
+    switched_out = battle.actives[0]
+    switched_out.moves[0].pp = 0
+    t.run_switch(battle, 0, 1)
+    t.run_switch(battle, 0, 0)
+    mon = battle.actives[0]
+    assert mon.moves[0].pp == 10
+    assert not mon.has_item()
+
+
+def test_ヒメリのみ_うらみでPPが0になったとき発動する():
+    """ヒメリのみ: うらみの効果でPPが0になったときも発動する。
+
+    move.modify_pp は通常のPP消費経路を経由しないため、Event.ON_PP_CONSUMED を
+    改めて発火する実装になっていることを確認する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["うらみ"])],
+        team1=[Pokemon("ピカチュウ", item_name="ヒメリのみ", move_names=["でんこうせっか"])],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    defender.moves[0].pp = 4
+    defender.pp_consumed_move = defender.moves[0]
+    t.run_move(battle, 0)
+    assert defender.moves[0].pp == 10
+    assert not defender.has_item()
+
+
+def test_ヒメリのみ_ぶきみなじゅもんでPPが0になったとき発動する():
+    """ヒメリのみ: ぶきみなじゅもんの追加効果でPPが0になったときも発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["ぶきみなじゅもん"])],
+        team1=[Pokemon("ピカチュウ", item_name="ヒメリのみ", move_names=["でんこうせっか"])],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    defender = battle.actives[1]
+    defender.moves[0].pp = 3
+    defender.pp_consumed_move = defender.moves[0]
+    t.run_move(battle, 0)
+    assert defender.moves[0].pp == 10
+    assert not defender.has_item()
+
+
+def test_ヒメリのみ_むしくいで奪われて食べられたとき技のPPを回復する():
+    """ヒメリのみ: むしくいで奪われて食べられたとき、奪った側の技のPPが回復する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["むしくい", "たいあたり"])],
+        team1=[Pokemon("ピカチュウ", item_name="ヒメリのみ", move_names=["でんこうせっか"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    attacker.moves[1].pp = 0
+    t.run_move(battle, 0)
+    assert not battle.actives[1].has_item()
+    assert attacker.moves[1].pp == 10
+
+
+def test_ヒメリのみ_ほおばるで発動してPPを回復する():
+    """ヒメリのみ: ほおばるで自分のヒメリのみを強制消費したとき、PPが0の技があれば回復する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="ヒメリのみ", move_names=["ほおばる", "たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    mon.moves[1].pp = 0
+    t.run_move(battle, 0)
+    assert mon.moves[1].pp == 10
+    assert not mon.has_item()
+
+
+def test_ヒメリのみ_マジックルーム解除時にPPが0のままなら発動する():
+    """ヒメリのみ: マジックルームでアイテムが無効化されている間はPPが0でも発動せず、
+    解除時にPPが0のままなら即座に発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ヒメリのみ", move_names=["でんこうせっか"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    battle.item_manager.add_disabled_reason(mon, "マジックルーム")
+    mon.moves[0].pp = 0
+    assert mon.moves[0].pp == 0
+    assert mon.has_item()
+    battle.item_manager.remove_disabled_reason(mon, "マジックルーム")
+    assert mon.moves[0].pp == 10
+    assert not mon.has_item()
+
+
+def test_ヒメリのみ_ぶきよう解除時にPPが0のままなら発動する():
+    """ヒメリのみ: 特性ぶきようでアイテムが無効化されている間はPPが0でも発動せず、
+    特性が変わって無効化が解除されたときにPPが0のままなら即座に発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ぶきよう", item_name="ヒメリのみ", move_names=["でんこうせっか"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    mon.moves[0].pp = 0
+    battle.change_ability(mon, "せいでんき")
+    assert mon.moves[0].pp == 10
+    assert not mon.has_item()
+
+
+def test_ヒメリのみ_PPが0の技が複数ある場合は最後に使われた技を優先する():
+    """ヒメリのみ: PPが0の技が複数ある場合、最後に使われた技を優先して回復する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="ヒメリのみ", move_names=["なげつける"])],
+        team1=[Pokemon("ピカチュウ", move_names=["でんこうせっか", "たいあたり"])],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    defender.moves[0].pp = 0
+    defender.moves[1].pp = 0
+    defender.pp_consumed_move = defender.moves[1]
+    t.run_move(battle, 0)
+    assert defender.moves[0].pp == 0
+    assert defender.moves[1].pp == 10
+
+
 @pytest.mark.parametrize("item_name", ["おうじゃのしるし", "するどいキバ"])
 def test_ひるみ付与アイテム_てんのめぐみで確率2倍(item_name):
     """おうじゃのしるし・するどいキバ: 特性てんのめぐみによりひるみ確率が2倍(20%)になる"""
