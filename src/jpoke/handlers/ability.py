@@ -4679,8 +4679,13 @@ def _block_item_change(mon: Pokemon, unchangable_items: list[ItemName]) -> Handl
 
 
 def わざわいのおふだ_reduce_A(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """わざわいのおふだ特性: 自分以外の攻撃補正を0.75倍にする。"""
-    if ctx.attacker is not ctx.defender:
+    """わざわいのおふだ特性: 自分以外の攻撃補正を0.75倍にする。
+    攻撃側自身がわざわいのおふだを持つ場合（コピー・交換等による取得を含む）は対象外。
+    """
+    if (
+        ctx.attacker is not ctx.defender
+        and ctx.attacker.ability.name != "わざわいのおふだ"
+    ):
         value = apply_fixed_modifier(value, 3072)
     return HandlerReturn(value=value)
 
