@@ -71,3 +71,38 @@
   `PYTHONIOENCODING=utf-8 python examples/03_damage_calc/01_basic_lethal_calculation.py`が
   従来通り正常終了し致死率の出力が変わらないことを確認した。`python -m pytest tests/ -v`で
   5828件全件パス・1件skip（既存のflaky無し）を確認した。
+- [x] 対戦実行結果の収集パターン（`on_battle_end`）が未整理・未周知で、
+  `examples/01_basics/01_battle_against_intro.py`「Battleリストを返すべき」・
+  `examples/04_research/02_replay.py`「戻り値統一を検討する」・
+  `examples/05_benchmark/01_step_time_benchmark.py`「進捗表示」の3件のTODOが
+  未解消のまま残っていた（developer視点、id: r8-4） → 対応内容 (2026-07-14):
+  `examples/01_basics/01_battle_against_intro.py`のTODOを、`battle_against()`は
+  各対戦の`Battle`を使い捨てるため戻り値は`None`であり、対戦後の`Battle`（ログ等）に
+  アクセスしたい場合は`on_battle_end`コールバックを渡す旨の案内コメント（`docs/api/README.md`・
+  05_benchmarkの進捗表示例への参照込み）に置き換えた。`examples/04_research/02_replay.py`の
+  TODOを、`play_out()`は呼び出し側が既に`battle`を保持しているため勝者のみを返す設計である旨と、
+  `docs/api/README.md`の新設「対戦実行系メソッドの戻り値一覧」節への参照コメントに置き換えた。
+  `examples/05_benchmark/01_step_time_benchmark.py`のTODOを解消するため、`run_benchmark()`に
+  `on_battle_end: Callable[[Battle], None] | None`引数を追加し（examples側のローカル関数であり
+  `Player.battle_against()`自体のシグネチャ変更は伴わない）、既存の`try/except Exception:
+  continue`を`try/except/else`に整理した上で、例外の有無に関わらずバトルごとに
+  `on_battle_end`を呼ぶ実装にした。`main()`に`--progress-every`引数と`nonlocal`カウンタを使う
+  `report_progress()`クロージャを追加し、指定件数ごとに進捗をprintするデモを実装した。
+  `docs/api/README.md`の`battle_against()`節の直後に「対戦実行系メソッドの戻り値一覧」表
+  （`Battle.play_out()`は勝者のみ返す/`Player.battle_against()`は`None`で`on_battle_end`が
+  アクセス手段、という設計方針の対比）を追加した。レビューで、`run_benchmark()`の
+  `on_battle_end`引数docstringが「例外で打ち切られたバトルでも呼ばれる点も
+  `Player.battle_against()`と揃えている」と誤って断言していた点を修正した
+  （`Player.battle_against()`は`play_out()`の例外を捕捉せずそのまま伝播するため、
+  例外発生時は`on_battle_end`が呼ばれない。`src/jpoke/core/player.py`の
+  `battle_against()`実装で`on_battle_end(battle)`呼び出しが`play_out()`の直後にあり、
+  間に例外捕捉がないことを確認した上で、両者が揃っているのは「未決着（`winner is None`）でも
+  呼ばれる」点のみであり、例外時の挙動はexamples側`run_benchmark()`独自の仕様である旨に
+  docstringを修正した）。公開APIの新設・シグネチャ変更を伴わない変更のため
+  `src/jpoke`配下への新規回帰テストは追加せず、代わりに3つのexamplesを個別実行し
+  （`01_battle_against_intro.py`・`02_replay.py`は従来通りの出力、
+  `01_step_time_benchmark.py --n-battles 20 --max-turns 20 --progress-every 5`で
+  「進捗: N/20バトル完了」が5件ごとに表示されること、`--progress-every 0`で進捗が
+  非表示になることを確認）、`tests/test_examples_smoke.py`（全examplesをサブプロセス実行し
+  returncode==0を確認する既存テスト、24件）を実行して全件パスを確認した。
+  `python -m pytest tests/ -v`で5829件全件パス・1件skip（既存のflaky無し）を確認した。

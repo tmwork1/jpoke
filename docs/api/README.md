@@ -390,6 +390,21 @@ replays = []
 player1.battle_against(player2, n_battles=100, seed=1, on_battle_end=replays.append)
 ```
 
+### 対戦実行系メソッドの戻り値一覧
+
+対戦を最後まで進めるメソッドは、対象によって戻り値の設計方針が異なる。
+
+| メソッド | 戻り値 | 対戦結果へのアクセス手段 |
+|---|---|---|
+| `Battle.play_out(max_turns=100)` | 勝者（`Player`）。ターン上限で未決着なら `None` | 呼び出し側が既に `battle` インスタンスを保持しているため、戻り値は勝者のみで十分。ログ等が必要なら `battle.print_logs()` / `battle.get_event_logs()` などをそのまま使う |
+| `Player.battle_against(...)` | `None` | 戦績カウンタ（`n_won_battles` 等）を自動更新するだけで、各対戦の `Battle` はループ内で使い捨てる。個々の対戦の `Battle` インスタンスにアクセスしたい場合は `on_battle_end` コールバックを使う |
+
+`play_out()` は既存の `Battle` の上で呼ぶ低レベルAPIなので勝者だけを返せば足りるが、
+`battle_against()` は対戦ごとに `Battle` を新規生成・破棄するループを内包するため、個々の
+`Battle` を（リストとして蓄積するのではなく）`on_battle_end` コールバックで都度受け取る設計に
+している。対戦数に比例して各対戦の `event_logger` の履歴等を保持するリストを返す設計は、
+対戦数が多いほどメモリ使用量が線形に増えるため採用していない。
+
 ## Pokemon
 
 `src/jpoke/model/pokemon.py`。ポケモン1体の全状態（種族値・技・特性・アイテム・状態異常など）を

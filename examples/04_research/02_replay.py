@@ -22,7 +22,9 @@ def main() -> None:
     battle = Battle(player1, player2, seed=1)
     battle.start()
     # 手動でstep()するループの定型は01で学んだので、ここではplay_out()で一括して進める
-    # TODO: 対戦を実行する系のメソッドの返り値を Battle インスタンスに統一するか、勝者だけ返すか、どちらがよいか検討する
+    # play_out()は勝者のみを返す（呼び出し側は既にbattleインスタンスを保持しているため）。
+    # 対戦実行系メソッドの戻り値の設計方針は docs/api/README.md の
+    # 「対戦実行系メソッドの戻り値一覧」を参照
     winner = battle.play_out(max_turns=100)
     print(f"元の対戦の勝者: {winner.username if winner else '引き分け（ターン上限）'}（{battle.turn}ターン）")
 

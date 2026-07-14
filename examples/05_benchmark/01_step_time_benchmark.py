@@ -1,4 +1,3 @@
-# TODO: 計算途中の進捗がわかるようにする。
 """jpoke で学べること: 完全ランダムな3vs3全選出バトルを繰り返し、
 `Battle.step()` 1回あたりの所要時間を計測する計算速度ベンチマーク。
 
@@ -25,7 +24,7 @@ from jpoke.data.move import MOVES
 from jpoke.data.pokedex import POKEDEX
 from jpoke.players import RandomPlayer
 from jpoke.types import Gender, Nature, Type
-from typing import get_args
+from typing import Callable, get_args
 
 GENDERS = list(get_args(Gender))
 NATURES = list(get_args(Nature))
@@ -58,7 +57,12 @@ def build_random_team(rng: Random, n: int = 3) -> list[Pokemon]:
     return [build_random_pokemon(rng) for _ in range(n)]
 
 
-def run_benchmark(n_battles: int, max_turns: int, seed: int) -> tuple[list[float], int]:
+def run_benchmark(
+    n_battles: int,
+    max_turns: int,
+    seed: int,
+    on_battle_end: Callable[[Battle], None] | None = None,
+) -> tuple[list[float], int]:
     """n_battles回のランダム3vs3全選出バトルを実行し、step()ごとの所要時間（秒）と
     スキップしたバトル数を返す。
 
@@ -69,6 +73,15 @@ def run_benchmark(n_battles: int, max_turns: int, seed: int) -> tuple[list[float
     エッジケースを踏むことがある。ベンチマークの主目的は計算速度の計測であり
     バグ調査ではないため、バトル単位で例外を捕捉してそのバトルの計測値は捨て、
     次のバトルへ進む（バグ自体は別途 fuzz スクリプトで追う）。
+
+    Args:
+        on_battle_end: `Player.battle_against()` の同名引数と同じ「対戦1件の
+            処理が終わるたびに、そのバトルの `Battle` インスタンスを受け取る
+            コールバック」パターン。ただし本関数は上記の通り例外をバトル単位で
+            捕捉して次のバトルへ進む仕様のため、例外で打ち切られたバトルでも
+            呼ばれる（`Player.battle_against()` は `play_out()` の例外を捕捉
+            しないためそのまま伝播し、この場合は呼ばれない点で異なる）。
+            計算途中の進捗表示（一定件数ごとにprintする等）に使う
     """
     master = Random(seed)
     team_rngs = [Random(master.randrange(2**31)) for _ in range(2)]
@@ -94,9 +107,11 @@ def run_benchmark(n_battles: int, max_turns: int, seed: int) -> tuple[list[float
                 battle_step_times.append(time.perf_counter() - t0)
         except Exception:
             n_skipped += 1
-            continue
+        else:
+            step_times.extend(battle_step_times)
 
-        step_times.extend(battle_step_times)
+        if on_battle_end is not None:
+            on_battle_end(battle)
 
     return step_times, n_skipped
 
@@ -106,9 +121,27 @@ def main() -> None:
     parser.add_argument("--n-battles", type=int, default=300, help="実行するバトル数（既定: 300）")
     parser.add_argument("--max-turns", type=int, default=100, help="1バトルの最大ターン数（既定: 100）")
     parser.add_argument("--seed", type=int, default=0, help="乱数シード（既定: 0）")
+    parser.add_argument(
+        "--progress-every", type=int, default=50,
+        help="この件数ごとに進捗を表示する（既定: 50。0で非表示）",
+    )
     args = parser.parse_args()
 
-    step_times, n_skipped = run_benchmark(args.n_battles, args.max_turns, args.seed)
+    # on_battle_end の典型的な使い方: 外側の変数（nonlocal）をクロージャで
+    # 更新し、一定件数ごとに進捗をprintする。Battleインスタンス自体（引数）は
+    # ここでは使わないが、対戦ごとのログ等を見たい場合はここで受け取れる
+    n_done = 0
+
+    def report_progress(battle: Battle) -> None:
+        nonlocal n_done
+        n_done += 1
+        if args.progress_every and n_done % args.progress_every == 0:
+            print(f"進捗: {n_done}/{args.n_battles}バトル完了")
+
+    step_times, n_skipped = run_benchmark(
+        args.n_battles, args.max_turns, args.seed,
+        on_battle_end=report_progress if args.progress_every else None,
+    )
 
     n = len(step_times)
     total = sum(step_times)
