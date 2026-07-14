@@ -706,6 +706,38 @@ def test_シンプルビーム_通常特性をたんじゅんに変更():
     assert defender.ability.name == "たんじゅん"
 
 
+def test_じこあんじ_volatile_manager経由で付与されたきゅうしょアップを解除してもハンドラが残留しない():
+    """じこあんじ: `volatile_manager.apply`経由（`set_volatile`/サンのみ等）で正規に付与された
+    きゅうしょアップを、相手の急所ランクが0の状態でコピーして解除した場合、
+    `ON_CALC_CRITICAL_RANK`ハンドラの登録解除も正しく行われ、以降の急所判定で
+    KeyErrorにならないこと（回帰テスト: fuzz seed=19566, player=random）。
+
+    修正前は`critical_rank`セッターで`volatiles`辞書を直接操作していたため、
+    ハンドラの登録解除（`unregister_handlers`）が行われず孤立ハンドラが残り、
+    次のクリティカル判定で`ctx.attacker.volatiles["きゅうしょアップ"]`への
+    アクセスがKeyErrorになっていた。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["じこあんじ", "たいあたり"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"きゅうしょアップ": 2},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    assert attacker.has_volatile("きゅうしょアップ")
+
+    # じこあんじ: 相手（急所ランク0）をコピーし、正規に付与されたきゅうしょアップを解除する
+    t.run_move(battle, 0)
+    assert attacker.critical_rank == 0
+    assert not attacker.has_volatile("きゅうしょアップ")
+
+    battle.turn += 1
+    # 修正前はここで孤立したON_CALC_CRITICAL_RANKハンドラがKeyErrorを送出していた
+    t.run_move(battle, 0, move_idx=1)
+
+    assert battle.move_executor.critical_rank == 0
+
+
 def test_じこあんじ_しろいハーブでマイナスランクを打ち消す():
     """じこあんじ: コピー結果に負のランクが含まれる場合、しろいハーブが発動してランクを0に戻す"""
     battle = t.start_battle(

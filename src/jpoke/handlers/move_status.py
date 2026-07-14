@@ -1198,7 +1198,19 @@ def じこあんじ_copy_ranks(battle: Battle, ctx: AttackContext, value: Any) -
         attacker.boosts[stat] = defender.boosts[stat]
 
     # 急所ランクに関する効果（きゅうしょアップ状態）も第六世代以降コピー対象。
-    attacker.critical_rank = defender.critical_rank
+    # Pokemon.critical_rank のセッターはテスト・デバッグ用の直接代入であり、
+    # volatile_manager を経由しないためイベントハンドラの登録・解除が行われない
+    # （既存のvolatileを直接delすると、登録済みハンドラが残ったまま
+    # ctx.attacker.volatiles["きゅうしょアップ"] へのアクセスでKeyErrorになる）。
+    # そのため付け外しは battle.volatile_manager.apply/remove を経由する。
+    defender_critical_rank = defender.critical_rank
+    if attacker.critical_rank != defender_critical_rank:
+        if attacker.has_volatile("きゅうしょアップ"):
+            battle.volatile_manager.remove(attacker, "きゅうしょアップ")
+        if defender_critical_rank > 0:
+            battle.volatile_manager.apply(
+                attacker, "きゅうしょアップ", count=defender_critical_rank
+            )
 
     # しろいハーブ: マイナスのランクをコピーした直後に発動する（じこあんじ固有の特例）。
     if attacker.item.name == "しろいハーブ":
