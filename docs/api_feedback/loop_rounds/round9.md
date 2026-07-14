@@ -52,3 +52,30 @@
   追加・変更は無いため`docs/api/README.md`の更新は不要と判断した。
   `python -m pytest tests/ -v`で5848件全件パス・1件skip（既存件数のまま、flaky testの新規発生なし）
   を確認した。
+- [x] `01_basics/04_log_and_pokedex_lookup.py`が「LogCodeの使い方」と「POKEDEXの使い方」という
+  異なる2つの調べ物を1ファイルに同居させており、`show_critical_hit_logs()`内の3重forを含む
+  リスト内包表記が初心者には追いづらかった（id: r9-4） → 対応内容 (2026-07-15):
+  `04_log_and_pokedex_lookup.py`を削除し、`04_pokedex_ability_lookup.py`
+  （POKEDEX特性確認専用、バトル実行なしでPOKEDEXの静的データだけを扱う最も手軽な例として整理）と
+  `06_structured_log_extraction.py`（構造化ログ抽出専用）の2ファイルに分割した
+  （`05`は既存の`05_hazards_and_explicit_commands.py`と衝突するため`06`を採番）。
+  `show_critical_hit_logs()`のリスト内包表記は、何が繰り返されているか分かりやすいよう
+  ターン→プレイヤー→ログの3段のネストしたfor文+if文に書き換え、各段にコメントを追加した
+  （置き換え前後で同じ`(t, username, pokemon)`のタプル列を同じ順序で生成することを確認済み）。
+  `show_logcode_variety()`ではLogCodeの代表5種類（`CRITICAL_HIT`/`ABILITY_TRIGGERED`/
+  `AILMENT_APPLIED`/`HP_CHANGED`/`MOVE_MISSED`）を個別に案内し、全種類（37種類）を確認したい場合は
+  `list(LogCode)`で列挙する方法を示すにとどめ、全列挙はしない方針にした。実装の過程で
+  `POKEDEX[name].abilities`が固定長でなく、隠れ特性を持たないポケモン等では2要素になる
+  可変長リストである点を実行時に発見したため、`show_pokedex_abilities()`の説明文を
+  「通常特性1・2・隠れ特性の順のリスト。持てる特性が1つや2つしかないポケモンでは、
+  存在しない枠は含まれず短いリストになる」に修正し、`フシギバナ`（隠れ特性なし、2要素）を
+  例に加えて動作を確認できるようにした。`examples/README.md`のファイル一覧・目次を
+  04（POKEDEX特性確認）/05（設置技・交代コマンド）/06（構造化ログ抽出）の3ファイル構成に
+  更新した。`tests/`配下にこれらのexamplesファイルを直接参照するテストが無いことを確認した。
+  分割後の2ファイル（`04_pokedex_ability_lookup.py`・`06_structured_log_extraction.py`）を
+  それぞれ実行し、POKEDEXの特性一覧（可変長を含む）とLogCodeの抽出結果
+  （急所ログ2件・LogCode37種類）が意図通り出力されることを確認した。ロジック変更を伴う
+  公開APIの追加・変更は無いため`docs/api/README.md`の更新は不要と判断した。
+  docstring・サンプル構成の整理でありコアロジック変更を伴わないため新規の回帰テストは
+  不要と判断し、`python -m pytest tests/ -v`で5849件全件パス・1件skip
+  （既存件数のまま、flaky testの新規発生なし）を確認した。

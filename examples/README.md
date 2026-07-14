@@ -41,8 +41,9 @@ PYTHONUTF8=1 python examples/01_basics/01_battle_against_intro.py
 | `01_basics/01_battle_against_intro.py` | `Player.battle_against()` を使った最小構成のバトル実行 | 導入 |
 | `01_basics/02_quickstart.py` | `Battle` / `Player` を手動管理する最小構成の1vs1バトル | 導入 |
 | `01_basics/03_team_battle.py` | 3体チーム・複数選出・複数ターンのバトルループ | 導入 |
-| `01_basics/04_log_and_pokedex_lookup.py` | `battle.get_event_logs()` による構造化ログからの特定イベント抽出、`POKEDEX[name].abilities` によるポケモンが持てる特性の確認 | 導入 |
+| `01_basics/04_pokedex_ability_lookup.py` | `POKEDEX[name].abilities` によるポケモンが持てる特性の確認 | 導入 |
 | `01_basics/05_hazards_and_explicit_commands.py` | 設置技（ステルスロック）・交代誘発技（とんぼがえり）の効果、`Command.get_switch_command()` / `get_terastal_command()` / `get_megaevol_command()` による交代・テラスタル・メガシンカコマンドの明示的な組み立て、わるあがき（PP切れ）の挙動 | 導入 |
+| `01_basics/06_structured_log_extraction.py` | `battle.get_event_logs()` による構造化ログ（LogCode付きのEventLog）からの特定イベント抽出 | 導入 |
 | `02_ai/01_custom_player.py` | `Player` を継承した最小のカスタム方策（`choose_command()` のオーバーライド） | AI開発 |
 | `02_ai/02_selection_customization.py` | `choose_selection()` のオーバーライドによる選出順のカスタマイズ | AI開発 |
 | `02_ai/03_tree_search_ai.py` | `TreeSearchPlayer` を継承した木探索AIとランダム方策の対戦 | AI開発（発展） |
