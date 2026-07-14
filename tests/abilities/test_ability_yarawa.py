@@ -7,6 +7,7 @@ if TYPE_CHECKING:
 import pytest
 
 from jpoke import Pokemon
+from jpoke.enums import LogCode
 from jpoke.types import AilmentName, WeatherName
 
 from .. import test_utils as t
@@ -105,6 +106,84 @@ def test_ゆうばく_非接触KOでは発動しない():
     t.run_move(battle, 1)
     assert mon.fainted
     assert foe.hp == foe.max_hp
+
+
+def test_ゆうばく_マジックガード持ちの攻撃者にはダメージが入らない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ゆうばく")],
+        team1=[Pokemon("カビゴン", ability_name="マジックガード", move_names=["たいあたり"])],
+    )
+    mon, foe = battle.actives
+    mon.hp = 1
+    t.run_move(battle, 1)
+    assert mon.fainted
+    assert foe.hp == foe.max_hp
+
+
+def test_ゆうばく_攻撃者がぼうごパットを持つ場合発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ゆうばく")],
+        team1=[Pokemon("カビゴン", item_name="ぼうごパット", move_names=["たいあたり"])],
+    )
+    mon, foe = battle.actives
+    mon.hp = 1
+    t.run_move(battle, 1)
+    assert mon.fainted
+    assert foe.hp == foe.max_hp
+
+
+def test_ゆうばく_攻撃者が反動で既にひんしの場合は発動しない():
+    """とっしんの反動（ON_HIT）は ON_MOVE_KO より先に発火するため、反動だけで
+    攻撃者がひんしになった場合ゆうばくは発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ゆうばく")],
+        team1=[Pokemon("カビゴン", move_names=["とっしん"])],
+        accuracy=100,
+    )
+    mon, foe = battle.actives
+    mon.hp = 1
+    foe.hp = 1
+    t.run_move(battle, 1)
+    assert mon.fainted
+    assert foe.fainted
+    logs = [
+        log for log in battle.event_logger.logs
+        if log.log == LogCode.ABILITY_TRIGGERED
+        and log.payload is not None
+        and getattr(log.payload, "ability", None) == "ゆうばく"
+    ]
+    assert len(logs) == 0
+
+
+def test_ゆうばく_攻撃者がみがわり状態でも本体にダメージが入る():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ゆうばく")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+    )
+    mon, foe = battle.actives
+    mon.hp = 1
+    battle.volatile_manager.apply(foe, "みがわり", hp=100)
+    t.run_move(battle, 1)
+    assert mon.fainted
+    # みがわりの身代わり(hp=100)ではなく、攻撃者自身の実HPが減っている
+    assert foe.hp == foe.max_hp - foe.max_hp // 4
+    assert foe.volatiles["みがわり"].hp == 100
+
+
+def test_ゆうばく_相手も同時にひんしになった場合ゆうばく側が負ける():
+    """通信対戦の現行仕様（第七世代以降）: ゆうばくの反撃ダメージで相手も
+    ひんしになり両者全滅した場合、ゆうばく側の負けとなる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ゆうばく")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+    )
+    mon, foe = battle.actives
+    mon.hp = 1
+    foe.hp = foe.max_hp // 4
+    t.run_move(battle, 1)
+    assert mon.fainted
+    assert foe.fainted
+    assert battle.judge_winner() is battle.players[1]
 
 
 def test_よちむ_場に出たとき相手の最高威力の技が公開される():
