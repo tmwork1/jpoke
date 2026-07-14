@@ -269,6 +269,57 @@ def test_ねむり_通常付与のcountは2か3():
     assert 2 in results or 3 in results, "count が 2 または 3 のどちらかしか出なかった（偏り）"
 
 
+def test_ねむり_こんらん状態では眠りカウントが消費されない():
+    """ねむり: いびき・ねごと以外を選んでいる間、こんらん状態なら眠りカウントも消費されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ニャース")],
+    )
+    attacker, defender = battle.actives
+    battle.ailment_manager.apply(attacker, "ねむり", count=2)
+    battle.volatile_manager.apply(attacker, "こんらん", count=5)
+    battle.test_option.trigger_volatile = True  # こんらんの自傷判定が発生しないことも確認する
+
+    t.run_move(battle, 0)
+    assert not battle.move_executor.action_success
+    assert attacker.ailment.count == 2, "こんらん状態のときは眠りカウントが消費されないはず"
+    assert attacker.hp == attacker.max_hp, "こんらん状態でもねむり中は自傷しないはず"
+
+
+def test_ねむり_こんらん状態でもいびきを選べば眠りカウントが消費されこんらんも判定される():
+    """ねむり: いびき・ねごとを選んだ場合は眠りカウントが消費され、こんらんの自傷判定も行われる"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["いびき"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    battle.ailment_manager.apply(attacker, "ねむり", count=3)
+    battle.volatile_manager.apply(attacker, "こんらん", count=5)
+    battle.test_option.trigger_volatile = True  # こんらんで必ず自傷させる
+
+    t.run_move(battle, 0)
+    assert not battle.move_executor.action_success, "こんらんの自傷で行動が中断されるはず"
+    assert attacker.ailment.count == 2, "いびきを選んだ場合は眠りカウントが消費されるはず"
+    assert attacker.hp < attacker.max_hp, "いびきを選んだ場合はこんらんの自傷判定が行われるはず"
+
+
+def test_ねむり_はやおきはこんらん状態のとき追加消費しない():
+    """ねむり: はやおき特性でもこんらん状態のときはねむりカウントの追加消費が行われない"""
+    battle = t.start_battle(
+        team0=[Pokemon("マリルリ", ability_name="はやおき", move_names=["たいあたり"])],
+        team1=[Pokemon("ニャース")],
+    )
+    attacker, defender = battle.actives
+    battle.ailment_manager.apply(attacker, "ねむり", count=3)
+    battle.volatile_manager.apply(attacker, "こんらん", count=5)
+    battle.test_option.trigger_volatile = True
+
+    t.run_move(battle, 0)
+    assert not battle.move_executor.action_success
+    assert attacker.ailment.count == 3, "こんらん状態ではやおきの追加消費も行われないはず"
+
+
 def test_まひ_すばやさ低下():
     """まひ: 素早さ半減"""
     battle = t.start_battle(
