@@ -4463,11 +4463,15 @@ def ゆきかき_boost_speed(battle: Battle, ctx: EventContext, value: int) -> H
 
 
 def ゆきがくれ_reduce_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ゆきがくれ特性: ゆき中に受ける技の命中率を3277/4096倍にする（必中技は除く）。
+    """ゆきがくれ特性: ゆき中に受ける技の命中率を3277/4096倍にする（必中技・一撃必殺技は除く）。
 
     value が None の場合は既に必中状態が確定しているため、補正をかけずそのまま返す。
     """
-    if value is not None and battle.weather.name == "ゆき":
+    if (
+        value is not None
+        and battle.weather.name == "ゆき"
+        and not ctx.move.has_flag("ohko")
+    ):
         value = apply_fixed_modifier(value, 3277)
     return HandlerReturn(value=value)
 
@@ -4477,14 +4481,69 @@ def ゆきふらし_activate_weather(battle: Battle, ctx: EventContext, value: A
 
 
 def ようりょくそ_boost_speed(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
-    """ようりょくそ特性: はれ中に素早さが2倍になる。ばんのうがさを持つ場合は無効。"""
+    """ようりょくそ特性: にほんばれ・おおひでり中に素早さが2倍になる。
+    ばんのうがさを持つ場合や、ノーてんき/エアロックで天候効果が無効化されている場合は発動しない。
+    """
     if battle.weather_for(ctx.source).sunny:
         value *= 2
     return HandlerReturn(value=value)
 
 
-# よちむ仕様: 変化技=0、その他は data.power を使用
+# よちむ仕様: 威力欄が「―」と表示される変動威力技は、内部データの data.power が
+# ダメージ計算用のプレースホルダ（0や1など）になっているため、そのままでは
+# よちむの「見なし威力」判定に使えない。技説明で表示される見なし威力を明示的に対応付ける。
+_よちむ_威力欄が変動する技の見なし威力: dict[str, int] = {
+    # 一撃必殺技
+    "じわれ": 150,
+    "ぜったいれいど": 150,
+    "つのドリル": 150,
+    "ハサミギロチン": 150,
+    # カウンター系
+    "カウンター": 120,
+    "ミラーコート": 120,
+    "メタルバースト": 120,
+    "ほうふく": 120,
+    # その他の変動威力技
+    "いかりのまえば": 80,
+    "いのちがけ": 80,
+    "おんがえし": 80,
+    "エレキボール": 80,
+    "おしおき": 80,
+    "カタストロフィ": 80,
+    "がまん": 80,
+    "がむしゃら": 80,
+    "きしかいせい": 80,
+    "きりふだ": 80,
+    "くさむすび": 80,
+    "けたぐり": 80,
+    "サイコウェーブ": 80,
+    "しぜんのいかり": 80,
+    "しぜんのめぐみ": 80,
+    "じたばた": 80,
+    "しぼりとる": 80,
+    "ジャイロボール": 80,
+    "ソニックブーム": 80,
+    "ちきゅうなげ": 80,
+    "ナイトヘッド": 80,
+    "なげつける": 80,
+    "にぎりつぶす": 80,
+    "ハードプレス": 80,
+    "はきだす": 80,
+    "ヒートスタンプ": 80,
+    "ふくろだたき": 80,
+    "プレゼント": 80,
+    "ヘビーボンバー": 80,
+    "めざめるパワー": 80,
+    "やつあたり": 80,
+    "りゅうのいかり": 80,
+}
+
 def _move_power(move) -> int:
+    """よちむ仕様: 変化技=0。威力が「―」表示の変動威力技は見なし威力の対応表を使用し、
+    それ以外（威力欄に数値が表記される技）は data.power をそのまま使用する。
+    """
+    if move.name in _よちむ_威力欄が変動する技の見なし威力:
+        return _よちむ_威力欄が変動する技の見なし威力[move.name]
     if move.data.power is None:
         return 0
     return move.data.power
@@ -4495,11 +4554,7 @@ def よちむ_reveal_strongest_move(battle: Battle, ctx: EventContext, value: An
     変化技など威力がない技は威力0として扱う。
     """
     mon = ctx.source
-    if mon is None:
-        return HandlerReturn(value=value)
     foe = battle.foe(mon)
-    if not foe.moves:
-        return HandlerReturn(value=value)
 
     max_power = max(_move_power(m) for m in foe.moves)
     candidates = [m for m in foe.moves if _move_power(m) == max_power]
@@ -4520,8 +4575,14 @@ def よびみず_absorb_water(battle: Battle, ctx: AttackContext, value: bool) -
 
 
 def よわき_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """よわき特性: HP半分以下で攻撃補正を0.5倍にする。"""
-    if ctx.attacker.hp * 2 <= ctx.attacker.max_hp:
+    """よわき特性: HP半分以下で攻撃補正を0.5倍にする。
+
+    こんらんの自傷ダメージ（"_こんらん"）には効果が無い。
+    """
+    if (
+        ctx.move.name != "_こんらん"
+        and ctx.attacker.hp * 2 <= ctx.attacker.max_hp
+    ):
         value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
 
