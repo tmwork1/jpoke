@@ -178,7 +178,13 @@ def やけど_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerRe
 
 
 def やけど_modifier(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """やけど状態による物理技ダメージ半減"""
+    """やけど状態による物理技ダメージ半減。
+
+    こんらんの自傷ダメージ（内部技名"_こんらん"）は物理技扱いだが、
+    第五世代以降はやけどによる半減の影響を受けないため対象外とする。
+    """
+    if ctx.move.name == "_こんらん":
+        return HandlerReturn(value=value)
     if battle.query.resolve_move_category(ctx.attacker, ctx.move) == "physical":
         value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)

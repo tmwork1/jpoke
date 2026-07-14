@@ -479,5 +479,21 @@ def test_やけど_特殊技ダメージは半減しない():
     assert battle.damage_calculator.burn_modifier == 4096
 
 
+def test_やけど_こんらん自傷ダメージは半減しない():
+    """やけど: こんらんの自傷ダメージ（内部技名"_こんらん"）は物理技扱いだが、
+    第五世代以降はやけどによる半減の影響を受けない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"こんらん": 2},
+    )
+    attacker, defender = battle.actives
+    battle.ailment_manager.apply(attacker, "やけど")
+    # 自傷を強制
+    battle.test_option.trigger_volatile = True
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.burn_modifier == 4096
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
