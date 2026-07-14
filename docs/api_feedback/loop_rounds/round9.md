@@ -79,3 +79,21 @@
   docstring・サンプル構成の整理でありコアロジック変更を伴わないため新規の回帰テストは
   不要と判断し、`python -m pytest tests/ -v`で5849件全件パス・1件skip
   （既存件数のまま、flaky testの新規発生なし）を確認した。
+- [x] `01_basics/05_hazards_and_explicit_commands.py`冒頭の
+  「TODO: このサンプルは削除すべき」というTODOコメントについて、削除の是非を判断する必要が
+  あった（id: r9-5） → 対応内容 (2026-07-15): ファイル自体の削除ではなく、
+  `show_struggle_when_out_of_pp()`内で`Player`を継承していた`ShowCommandsPlayer`インナークラス
+  定義（`choose_command()`をオーバーライドして`battle.get_available_commands()`を表示するだけの
+  デバッグ用実装）を除去し、`mon.last_move.name`とHP変化の確認のみで完結する簡潔な実装に
+  書き換えた。コマンド候補が「わるあがきのみ」であることを事前に確認したい場合は
+  `battle.is_struggle_only(player)`を`choose_command()`内などphase解決中のコンテキストで
+  呼べる旨、および`02_ai/01_custom_player.py`への参照コメントを関数内に追加した。
+  冒頭のTODOコメントは対応済みのため削除した。`examples/README.md`の該当行
+  （45行目、設置技・交代誘発技・交代コマンド組み立て・わるあがきの挙動を扱う旨の説明）は
+  クラス継承の有無に言及しておらず書き換え後も実態と一致しているため、更新不要と判断した。
+  `01_basics/`配下の01〜06全ファイルを`PYTHONUTF8=1`で実行し、各docstringの説明内容と
+  実際の出力が一致することを確認した（わるあがき使用後の技名`わるあがき`・HP変化
+  `110 → 83`等）。ロジック変更を伴う公開APIの追加・変更は無いため`docs/api/README.md`の
+  更新は不要と判断した。クラス継承除去は表示方法の整理でありコアロジック変更を伴わないため
+  新規の回帰テストは不要と判断し、`python -m pytest tests/ -v`で5849件全件パス・1件skip
+  （既存件数のまま、flaky testの新規発生なし）を確認した。
