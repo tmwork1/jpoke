@@ -415,9 +415,9 @@ def battle_against(self, *opponents: "Player", n_battles: int = 1, **battle_kwar
   （`n_won_battles` はもちろん `n_finished_battles` もインクリメントしない）。
   jpoke には引き分け概念（`n_tied_battles` は常に0）がないため、「引き分けとして記録する」選択肢は
   取らず、「対戦が成立しなかった」として扱う方が既存の戦績プロパティの意味と整合する。
-  既存の `scripts/fuzz_battle.py --player tree_search` も外部の `max_turns` ガードで打ち切り、
+  既存の `scripts/fuzz/fuzz_battle.py --player tree_search` も外部の `max_turns` ガードで打ち切り、
   勝者を強制しない実装になっており、これと方針を揃えた
-- **【確定】`MAX_TURNS` の値**: `100`。`scripts/fuzz_battle.py` の `"random"` プリセット
+- **【確定】`MAX_TURNS` の値**: `100`。`scripts/fuzz/fuzz_battle.py` の `"random"` プリセット
   （`max_turns=100`, 6匹パーティ想定）を参考にした。`core/player.py` モジュール直下の定数として定義
 - `Battle` 生成時のパラメータ（`n_selected`, `seed` 等）は `**battle_kwargs` として素通しする
   形で実装した（jpoke独自拡張。poke-env にはない）

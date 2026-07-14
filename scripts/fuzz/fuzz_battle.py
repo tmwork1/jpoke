@@ -13,16 +13,16 @@
 
 いずれのモードでも、乱数シード（int）1つだけでチーム構成・選出数・選出・行動選択
 （木探索中の割り込み交代時のフォールバックを含む）まで完全に再現できる。
-チーム生成・失敗レポートの形式は `scripts/fuzz_common.py` に共通化している。
+チーム生成・失敗レポートの形式は `scripts/fuzz/fuzz_common.py` に共通化している。
 
 使い方:
     # 単発再現モード
-    python scripts/fuzz_battle.py --seed 12345
-    python scripts/fuzz_battle.py --seed 12345 --player tree_search --max-plies 1
+    python scripts/fuzz/fuzz_battle.py --seed 12345
+    python scripts/fuzz/fuzz_battle.py --seed 12345 --player tree_search --max-plies 1
 
     # バッチ探索モード（count 件を worker プロセスに分散して並列実行）
-    python scripts/fuzz_battle.py --search --start-seed 0 --count 200
-    python scripts/fuzz_battle.py --search --player tree_search --start-seed 0 --count 50
+    python scripts/fuzz/fuzz_battle.py --search --start-seed 0 --count 200
+    python scripts/fuzz/fuzz_battle.py --search --player tree_search --start-seed 0 --count 50
 """
 
 from __future__ import annotations
@@ -47,7 +47,7 @@ from fuzz_common import (
     write_failure_report,
 )
 
-_ROOT = Path(__file__).resolve().parent.parent
+_ROOT = Path(__file__).resolve().parent.parent.parent
 
 # プレイヤーモデルごとの既定値。木探索は1バトルのコストが大きいため
 # n_pokemon・max_turns を random より小さくし、レポート出力先も分ける
@@ -164,7 +164,7 @@ def run_fuzz_battle(seed: int,
 
 def _repro_cmd(result: FuzzResult, player_kind: str, max_plies: int) -> str:
     cmd = (
-        f"python scripts/fuzz_battle.py --seed {result.seed} "
+        f"python scripts/fuzz/fuzz_battle.py --seed {result.seed} "
         f"--player {player_kind} "
         f"--max-turns {result.max_turns} --n-pokemon {result.n_pokemon}"
     )

@@ -12,7 +12,7 @@ from random import Random
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts" / "fuzz"))
 from fuzz_common import build_team, random_team_spec  # noqa: E402
 
 from jpoke import Battle, Player
@@ -24,7 +24,7 @@ MAX_TURNS = 30
 FUZZ_SEEDS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 class _RandomPlayer(Player):
-    """自前の乱数生成器で選出・行動をランダムに選ぶプレイヤー（scripts/fuzz_battle.py 参照）。"""
+    """自前の乱数生成器で選出・行動をランダムに選ぶプレイヤー（scripts/fuzz/fuzz_battle.py 参照）。"""
 
     def __init__(self, username: str, rng: Random):
         super().__init__(username)

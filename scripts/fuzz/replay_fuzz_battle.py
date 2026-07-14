@@ -1,7 +1,7 @@
 """完全ランダムな対戦を実行し、Battle.build_replay_data() → replay_battle() による
 リプレイ再現が元の対戦と完全に一致するかを検証するバグ出し用スクリプト。
 
-チーム生成・行動選択（RandomPlayer）は scripts/fuzz_battle.py と同じ
+チーム生成・行動選択（RandomPlayer）は scripts/fuzz/fuzz_battle.py と同じ
 （`fuzz_common.py` に共通化されたロジックを再利用する）。fuzz_battle.py が
 「未捕捉例外」を検出するのに対し、こちらは「対戦は正常終了するがリプレイが
 元と食い違う」バグ（tests/test_replay_fuzz.py のプロパティテストが検証する内容）
@@ -15,10 +15,10 @@
 
 使い方:
     # 単発再現モード
-    python scripts/replay_fuzz_battle.py --seed 12345
+    python scripts/fuzz/replay_fuzz_battle.py --seed 12345
 
     # バッチ探索モード（count 件を worker プロセスに分散して並列実行）
-    python scripts/replay_fuzz_battle.py --search --start-seed 0 --count 200
+    python scripts/fuzz/replay_fuzz_battle.py --search --start-seed 0 --count 200
 """
 
 from __future__ import annotations
@@ -43,7 +43,7 @@ from fuzz_common import (
     random_team_spec,
 )
 
-_ROOT = Path(__file__).resolve().parent.parent
+_ROOT = Path(__file__).resolve().parent.parent.parent
 
 DEFAULT_MAX_TURNS = 30
 DEFAULT_N_POKEMON = 3
@@ -188,7 +188,7 @@ def run_replay_fuzz_battle(seed: int,
 
 def _repro_cmd(result: ReplayFuzzResult) -> str:
     return (
-        f"python scripts/replay_fuzz_battle.py --seed {result.seed} "
+        f"python scripts/fuzz/replay_fuzz_battle.py --seed {result.seed} "
         f"--max-turns {result.max_turns} --n-pokemon {result.n_pokemon}"
     )
 
