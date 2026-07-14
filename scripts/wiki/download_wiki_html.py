@@ -22,6 +22,8 @@ PROGRESS_FILES = {
     "moves": "docs/progress/move.md",
 }
 
+FOREIGN_NAMES_PAGE = "ポケモンの外国語名一覧"
+
 
 def read_names_from_progress(progress_path: Path) -> list[str]:
     with progress_path.open("r", encoding="utf-8") as f:
@@ -55,6 +57,11 @@ def download_html(name: str, output_dir: Path) -> Path:
     return output_path
 
 
+def download_foreign_names() -> Path:
+    output_dir = Path("docs/wiki/")
+    return download_html(FOREIGN_NAMES_PAGE, output_dir)
+
+
 def main(target: str):
     output_dir = Path(f"docs/wiki/{target}/")
 
@@ -72,9 +79,9 @@ def main(target: str):
 
 if __name__ == "__main__":
     targets = [
-        "abilities",
-        "items",
-        "moves",
+        # "abilities",
+        # "items",
+        # "moves",
         # "ailments",
         # "volatiles",
         # "fields",
@@ -82,3 +89,9 @@ if __name__ == "__main__":
 
     for target in targets:
         main(target)
+
+    try:
+        path = download_foreign_names()
+        print(f"{path}")
+    except Exception as e:
+        print(f"[failed] {FOREIGN_NAMES_PAGE} ({e})")
