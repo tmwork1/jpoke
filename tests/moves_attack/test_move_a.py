@@ -83,6 +83,18 @@ def test_アイアンテール_ぼうぎょ1段階低下が発動する():
     assert battle.actives[1].boosts["def"] == -1
 
 
+def test_アイアンヘッド_ひるみが発動しない():
+    """アイアンヘッド: 追加効果不発時はひるみが付与されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ハガネール", move_names=["アイアンヘッド"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    t.run_move(battle, 0)
+    assert not battle.actives[1].has_volatile("ひるみ")
+
+
 def test_アイアンヘッド_ひるみが発動する():
     """アイアンヘッド: 20%でひるみを付与する。"""
     battle = t.start_battle(

@@ -5,30 +5,6 @@ from jpoke import Pokemon
 from .. import test_utils as t
 
 
-def test_アイアンヘッド_ひるみが発動しない():
-    """アイアンヘッド: 確率外（70%以上）ではひるみを付与しない。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ドサイドン", move_names=["アイアンヘッド"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    t.fix_random(battle, 0.5)
-    t.run_move(battle, 0)
-    assert not battle.actives[1].has_volatile("ひるみ")
-
-
-def test_アイアンヘッド_ひるみが発動する():
-    """アイアンヘッド: 30%でひるみを付与する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ドサイドン", move_names=["アイアンヘッド"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    t.fix_random(battle, 0.0)
-    t.run_move(battle, 0)
-    assert battle.actives[1].has_volatile("ひるみ")
-
-
 def test_アクアリング_揮発性状態が付与される():
     """アクアリング: 使用するとアクアリング揮発性状態が付与される"""
     battle = t.start_battle(
