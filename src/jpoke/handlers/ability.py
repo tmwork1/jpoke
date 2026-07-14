@@ -188,9 +188,16 @@ def _apply_contact_counter_chip(battle: Battle,
     return HandlerReturn(value=value)
 
 def _trigger_emergency_switch(battle: Battle, mon: Pokemon):
-    """緊急交代を発動する。"""
+    """緊急交代を発動する。
+
+    docs/spec/abilities/にげごし.md の通り、控えのポケモンがいない場合のみ
+    発動しない。特性かげふみ/ありじごく/じりょくの影響や、にげられない/バインド/
+    ねをはる/フェアリーロック状態の効果は無視して発動するため、`can_switch`
+    （とらわれ状態を考慮する）ではなく `has_available_bench`
+    （生存している控えの有無のみを見る）で判定する。
+    """
     player = battle.get_player(mon)
-    if battle.query.can_switch(player):
+    if battle.query.has_available_bench(player):
         battle.player_states[player].interrupt = Interrupt.EMERGENCY
         _announce_ability_triggered(battle, mon=mon)
 
