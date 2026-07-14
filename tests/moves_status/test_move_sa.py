@@ -1386,6 +1386,35 @@ def test_スキルスワップ_通常発動で特性が入れ替わる():
     assert defender.ability.name == "せいでんき"
 
 
+def test_スケッチ_PPは1で必ず命中する():
+    """スケッチ: チャンピオンズのmoves.mdに記載がないためGen9本家基準のPP1を採用し、必中技である。"""
+    assert MOVES["スケッチ"].pp == 1
+    assert MOVES["スケッチ"].accuracy is None
+
+
+def test_スケッチ_まもるで防がれない():
+    """スケッチ: まもる状態を無視して成功する（unprotectableフラグ）。
+    実装保留のため追加効果は発生しないが、技自体はまもるに防がれず使用される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ドーブル", move_names=["スケッチ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_applied
+
+
+def test_スケッチ_マジックコートで跳ね返されない():
+    """スケッチ: マジックコート状態を無視して成功する（unreflectableフラグ）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ドーブル", move_names=["スケッチ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_applied
+
+
 def test_すてゼリフ_クリアボディで完全阻止されたとき交代しない():
     """すてゼリフ: クリアボディで全ランク低下が阻止された場合は交代も発動しない"""
     battle = t.start_battle(
