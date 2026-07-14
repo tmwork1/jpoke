@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from jpoke.model import Pokemon
 
 from jpoke.enums import Command
-from jpoke.types import AbilityName, Gender, ItemName, MoveName, Nature, PokemonName, Type
+from jpoke.types import AbilityName, Gender, ItemName, MoveName, Nature, PokemonName, Stat, Type
 
 # poke-env 互換の battle_against() でターン上限に使う既定値。
 # scripts/fuzz_battle.py の "random" プリセット（max_turns=100）を参考にした値。
@@ -59,11 +59,19 @@ class Player:
                     ability_name: AbilityName = "",
                     item_name: ItemName = "",
                     move_names: list[MoveName] | None = None,
-                    tera_type: Type | None = None) -> Pokemon:
+                    tera_type: Type | None = None,
+                    evs: dict[Stat, int] | None = None,
+                    ivs: dict[Stat, int] | None = None) -> Pokemon:
         """ポケモンを1体作成し、チームに追加する。
 
         `from jpoke import Pokemon` を使わずにチームを組める、`team` への
-        正規の追加ルート。引数は `Pokemon.__init__` にそのまま渡す。
+        正規の追加ルート。`evs`/`ivs` 以外の引数は `Pokemon.__init__` にそのまま渡す。
+
+        Args:
+            evs: Champions形式の努力値（各値0〜32）を指定するステータスのみの辞書。
+                `None`（デフォルト）の場合は設定せず、`Pokemon` の既定値のまま
+            ivs: 個体値を指定するステータスのみの辞書。`None`（デフォルト）の
+                場合は設定せず、`Pokemon` の既定値（全て31）のまま
 
         Returns:
             Pokemon: 追加したポケモンのインスタンス（交代先の参照などに使う）
@@ -83,6 +91,10 @@ class Player:
             move_names=move_names,
             tera_type=tera_type,
         )
+        if evs is not None:
+            mon.set_evs(evs)
+        if ivs is not None:
+            mon.set_ivs(ivs)
         self.team.append(mon)
         return mon
 

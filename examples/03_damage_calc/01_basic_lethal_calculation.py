@@ -12,9 +12,11 @@ def main() -> None:
     move_name = "ドラゴンテール"
 
     attacker_player = Player("Attacker")
-    # TODO: add_pokemon()でivsやevsなどを一通り設定できるようにする
     # TODO: add_pokemon()の引数名の_nameは省略してもよいのではないか (Pokemonクラスの引数名と一貫性には注意)。
-    attacker_player.add_pokemon("ガブリアス", move_names=[move_name])
+    # こうげき努力値をChampions形式（0〜32、poke-envの0〜252スケールとは異なる）で最大まで振る
+    attacker_player.add_pokemon(
+        "ガブリアス", move_names=[move_name], evs={"atk": 32},
+    )
 
     defender_player = Player("Defender")
     defender_player.add_pokemon("カイリュー", ability_name="マルチスケイル")
@@ -24,9 +26,6 @@ def main() -> None:
 
     attacker = battle.get_active(attacker_player)
     defender = battle.get_active(defender_player)
-
-    # こうげき努力値をChampions形式（0〜32、poke-envの0〜252スケールとは異なる）で最大まで振る
-    attacker.set_evs([0, 32, 0, 0, 0, 0])
 
     # Pokemon.show() で実数値・性格・特性・持ち物・テラスタイプ・技構成をまとめて確認できる
     attacker.show()

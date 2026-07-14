@@ -648,17 +648,23 @@ class Pokemon:
         """
         return self._ivs
 
-    def set_ivs(self, ivs: list[int], hp_policy: HpPolicy = "keep_absolute"):
+    def set_ivs(self, ivs: list[int] | dict[Stat, int], hp_policy: HpPolicy = "keep_absolute"):
         """個体値を設定する。
 
         Args:
-            ivs: 個体値のリスト
+            ivs: 個体値。`list[int]` の場合は6要素（HP, 攻撃, 防御, 特攻, 特防,
+                素早さの順）で全体を置き換える。`dict[Stat, int]` の場合は
+                指定したステータスのみ更新し、未指定のステータスは既存値を維持する
             hp_policy: 最大HP変化時のhpの追従方法（HpPolicy参照）
 
         Note:
             個体値変更時にステータスを自動再計算する。
         """
-        self._ivs = ivs
+        if isinstance(ivs, dict):
+            for stat, value in ivs.items():
+                self._ivs[STATS.index(stat)] = value
+        else:
+            self._ivs = ivs
         self.update_stats(hp_policy)
 
     @property
@@ -674,11 +680,14 @@ class Pokemon:
         """
         return self._evs
 
-    def set_evs(self, evs: list[int], hp_policy: HpPolicy = "keep_absolute"):
+    def set_evs(self, evs: list[int] | dict[Stat, int], hp_policy: HpPolicy = "keep_absolute"):
         """努力値をChampions形式（0〜32）で設定する。
 
         Args:
-            evs: Champions形式の努力値のリスト（各値0〜32）
+            evs: Champions形式の努力値（各値0〜32）。`list[int]` の場合は6要素
+                （HP, 攻撃, 防御, 特攻, 特防, 素早さの順）で全体を置き換える。
+                `dict[Stat, int]` の場合は指定したステータスのみ更新し、
+                未指定のステータスは既存値を維持する
             hp_policy: 最大HP変化時のhpの追従方法（HpPolicy参照）
 
         Note:
@@ -686,7 +695,11 @@ class Pokemon:
             poke-env の `evs`（各値0〜252）とはスケールが異なるため、
             poke-env形式の値をそのまま渡さないこと（`evs_from_poke_env` で変換する）。
         """
-        self._evs = evs
+        if isinstance(evs, dict):
+            for stat, value in evs.items():
+                self._evs[STATS.index(stat)] = value
+        else:
+            self._evs = evs
         self.update_stats(hp_policy)
 
     @property
