@@ -3,5 +3,5 @@
 もうどく	-	-	x	x	x	x	-
 まひ	x	x	x	x	n/a	n/a	-
 やけど	x	x	x	x	x	x	-
-ねむり	x	x	x	x	n/a	n/a	-
+ねむり	x	x	x	x	n/a	n/a	x
 こおり	-	-	x	x	n/a	n/a	-

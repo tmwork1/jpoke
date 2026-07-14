@@ -101,6 +101,17 @@ def ねむり_check_action(battle: Battle, ctx: AttackContext, value: Any) -> Ha
         # 再度発火するが、ねむりのカウント消費は1ターンに1回のみで良いため
         # （ねごと自身の ON_TRY_ACTION 時点ですでに消費済み）、ここでは何もしない。
         return HandlerReturn(value=True)
+
+    if ctx.move.name not in ["いびき", "ねごと"] and mon.has_volatile("こんらん"):
+        # こんらん状態のポケモンが眠っている間は、いびき・ねごと以外を選んでも
+        # こんらんの自傷判定が行われない代わりに、ねむりのカウントも消費されない
+        # （Wiki: 「眠っている間はこんらんで自傷することはなく、眠りカウントも
+        # 消費されない。ただし、いびき・ねごとを使用したときはこんらんの判定が
+        # 行われる」）。
+        battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
+                             payload=FailureLogPayload(move=ctx.move.name, display_reason="ねむり"))
+        return HandlerReturn(value=False, stop_event=True)
+
     battle.ailment_manager.tick(mon)
     if not mon.has_ailment("ねむり"):
         # 眠りから覚めた：ハンドラを解除して空の状態に
