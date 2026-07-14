@@ -139,6 +139,128 @@ def test_よちむ_変化技も公開される():
     assert foe.moves[0].revealed
 
 
+def test_よびみず_エレキフィールドなど場を対象とするでんき技には発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["あまごい"])],
+        team1=[Pokemon("カビゴン", ability_name="よびみず")],
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert battle.weather.name == "あめ"
+    assert defender.boosts["spa"] == 0
+    assert not defender.ability.revealed
+
+
+def test_よびみず_アクアリングなど自分自身を対象とするみず技には発動しない():
+    """よびみず: アクアリングは自分自身が対象の技のため、自分のよびみずには発動しない
+    （アクアリング自体の効果は通常どおり発生する）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="よびみず", move_names=["アクアリング"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 0)
+    assert mon.has_volatile("アクアリング")
+    assert mon.boosts["spa"] == 0
+
+
+def test_よびみず_みずタイプの変化技も無効化する():
+    """よびみず: みずびたしのようなみずタイプの変化技を受けても無効化し、タイプは変わらない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="よびみず")],
+        team1=[Pokemon("カビゴン", move_names=["みずびたし"])],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 1)
+    assert mon.types == ["でんき"]
+    assert mon.boosts["spa"] == 1
+
+
+def test_よびみず_マジックコートで跳ね返された変化技を受けるととくこうが上がる():
+    """よびみず: 自分が使ったみずタイプの変化技が相手のマジックコートで跳ね返され、
+    跳ね返った技を自分自身が受けた場合はよびみずが発動してとくこうが上がる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="よびみず", move_names=["みずびたし"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert mon.boosts["spa"] == 1
+    assert foe.types == ["ノーマル"]
+
+
+def test_よびみず_マジックコート状態では変化技を跳ね返しとくこうが上がらない():
+    """よびみず: マジックコート状態のよびみず持ちがみずタイプの変化技を受けても、
+    先に跳ね返されるためよびみずは発動せずとくこうは上がらない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="よびみず")],
+        team1=[Pokemon("カビゴン", move_names=["みずびたし"])],
+        volatile0={"マジックコート": 1},
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 1)
+    assert mon.boosts["spa"] == 0
+    assert not mon.ability.revealed
+
+
+def test_よびみず_まもるで防がれたときは発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="よびみず")],
+        team1=[Pokemon("カビゴン", move_names=["みずでっぽう"])],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    battle.volatile_manager.apply(mon, "まもる", count=1)
+    t.run_move(battle, 1)
+    assert mon.boosts["spa"] == 0
+    assert not mon.ability.revealed
+
+
+def test_よびみず_みがわり状態の攻撃技でも発動する():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="よびみず")],
+        team1=[Pokemon("カビゴン", move_names=["みずでっぽう"])],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    battle.volatile_manager.apply(mon, "みがわり", count=mon.max_hp // 4)
+    t.run_move(battle, 1)
+    assert mon.boosts["spa"] == 1
+    assert mon.has_volatile("みがわり")
+
+
+def test_よびみず_無効化時にきゅうこんは発動しない():
+    """よびみず: きゅうこんのようなみず技被弾で発動するアイテムは、
+    よびみずで無効化されたときは発動しない（ダメージ処理自体が行われないため）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="よびみず", item_name="きゅうこん")],
+        team1=[Pokemon("カビゴン", move_names=["みずでっぽう"])],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 1)
+    assert mon.hp == mon.max_hp
+    assert mon.boosts["spa"] == 1
+    assert mon.has_item()
+
+
+def test_よびみず_連続技を受けてもとくこう上昇は1回のみ():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="よびみず")],
+        team1=[Pokemon("カビゴン", move_names=["すいりゅうれんだ"])],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 1)
+    assert mon.boosts["spa"] == 1
+    assert mon.hp == mon.max_hp
+
+
 @pytest.mark.parametrize(
     "move_name",
     ["でんきショック", "たいあたり"]
