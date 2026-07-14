@@ -61,6 +61,11 @@ MOVES_A: dict[MoveName, MoveData] = {
                 subject_spec="attacker:self",
                 priority=180,
             ),
+            Event.ON_HIT: h.MoveHandler(
+                ha.アイアンローラー_clear_terrain_on_zero_damage,
+                subject_spec="attacker:self",
+                priority=180,
+            ),
         }
     ),
     "アイススピナー": MoveData(
