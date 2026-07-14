@@ -53,6 +53,13 @@
   委譲として追加。`can_switch()` 以外は `battle.query.<method>()` の直接呼び出しが
   必要で `docs/api/README.md` にも未掲載だったための対応（`AttackContext`/
   `EventContext` を要求する内部専用メソッドは対象外のまま）
+- `docs/api/README.md`（Pokemon「シナリオ構築系（フォルム変化）」）に
+  `Pokemon.set_form(name, hp_policy="keep_absolute", set_default_ability=False)` を追記。
+  実装済み（ロトム・ザシアン/ザマゼンタ・オリジンフォルム等の切り替えに内部で使用）
+  ながら `docs/api/README.md`・`examples/` のどちらにも未掲載だったための対応。
+  合わせて `examples/03_damage_calc/10_form_change_comparison.py` を新設し、
+  `set_form()` によるロトムのフォルム変化がタイプ・種族値を通じてダメージ・致死率に
+  与える影響を比較するサンプルを追加
 
 ### Changed
 
