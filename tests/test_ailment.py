@@ -424,6 +424,30 @@ def test_もうどく_交代でカウントリセット():
     assert damage == mon.max_hp * 1 // 16  # 交代後1ターン目は1/16ダメージ
 
 
+def test_もうどく_マジックガードでもターン経過は加算される():
+    """もうどく: マジックガードでダメージを受けない間もelapsed_turnsは加算され続け、
+    かがくへんかガスで特性が無効化されたターンには継続していたターン数分のダメージを受ける"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="マジックガード")],
+        team1=[Pokemon("カビゴン"), Pokemon("ドガース", ability_name="かがくへんかガス")],
+    )
+    mon = battle.actives[0]
+    battle.ailment_manager.apply(mon, "もうどく")
+
+    for _ in range(3):
+        t.end_turn(battle)
+    assert mon.hp == mon.max_hp, "マジックガードでダメージを受けない"
+    assert mon.ailment.elapsed_turns == 3, "ダメージを受けなくてもターン経過は記録される"
+
+    # かがくへんかガスでマジックガードを無効化
+    t.run_switch(battle, 1, 1)
+    hp_before = mon.hp
+    t.end_turn(battle)
+    damage = hp_before - mon.hp
+    assert mon.ailment.elapsed_turns == 4
+    assert damage == mon.max_hp * 4 // 16, "特性を失ったターンは継続していたターン数分のダメージを受ける"
+
+
 def test_やけど_ダメージ():
     """やけど: ターン終了時ダメージ"""
     battle = t.start_battle(team1=[Pokemon("ピカチュウ")], team0=[Pokemon("ピカチュウ")])
