@@ -684,12 +684,14 @@ def もうどく_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) 
     """もうどく: ターン終了時に経過ターンに応じて増加するダメージを受ける。
 
     ダメージ: max(1, 最大HP × min(15, 経過ターン数) // 16)
-    ポイズンヒール所持時はダメージを与えない（ポイズンヒール側で回復処理する）。
+    ポイズンヒール所持時はダメージを与えない（ポイズンヒール側で回復処理する）が、
+    経過ターン数の加算は実際にダメージを受けたかどうかに関わらず常に行う
+    （もうどく状態でいるターン自体は継続してカウントされ続けるため）。
     """
-    if ctx.defender.ability.base_name == "ポイズンヒール":
-        return hp_dist
     ctx.defender.ailment.tick()
     turns = min(15, ctx.defender.ailment.elapsed_turns)
+    if ctx.defender.ability.base_name == "ポイズンヒール":
+        return hp_dist
     damage = max(1, ctx.defender.max_hp * turns // 16)
     return _damage(hp_dist, damage)
 

@@ -74,11 +74,11 @@ MOVES_KA: dict[MoveName, MoveData] = {
         pp=25,
         power=60,
         accuracy=100,
-        flags={"contact", "secondary_effect", "thaw"},
+        flags={"contact", "secondary_effect", "thaw", "self_thaw"},
         handlers={
             Event.ON_TRY_ACTION: h.MoveHandler(
                 ha.かえんぐるま_thaw_attacker,
-                priority=5,
+                priority=170,
             ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.かえんぐるま_apply_burn_to_defender,
@@ -141,11 +141,11 @@ MOVES_KA: dict[MoveName, MoveData] = {
         pp=5,
         power=120,
         accuracy=90,
-        flags={"bullet", "secondary_effect", "thaw"},
+        flags={"bullet", "secondary_effect", "thaw", "self_thaw"},
         handlers={
             Event.ON_TRY_ACTION: h.MoveHandler(
                 ha.かえんボール_thaw_attacker,
-                priority=5,
+                priority=170,
             ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.かえんボール_apply_burn_to_defender,
@@ -946,11 +946,11 @@ MOVES_KA: dict[MoveName, MoveData] = {
         pp=8,
         power=100,
         accuracy=100,
-        flags={"thaw"},
+        flags={"thaw", "self_thaw"},
         handlers={
             Event.ON_TRY_ACTION: h.MoveHandler(
                 ha.クロスフレイム_thaw_attacker,
-                priority=5,
+                priority=170,
             ),
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
                 ha.クロスフレイム_calc_power,
