@@ -32,7 +32,7 @@
 
 ```json
 {
-  "worktree": "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-loop\\flaky",
+  "worktree": "{ROOTの親}\\jpoke-loop\\flaky",
   "batch_size": 10,
   "isolate_reruns": 20,
   "extra_fullsuite_reruns": 5,
@@ -45,6 +45,9 @@
   "unreproduced": [{"test_id": "...", "seen_at_run": 12, "log_path": "..."}]
 }
 ```
+
+`{ROOTの親}` は `$ROOT`（プロジェクトルート、§共通1 参照）の親ディレクトリ。初回状態ファイル
+作成時に実際の絶対パスへ置き換える（他端末の具体例をそのままコピーしない）。
 
 - `total_runs`: これまでに完走したフルスイート実行の累計回数（バッチをまたいで単調増加）。
 - `current_investigation`: `{"test_id", "stage", "log_path"}`。`stage` は
@@ -70,6 +73,17 @@
 ### 1.6. worktree を準備する
 
 §共通4 パターンA を適用する（`{worktree}`・ブランチ `loop/flaky`）。
+
+### 1.7. 他フローからのハンドオフを取り込む
+
+`$ROOT\.loop\flaky_found.md`（§共通13 の手順5で他フローが書き込む、無ければスキップ）を確認する。
+存在すれば各エントリ（`{test_id, 発見日時, 発見元フロー, 症状}`）について:
+
+- `completed` / `failed`（attempts >= 2）に同じ test_id が既にあればスキップ（対応済み・調査済み）。
+- それ以外は test_id を `pending_investigation` に追加する（`current_investigation` が null かつ
+  重複しない場合のみ追加。症状メモは手順4.2 の impl エージェントへの依頼文に含める）。
+
+取り込んだら `flaky_found.md` を空にする（§共通9 のガード付き rm、またはWrite で空文字列に上書き）。
 
 ### 2. バッチ実行
 
@@ -131,11 +145,15 @@ echo "pass=$pass fail=$fail"
   - 含まれない → `unreproduced` に `{"test_id", "seen_at_run": n, "log_path"}` を追加。
     `current_investigation` をクリアして保存し、手順5へ。
   - 含まれる → flaky 確定として手順4.2へ。
-- `fail == isolate_reruns`（毎回失敗）→ 「flaky ではなく常に失敗する」ケース。ループを中断し、
-  「{test_id} は隔離再実行 {isolate_reruns}/{isolate_reruns} 回失敗し、flaky ではなく既存の
-  デグレ／バグの可能性があります。手動確認が必要です。」と報告して §共通7 に従い終了する
-  （`current_investigation` は残したまま。次回 `/loop flaky` 実行時にユーザーが対応を判断できるよう
-  そのままにする）。
+- `fail == isolate_reruns`（毎回失敗）→ 「flaky ではなく常に失敗する」ケース。このフローの対象外
+  なので、`failed` の該当 test_id エントリを探し、あれば `attempts += 1`、なければ
+  `{"test_id": ..., "attempts": 1, "note": "隔離再実行{isolate_reruns}/{isolate_reruns}回失敗、
+  flakyではなく既存のデグレ／バグの可能性あり。手動確認が必要"}` を新規追加する。
+  `current_investigation` をクリアして保存し、**ループは中断せず**手順5（次の調査対象へ）に進む。
+  「{test_id} は毎回失敗するため flaky 調査対象外として `failed` に記録し、次へ進みました。
+  手動確認をお願いします。」とその場でユーザーに報告する（黙って握りつぶさない）。同じ test_id が
+  後日の全体テストで再検出された場合も、手順4冒頭の重複チェック（`attempts >= 2` でスキップ）が
+  同様に効く。
 - `0 < fail < isolate_reruns` → flaky 確定。手順4.2へ。
 
 #### 4.2 impl エージェント（foreground）を起動

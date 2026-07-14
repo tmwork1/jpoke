@@ -35,7 +35,7 @@ review エージェントが並列にレビュー・修正する。`loop/review/
     "review_dir":  "docs/review/moves/",
     "test_files":  ["tests/moves_status/"],
     "parallel_max": 3,
-    "worktree_base": "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-loop\\review"
+    "worktree_base": "{ROOTの親}\\jpoke-loop\\review"
   },
   "review_queue": ["..."],
   "in_progress":  [],
@@ -45,6 +45,9 @@ review エージェントが並列にレビュー・修正する。`loop/review/
   "last_format_commit": "..."
 }
 ```
+
+`{ROOTの親}` は `$ROOT`（プロジェクトルート、§共通1 参照）の親ディレクトリ。初回状態ファイル
+作成時に実際の絶対パスへ置き換える（他端末の具体例をそのままコピーしない）。
 
 `in_progress` の要素は `{"name": "...", "slot": N, "branch": "loop/review/{name}"}` 形式のオブジェクト。
 
@@ -144,16 +147,16 @@ jpoke {config.category} 再レビュータスク: {entry}
 4. 実装のレビュー・修正
    handlers/ と data/ の実装を仕様書・計画書と照合し、誤り・欠落があれば修正する。
    ※ 五十音ソート（sort_handlers.py / sort_data/*.py）は実行しない（マージ後に一括整形）。
-   ※ 技のレビューの場合、PP値は必ず `docs/champions/move_list.txt` の値を正とする
+   ※ 技のレビューの場合、PP値は必ず `docs/champions/moves.md` の値を正とする
      （`docs/champions/changes_from_sv.md` により全技PPは8/12/16/20の4段階に統一されている）。
      `data/moves/*.py` の実装がGen9本家基準の値になっている場合はそちらが移行漏れのバグであり、
-     champions側の値に修正すること。`docs/progress/move.md` のPP列とmove_list.txtが食い違う
-     場合も、move_list.txt を優先し進捗表の方を修正する（実装値に進捗表を合わせて
+     champions側の値に修正すること。`docs/progress/move.md` のPP列とmoves.mdが食い違う
+     場合も、moves.md を優先し進捗表の方を修正する（実装値に進捗表を合わせて
      champions値を消してしまわないこと）。
 
 5. リーサル計算のレビュー・実装
    `{config.progress_file}` の {entry} 行の「リーサル実装」列を確認する。
-   - `n/a` または `保留` → 対象外なのでスキップする
+   - `n/a` / `保留` / `ダブル専用` → 対象外なのでスキップする（impl.md の実装手順3参照）
    - `x` → handlers/lethal.py の既存ハンドラを仕様書・実装と照合し、誤り・欠落があれば修正する
      （`.claude/loop/_common.md` §共通11「リーサル計算ハンドラの実装パターン」を基準にする）
    - `-` → 仕様書をもとに §共通11 に従って新規にリーサル計算ハンドラを実装する
@@ -196,8 +199,8 @@ jpoke {config.category} 再レビュータスク: {entry}
    git add -A
    git commit -m "review: {entry}"
 
-10. 結果を記録する（パスは作業ディレクトリ外の固定絶対パス）
-   成功: C:\Users\tmtmp\Documents\pokemon\jpoke\.loop\review_results\{entry}.ok を Write で作成（内容は空でよい）
+10. 結果を記録する（パスは作業ディレクトリ外の固定パス、$ROOTは§共通1参照）
+   成功: $ROOT\.loop\review_results\{entry}.ok を Write で作成（内容は空でよい）
    失敗: 同 .fail を Write で作成（失敗理由を記述）
 ```
 
@@ -217,7 +220,9 @@ jpoke {config.category} 再レビュータスク: {entry}
 
 §共通8 に加えて:
 - `in_progress` のエントリが前回から残り結果ファイルが無い場合 → 再度エージェントを起動（再試行扱い）。
-- §共通5 の最終 pytest が失敗 → commit せずユーザーに報告（統合ブランチは調査用に残す）。
+- §共通5 の最終 pytest が失敗 → §共通5 の記載通り、まず flaky 確認（§共通13）、次に §共通15 の
+  自律修正を1回だけ試みる。それでも失敗する場合のみ commit せずユーザーに報告（統合ブランチは
+  調査用に残す）。
 - エージェント呼び出しがAPIセッション制限で失敗した場合 → §共通12 に従う。
 
 ## 状態例
@@ -230,7 +235,7 @@ jpoke {config.category} 再レビュータスク: {entry}
     "spec_dir": "docs/spec/moves/", "plan_dir": "docs/plan/moves",
     "progress_file": "docs/progress/move.md", "review_dir": "docs/review/moves/",
     "test_files": ["tests/moves_status/"], "parallel_max": 3,
-    "worktree_base": "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-loop\\review"
+    "worktree_base": "{ROOTの親}\\jpoke-loop\\review"
   },
   "review_queue": ["いえき", "いばる", "うたう"],
   "in_progress": [], "completed": ["あくび"], "failed": [],
