@@ -67,6 +67,22 @@ def test_Gのちから_ぼうぎょ1段階低下が発動する():
     assert battle.actives[1].boosts["def"] == -1
 
 
+def test_Gのちから_相手を瀕死にした場合はぼうぎょ低下が発動しない():
+    """Gのちから: このダメージで相手を瀕死にした場合、追加効果のぼうぎょ低下は発動しない
+    （実機仕様）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["Gのちから"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    defender.hp = 1
+    t.fix_damage(battle, 1)
+    t.run_move(battle, 0)
+    assert defender.fainted
+    assert defender.boosts["def"] == 0
+
+
 def test_サイケこうせん_こんらんが発動する():
     """サイケこうせん: 10%でこんらんを付与する。"""
     battle = t.start_battle(

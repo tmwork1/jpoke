@@ -492,6 +492,23 @@ def test_ミストボール_ぼうだん持ちには技が無効化される():
     assert defender.hp == hp_before
 
 
+def test_ミストボール_相手を瀕死にした場合はとくこう低下が発動しない():
+    """ミストボール: このダメージで相手を瀕死にした場合、追加効果のとくこう低下は発動しない
+    （実機仕様）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ラティアス", move_names=["ミストボール"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    defender = battle.actives[1]
+    defender.hp = 1
+    t.fix_damage(battle, 1)
+    t.run_move(battle, 0)
+    assert defender.fainted
+    assert defender.boosts["spa"] == 0
+
+
 def test_みずあめボム_あめまみれでターンごとに素早さが低下する():
     """みずあめボム: あめまみれ状態のポケモンはターン終了時に素早さが1段階下がる。"""
     battle = t.start_battle(
