@@ -101,6 +101,8 @@ cd "{worktree}" && PYTHONPATH=src python scripts/fuzz_log_battle.py \
 `count` 件は worker プロセスに分散して並列実行される。`--workers {workers}`（既定1）は、他の
 並行セッション・ループ（review/impl 等）も同じマシンの CPU を使うため、`fuzz_log` が全コアを
 専有しないよう明示的に絞っている値（省略時のスクリプト既定は CPU数と count の小さい方）。
+`fuzz`/`replay_fuzz` の既定4より小さいのは設定漏れではなく意図的な既定値
+（`fuzz_log` は既定 `batch_size` も小さく、direct並列より頻繁な起動間隔で回す設計のため）。
 常に exit code 0 で終了し、stdout に1行ずつ seed 昇順で `report: {path} crashed={True|False}` が出力される
 （`{path}` は worktree 配下の絶対パス）。`next_seed += batch_size`、
 `total_battles += batch_size` を更新する。
@@ -241,6 +243,13 @@ review-test 失敗 → 手順4.3の失敗時と同様に `failed_bugs` を更新
 
 1件の修正が review-test で成功・コミットされるたびに、ディスパッチャーがその場で §共通6 の
 手順に従い直ちに main へ反映する（`{branch}` = `loop/fuzz_log`）。
+
+## ループの実行間隔
+
+`/loop fuzz_log` の動的セルフペーシング（`ScheduleWakeup`）では、`/loop` スキルの汎用ガイド
+（1200〜1800秒）ではなく **固定1分間隔（`delaySeconds=60`）** を使う（`fuzz`/`replay_fuzz` と共通）。
+impl / review-test エージェントは常に foreground 起動でそのターン内に完結するため、次回起動も
+同様に60秒後とする。
 
 ## エラーハンドリング
 

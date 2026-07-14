@@ -94,6 +94,19 @@ def アイアンローラー_clear_terrain(battle: Battle, ctx: AttackContext, v
     return HandlerReturn(value=value)
 
 
+def アイアンローラー_clear_terrain_on_zero_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """アイアンローラー: みがわり等で実HPダメージが0だった場合でもフィールドを解除する。
+
+    Event.ON_DAMAGE_HIT は実HPダメージが0のとき発火しないため（みがわりに
+    被弾した場合等）、常に発火する Event.ON_HIT 側でこのケース（value<=0）
+    のみを処理する。実HPダメージが正の場合は Event.ON_DAMAGE_HIT 側
+    （アイアンローラー_clear_terrain）で処理するため、ここでは何もしない。
+    """
+    if value <= 0:
+        battle.terrain_manager.remove()
+    return HandlerReturn(value=value)
+
+
 def アイススピナー_clear_terrain(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """アイススピナー: ダメージ後にフィールドを解除する。"""
     battle.terrain_manager.remove()

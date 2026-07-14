@@ -83,6 +83,18 @@ def test_アイアンテール_ぼうぎょ1段階低下が発動する():
     assert battle.actives[1].boosts["def"] == -1
 
 
+def test_アイアンヘッド_ひるみが発動しない():
+    """アイアンヘッド: 追加効果不発時はひるみが付与されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ハガネール", move_names=["アイアンヘッド"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    t.run_move(battle, 0)
+    assert not battle.actives[1].has_volatile("ひるみ")
+
+
 def test_アイアンヘッド_ひるみが発動する():
     """アイアンヘッド: 20%でひるみを付与する。"""
     battle = t.start_battle(
@@ -125,6 +137,42 @@ def test_アイアンローラー_フィールドなしのとき失敗する():
     assert defender.hp == hp_before
 
 
+def test_アイアンローラー_まもるで防がれた場合はフィールドが解除されない():
+    """アイアンローラー: まもるで防がれたときはフィールドを解除できない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ハガネール", move_names=["アイアンローラー"])],
+        team1=[Pokemon("カビゴン")],
+        terrain=("エレキフィールド", 5),
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+    assert battle.terrain.is_active
+
+
+def test_アイアンローラー_みがわり状態でも実HPダメージ0でフィールドが解除される():
+    """アイアンローラー: みがわりに被弾して実HPダメージが0でも、技は命中しているため
+    フィールドは解除される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ハガネール", move_names=["アイアンローラー"])],
+        team1=[Pokemon("カビゴン")],
+        terrain=("エレキフィールド", 5),
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success is True
+    # みがわりが肩代わりするため本体HPは変化しない
+    assert defender.hp == hp_before
+    assert defender.volatiles["みがわり"].hp < 999
+    assert not battle.terrain.is_active
+
+
 def test_アイススピナー_フィールドありのとき命中してフィールドが解除される():
     """アイススピナー: フィールドが存在するとき命中してダメージを与え、フィールドを解除する。"""
     battle = t.start_battle(
@@ -153,6 +201,19 @@ def test_アイススピナー_フィールドなしでも命中する():
     t.run_move(battle, 0)
     assert battle.move_executor.move_success is True
     assert defender.hp < hp_before
+
+
+def test_アイスハンマー_ちからずくは無関係で発動する():
+    """アイスハンマー: 自分のランクを下げる確定効果はちからずくの対象外のため、
+    ちからずく所持時も威力上昇なし・すばやさ低下は通常通り発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", ability_name="ちからずく", move_names=["アイスハンマー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[0].boosts["spe"] == -1
+    assert battle.damage_calculator.power_modifier == 4096
 
 
 def test_アイスハンマー_相手にダメージを与える():
