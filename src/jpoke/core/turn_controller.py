@@ -423,8 +423,14 @@ class TurnController:
         # のを防ぐ）。ただし瀕死交代処理（run_faint_switch）は決着後でも
         # 内部で battle.judge_winner() を確認した上で早期returnする既存の
         # 安全策があるため、そのまま呼び出す。
+        # なお ON_TURN_END は速度順に複数個体（どく・やけど・天候ダメージ等）
+        # のハンドラをまとめて処理するため、フェーズ開始時点のガードだけでは
+        # 不十分（先に処理された個体の瀕死でイベント処理の途中に決着が
+        # ついても、残りのハンドラがそのまま実行されてしまう）。
+        # stop_if_winner_determined=True で、途中で決着した場合に残りの
+        # ハンドラの実行を打ち切る。
         if self.battle.is_new_turn() and self.battle.winner is None:
-            self._events.emit(Event.ON_TURN_END)
+            self._events.emit(Event.ON_TURN_END, stop_if_winner_determined=True)
 
             # だっしゅつパックによる割り込みフラグをフェーズに合わせて設定
             self._switch.override_ejectpack_interrupt(Interrupt.EJECTPACK_ON_TURN_END)
