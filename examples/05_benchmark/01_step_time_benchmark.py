@@ -5,7 +5,7 @@ README の「計算速度」節に載せる数値（mean ± σ）はこのスク
 選出フェーズ・`Battle.start()`（場に出す際の特性発動等）は計測対象に含めない
 （ターン進行そのものの「純粋な計算速度」を見たいため）。
 
-技は実際のゲーム仕様（最大4つ）に合わせて4つに固定する。`scripts/fuzz_battle.py`
+技は実際のゲーム仕様（最大4つ）に合わせて4つに固定する。`scripts/fuzz/fuzz_battle.py`
 の1〜10技はバグ出し用に状態空間を広く浅く掘るための設定であり、ここでは
 実戦に近い負荷を計測したいため踏襲しない。
 """
@@ -69,7 +69,7 @@ def run_benchmark(
     master seedからチーム生成用・バトル用の乱数を分離することで、
     同一プロセス内では同じseedなら常に同じ計測条件（チーム構成・展開）を再現できる。
 
-    完全ランダム編成は `scripts/fuzz_battle.py` が拾うような未実装組み合わせの
+    完全ランダム編成は `scripts/fuzz/fuzz_battle.py` が拾うような未実装組み合わせの
     エッジケースを踏むことがある。ベンチマークの主目的は計算速度の計測であり
     バグ調査ではないため、バトル単位で例外を捕捉してそのバトルの計測値は捨て、
     次のバトルへ進む（バグ自体は別途 fuzz スクリプトで追う）。
@@ -151,7 +151,7 @@ def main() -> None:
 
     print(f"バトル数: {args.n_battles} / 最大ターン数: {args.max_turns} / seed: {args.seed}")
     if n_skipped:
-        print(f"未捕捉例外によりスキップしたバトル数: {n_skipped}（完全ランダム編成のエッジケース。scripts/fuzz_battle.py 参照）")
+        print(f"未捕捉例外によりスキップしたバトル数: {n_skipped}（完全ランダム編成のエッジケース。scripts/fuzz/fuzz_battle.py 参照）")
     print(f"stepサンプル数: {n}")
     print(f"1step所要時間: ({mean * 1000:.1f} ± {sigma * 1000:.1f}) ms")
     print(f"battles/sec: {n_ok / total:.1f}")

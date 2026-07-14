@@ -31,7 +31,7 @@ jobs:
         continue-on-error: true
         timeout-minutes: 15
         run: >
-          python scripts/fuzz_battle.py --search
+          python scripts/fuzz/fuzz_battle.py --search
           --start-seed ${{ steps.seed.outputs.start_seed }}
           --count 500
 
@@ -40,7 +40,7 @@ jobs:
         continue-on-error: true
         timeout-minutes: 15
         run: >
-          python scripts/fuzz_battle.py --search --player tree_search
+          python scripts/fuzz/fuzz_battle.py --search --player tree_search
           --start-seed ${{ steps.seed.outputs.start_seed }}
           --count 100
 

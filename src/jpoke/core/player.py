@@ -13,7 +13,7 @@ from jpoke.enums import Command
 from jpoke.types import AbilityName, Gender, ItemName, MoveName, Nature, PokemonName, Stat, Type
 
 # poke-env 互換の battle_against() でターン上限に使う既定値。
-# scripts/fuzz_battle.py の "random" プリセット（max_turns=100）を参考にした値。
+# scripts/fuzz/fuzz_battle.py の "random" プリセット（max_turns=100）を参考にした値。
 MAX_TURNS = 100
 
 

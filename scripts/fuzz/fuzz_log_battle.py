@@ -10,8 +10,8 @@
 （`fuzz_common.py` に共通化されたロジックを再利用する）。
 
 使い方:
-    python scripts/fuzz_log_battle.py --start-seed 0 --count 10
-    python scripts/fuzz_log_battle.py --start-seed 0 --count 10 --max-turns 30 --n-pokemon 3
+    python scripts/fuzz/fuzz_log_battle.py --start-seed 0 --count 10
+    python scripts/fuzz/fuzz_log_battle.py --start-seed 0 --count 10 --max-turns 30 --n-pokemon 3
 """
 
 from __future__ import annotations
@@ -29,7 +29,7 @@ from jpoke import Battle
 from fuzz_battle import RandomPlayer
 from fuzz_common import build_team, format_full_log, format_team, random_team_spec
 
-_ROOT = Path(__file__).resolve().parent.parent
+_ROOT = Path(__file__).resolve().parent.parent.parent
 
 DEFAULT_MAX_TURNS = 30
 DEFAULT_N_POKEMON = 3
@@ -71,7 +71,7 @@ def run_one(seed: int, max_turns: int, n_pokemon: int) -> tuple[Path, bool]:
     path = report_dir / f"seed_{seed}.log"
 
     repro_cmd = (
-        f"python scripts/fuzz_log_battle.py --start-seed {seed} --count 1 "
+        f"python scripts/fuzz/fuzz_log_battle.py --start-seed {seed} --count 1 "
         f"--max-turns {max_turns} --n-pokemon {n_pokemon}"
     )
 

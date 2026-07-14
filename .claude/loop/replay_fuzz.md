@@ -7,7 +7,7 @@
 
 ## フロー概要
 
-`scripts/replay_fuzz_battle.py` で完全ランダムな対戦をシード付きで大量に実行し、
+`scripts/fuzz/replay_fuzz_battle.py` で完全ランダムな対戦をシード付きで大量に実行し、
 `Battle.build_replay_data()` → `replay_battle()` によるリプレイ再現が元の対戦と
 完全に一致するか（`tests/test_replay_fuzz.py` と同じ判定基準）を検証する。
 既存の `fuzz` ループ（`.claude/loop/fuzz.md`）が「未捕捉例外」を検出するのに対し、
@@ -59,7 +59,7 @@
 - `max_turns` / `n_pokemon`: `tests/test_replay_fuzz.py` の既定値（`MAX_TURNS=30`, `N_POKEMON=3`）を
   踏襲した既定値。値を大きくするほど1戦が高コストになる。
 - `pending_failures`: 直近のバッチ実行で見つかった未処理の食い違いのキュー（`fuzz_log.md` の
-  `pending_anomalies` と同じ形）。`scripts/replay_fuzz_battle.py --search` は打ち切りをせず
+  `pending_anomalies` と同じ形）。`scripts/fuzz/replay_fuzz_battle.py --search` は打ち切りをせず
   `batch_size` 件を必ず全て並列実行するため、1バッチで複数件の食い違いが同時に見つかることがある。
   1件ずつ手順4で処理し、処理し終えたらそのエントリを取り除く。
 - バグ台帳（`completed_bugs` / `failed_bugs`）は `fuzz` と同じ形式（`player` フィールドは無し）。
@@ -89,7 +89,7 @@
 worktree 配下に書き込まれる）:
 
 ```bash
-cd "{worktree}" && PYTHONPATH=src python scripts/replay_fuzz_battle.py --search \
+cd "{worktree}" && PYTHONPATH=src python scripts/fuzz/replay_fuzz_battle.py --search \
   --start-seed {next_seed} --count {batch_size} --workers {workers} \
   --max-turns {max_turns} --n-pokemon {n_pokemon}
 ```

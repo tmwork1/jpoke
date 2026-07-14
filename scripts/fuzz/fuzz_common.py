@@ -33,7 +33,7 @@ MAX_MOVES = 10
 
 # src/jpoke 配下のファイルのみを signature 算出の対象にする
 # （呼び出し元スクリプト自身や標準ライブラリのフレームは原因箇所として扱わない）
-_PACKAGE_ROOT = str(Path(__file__).resolve().parent.parent / "src" / "jpoke")
+_PACKAGE_ROOT = str(Path(__file__).resolve().parent.parent.parent / "src" / "jpoke")
 
 
 def random_team_spec(rng: Random, n_pokemon: int = 6) -> list[dict]:
