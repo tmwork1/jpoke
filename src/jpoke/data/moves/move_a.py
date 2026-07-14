@@ -200,7 +200,7 @@ MOVES_A: dict[MoveName, MoveData] = {
     "アクセルブレイク": MoveData(
         type="かくとう",
         category="physical",
-        pp=5,
+        pp=8,
         power=100,
         accuracy=100,
         flags={"contact"},
