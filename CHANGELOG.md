@@ -60,6 +60,12 @@
   合わせて `examples/03_damage_calc/10_form_change_comparison.py` を新設し、
   `set_form()` によるロトムのフォルム変化がタイプ・種族値を通じてダメージ・致死率に
   与える影響を比較するサンプルを追加
+- `docs/api/README.md`（Battle「状態取得系」）に `Battle.calc_move_priority(attacker, move)` /
+  `Battle.resolve_speed_order()` を追記。`examples/02_ai/04_priority_and_command_debug.py`
+  で使用されているが実装済みメソッド自体は `docs/api/README.md` に未掲載で、
+  「テストユーティリティ」節のインデックス指定版 `jpoke.testing.calc_move_priority(battle,
+  player_index, move_index=0)` のみが記載されていたための対応。両者の違い
+  （`Pokemon`/`Move` オブジェクト指定かインデックス指定か）を相互に明記した
 
 ### Changed
 

@@ -117,3 +117,30 @@
   `python scripts/sort_tests.py tests/test_command.py`・`python scripts/generate_test_list.py`を
   実行し、`python -m pytest tests/ -v`で5769件全件パス（既存の5765件+新規テスト4件、flaky testの
   新規発生なし）を確認した。
+
+- [x] `Battle.calc_move_priority()`/`Battle.resolve_speed_order()`が`docs/api/README.md`のBattle章に
+  未掲載で、`jpoke.testing`版と混同しやすい（id: r7-6） → 対応内容 (2026-07-14):
+  `src/jpoke/core/battle.py:749`の`calc_move_priority(self, attacker: Pokemon, move: Move) -> int`
+  （`speed_calculator.calc_move_priority()`への委譲。技本来の優先度に
+  ON_MODIFY_MOVE_PRIORITYイベントによる補正を加えた値を返す）と、同ファイル729行目の
+  `resolve_speed_order(self) -> list[Pokemon]`（`speed_calculator.resolve_speed_order()`への委譲。
+  引数なしで現在の実効素早さ順にソートしたポケモンのリストを返す）は
+  `examples/02_ai/04_priority_and_command_debug.py`で実際に使われている実装済みメソッドだが、
+  `docs/api/README.md`のBattle「状態取得系」テーブルには一度も掲載されておらず、
+  「テストユーティリティ」節の`jpoke.testing.calc_move_priority(battle, player_index,
+  move_index=0)`（インデックス指定の薄いラッパー）のみが記載されていたため、
+  両者が別物であることに気づきにくかった。Battle「状態取得系」テーブルに
+  `calc_move_priority(attacker, move)`/`resolve_speed_order()`の行を追加し、コード例にも
+  `battle.calc_move_priority(active, active.moves[0])`/`battle.resolve_speed_order()`を追記した。
+  `calc_move_priority`の説明には`jpoke.testing.calc_move_priority(battle, player_index,
+  move_index=0)`が内部でこちらを呼ぶインデックス指定版であることを明記し、
+  「テストユーティリティ」節側の`calc_move_priority`の説明にも`Battle.calc_move_priority(pokemon,
+  move)`のインデックス指定版である旨を追記して相互参照できるようにした。`resolve_speed_order()`の
+  説明には、予約済みコマンドを考慮した実際の行動順が必要な場合は`resolve_action_order()`を使う
+  旨も明記した。`CHANGELOG.md`にも明記した。ドキュメントのみの修正でコード変更を伴わないため
+  新規の回帰テストは不要と判断し、`PYTHONUTF8=1 python
+  examples/02_ai/04_priority_and_command_debug.py`を実行してBattle直下の
+  `calc_move_priority()`/`resolve_speed_order()`呼び出しが引き続き動作すること
+  （でんこうせっか=1・のしかかり=0という優先度、通常時/トリックルーム下での素早さ順反転）を
+  確認した。`python -m pytest tests/ -v`で5769件全件パス（既存件数のまま、flaky testの新規発生
+  なし）を確認した。
