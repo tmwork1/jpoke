@@ -62,6 +62,24 @@ def test_ZMOVEコマンド_行動候補に含まれない():
     assert not any(cmd.is_zmove for cmd in commands)
 
 
+def test_is_switch_プロパティとしてコマンド種別ごとに真偽を返す():
+    """is_regular_move/is_terastal等と同様に@propertyとして実装されており、
+    括弧を付けずに参照するだけで交代コマンドかどうかの真偽値を返す。
+    """
+    assert Command.SWITCH_0.is_switch
+    assert Command.SWITCH_9.is_switch
+    assert not Command.MOVE_0.is_switch
+    assert not Command.TERASTAL_0.is_switch
+    assert not Command.MEGAEVOL_0.is_switch
+    assert not Command.GIGAMAX_0.is_switch
+    assert not Command.ZMOVE_0.is_switch
+    assert not Command.STRUGGLE.is_switch
+    assert not Command.FORCED.is_switch
+    # bound methodではなくboolを返すこと（真偽反転が機能することで確認）
+    assert isinstance(Command.SWITCH_0.is_switch, bool)
+    assert not (not Command.SWITCH_0.is_switch)
+
+
 def test_is_type_Noneを渡すと偽を返す():
     """command_typeにNoneを渡した場合は種別を問わず偽になる。"""
     assert not Command.MOVE_0.is_type(None)

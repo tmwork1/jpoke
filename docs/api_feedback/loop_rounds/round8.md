@@ -22,3 +22,22 @@
   従来通り正常終了し、致死率比較の出力（どく無し/どくあり、HP満タン/HP減少後、ぼうぎょ+1後、
   faint()呼び出し後）が変わらないことを確認した。`python -m pytest tests/ -v`で5803件全件
   パス・1件skip（既存件数のまま、flaky testの新規発生なし）を確認した。
+- [x] `Command.is_switch()`のみメソッドで、同じ真偽値判定を行う`is_regular_move`/
+  `is_terastal`/`is_megaevol`/`is_gigamax`/`is_zmove`はすべて`@property`という
+  不一致があった。`if cmd.is_switch:`と書くとbool化されずbound methodが常にTruthyになる
+  バグの温床だった（developer視点、id: r8-2） → 対応内容 (2026-07-14):
+  `src/jpoke/enums/command.py`の`is_switch()`を`@property`の`is_switch`に変更し、
+  呼び出し箇所`src/jpoke/core/battle.py:1564`・`src/jpoke/core/switch_manager.py:190`を
+  `cmd.is_switch()`→`cmd.is_switch`に修正した。`docs/api/README.md`のCommand章
+  「インスタンスプロパティ・メソッド」表の記載も`is_switch()`→`is_switch (property)`に
+  修正した。公開APIのシグネチャ変更（メソッド→プロパティ）に伴う破壊的変更のため
+  `CHANGELOG.md`の`[Unreleased]`/`Changed`に追記した。`src/jpoke`・`examples/`・`tests/`
+  全体を再度grepし、`is_switch()`の呼び出しが他に残っていないことを確認した
+  （`CHANGELOG.md`・`docs/api_feedback/loop_rounds/round7.md`内の説明文への言及のみ残存）。
+  `tests/test_command.py`に`test_is_switch_プロパティとしてコマンド種別ごとに真偽を返す()`を
+  追加し、`SWITCH_*`で真、`MOVE_0`/`TERASTAL_0`/`MEGAEVOL_0`/`GIGAMAX_0`/`ZMOVE_0`/
+  `STRUGGLE`/`FORCED`で偽になること、および`isinstance(..., bool)`でbound methodではなく
+  bool値そのものを返すことを検証した。`python scripts/sort_tests.py tests/test_command.py`・
+  `python scripts/generate_test_list.py`を実行し、`examples/02_ai/01_custom_player.py`が
+  従来通り正常終了することを確認した。`python -m pytest tests/ -v`で5818件全件パス・1件skip
+  （既存のflaky無し）を確認した。

@@ -137,6 +137,12 @@
   `04_research/03_janken_nash_cfr.py` の `hp_bucket()` はHP満タン
   （fraction=1.0）を専用の最上位バケットとして切り出す仕様に変更し、バケット
   総数が `HP_BUCKETS` から `HP_BUCKETS + 1` になった
+- **破壊的変更**: `Command.is_switch()` をプロパティ `Command.is_switch` に変更した。
+  同じ真偽値判定を行う `is_regular_move` / `is_terastal` / `is_megaevol` /
+  `is_gigamax` / `is_zmove` がすべて `@property` である中で `is_switch()` のみ
+  メソッド呼び出しになっており、`if cmd.is_switch:` と書くとbool化されず
+  bound methodが常にTruthyになるバグの温床だったため統一した。呼び出し側は
+  `cmd.is_switch()` を `cmd.is_switch` に変更する必要がある
 
 ### Fixed
 

@@ -187,7 +187,7 @@ class SwitchManager:
                     continue
                 self.battle.item_manager.consume_item(state.active)
 
-            if state.command_reserved() and state.next_command.is_switch():
+            if state.command_reserved() and state.next_command.is_switch:
                 # 予約されている交代コマンドを使う
                 command = state.pop_command()
             else:
