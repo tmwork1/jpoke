@@ -36,17 +36,31 @@ def main() -> None:
     serialized = replay_data.to_dict()
     restored = type(replay_data).from_dict(serialized)
 
-    # TODO: リプレイを再生する箇所にも説明を追加する。
+    # replay_battle() は ReplayData（チーム＋シード＋選出＋コマンド列）から
+    # 新しい Battle インスタンスを構築し、記録されたコマンドを ReplayPlayer で
+    # 順に払い出しながら決着まで自動的に進める（手動で step() を呼ぶ必要はない）。
+    # 内部的には ReplayData と同じ乱数シードを使うため、決着後の対戦は元の対戦と
+    # まったく同じ展開になる。
     replayed_battle = replay_battle(restored)
 
-    # TODO: 勝者だけを確認するのではなく、print_logs()の出力が元の対戦と同じになることを確認できるようにする
+    # 勝者・ターン数の一致だけでなく、get_log_lines(turn="all")（print_logs()が
+    # 内部で出力している行そのもの。turn="all" で1ターン目から現在ターンまでの
+    # 全ログを取得する）が完全に一致することを確認し、「同じ展開が再現された」
+    # ことを実際に検証する
+    original_log_lines = battle.get_log_lines(turn="all")
+    replayed_log_lines = replayed_battle.get_log_lines(turn="all")
+    assert original_log_lines == replayed_log_lines, "リプレイの再生結果が元の対戦と一致しない"
+
     replayed_winner = replayed_battle.winner
     print(
         f"再生した対戦の勝者: "
         f"{replayed_winner.username if replayed_winner else '引き分け（ターン上限）'}"
         f"（{replayed_battle.turn}ターン）"
     )
-    print("同じ展開が再現されているはず（勝者・ターン数が元の対戦と一致する）")
+    print(
+        f"ログ行数: 元={len(original_log_lines)}行 / 再生={len(replayed_log_lines)}行 "
+        "（完全一致することをassertで確認済み）"
+    )
 
     # 試してみよう: serialized を json.dumps() でファイルに保存し、別プロセスで
     # json.load() → from_dict() → replay_battle() すると、対戦の記録・共有・
