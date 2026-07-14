@@ -1,10 +1,8 @@
-# TODO: まずポケモンの状態を直接操作するだけのサンプルコードを作成し、02として見せるべき。すべての操作をわかりやすく列挙してほしい。
-
 """状態異常・HP・能力ランクを直接操作したシナリオ間で致死率を比較する。
 
-01（calc_lethal 基本）を踏まえ、battle.set_ailment() / modify_hp() / modify_stats() /
-faint() で「対戦を進行させずに特定の状態から始まるシナリオ」を組み立て、
-calc_lethal() の結果がどう変わるかを比較する。
+02（各操作の単体確認）・03（calc_lethal 基本）を踏まえ、battle.set_ailment() /
+modify_hp() / modify_stats() / faint() で「対戦を進行させずに特定の状態から
+始まるシナリオ」を組み立て、calc_lethal() の結果がどう変わるかを比較する。
 """
 from __future__ import annotations
 

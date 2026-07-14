@@ -51,16 +51,17 @@ PYTHONUTF8=1 python examples/01_basics/01_battle_against_intro.py
 | `02_ai/05_opponent_estimation.py` | `TreeSearchPlayer.opponent_estimator()` のオーバーライドによる、相手の未公開の技構成の推定と、それを踏まえた木探索 | AI開発（発展） |
 | `02_ai/06_deterministic_search.py` | `TreeSearchPlayer.configure_sim()` のオーバーライドによる、探索中だけ命中率・ダメージ乱数を固定する決定論化 | AI開発（発展） |
 | `02_ai/07_fallback_policy.py` | `TreeSearchPlayer.fallback()` のオーバーライドによる、探索できない局面での代替方策のカスタマイズ | AI開発（発展） |
-| `03_damage_calc/01_basic_lethal_calculation.py` | `battle.calc_lethal()` による確定数・乱数ダメージの基本計算、努力値、`Pokemon.show()` | ダメージ計算ツール開発 |
-| `03_damage_calc/02_ailment_and_scenario_comparison.py` | `set_ailment()` / `modify_hp()` / `modify_stats()` / `faint()` でシナリオを組み立てた致死率比較 | ダメージ計算ツール開発 |
-| `03_damage_calc/03_raw_damage_rolls.py` | `calc_damages()` / `roll_damage()` による生ダメージロールの確認、`damage_roll` / `critical_mode` による固定ロール | ダメージ計算ツール開発 |
-| `03_damage_calc/04_multi_hit_and_combo_moves.py` | `Move.expected_hits`（連続技の期待ヒット数）、複数技を組み合わせる（`moves=[...]`） | ダメージ計算ツール開発 |
-| `03_damage_calc/05_secondary_effects.py` | `secondary=True` による追加効果込みの確定数短縮 | ダメージ計算ツール開発 |
-| `03_damage_calc/06_field_effects.py` | 天候（すなあらし）・地形（エレキフィールド）の効果 | ダメージ計算ツール開発 |
-| `03_damage_calc/07_ailment_and_volatile.py` | 技を実際に当てて状態異常を発生させる方法、`battle.set_volatile()` による揮発性状態（やどりぎのタネ）の直接付与、`effect_chance_threshold` による追加効果発動確率の固定 | ダメージ計算ツール開発 |
-| `03_damage_calc/08_ability_and_item_logs.py` | `battle.step()` を伴う進行での特性・アイテムの発動ログ確認 | ダメージ計算ツール開発 |
-| `03_damage_calc/09_testing_helpers.py` | `jpoke.testing` の `start_battle()` / `apply_ailment()` / `run_move()` / `calc_lethal()` による、定型的なセットアップを短く書くショートカット | ダメージ計算ツール開発 |
-| `03_damage_calc/10_form_change_comparison.py` | `Pokemon.set_form()` によるフォルム変化（ロトムの姿）がタイプ・種族値の違いを通じてダメージ・致死率に与える影響の比較 | ダメージ計算ツール開発 |
+| `03_damage_calc/01_raw_damage_rolls.py` | `calc_damages()` / `roll_damage()` による生ダメージロールの確認、`damage_roll` / `critical_mode` による固定ロール | ダメージ計算ツール開発 |
+| `03_damage_calc/02_direct_state_manipulation.py` | `set_ailment()` / `modify_hp()` / `modify_stats()` / `faint()` を単体で直接操作するAPIの確認 | ダメージ計算ツール開発 |
+| `03_damage_calc/03_basic_lethal_calculation.py` | `battle.calc_lethal()` による確定数・乱数ダメージの基本計算、努力値、`Pokemon.show()` | ダメージ計算ツール開発 |
+| `03_damage_calc/04_ailment_and_scenario_comparison.py` | 02の各操作を組み合わせ、シナリオ間でcalc_lethal()の致死率を比較 | ダメージ計算ツール開発 |
+| `03_damage_calc/05_multi_hit_and_combo_moves.py` | `Move.expected_hits`（連続技の期待ヒット数）、複数技を組み合わせる（`moves=[...]`） | ダメージ計算ツール開発 |
+| `03_damage_calc/06_secondary_effects.py` | `secondary=True` による追加効果込みの確定数短縮、自傷効果（りゅうせいぐん等）が`secondary`の対象外である理由 | ダメージ計算ツール開発 |
+| `03_damage_calc/07_field_effects.py` | 天候（すなあらし）・地形（エレキフィールド）の効果 | ダメージ計算ツール開発 |
+| `03_damage_calc/08_ailment_and_volatile.py` | 技を実際に当てて状態異常を発生させる方法、`battle.set_volatile()` による揮発性状態（やどりぎのタネ）の直接付与、`effect_chance_threshold` による追加効果発動確率の固定 | ダメージ計算ツール開発 |
+| `03_damage_calc/09_ability_and_item_logs.py` | `battle.step()` を伴う進行での特性・アイテムの発動ログ確認 | ダメージ計算ツール開発 |
+| `03_damage_calc/10_testing_helpers.py` | `jpoke.testing` の `start_battle()` / `apply_ailment()` / `run_move()` / `calc_lethal()` による、定型的なセットアップを短く書くショートカット | ダメージ計算ツール開発 |
+| `03_damage_calc/11_form_change_comparison.py` | `Pokemon.set_form()` によるフォルム変化（ロトムの姿）がタイプ・種族値の違いを通じてダメージ・致死率に与える影響の比較 | ダメージ計算ツール開発 |
 | `04_research/01_bulk_simulation.py` | `Player.battle_against()` による多数回対戦・構成比較 | 戦術研究（構成比較） |
 | `04_research/02_replay.py` | `Battle.build_replay_data()` / `ReplayPlayer` / `replay_battle()` によるリプレイの記録・再生 | 戦術研究（対戦の記録・解析） |
 | `04_research/03_janken_nash_cfr.py` | `Battle.copy()` を使ったロールアウトベースのregret matching（CFR風）による、HP状況に応じた適応的な戦略の自己対戦学習 | 戦術研究（読み合いの定量分析、発展） |
