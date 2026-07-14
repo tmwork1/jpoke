@@ -1634,6 +1634,11 @@ def さまようたましい_swap_ability_on_contact(battle: Battle, ctx: Attack
     ):
         return HandlerReturn(value=value)
     battle.ability_manager.swap_ability(defender, attacker)
+    # docs/spec/abilities/わるいてぐせ.md「効果の処理順」: てつのトゲ等ダメージを受けて
+    # 発動する特性とは異なり、わるいてぐせは特性を交換した直後に発動判定があるため、
+    # 通常の発動タイミング（ON_DAMAGE_HIT priority=180）を待たずにここで即座に判定する。
+    if defender.ability.base_name == "わるいてぐせ":
+        わるいてぐせ_steal_item(battle, ctx, value)
     return HandlerReturn(value=value)
 
 
@@ -4605,6 +4610,13 @@ def リミットシールド_prevent_ailment(battle: Battle, ctx: EventContext, 
     return _prevent_ailment(battle, ctx, value)
 
 
+def リミットシールド_prevent_drowsy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """リミットシールド特性: りゅうせいのすがた時にねむけ状態を無効化する。"""
+    if ctx.target.name != METEONO_METEOR:
+        return HandlerReturn(value=value)
+    return _prevent_volatile(battle, ctx, value, blocked_volatiles=["ねむけ"])
+
+
 def リミットシールド_revert_form(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """リミットシールド特性: 交代時にりゅうせいのすがたからコアの姿へ戻す。"""
     mon = ctx.source
@@ -4633,7 +4645,15 @@ def りゅうのあぎと_modify_atk(battle: Battle, ctx: AttackContext, value: 
 
 
 def りんぷん_block_secondary_chance(battle: Battle, ctx: AttackContext, value: float) -> HandlerReturn:
-    """りんぷん特性: 相手の攻撃技の追加効果を無効化する。"""
+    """りんぷん特性: 相手の攻撃技の追加効果を無効化する。
+
+    コメットパンチなど、使用者自身の能力が変化する追加効果（ctx.secondary_effect_target
+    == "attacker"）は、自分を使用したときも相手から受けたときも発動するため防げない
+    （一次情報: 「チャージビームなど、追加効果で使用者の能力が変化する技の効果は、
+    自分を使用したときも、相手から受けたときも発動する」）。
+    """
+    if ctx.secondary_effect_target != "defender":
+        return HandlerReturn(value=value)
     return HandlerReturn(value=0, stop_event=True)
 
 
@@ -4646,8 +4666,19 @@ def リーフガード_prevent_ailment(battle: Battle, ctx: EventContext, value:
 
 
 def わざわいのうつわ_reduce_C(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """わざわいのうつわ特性: 自分以外の特攻補正を0.75倍にする。"""
-    if ctx.attacker is not ctx.defender:
+    """わざわいのうつわ特性: 自分以外の特攻補正を0.75倍にする。
+
+    分類が特殊に決まった技のみが対象（物理技のとくこうは参照されないため対象外）。
+    サイコショック/サイコブレイク/しんぴのつるぎ等の分類が変わる技は、
+    ON_CALC_ATK_MODIFIER到達時点で分類が確定済みのため、ここでの
+    ctx.move.category判定だけで正しく扱える。
+    攻撃側自身がわざわいのうつわを持つ場合（コピー・交換等による取得を含む）は対象外。
+    """
+    if (
+        ctx.attacker is not ctx.defender
+        and ctx.move.category == "special"
+        and ctx.attacker.ability.name != "わざわいのうつわ"
+    ):
         value = apply_fixed_modifier(value, 3072)
     return HandlerReturn(value=value)
 
@@ -4666,31 +4697,56 @@ def _block_item_change(mon: Pokemon, unchangable_items: list[ItemName]) -> Handl
 
 
 def わざわいのおふだ_reduce_A(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """わざわいのおふだ特性: 自分以外の攻撃補正を0.75倍にする。"""
-    if ctx.attacker is not ctx.defender:
+    """わざわいのおふだ特性: 自分以外の攻撃補正を0.75倍にする。
+    攻撃側自身がわざわいのおふだを持つ場合（コピー・交換等による取得を含む）は対象外。
+    """
+    if (
+        ctx.attacker is not ctx.defender
+        and ctx.attacker.ability.name != "わざわいのおふだ"
+    ):
         value = apply_fixed_modifier(value, 3072)
     return HandlerReturn(value=value)
 
 
 def わざわいのたま_reduce_D(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """わざわいのたま特性: 自分以外の特防補正を0.75倍にする。"""
-    if ctx.attacker is not ctx.defender:
+    """わざわいのたま特性: 自分以外の特防補正を0.75倍にする。
+
+    とくぼうが参照される技のみが対象（物理技のぼうぎょは参照されないため対象外）。
+    ボディプレス/サイコショック/サイコブレイク等、参照する防御側ステータスが
+    分類と食い違う技は _calc_final_defense と同じ
+    battle.query.deals_physical_damage 判定を使うことで正しく扱える。
+    防御側自身がわざわいのたまを持つ場合（コピー・交換等による取得を含む）は対象外。
+    """
+    if (
+        ctx.attacker is not ctx.defender
+        and not battle.query.deals_physical_damage(ctx.attacker, ctx.move)
+        and ctx.defender.ability.name != "わざわいのたま"
+    ):
         value = apply_fixed_modifier(value, 3072)
     return HandlerReturn(value=value)
 
 
 def わざわいのつるぎ_reduce_B(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """わざわいのつるぎ特性: 自分以外の防御補正を0.75倍にする。"""
-    if ctx.attacker is not ctx.defender:
+    """わざわいのつるぎ特性: 自分以外の防御補正を0.75倍にする。
+    防御側自身がわざわいのつるぎを持つ場合（コピー・交換等による取得を含む）は対象外。
+    """
+    if (
+        ctx.attacker is not ctx.defender
+        and ctx.defender.ability.name != "わざわいのつるぎ"
+    ):
         value = apply_fixed_modifier(value, 3072)
     return HandlerReturn(value=value)
 
 
 def わたげ_lower_spd_on_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """わたげ特性: 攻撃を受けたとき攻撃者のすばやさを1段階下げる。"""
+    """わたげ特性: 攻撃を受けたとき攻撃者のすばやさを1段階下げる。
+
+    攻撃してきたポケモンがみがわり状態であるときは効果を受けない
+    （一次情報: docs/wiki/abilities/わたげ.html 特性の仕様節）。
+    """
     mon = ctx.defender
     attacker = ctx.attacker
-    if attacker is None:
+    if attacker.has_volatile("みがわり"):
         return HandlerReturn(value=value)
     if battle.modify_stats(attacker, {"spe": -1}, source=mon):
         _announce_ability_triggered(battle, mon)
@@ -4698,10 +4754,16 @@ def わたげ_lower_spd_on_hit(battle: Battle, ctx: AttackContext, value: Any) -
 
 
 def わるいてぐせ_steal_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """わるいてぐせ特性: 直接攻撃を受けた後に相手のアイテムを奪う。"""
+    """わるいてぐせ特性: 直接攻撃を受けた後に相手のアイテムを奪う。
+
+    自身（わるいてぐせのポケモン）がひんしになった場合は発動しない。反動ダメージ等で
+    攻撃側がひんしになった場合は発動する（このとき攻撃側の特性ねんちゃくによる
+    奪取阻止も無視する。docs/spec/abilities/わるいてぐせ.md「ねんちゃくのポケモンが
+    技の反動などでひんしになったときは、ねんちゃくは発動せずに道具を奪える」）。
+    """
     if (
         battle.query.is_contact(ctx)
         and not ctx.defender.fainted
     ):
-        battle.item_manager.take_item(ctx.attacker)
+        battle.item_manager.take_item(ctx.attacker, ignore_sticky_hold=ctx.attacker.fainted)
     return HandlerReturn(value=value)
