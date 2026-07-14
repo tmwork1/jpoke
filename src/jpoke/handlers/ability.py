@@ -4781,10 +4781,15 @@ def わるいてぐせ_steal_item(battle: Battle, ctx: AttackContext, value: Any
     攻撃側がひんしになった場合は発動する（このとき攻撃側の特性ねんちゃくによる
     奪取阻止も無視する。docs/spec/abilities/わるいてぐせ.md「ねんちゃくのポケモンが
     技の反動などでひんしになったときは、ねんちゃくは発動せずに道具を奪える」）。
+
+    レッドカード（priority=150）が同じON_DAMAGE_HITでわるいてぐせ（priority=180）より
+    先に発動し、攻撃側を強制交代させている場合がある。この場合ctx.attackerは既に場を
+    離れているため、battle.foe解決不能を避けるためここで何もしない。
     """
     if (
         battle.query.is_contact(ctx)
         and not ctx.defender.fainted
+        and (ctx.attacker.fainted or battle.is_active(ctx.attacker))
     ):
         battle.item_manager.take_item(ctx.attacker, ignore_sticky_hold=ctx.attacker.fainted)
     return HandlerReturn(value=value)
