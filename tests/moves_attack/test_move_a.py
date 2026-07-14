@@ -191,6 +191,19 @@ def test_アイスハンマー_自分のすばやさが1段階下がる():
     assert battle.actives[0].boosts["spe"] == -1
 
 
+def test_アイスハンマー_ちからずくは無関係で発動する():
+    """アイスハンマー: 自分のランクを下げる確定効果はちからずくの対象外のため、
+    ちからずく所持時も威力上昇なし・すばやさ低下は通常通り発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", ability_name="ちからずく", move_names=["アイスハンマー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[0].boosts["spe"] == -1
+    assert battle.damage_calculator.power_modifier == 4096
+
+
 def test_あおいほのお_やけどが発動する():
     """あおいほのお: 20%でやけどを付与する。"""
     battle = t.start_battle(
