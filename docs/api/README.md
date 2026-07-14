@@ -105,12 +105,16 @@ winner = battle.play_out(max_turns=100)
 | `get_team(player)` | 指定プレイヤーの対戦中のチーム（選出漏れの控えも含む）を取得。`player.team` は開始前のスナップショットで対戦中は更新されないため、HP・瀕死・状態異常などバトル中の実際の状態を見るにはこちらを使う |
 | `get_available_commands(player)` | 現在使用可能な `Command` のリストを取得 |
 | `command_to_move(player, command)` | コマンドから `Move` オブジェクトを取得。`choose_command()` の実装で使う |
+| `is_struggle_only(player)` | わるあがきしか選べない状態かどうかを判定する。`get_available_commands(player)[0]` で代用すると、交代コマンドが同時に存在する場合に誤ってそちらを返すことがあるため、判定にはこちらを使う。実際にわるあがきを選ぶ際は `Command.STRUGGLE` をそのまま使えばよい（`SWITCH_i`/`MOVE_i` と異なりインデックス解決が不要なため、取得専用メソッドは無い） |
 
 ```python
 active = battle.get_active(player1)
 team = battle.get_team(player1)  # 瀕死・HP変化などを反映した実体
 commands = battle.get_available_commands(player1)
 move = battle.command_to_move(player1, commands[0])
+
+if battle.is_struggle_only(player1):
+    command = Command.STRUGGLE
 ```
 
 `battle.query`（`PokemonQuery`）には他にも判定用メソッドがあるが、そのうち `Pokemon`/`Player`

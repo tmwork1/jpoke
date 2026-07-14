@@ -134,3 +134,39 @@
   `python examples/03_damage_calc/09_testing_helpers.py`が従来通り正常終了することを
   確認した。`python -m pytest tests/ -v`で5836件全件パス・1件skip（既存のflaky無し）を
   確認した。
+- [x] わるあがき専用コマンドを明示的に判定・取得する公開APIが無く、
+  `examples/02_ai/01_custom_player.py`の`choose_command_poke_env_style()`が
+  `battle.get_available_commands(self)[0]`でわるあがきを代用していたが、これには
+  罠があった。技コマンドが1つも無くても交代可能な控えがいる場合は
+  `get_available_action_commands()`が交代コマンドを先にリストへ加えてからわるあがきを
+  末尾に追加するため、`commands[0]`はわるあがきではなく交代コマンドになってしまう
+  （developer視点、id: r8-6） → 対応内容 (2026-07-14):
+  `src/jpoke/core/battle.py`の`get_available_commands()`直後に
+  `Battle.is_struggle_only(player) -> bool`を新設し、`Command.STRUGGLE in
+  self.get_available_commands(player)`の薄いラッパーとして実装した（実際に選ぶ際は
+  `Command.STRUGGLE`をそのまま使えばよく、`SWITCH_i`/`MOVE_i`と異なりインデックス
+  解決が不要な固定コマンドのため取得専用メソッドは追加していない旨をdocstringに
+  明記）。`docs/api/README.md`のBattle「状態取得系」表に追記し、`get_available_commands()`
+  の使用例の直後に`is_struggle_only()`の使用例を追加した。`CHANGELOG.md`の
+  `[Unreleased]`/`Added`に、罠の内容と併せて追記した。`examples/02_ai/01_custom_player.py`の
+  `choose_command_poke_env_style()`を`assert battle.is_struggle_only(self); return
+  Command.STRUGGLE`に修正し、コメントで罠の内容と回避方法を説明した。レビューで
+  `src/jpoke/core/command_manager.py`の`get_available_action_commands()`実装を確認し、
+  (1) 通常時は技コマンドが残っていればFalse、(2) 技コマンドが0件で交代可能な控えがいる
+  場合は交代コマンドが先頭に来つつも`is_struggle_only()`は交代コマンドの有無に影響されず
+  正しくTrueを返す、(3) かなしばり等`ON_MODIFY_COMMAND_OPTIONS`ハンドラで技コマンドが
+  全て潰される場合も同様にTrue、(4) あなをほる等の2ターン技で`Command.FORCED`のみが
+  返る場合はわるあがきの選択肢自体が存在しないためFalse、という4つの分岐を実装通りに
+  網羅できていることを確認した。`tests/test_command.py`に
+  `test_is_struggle_only_技コマンドがある場合はFalse`・
+  `test_is_struggle_only_技のPPが尽き交代先もいない場合はTrue`・
+  `test_is_struggle_only_交代可能な控えがいても正しくTrueを返す`（既存の
+  `get_available_commands(player)[0]`イディオムのバグを`commands[0].is_switch`で
+  再現した上で`is_struggle_only()`が正しくTrueを返すことを確認する重要ケース）・
+  `test_is_struggle_only_かなしばりで全ての技が封じられた場合はTrue`・
+  `test_is_struggle_only_FORCEDが優先される場合はFalse`の5件を追加した。
+  `python scripts/sort_tests.py tests/test_command.py`・`python
+  scripts/generate_test_list.py`を実行し、`python examples/02_ai/01_custom_player.py`が
+  従来通り正常終了する（威力110の「かみなり」を選び続ける）ことを確認した。
+  `python -m pytest tests/ -v`で5842件全件パス・1件skip（既存のflaky無し、新規追加5件を
+  含む）を確認した。

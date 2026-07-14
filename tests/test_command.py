@@ -7,6 +7,10 @@
 
 また `Command.is_type()` が `docs/api/README.md` の Command 章「インスタンス
 プロパティ・メソッド」表の記載通りに動作することも検証する。
+
+さらに `Battle.is_struggle_only()` が、`get_available_commands(player)[0]` による
+わるあがき判定の罠（技コマンドが無くても交代可能な控えがいると交代コマンドが
+先頭に来てしまう）を回避して正しく判定できることも検証する。
 """
 import pytest
 
@@ -60,6 +64,91 @@ def test_ZMOVEコマンド_行動候補に含まれない():
     with battle.phase_context("action"):
         commands = battle.get_available_commands(player)
     assert not any(cmd.is_zmove for cmd in commands)
+
+
+def test_is_struggle_only_FORCEDが優先される場合はFalse():
+    """Command.FORCEDのみが返る強制行動中は、わるあがきの選択肢自体が
+    存在しないためFalseを返す。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ディグダ", move_names=["あなをほる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    player = battle.players[0]
+    # 1ターン目: あなをほるでチャージに入る
+    t.run_move(battle, 0)
+
+    with battle.phase_context("action"):
+        assert battle.get_available_commands(player) == [Command.FORCED]
+        assert not battle.is_struggle_only(player)
+
+
+def test_is_struggle_only_かなしばりで全ての技が封じられた場合はTrue():
+    """かなしばり等ON_MODIFY_COMMAND_OPTIONSハンドラで技コマンドが全て
+    潰される場合でも正しくTrueを返す。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("コラッタ", move_names=["かなしばり"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    # attackerが事前にたいあたりを使ったことにする
+    t.run_move(battle, 0)
+    # defender（コラッタ）がかなしばりを使いattackerの唯一の技を封じる
+    t.run_move(battle, 1)
+    assert attacker.has_volatile("かなしばり")
+
+    player = battle.players[0]
+    with battle.phase_context("action"):
+        assert battle.is_struggle_only(player)
+
+
+def test_is_struggle_only_交代可能な控えがいても正しくTrueを返す():
+    """技コマンドが1つも無くても交代可能な控えがいる場合、
+    get_available_commands(player)[0] は交代コマンドを返してしまう
+    （わるあがきのみと誤認する罠）が、is_struggle_only()は交代コマンドの有無に
+    関わらず正しくTrueを返す。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんこうせっか"]), Pokemon("コラッタ")],
+        team1=[Pokemon("ゼニガメ")],
+    )
+    player = battle.players[0]
+    battle.actives[0].moves[0].modify_pp(-99)
+
+    with battle.phase_context("action"):
+        commands = battle.get_available_commands(player)
+        # 罠の再現: 交代コマンドが先頭に来てSTRUGGLEではない
+        assert commands[0].is_switch
+        assert Command.STRUGGLE in commands
+        # is_struggle_only()は罠の影響を受けず正しく判定する
+        assert battle.is_struggle_only(player)
+
+
+def test_is_struggle_only_技コマンドがある場合はFalse():
+    """使用可能な技が残っている通常時はFalseを返す。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんこうせっか"])],
+        team1=[Pokemon("コラッタ")],
+    )
+    player = battle.players[0]
+    with battle.phase_context("action"):
+        assert not battle.is_struggle_only(player)
+
+
+def test_is_struggle_only_技のPPが尽き交代先もいない場合はTrue():
+    """技のPPが尽き控えもいない場合、get_available_commands()[0]もSTRUGGLEとなる
+    単純なケースでTrueを返すことを確認する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんこうせっか"])],
+        team1=[Pokemon("コラッタ")],
+    )
+    player = battle.players[0]
+    battle.actives[0].moves[0].modify_pp(-99)
+
+    with battle.phase_context("action"):
+        commands = battle.get_available_commands(player)
+        assert commands == [Command.STRUGGLE]
+        assert battle.is_struggle_only(player)
 
 
 def test_is_switch_プロパティとしてコマンド種別ごとに真偽を返す():
