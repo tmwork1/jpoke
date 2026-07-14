@@ -217,6 +217,18 @@ class SwitchManager:
         HPが0になったポケモンを交代させる。
         再帰的に実行し、すべての死に出しが完了するまで処理する。
 
+        Note:
+            瀕死交代で場に出たポケモンが、まきびし等の入場時ダメージ
+            （`Event.ON_HP_CHANGED`）でにげごし・ききかいひの発動条件
+            （HPが半分以下になったこと）を新たに満たすことがある。この
+            `Interrupt.EMERGENCY` はここで生じる ON_SWITCH_IN の遅延発火
+            （`run_interrupt_switch(..., process_event_on_each_switch=False)`）の
+            中で立つため、瀕死交代のみを処理して終了すると誰にも解決されずに
+            残ってしまい、次ターンの `is_new_turn()`（=`not has_interrupt()`）
+            判定を壊してバトルが進行不能になる（fuzz seed=18407 で発見された
+            InvalidCommandError の原因）。そのため瀕死交代・緊急交代のどちらの
+            割り込みもなくなるまで再帰的に処理する。
+
         Args:
             _depth: 内部専用の再帰深さカウンタ。方策関数が状況を進行させない
                 （瀕死ポケモンが交代後も active のままになる等の）コマンドを
@@ -232,16 +244,18 @@ class SwitchManager:
                 if state.active.fainted:
                     state.interrupt = Interrupt.FAINTED
 
-        # 交代を行うプレイヤー
-        switch_players = [pl for pl, state in self.battle.player_states.items()
-                          if state.interrupt == Interrupt.FAINTED]
+        # 交代を行うプレイヤー（瀕死交代・緊急交代の両方を対象にする）
+        faint_players = [pl for pl, state in self.battle.player_states.items()
+                         if state.interrupt == Interrupt.FAINTED]
+        emergency_players = [pl for pl, state in self.battle.player_states.items()
+                             if state.interrupt == Interrupt.EMERGENCY]
 
         # 対象プレイヤーがいなければ終了
-        if not switch_players:
+        if not faint_players and not emergency_players:
             return
 
         # 非進行ガード: 両プレイヤーの総ポケモン数を超えて再帰した場合は、
-        # 方策関数が瀕死交代を進行させるコマンドを返せていないと判断し、
+        # 方策関数が瀕死交代・緊急交代を進行させるコマンドを返せていないと判断し、
         # 無限再帰（RecursionError）の代わりに診断可能な例外を送出する。
         max_depth = sum(len(state.team) for state in self.battle.player_states.values())
         if _depth > max_depth:
@@ -251,9 +265,13 @@ class SwitchManager:
             )
 
         # 交代
-        self.run_interrupt_switch(Interrupt.FAINTED, False)
+        if faint_players:
+            self.run_interrupt_switch(Interrupt.FAINTED, False)
+        if emergency_players:
+            self.run_interrupt_switch(Interrupt.EMERGENCY)
 
-        # すべての死に出しが完了するまで再帰的に実行
+        # 上記の交代（入場時ダメージ等）でさらに瀕死交代・緊急交代が発生していない
+        # かを含め、すべての死に出し・緊急交代が完了するまで再帰的に実行
         self.run_faint_switch(_depth + 1)
 
     def _switch_in(self, state: PlayerState, mon: Pokemon):
