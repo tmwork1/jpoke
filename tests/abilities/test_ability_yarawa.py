@@ -989,6 +989,82 @@ def test_わたげ_クリアボディではブロックされる():
     assert battle.actives[1].boosts["spe"] == 0
 
 
+def test_わたげ_タイプ相性で無効化されたときは発動しない():
+    """わたげ: タイプ相性で無効化された攻撃（ゴーストへのノーマル技）では発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", ability_name="わたげ")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+    )
+    t.run_move(battle, 1)
+    assert battle.actives[1].boosts["spe"] == 0
+    assert not battle.actives[0].ability.revealed
+
+
+def test_わたげ_まもるで防がれたときは発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="わたげ")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        volatile0={"まもる": 1},
+    )
+    t.run_move(battle, 1)
+    assert battle.actives[1].boosts["spe"] == 0
+
+
+def test_わたげ_みがわりで防いだときは発動しない():
+    """わたげ: 自身がみがわり状態で技を防いだときは発動しない
+    （ON_DAMAGE_HIT はみがわりが肩代わりした場合は実HPが減らないため発火しない）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="わたげ")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        volatile0={"みがわり": 1},
+    )
+    t.run_move(battle, 1)
+    assert battle.actives[1].boosts["spe"] == 0
+
+
+def test_わたげ_攻撃者がみがわり状態のときは発動しない():
+    """わたげ: 攻撃してきたポケモンがみがわり状態であるときは、わたげの効果を受けない
+    （ぬめぬめ/カーリーヘアーとの違い。一次情報: docs/wiki/abilities/わたげ.html 特性の仕様節）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="わたげ")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        volatile1={"みがわり": 1},
+    )
+    t.run_move(battle, 1)
+    assert battle.actives[1].boosts["spe"] == 0
+
+
+def test_わたげ_ひんしになっても発動する():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="わたげ")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+    )
+    battle.actives[0].hp = 1
+    t.run_move(battle, 1)
+    assert battle.actives[0].fainted
+    assert battle.actives[1].boosts["spe"] == -1
+
+
+def test_わたげ_非直接攻撃でも発動する():
+    """わたげ: 非直接攻撃（接触判定のない特殊技）を受けたときでも発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="わたげ")],
+        team1=[Pokemon("カビゴン", move_names=["れいとうビーム"])],
+    )
+    t.run_move(battle, 1)
+    assert battle.actives[1].boosts["spe"] == -1
+
+
+def test_わたげ_ミラーアーマー持ちには反射されてわたげ自身のSが下がる():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="わたげ")],
+        team1=[Pokemon("カビゴン", ability_name="ミラーアーマー", move_names=["たいあたり"])],
+    )
+    t.run_move(battle, 1)
+    assert battle.actives[0].boosts["spe"] == -1
+    assert battle.actives[1].boosts["spe"] == 0
+
+
 def test_わたげ_被弾で攻撃者のSが1段階下がる():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="わたげ")],
