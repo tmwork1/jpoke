@@ -1,3 +1,4 @@
+# TODO: HP fracは1から始まるため、HP_BUCKETS=2のときでもバケット分割は 1 / 1~0.5 / 0.5~0 とすべき。
 """jpoke で学べること: CFR風の自己対戦学習で「状態に応じて手を変える」読み合いAIを作る。
 
 ## 03との違い
@@ -284,6 +285,7 @@ def main() -> None:
 
     print("-" * 60)
     print("状態別の平均戦略（自分HP割合バケット, 相手HP割合バケット）:")
+    # TODO : 時系列 (HPの多い順) に表示するように改善したい。現状は辞書の順序に依存している。
     for info in sorted(visit_counts):
         own_bucket, opp_bucket = info
         n = visit_counts[info]

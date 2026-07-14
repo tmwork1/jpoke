@@ -22,6 +22,14 @@ def build(battle: Battle, observer: Player) -> Battle:
 
     Returns:
         Observation インスタンス
+
+    Warning:
+        本関数はモジュールグローバルな辞書 OBSERVED_MOVE_INDEXES を
+        呼び出しのたびに再代入・書き込み・読み出しする実装であり、
+        スレッドセーフではない。自己対戦データ収集などで並列化する場合は
+        ProcessPoolExecutor 等のプロセス並列を使うこと。
+        ThreadPoolExecutor 等で複数スレッドから同時に build() を呼び出すと、
+        インデックス対応表が競合して壊れる可能性がある。
     """
     opponent = battle.opponent(observer)
 

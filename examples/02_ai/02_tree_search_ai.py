@@ -9,6 +9,7 @@ AI開発ユースケースの発展形。
 """
 from __future__ import annotations
 
+# TODO: from jpoke import ...で済むように、Battle / Player / Command を __init__.py に import しておくべきかも。
 from jpoke import Battle
 from jpoke.players import RandomPlayer
 from jpoke.players.tree_search_player import TreeSearchPlayer
