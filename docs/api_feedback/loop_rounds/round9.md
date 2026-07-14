@@ -192,3 +192,36 @@
   更新は不要と判断した。`python -m pytest tests/ -v`で5854件全件パス・1件skip
   （既存件数から新規追加した`test_render_info.py`の4件分増加、flaky testの新規発生なし）を
   確認した。
+- [x] `04_research/03_janken_nash_cfr.py`冒頭に残っていた
+  「TODO: 難易度勾配を考慮して、04のfictitious playを03に繰り上げたほうがよいか検討する」、
+  `02_replay.py`の「TODO: リプレイを再生する箇所にも説明を追加する」
+  「TODO: 勝者だけを確認するのではなく、print_logs()の出力が元の対戦と同じになることを
+  確認できるようにする」の計3件（id: r9-8） → 対応内容 (2026-07-15):
+  `git mv`で`03_janken_nash_cfr.py`↔`04_janken_nash_fictitious_play.py`の番号を入れ替え、
+  概念的に単純なfictitious playを03（Nash均衡の基礎、固定の混合戦略）、状態に応じて
+  戦略を変えるCFR風の発展形を04にする順序に戻した。この順序（03=fictitious_play,
+  04=cfr）は`tests/test_code_conventions.py`の複数テスト（`test_examplesがjudge_winnerの
+  is_None比較を使っていない`のid:r6-4コメント等）が2026-07-12〜13時点で既に前提としていた
+  ものであり、2026-07-14の`3329db02`（`examples: origin/mainのTODOコメントを反映し
+  1ファイル=1事例に再構成`）で「04_researchのjanken_nash 2ファイルの番号を入れ替えた」
+  際にテストのdocstring更新が漏れ、実ファイルと記述が食い違っていたことを`git log`で
+  確認した上で復元した。両ファイル冒頭に「ゲーム理論の用語ミニ解説」節を追加し、
+  03では混合戦略・Nash均衡・fictitious play・exploitabilityを、04ではinformation set・
+  regret・regret matching・CFRを対戦経験（読み合いの確率配分、相手の使用率統計への
+  回答の積み重ね、反省会での「あの技の方が勝ちやすかった」という振り返り等）に
+  紐づけて解説し、04冒頭では03で解説済みの用語への参照を挟んで重複を避けた。
+  `02_replay.py`の2件のTODOは、`replay_battle()`呼び出し前に処理内容（ReplayDataから
+  Battleを再構築しReplayPlayerでコマンドを払い出す仕組み）の説明コメントを追加し、
+  再生後に`battle.get_log_lines(turn="all")`（`print_logs()`が内部で出力する行そのもの）
+  を元の対戦・再生した対戦の両方から取得して完全一致をassertで検証するコードに
+  置き換えることで解消した。`examples/README.md`のファイル一覧・実行時間注記
+  （元の「数十秒・十数秒」を実測に基づき「十数秒・数十秒」に入れ替え）と、03→04の順で
+  読むと理解しやすい旨の案内を追記した。`PYTHONUTF8=1 python examples/04_research/
+  02_replay.py`を実行し、ログ完全一致のassertが例外なく通ること（元・再生とも20行、
+  勝者・ターン数一致）を確認した。`03_janken_nash_fictitious_play.py`
+  （実測約8秒）・`04_janken_nash_cfr.py`（実測約26秒）・`01_bulk_simulation.py`を含む
+  `04_research/`配下の全4ファイルを実行し、いずれも正常終了・出力内容が更新後の
+  docstringと整合することを確認した。ロジック変更を伴う公開APIの追加・変更は無いため
+  `docs/api/README.md`の更新は不要と判断した。ファイル名変更後も
+  `tests/test_code_conventions.py`が問題なく通ることを含め、`python -m pytest tests/ -v`で
+  5854件全件パス・1件skip（既存件数のまま、flaky testの新規発生なし）を確認した。
