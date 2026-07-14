@@ -202,7 +202,8 @@ class EventLog:
                 return "攻撃を防いだ"
 
             case LogCode.PROTECT_FAILED:
-                return "まもるは失敗した"
+                move = payload.move if isinstance(payload, MoveActionPayload) else "技"
+                return f"{move} は失敗した"
 
             case LogCode.MOVE_IMMUNED:
                 move = payload.move if isinstance(payload, FailureLogPayload) else "技"
