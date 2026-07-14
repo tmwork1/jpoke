@@ -4653,8 +4653,14 @@ def リーフガード_prevent_ailment(battle: Battle, ctx: EventContext, value:
 
 
 def わざわいのうつわ_reduce_C(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """わざわいのうつわ特性: 自分以外の特攻補正を0.75倍にする。"""
-    if ctx.attacker is not ctx.defender:
+    """わざわいのうつわ特性: 自分以外の特攻補正を0.75倍にする。
+
+    分類が特殊に決まった技のみが対象（物理技のとくこうは参照されないため対象外）。
+    サイコショック/サイコブレイク/しんぴのつるぎ等の分類が変わる技は、
+    ON_CALC_ATK_MODIFIER到達時点で分類が確定済みのため、ここでの
+    ctx.move.category判定だけで正しく扱える。
+    """
+    if ctx.attacker is not ctx.defender and ctx.move.category == "special":
         value = apply_fixed_modifier(value, 3072)
     return HandlerReturn(value=value)
 

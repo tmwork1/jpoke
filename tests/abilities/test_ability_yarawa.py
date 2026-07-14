@@ -843,6 +843,35 @@ def test_わざわいのおふだ_かたやぶりで無効化されない():
     assert 3072 == battle.damage_calculator.atk_modifier
 
 
+def test_わざわいのうつわ_物理技には効果が及ばない():
+    """わざわいのうつわはとくこうのみを対象とするため、物理技の攻撃補正には影響しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", ability_name="わざわいのうつわ")],
+    )
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.atk_modifier
+
+
+def test_わざわいのうつわ_かたやぶりで無効化されない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["ひのこ"])],
+        team1=[Pokemon("ピカチュウ", ability_name="わざわいのうつわ")],
+    )
+    t.run_move(battle, 0)
+    assert 3072 == battle.damage_calculator.atk_modifier
+
+
+def test_わざわいのうつわ_自分自身の特攻には効果が及ばない():
+    """わざわいのうつわ所持ポケモン自身が特殊技で攻撃するときは特攻補正が下がらない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="わざわいのうつわ", move_names=["ひのこ"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.atk_modifier
+
+
 def test_わたげ_クリアボディではブロックされる():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="わたげ")],
