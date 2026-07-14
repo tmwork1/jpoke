@@ -79,6 +79,10 @@
   を使わず `seed + 対戦通番` の派生シード規約を手動で再実装する必要があった。
   各対戦の `play_out()` 完了直後に `Battle` を受け取れるコールバックを追加し、
   この重複を解消した。既定値 `None` のため既存呼び出しの挙動は変わらない
+- `Player.add_pokemon()` に `evs: dict[Stat, int] | None = None` / `ivs: dict[Stat,
+  int] | None = None` 引数を追加。指定した場合、生成した `Pokemon` に対し内部で
+  `set_evs()` / `set_ivs()` を呼ぶ。従来は `add_pokemon()` の戻り値に対して別途
+  `set_evs()` / `set_ivs()` を呼ぶ必要があった
 
 ### Changed
 
@@ -143,6 +147,13 @@
   メソッド呼び出しになっており、`if cmd.is_switch:` と書くとbool化されず
   bound methodが常にTruthyになるバグの温床だったため統一した。呼び出し側は
   `cmd.is_switch()` を `cmd.is_switch` に変更する必要がある
+- `Pokemon.set_ivs()` / `Pokemon.set_evs()` の引数が `list[int]` に加えて
+  `dict[Stat, int]` を受け付けるようになった。`Pokemon.set_stats()` が先に辞書形式に
+  対応したのに対し、こちらは `[HP, 攻撃, 防御, 特攻, 特防, 素早さ]` の暗黙の固定順
+  リストのままで、要素の並び順を覚えていないと意図しないステータスに書き込まれる
+  （例外は出ない）という `set_stats()` と同型の罠が残っていたための対応。`dict` 指定
+  時は指定したステータスのみ更新し、未指定のステータスは既存値を維持する。従来通り
+  `list[int]`（6要素で全体を置き換え）でも呼び出せるため既存呼び出しの挙動は変わらない
 
 ### Fixed
 
