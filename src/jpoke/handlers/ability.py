@@ -866,8 +866,14 @@ def おやこあい_modify_hit_count(battle: Battle, ctx: AttackContext, value: 
 
 
 def おやこあい_reduce_second_damage(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """おやこあい特性: 2ヒット目のダメージを1/4に減衰させる（最低1ダメージ保証）。"""
-    if ctx.hit_index == 2:
+    """おやこあい特性: 2ヒット目のダメージを1/4に減衰させる（最低1ダメージ保証）。
+
+    みがわり等、より優先度の低い（先に実行される）ハンドラによって既に
+    ダメージが0にブロックされている場合（value<=0）は、最低1ダメージ保証を
+    適用しない。適用してしまうと、みがわりで完全に防がれたはずのダメージが
+    本体に漏れてしまう（本体HPが減ってしまう）ため。
+    """
+    if ctx.hit_index == 2 and value > 0:
         value = max(1, value // 4)
     return HandlerReturn(value=value)
 

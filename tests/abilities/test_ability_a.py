@@ -1403,6 +1403,28 @@ def test_おもかげやどし_特性再有効化時にも発動する():
     assert mon.boosts["spe"] == 1
 
 
+def test_おやこあい_1ヒット目でみがわりが破壊された場合2ヒット目は本体に通常通り当たる():
+    """おやこあい: 1ヒット目でみがわりが消滅した場合、2ヒット目はみがわりを介さず
+    本体に直接ダメージが入る（連続攻撃技の一般仕様。docs/spec/moves/連続技.md
+    5.1「みがわり破壊後は残りヒットが本体に適用される」）。上記の回帰バグ修正
+    （value>0チェックの追加）が、この既存の正常系挙動を壊していないことを確認する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="おやこあい", move_names=["アクアステップ"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker, defender = battle.actives
+    battle.volatile_manager.apply(defender, "みがわり", hp=40)
+    t.fix_damage(battle, 40)
+    before_hp = defender.hp
+    t.run_move(battle, 0)
+    # 1ヒット目（40ダメージ）でみがわりがちょうど消滅する
+    assert not defender.has_volatile("みがわり")
+    # 2ヒット目（1/4減衰後 40//4=10）は本体に通常通り適用される
+    assert defender.hp == before_hp - 10
+    assert defender.hits_taken == 1
+
+
 def test_おやこあい_2ヒット目は端数切り捨てでも最低1ダメージ保証():
     """おやこあい: 1ヒット目のダメージが小さく1/4が0になる場合でも、2ヒット目は最低1ダメージ入る。"""
     battle = t.start_battle(
@@ -1442,6 +1464,29 @@ def test_おやこあい_ころがるには適用しない():
     t.run_move(battle, 0)
     assert defender.hits_taken == 1
     assert attacker.volatiles["ころがる"].count == 1
+
+
+def test_おやこあい_みがわりで完全にブロックされたダメージは本体に漏れない():
+    """おやこあい: みがわりが両方のヒットを吸収しきる場合、本体HPは一切減少しない。
+
+    みがわり_block_damage（ON_MODIFY_MOVE_DAMAGE priority=20）はおやこあい_reduce_second_damage
+    （同priority=100）より先に実行され、2ヒット目もvalue=0を返す。この0に対して
+    「最低1ダメージ保証」（max(1, value//4)）を無条件適用すると、みがわりで完全に
+    防がれたはずのダメージが本体に漏れてしまう回帰バグを防ぐテスト（fuzz_log seed=127）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="おやこあい", move_names=["アクアステップ"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker, defender = battle.actives
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.fix_damage(battle, 40)
+    t.run_move(battle, 0)
+    # 本体HPは1ヒット目・2ヒット目ともみがわりに完全に肩代わりされ、一切減少しない
+    assert defender.hp == defender.max_hp
+    assert defender.hits_taken == 0
+    # みがわりのHPからは両ヒット分（40+40）が正しく差し引かれる
+    assert defender.volatiles["みがわり"].hp == 999 - 40 - 40
 
 
 def test_おやこあい_単発攻撃が2ヒットする():
