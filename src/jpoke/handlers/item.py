@@ -1638,7 +1638,6 @@ def himeri_pp_restore_cap(mon: Pokemon) -> int:
     """ヒメリのみ: 回復するPP量（じゅくせい所持時は2倍の20）。"""
     return 20 if is_ripen(mon) else 10
 
-
 def himeri_select_move_to_restore(mon: Pokemon) -> Move | None:
     """ヒメリのみ: PPが0の技が複数ある場合に回復対象を選ぶ（なげつける・むしくい・
     ついばむ・ほおばる・おちゃかい等、使用中の技以外から発動する経路で使う）。
