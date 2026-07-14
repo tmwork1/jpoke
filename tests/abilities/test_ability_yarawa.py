@@ -128,6 +128,31 @@ def test_よちむ_変化技も公開される():
     assert foe.moves[0].revealed
 
 
+def test_よちむ_威力欄が変動する技は見なし威力で判定される():
+    """よちむ: くさむすびは実際の内部データ上の威力（対象の重さで変動、格納値は
+    プレースホルダの1）ではなく、技説明で表示される見なし威力80で判定される。
+    そのため威力40のたいあたりより優先して読み取られる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="よちむ")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり", "くさむすび"])],
+    )
+    _, foe = battle.actives
+    assert foe.moves[1].revealed
+    assert not foe.moves[0].revealed
+
+
+def test_よちむ_一撃必殺技は見なし威力150として最優先で読み取られる():
+    """よちむ: じわれは実威力0（固定即死ダメージ）だが、見なし威力150として扱われ、
+    見なし威力80のくさむすびより優先して読み取られる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="よちむ")],
+        team1=[Pokemon("カビゴン", move_names=["じわれ", "くさむすび"])],
+    )
+    _, foe = battle.actives
+    assert foe.moves[0].revealed
+    assert not foe.moves[1].revealed
+
+
 @pytest.mark.parametrize(
     "move_name",
     ["でんきショック", "たいあたり"]
