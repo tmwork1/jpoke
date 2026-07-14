@@ -1,4 +1,3 @@
-# TODO: 合法手の評価値を確認するだけなのに、コードの量が多すぎる。choose_command()内でevaluate_commands()を呼んでexitするだけの簡易サンプルに置き換えるべき
 """優先度技・素早さ操作技（トリックルーム）が行動順に与える影響と、
 TreeSearchPlayer.evaluate_commands() によるコマンド候補・評価値のデバッグ確認方法を扱う。
 
@@ -39,11 +38,9 @@ class DebugPlayer(TreeSearchPlayer):
     """choose_command()の直前にevaluate_commands()の結果を表示するデバッグ用サブクラス。
 
     evaluate_commands()は探索本体の状態を変更しない副作用なしのメソッドなので、
-    表示を挟んでもchoose_command()自体の判断には影響しない。
-    ただしevaluate_commands()はmax_nodesによるノード数上限を無視して全合法手を
-    評価するため、このサンプルのように毎ターン（choose_command()の呼び出しごと）
-    呼び出す構成をそのまま学習ループの可視化等に転用する場合、max_plies次第では
-    探索コストが無制限に膨らみうる点に注意する。
+    表示を挟んでもchoose_command()自体の判断には影響しない
+    （ただし毎ターン呼ぶ構成をそのまま流用する場合はmax_nodesの上限を無視して
+    評価する点に注意。詳細はメソッドのdocstring参照）。
     """
 
     def choose_command(self, battle: Battle):
