@@ -102,7 +102,7 @@ def test_ふくろだたき_状態異常ポケモンはカウントされない(
     move = attacker.moves[0]
     move.register_handlers(battle.events, attacker)
     hit_count = battle.move_executor._resolve_hit_count(
-        t.build_context(battle, atk_idx=0)
+        t.build_context(battle, player_idx=0)
     )
     move.unregister_handlers(battle.events, attacker)
     assert hit_count == 2
@@ -122,7 +122,7 @@ def test_ふくろだたき_選出3体健康ならば3ヒット():
     move = attacker.moves[0]
     move.register_handlers(battle.events, attacker)
     hit_count = battle.move_executor._resolve_hit_count(
-        t.build_context(battle, atk_idx=0)
+        t.build_context(battle, player_idx=0)
     )
     move.unregister_handlers(battle.events, attacker)
     assert hit_count == 3

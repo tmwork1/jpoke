@@ -1,11 +1,16 @@
 # test_command
 
-テスト数: 9
+テスト数: 14
 
 - [x] GIGAMAXコマンド_明示的に渡すとわるあがきになる
 - [x] GIGAMAXコマンド_行動候補に含まれない
 - [x] ZMOVEコマンド_明示的に渡すとわるあがきになる
 - [x] ZMOVEコマンド_行動候補に含まれない
+- [x] is_struggle_only_FORCEDが優先される場合はFalse
+- [x] is_struggle_only_かなしばりで全ての技が封じられた場合はTrue
+- [x] is_struggle_only_交代可能な控えがいても正しくTrueを返す
+- [x] is_struggle_only_技コマンドがある場合はFalse
+- [x] is_struggle_only_技のPPが尽き交代先もいない場合はTrue
 - [x] is_switch_プロパティとしてコマンド種別ごとに真偽を返す
 - [x] is_type_Noneを渡すと偽を返す
 - [x] is_type_anyを指定すると全てのコマンドが真になる

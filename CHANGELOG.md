@@ -83,6 +83,12 @@
   int] | None = None` 引数を追加。指定した場合、生成した `Pokemon` に対し内部で
   `set_evs()` / `set_ivs()` を呼ぶ。従来は `add_pokemon()` の戻り値に対して別途
   `set_evs()` / `set_ivs()` を呼ぶ必要があった
+- `Battle.is_struggle_only(player)` — 指定プレイヤーがわるあがきしか選べない状態
+  かどうかを判定する薄いヘルパー。従来は `get_available_commands(player)` が
+  空の技コマンドと交代コマンドを両方含みうるため `get_available_commands(player)[0]`
+  でわるあがきを代用すると、交代コマンドが同時に存在する場合に誤ってそちらを
+  返してしまう罠があった。実際にわるあがきを選ぶ際は `Command.STRUGGLE` を
+  そのまま使えばよい（インデックス解決が不要な固定コマンドのため）
 
 ### Changed
 
@@ -154,6 +160,14 @@
   （例外は出ない）という `set_stats()` と同型の罠が残っていたための対応。`dict` 指定
   時は指定したステータスのみ更新し、未指定のステータスは既存値を維持する。従来通り
   `list[int]`（6要素で全体を置き換え）でも呼び出せるため既存呼び出しの挙動は変わらない
+- **破壊的変更**: `jpoke.testing` の「0/1のどちらの陣営・アクティブポケモンか」を表す
+  インデックス引数名を全関数で `player_idx` に統一した。従来は `build_context` /
+  `run_move` / `calc_lethal` が `atk_idx`、`apply_ailment` が `active_index`、
+  `calc_move_priority` が `player_index`、`run_switch` / `can_switch` が
+  `player_idx` と4通りに分裂しており、覚えた引数名を別の関数にそのまま使うと
+  `TypeError` になる罠だった。キーワード引数で `atk_idx=` / `active_index=` /
+  `player_index=` を指定している呼び出し箇所は `player_idx=` に変更する必要がある
+  （位置引数での呼び出しは影響なし）
 
 ### Fixed
 

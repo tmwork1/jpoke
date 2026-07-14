@@ -105,12 +105,16 @@ winner = battle.play_out(max_turns=100)
 | `get_team(player)` | 指定プレイヤーの対戦中のチーム（選出漏れの控えも含む）を取得。`player.team` は開始前のスナップショットで対戦中は更新されないため、HP・瀕死・状態異常などバトル中の実際の状態を見るにはこちらを使う |
 | `get_available_commands(player)` | 現在使用可能な `Command` のリストを取得 |
 | `command_to_move(player, command)` | コマンドから `Move` オブジェクトを取得。`choose_command()` の実装で使う |
+| `is_struggle_only(player)` | わるあがきしか選べない状態かどうかを判定する。`get_available_commands(player)[0]` で代用すると、交代コマンドが同時に存在する場合に誤ってそちらを返すことがあるため、判定にはこちらを使う。実際にわるあがきを選ぶ際は `Command.STRUGGLE` をそのまま使えばよい（`SWITCH_i`/`MOVE_i` と異なりインデックス解決が不要なため、取得専用メソッドは無い） |
 
 ```python
 active = battle.get_active(player1)
 team = battle.get_team(player1)  # 瀕死・HP変化などを反映した実体
 commands = battle.get_available_commands(player1)
 move = battle.command_to_move(player1, commands[0])
+
+if battle.is_struggle_only(player1):
+    command = Command.STRUGGLE
 ```
 
 `battle.query`（`PokemonQuery`）には他にも判定用メソッドがあるが、そのうち `Pokemon`/`Player`
@@ -131,7 +135,7 @@ move = battle.command_to_move(player1, commands[0])
 | `can_use_last_resort(pokemon)` | とっておきの発動条件を満たしているか判定する |
 | `get_forced_move_name(pokemon)` | 強制行動中のポケモンが実行すべき技名を返す（固定されていなければ`None`） |
 | `is_first_actor(player)` / `is_second_actor(player)` | このターンでplayerが先攻/後攻かどうかを判定する（1vs1想定、行動順未確定なら`None`） |
-| `calc_move_priority(attacker, move)` | 指定した `Pokemon`/`Move` オブジェクトで技を発動したときの優先度（ON_MODIFY_MOVE_PRIORITYイベントによる補正込み）を計算する。`jpoke.testing.calc_move_priority(battle, player_index, move_index=0)` はインデックス指定の薄いラッパーで、内部でこちらを呼ぶ |
+| `calc_move_priority(attacker, move)` | 指定した `Pokemon`/`Move` オブジェクトで技を発動したときの優先度（ON_MODIFY_MOVE_PRIORITYイベントによる補正込み）を計算する。`jpoke.testing.calc_move_priority(battle, player_idx, move_index=0)` はインデックス指定の薄いラッパーで、内部でこちらを呼ぶ |
 | `resolve_speed_order()` | 現在の実効素早さでソートしたポケモンのリストを返す（引数なし）。行動順そのものが必要な場合は予約済みコマンドを考慮する `resolve_action_order()` を使う |
 
 ```python
@@ -388,6 +392,25 @@ print(f"{player1.username} 勝率: {player1.win_rate:.1%}")
 ```python
 replays = []
 player1.battle_against(player2, n_battles=100, seed=1, on_battle_end=replays.append)
+```
+
+### 対戦成績
+
+`battle_against()` が対戦のたびに自動更新する戦績カウンタ。手動で `Battle.play_out()` を
+呼んだ場合は自動更新されないため、必要なら呼び出し側でインクリメントする。
+
+| API | 概要 |
+|---|---|
+| `n_finished_battles` (int) | 成立した対戦数。ターン上限で未決着だった対戦は含まない |
+| `n_won_battles` (int) | 勝利数 |
+| `n_lost_battles` (property, int) | poke-env互換。敗北数（`n_finished_battles - n_won_battles - n_tied_battles`） |
+| `n_tied_battles` (property, int) | poke-env互換。引き分け数。jpokeに引き分けは存在しないため常に0 |
+| `win_rate` (property, float) | poke-env互換。勝率（`n_won_battles / n_finished_battles`）。poke-envと異なり対戦数0のときはゼロ除算を避け0.0を返す |
+
+```python
+player1.battle_against(player2, n_battles=100, seed=1)
+print(f"{player1.n_won_battles}勝{player1.n_lost_battles}敗/{player1.n_finished_battles}戦")
+print(f"勝率: {player1.win_rate:.1%}")
 ```
 
 ### 対戦実行系メソッドの戻り値一覧
@@ -681,26 +704,26 @@ battle = start_battle(
 )
 
 # run_move() は指定インデックスのポケモンが指定インデックスの技を使い、ログを出力する
-run_move(battle, atk_idx=0, move_idx=0)
+run_move(battle, player_idx=0, move_idx=0)
 
 # calc_lethal() は Battle.calc_lethal() のインデックス指定版
-results = calc_lethal(battle, atk_idx=0, moves="でんこうせっか", max_attack=3)
+results = calc_lethal(battle, player_idx=0, moves="でんこうせっか", max_attack=3)
 print(results[-1].lethal_probability)
 ```
 
 | API | 概要 |
 |---|---|
 | `start_battle(team0, team1, ...)` | チーム・状態異常・揮発性状態・天候・地形・場の効果・命中率固定などを指定して `Battle` を初期化し `start()` まで済ませる |
-| `run_move(battle, atk_idx, move_idx=0)` | 指定インデックスのポケモンに指定インデックスの技を使わせ、ログを出力する |
+| `run_move(battle, player_idx, move_idx=0)` | 指定インデックスのポケモンに指定インデックスの技を使わせ、ログを出力する |
 | `run_switch(battle, player_idx, new_idx)` | 指定インデックスのポケモンに交代させる |
 | `can_switch(battle, player_idx)` | 指定プレイヤーが交代可能か判定する |
-| `apply_ailment(battle, active_index, ailment_name, count=1, by_foe=False, overwrite=False)` | 指定インデックスのポケモンに状態異常を直接付与する |
+| `apply_ailment(battle, player_idx, ailment_name, count=1, by_foe=False, overwrite=False)` | 指定インデックスのポケモンに状態異常を直接付与する |
 | `change_item(battle, mon, item_name, source=None)` | ポケモンのアイテムを変更する |
 | `get_action_order(battle, command0=None, command1=None)` | コマンドを予約し、そのターンの行動順を取得する |
 | `reserve_command(battle, command0=None, command1=None)` | `step()` を介さずコマンド予約状態だけを作る（行動順・優先度だけを検証したい場合） |
-| `build_context(battle, atk_idx, move_idx=0)` | `AttackContext` を組み立てる |
-| `calc_lethal(battle, atk_idx, moves, critical=False, secondary=False, max_attack=10)` | `Battle.calc_lethal()` のインデックス指定版 |
-| `calc_move_priority(battle, player_index, move_index=0)` | 指定インデックスの技を使ったときの優先度を返す。`Battle.calc_move_priority(pokemon, move)` のインデックス指定版 |
+| `build_context(battle, player_idx, move_idx=0)` | `AttackContext` を組み立てる |
+| `calc_lethal(battle, player_idx, moves, critical=False, secondary=False, max_attack=10)` | `Battle.calc_lethal()` のインデックス指定版 |
+| `calc_move_priority(battle, player_idx, move_index=0)` | 指定インデックスの技を使ったときの優先度を返す。`Battle.calc_move_priority(pokemon, move)` のインデックス指定版 |
 | `end_turn(battle)` | `Battle.end_turn()` のラッパー |
 | `fix_damage(battle, damage)` | ダメージ計算を固定値にする（デバッグ専用モンキーパッチ） |
 | `fix_random(battle, value)` | `battle.random.random()` を固定値にする（デバッグ専用モンキーパッチ） |

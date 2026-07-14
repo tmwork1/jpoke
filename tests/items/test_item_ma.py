@@ -175,7 +175,7 @@ def test_ミクルのみ_行動不能のときは効果が持続する():
     mon.hp = mon.max_hp // 4 + 1
     battle.modify_hp(mon, v=-1)
     assert mon.item.count == 1
-    t.apply_ailment(battle, active_index=0, ailment_name="ねむり", count=3)
+    t.apply_ailment(battle, player_idx=0, ailment_name="ねむり", count=3)
     t.run_move(battle, 0)
     assert mon.item.count == 1
     assert mon.has_item()
@@ -205,7 +205,7 @@ def test_メトロノーム_ねむり中は行動できずカウント維持():
     mon = battle.actives[0]
     mon.item.count = 3
     mon.item.move_name = "たいあたり"
-    t.apply_ailment(battle, active_index=0, ailment_name="ねむり", count=3)
+    t.apply_ailment(battle, player_idx=0, ailment_name="ねむり", count=3)
     t.run_move(battle, 0)
     assert mon.item.count == 3
     assert mon.item.move_name == "たいあたり"

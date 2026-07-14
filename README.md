@@ -154,7 +154,7 @@ battle = t.start_battle(
     team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
     accuracy=100,  # 命中率を固定して再現性を上げる
 )
-t.run_move(battle, atk_idx=0, move_idx=0)
+t.run_move(battle, player_idx=0, move_idx=0)
 ```
 
 `fix_damage` / `fix_random` は対戦オブジェクトの内部属性を直接差し替えるモンキーパッチのため、

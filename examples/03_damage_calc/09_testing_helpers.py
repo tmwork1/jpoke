@@ -25,26 +25,26 @@ def main() -> None:
     attacker = battle.actives[0]
     defender = battle.actives[1]
 
-    # calc_lethal() は atk_idx（アクティブのインデックス）を渡すだけで済む
+    # calc_lethal() は player_idx（アクティブのインデックス）を渡すだけで済む
     # battle.calc_lethal() のショートカット
-    plain_final = calc_lethal(battle, atk_idx=0, moves=move_name, max_attack=2)[-1]
+    plain_final = calc_lethal(battle, player_idx=0, moves=move_name, max_attack=2)[-1]
 
-    # apply_ailment() は active_index 指定で set_ailment() 相当のことができる
-    apply_ailment(battle, active_index=1, ailment_name="どく")
+    # apply_ailment() は player_idx 指定で set_ailment() 相当のことができる
+    apply_ailment(battle, player_idx=1, ailment_name="どく")
     print(f"防御側の状態異常: {defender.status}")
 
-    poisoned_final = calc_lethal(battle, atk_idx=0, moves=move_name, max_attack=2)[-1]
+    poisoned_final = calc_lethal(battle, player_idx=0, moves=move_name, max_attack=2)[-1]
     print(
         f"{move_name}を{plain_final.n_attack}発当てた時点の致死率: "
         f"どく無し {plain_final.lethal_probability:.2%} / "
         f"どくあり {poisoned_final.lethal_probability:.2%}"
     )
 
-    # run_move() は「atk_idx番目のアクティブがmove_idx番目の技を使う」を1行にまとめ、
+    # run_move() は「player_idx番目のアクティブがmove_idx番目の技を使う」を1行にまとめ、
     # 使用後のログもまとめて出力する（battle.run_move() + battle.print_logs() のショートカット）
     print("-" * 50)
     hp_before = defender.hp
-    run_move(battle, atk_idx=0, move_idx=0)
+    run_move(battle, player_idx=0, move_idx=0)
     print(f"{move_name}を実際に撃ち込んだ後、{defender.name}のHP: {hp_before} → {defender.hp}")
 
     # 試してみよう: apply_ailment() の ailment_name を別の状態異常に変えたり、
