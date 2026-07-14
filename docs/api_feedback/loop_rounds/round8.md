@@ -185,3 +185,27 @@
   `test_battle_against_ターン上限で決着しない対戦は戦績にカウントされない`等）とも矛盾が
   ないことを確認し、ドキュメントのみの変更のため新規テストは追加しなかった。
   `python -m pytest tests/ -v`で5842件全件パス・1件skip（既存のflaky無し）を確認した。
+- [x] `TreeSearchPlayer`の拡張フック3種（`opponent_estimator()`/`configure_sim()`/
+  `fallback()`）がexamples/docsに一度も実演されていない（id: r8-8） →
+  対応内容 (2026-07-14): `examples/02_ai/05_opponent_estimation.py`
+  （`opponent_estimator()`をオーバーライドし相手の未公開技を推定、推定前後で
+  `nodes_expanded`が0→8に変わることを表示）・
+  `examples/02_ai/06_deterministic_search.py`（`configure_sim()`で
+  `accuracy_fix_threshold=0`・`damage_roll="average"`を設定し、`evaluate_commands()`を
+  2回呼んでも評価値が完全一致することを表示）・
+  `examples/02_ai/07_fallback_policy.py`（`fallback()`をオーバーライドし、相手の技が
+  未公開でopponent_estimator未実装のためfallbackに委譲される初手局面で、既定のランダム
+  選択の代わりに攻撃技を優先する）の3ファイルを新規作成した。`examples/README.md`の
+  ファイル一覧に3件追記した。`docs/api/README.md`はBattle/Player/Pokemon/Command/Move/
+  テストユーティリティという`jpoke`トップレベルの公開エクスポート（`src/jpoke/__init__.py`
+  の`__all__`）のみを対象範囲とする方針であることを確認し、`TreeSearchPlayer`は
+  `jpoke.players.tree_search_player`配下でトップレベルエクスポートに含まれない
+  （既存の`RandomPlayer`も同様に未掲載）ため、章の新設は見送り examples のみで実演する
+  方針とした。レビューで3ファイルを個別実行し、
+  観察事項（`opponent_estimator`未オーバーライド時0件→オーバーライド時8件展開、
+  `configure_sim`設定後の2回の評価値が`{'MOVE_0': -0.46, 'MOVE_1': -0.69}`で完全一致、
+  fallbackが「のしかかり」を選択）を確認した。`tests/test_examples_smoke.py`が
+  全examplesを動的にグロブして対象化する既存の回帰テストのため、新規テスト追加は不要と
+  判断し、同テストを実行して3ファイルがreturncode 0で正常終了することを確認した。
+  `python -m pytest tests/ -v`で5845件全件パス・1件skip（既存のflaky無し、
+  smokeテスト3件増加分を含む）を確認した。

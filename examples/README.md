@@ -35,6 +35,9 @@ python examples/01_basics/01_battle_against_intro.py
 | `02_ai/02_selection_customization.py` | `choose_selection()` のオーバーライドによる選出順のカスタマイズ | AI開発 |
 | `02_ai/03_tree_search_ai.py` | `TreeSearchPlayer` を継承した木探索AIとランダム方策の対戦 | AI開発（発展） |
 | `02_ai/04_priority_and_command_debug.py` | 優先度技・素早さ操作技（トリックルーム）が行動順に与える影響、`TreeSearchPlayer.evaluate_commands()` によるコマンド候補・評価値のデバッグ確認 | AI開発（発展） |
+| `02_ai/05_opponent_estimation.py` | `TreeSearchPlayer.opponent_estimator()` のオーバーライドによる、相手の未公開の技構成の推定と、それを踏まえた木探索 | AI開発（発展） |
+| `02_ai/06_deterministic_search.py` | `TreeSearchPlayer.configure_sim()` のオーバーライドによる、探索中だけ命中率・ダメージ乱数を固定する決定論化 | AI開発（発展） |
+| `02_ai/07_fallback_policy.py` | `TreeSearchPlayer.fallback()` のオーバーライドによる、探索できない局面での代替方策のカスタマイズ | AI開発（発展） |
 | `03_damage_calc/01_basic_lethal_calculation.py` | `battle.calc_lethal()` による確定数・乱数ダメージの基本計算、努力値、`Pokemon.show()` | ダメージ計算ツール開発 |
 | `03_damage_calc/02_ailment_and_scenario_comparison.py` | `set_ailment()` / `modify_hp()` / `modify_stats()` / `faint()` でシナリオを組み立てた致死率比較 | ダメージ計算ツール開発 |
 | `03_damage_calc/03_raw_damage_rolls.py` | `calc_damages()` / `roll_damage()` による生ダメージロールの確認、`damage_roll` / `critical_mode` による固定ロール | ダメージ計算ツール開発 |
