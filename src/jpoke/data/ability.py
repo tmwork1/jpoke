@@ -2457,10 +2457,16 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             "gas_proof",
         },
         handlers={
+            # docs/spec/turn.md Event.ON_MODIFY_DAMAGE: 40番（ばけのかわに被弾）。
+            # アイスフェイス（同じ40）と同一の優先度。ちきゅうなげ/ナイトヘッド等の
+            # level_fixed_damage（priority=15）より後に実行し、確定した攻撃側の
+            # ダメージ値を0へ上書きする必要がある。がんじょう/きあいのタスキ/
+            # きあいのハチマキ（いずれもデフォルト優先度100）より先に完全ブロックする
+            # 必要があるため、40であればこの両条件を同時に満たす。
             Event.ON_MODIFY_MOVE_DAMAGE: h.AbilityHandler(
                 h.ばけのかわ_block_damage,
                 subject_spec="defender:self",
-                priority=10,
+                priority=40,
             ),
             # こんらんの自傷ダメージは技扱いではないため ON_MODIFY_NON_MOVE_DAMAGE で別途判定する
             Event.ON_MODIFY_NON_MOVE_DAMAGE: h.AbilityHandler(

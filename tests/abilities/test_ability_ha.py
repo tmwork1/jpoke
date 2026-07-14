@@ -793,6 +793,25 @@ def test_ばけのかわ_交代しても再有効化されない():
     assert mon.ability.enabled is False
 
 
+def test_ばけのかわ_固定ダメージ技を受けても防いだ分以上のダメージが追加されない():
+    """ちきゅうなげ等の固定ダメージ技（level_fixed_damage、Event.ON_MODIFY_MOVE_DAMAGE
+    priority=15）は、ばけのかわ（同イベント priority=40）より先に実行される。この順序が
+    誤って逆（旧priority=10）になっていると、ばけのかわが0にしたダメージ値をレベル固定値で
+    再度上書きしてしまい、防いだはずの分以上のダメージが追加で入ってしまう
+    （fuzz_log seed=73 で発見された回帰）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", level=100, move_names=["ちきゅうなげ"])],
+        team1=[Pokemon("トゲピー", ability_name="ばけのかわ")],
+    )
+    _, defender = battle.actives
+    t.run_move(battle, 0)
+
+    # ばけのかわが1/8のみを消費し、level_fixed_damage側の値（レベル100）が
+    # 追加でダメージとして入っていないことを確認する
+    assert defender.hp == defender.max_hp - defender.max_hp // 8
+    assert defender.ability.enabled is False
+
+
 def test_ばけのかわ_発動ログに特性名が記録される():
     """ばけのかわは発動と同時に自己無効化（"consumed"）されるため、ログ記録時点で
     ability.name が空文字にならず、常に元の特性名（base_name）を使って記録されることを確認する
