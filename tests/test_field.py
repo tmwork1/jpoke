@@ -265,6 +265,25 @@ def test_グラスフィールド_じならし弱化():
     assert 2048 == battle.damage_calculator.power_modifier
 
 
+def test_グラスフィールド_同ターンに瀕死になったポケモンは回復しない():
+    """グラスフィールド: 同ターン中の攻撃で先にHPが0になったポケモンは、
+    ターン終了時のグラスフィールド回復を受けずに瀕死のままとなる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("コラッタ")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        terrain=("グラスフィールド", 99),
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.run_move(battle, 1)
+    assert mon.hp == 0
+    assert mon.fainted
+    t.end_turn(battle)
+    assert mon.hp == 0
+    assert mon.fainted
+
+
 def test_グラスフィールド_回復():
     """グラスフィールド: 接地ポケモンはターン終了時1/16回復"""
     battle = t.start_battle(
@@ -782,16 +801,6 @@ def test_どくびし_はがねタイプには効かない():
     assert not active.ailment.is_active
 
 
-def test_どくびし_浮いているポケモンには効かない():
-    battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ"), Pokemon("ピジョン")],
-        side0={"どくびし": 2},
-    )
-    active = t.run_switch(battle, 0, 1)
-    assert not active.ailment.is_active
-
-
 def test_どくびし_ふしょく持ちのはがねタイプにも効かない():
     """どくびし: 繰り出したポケモン自身がふしょく持ちのはがねタイプでも、
     どくびしの毒付与はふしょくのタイプ無効貫通の対象外なので毒状態にならない
@@ -804,6 +813,16 @@ def test_どくびし_ふしょく持ちのはがねタイプにも効かない(
     active = t.run_switch(battle, 0, 1)
     field = battle.get_side(battle.players[0]).get("どくびし")
     assert field.is_active
+    assert not active.ailment.is_active
+
+
+def test_どくびし_浮いているポケモンには効かない():
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ"), Pokemon("ピジョン")],
+        side0={"どくびし": 2},
+    )
+    active = t.run_switch(battle, 0, 1)
     assert not active.ailment.is_active
 
 
@@ -857,6 +876,30 @@ def test_ねがいごと_交代後は現在の場のポケモンが回復する(
     # 交代後のポケモン（ヤドラン）が回復していること
     assert teammate.hp == hp_teammate_before + heal
     assert not field.is_active
+
+
+def test_ねがいごと_同ターンに瀕死になったポケモンは回復しない():
+    """ねがいごと: 同ターン中の攻撃で先にHPが0になったポケモンは、
+    ねがいごとの発動時の回復を受けずに瀕死のままとなる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("コラッタ")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        side0={"ねがいごと": 1},
+        accuracy=100,
+    )
+    field = battle.get_side(battle.players[0]).get("ねがいごと")
+    field.heal = 100
+    mon = battle.actives[0]
+    mon.hp = 1
+
+    t.run_move(battle, 1)
+    assert mon.hp == 0
+    assert mon.fainted
+
+    t.end_turn(battle)
+    assert mon.hp == 0, "瀕死のポケモンがねがいごとで回復した"
+    assert mon.fainted
+    assert not field.is_active, "ねがいごとの発動自体は瀕死でも解除される"
 
 
 def test_ねがいごと_回復と解除():
