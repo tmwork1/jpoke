@@ -1127,11 +1127,14 @@ class Pokemon:
         s += f"HP {self.hp}/{self.max_hp} ({self.hp_fraction*100:.0f}%){sep}"
         s += f"{self._nature}{sep}"
         s += f"{self.ability.name}{sep}"
-        s += f"{self.item.name or 'No item'}{sep}"
+        s += f"{self.item.name or 'アイテムなし'}{sep}"
+        # __init__ で tera_type = tera_type or self.base_types[0] により常に非空値が
+        # 設定されるため、現状の設計ではelse節（テラスタルなし）は到達しない。
+        # 将来tera_typeが空になり得る経路が増えた場合の保険として残す。
         if self.tera_type:
             s += f"{self.tera_type}T{sep}"
         else:
-            s += f"No terastal{sep}"
+            s += f"テラスタルなし{sep}"
         for st, ef in zip(self._stats, self._evs):
             s += f"{st}({ef})-" if ef else f"{st}-"
         s = s[:-1] + sep

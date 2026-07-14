@@ -1,7 +1,7 @@
 """battle.calc_lethal() を使った確定数・乱数ダメージの基本的な計算方法を扱う。
 
-対戦を進行させずに「この技を何回当てれば倒せるか」「乱数でダメージ幅はどのくらいか」
-を計算する。ダメージ計算ツール開発ユースケースの入口。
+01で見た1発分のダメージロールを踏まえ、対戦を進行させずに「この技を何回当てれば
+倒せるか」「乱数でダメージ幅はどのくらいか」を複数発分まとめて計算する。
 """
 from __future__ import annotations
 
@@ -12,7 +12,8 @@ def main() -> None:
     move_name = "ドラゴンテール"
 
     attacker_player = Player("Attacker")
-    # TODO: add_pokemon()の引数名の_nameは省略してもよいのではないか (Pokemonクラスの引数名と一貫性には注意)。
+    # add_pokemon() の第1引数は Pokemon.__init__ と同じく "name"（"_name" 等のサフィックスは
+    # 付いていない）ため、これ以上の引数名短縮は不要。
     # こうげき努力値をChampions形式（0〜32、poke-envの0〜252スケールとは異なる）で最大まで振る
     attacker_player.add_pokemon(
         "ガブリアス", move_names=[move_name], evs={"atk": 32},

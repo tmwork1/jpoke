@@ -168,6 +168,18 @@
   `TypeError` になる罠だった。キーワード引数で `atk_idx=` / `active_index=` /
   `player_index=` を指定している呼び出し箇所は `player_idx=` に変更する必要がある
   （位置引数での呼び出しは影響なし）
+- `Pokemon.render_info()`（`Pokemon.show()` の出力）で、アイテム未所持・
+  テラスタル未設定時の表示が英語ハードコード（`"No item"` / `"No terastal"`）に
+  なっていたため、それぞれ「アイテムなし」「テラスタルなし」に変更した。
+  出力文字列のみの変更で構造（区切り文字・並び順）は変わらないため、
+  この文字列を直接パースしているコードがあれば影響を受ける
+- `examples/03_damage_calc/` を「生ダメージロール（01） → 状態操作の単体確認（02）
+  → calc_lethal基本（03） → シナリオ比較（04） → …」という順に組み直し、10→11
+  ファイルにrenumberした（新設: `02_direct_state_manipulation.py`。旧
+  `01_basic_lethal_calculation.py`→`03_basic_lethal_calculation.py`、旧
+  `02_ailment_and_scenario_comparison.py`→`04_ailment_and_scenario_comparison.py`、
+  旧`03_raw_damage_rolls.py`→`01_raw_damage_rolls.py`、以降`04`〜`10`は
+  `05`〜`11`にそれぞれ1つずつ繰り下げ）
 
 ### Fixed
 

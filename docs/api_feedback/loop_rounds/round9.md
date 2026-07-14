@@ -153,3 +153,42 @@
   （`03_tree_search_ai.py`は2ターンで`TreeSearchAI`勝利、`じしん`で確定KOする決着を確認）。
   `python -m pytest tests/ -v`で5849件全件パス・1件skip（既存件数のまま、flaky testの
   新規発生なし）を確認した。
+- [x] `03_damage_calc/01_basic_lethal_calculation.py`の`add_pokemon()`の第1引数を
+  `_name`サフィックス付きに改名すべきかというTODO、`Pokemon.show()`（`render_info()`）の
+  未所持アイテム・テラスタル未設定時の表示が`"No item"`/`"No terastal"`という英語の
+  ハードコードのままだった件、`03_damage_calc/`配下のファイル構成（生ダメージロールと
+  状態操作の単体確認が分離されておらず、りゅうせいぐんの自傷効果が`secondary`の対象外である
+  理由の実装根拠が未確認だった点）の3件（id: r9-7） → 対応内容 (2026-07-15):
+  `add_pokemon()`の第1引数は`Pokemon.__init__`と同じく単に`name`であり`_name`等の
+  サフィックスは付いていない（事実誤認だったTODO）と判明したため、改名は行わず
+  その事実を明記したコメントに置き換えた。`render_info()`内の`'No item'`/`'No terastal'`を
+  それぞれ`'アイテムなし'`/`'テラスタルなし'`に変更し（区切り文字・並び順は変更なし）、
+  `CHANGELOG.md`の`[Unreleased] Changed`に出力文字列変更である旨と、この文字列を直接
+  パースしているコードがあれば影響を受ける旨を記載した。`tests/test_render_info.py`を
+  新規追加し、アイテム未所持時に`"アイテムなし"`を含み`"No item"`を含まないこと、
+  アイテム所持時はアイテム名がそのまま表示されること、`show()`が`render_info()`の
+  結果をそのままprintするだけであることを検証した。あわせて`Pokemon.__init__`
+  （`self.tera_type: Type = tera_type or self.base_types[0]`）を確認したところ、
+  `tera_type`は常に非空値（省略時は第1タイプ由来）になるため、`render_info()`の
+  `else`節（`"テラスタルなし"`）は現状の設計では到達不能なdead codeであると判明した。
+  設計変更は本タスクの範囲外と判断し、`render_info()`内に到達不能である理由を
+  説明するコメントを追加するにとどめた（`tests/test_render_info.py`にも、常に
+  基本タイプ由来のテラスタイプ表記になることを確認するテストを追加し、この設計を
+  回帰的に固定した）。`03_damage_calc/`は生ダメージロール（01）→状態操作の単体確認
+  （新設`02_direct_state_manipulation.py`、`set_ailment()`/`modify_hp()`/`modify_stats()`/
+  `faint()`を技を介さず単体で確認）→calc_lethal基本（03、旧01）→シナリオ比較
+  （04、旧02、02と03を組み合わせる位置づけを明記）→…という順に組み直し、10→11ファイルに
+  renumberし、docstring相互参照・`examples/README.md`のファイル一覧を追従させた。
+  りゅうせいぐんの自傷効果については`src/jpoke/handlers/lethal.py`の
+  `りゅうせいぐん_lower_spa`が（`りんごさん`/`ルミナコリジョン`/`れんごく`の各ハンドラとは
+  異なり）`ctx.move_secondary`を一切参照せず常に適用されること、対応する
+  `src/jpoke/handlers/move_attack.py`の`りゅうせいぐん_sharply_lower_attacker_spa`も
+  `Event.ON_HIT`（追加効果ではなく命中時に必ず発生する効果）に登録されていることを
+  実装で確認し、既存の`06_secondary_effects.py`（キラースピンのどく付与デモ）は維持した上で
+  `show_self_stat_drop_is_always_applied()`を新規追加し、`secondary=True`/`False`いずれでも
+  りゅうせいぐん使用後のとくこうランクが同じ値になることを実行結果で示した。
+  `03_damage_calc/`配下の全11ファイルを`PYTHONUTF8=1`で実行し、いずれも正常終了することを
+  確認した。ロジック変更を伴う公開APIのシグネチャ変更は無いため`docs/api/README.md`の
+  更新は不要と判断した。`python -m pytest tests/ -v`で5854件全件パス・1件skip
+  （既存件数から新規追加した`test_render_info.py`の4件分増加、flaky testの新規発生なし）を
+  確認した。
