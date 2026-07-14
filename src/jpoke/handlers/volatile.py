@@ -1203,11 +1203,20 @@ def ブラッドムーン_tick_volatile(battle: Battle, ctx: EventContext, value
 def ほろびのうた_faint(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ほろびのうたでひんしになる処理。マジックガードでも防げない。
 
+    ON_VOLATILE_END は「対象ポケモンの何らかの揮発性状態が解除された」ことを表す
+    共通イベントであり、解除された揮発性状態名が value に渡される。対象ポケモンが
+    ほろびのうた以外の揮発性状態（ちょうはつ・ころがる等）を同ターン中に解除した
+    場合にもこのハンドラは呼ばれるため、value がほろびのうた自身でない場合は
+    何もしない（そうしないと無関係な揮発性状態の解除に反応して即座にひんしに
+    なってしまう）。
+
     ON_VOLATILE_END はカウント0による自然解除だけでなく、交代（remove_all_volatiles）
     による強制解除でも発火する。交代退場処理中はひんしにせず、状態変化を消滅させるのみとする
     （docs/spec/volatiles/ほろびのうた.md「交代によって解除される」「バトンタッチによって
     引き継がれる」）。
     """
+    if value != "ほろびのうた":
+        return HandlerReturn(value=value)
     mon = ctx.source
     if battle.switch_manager.switching_out_mon is mon:
         return HandlerReturn(value=value)

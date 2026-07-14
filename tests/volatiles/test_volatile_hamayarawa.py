@@ -191,6 +191,23 @@ def test_ほろびのうた_交代で解除():
     assert not mon.has_volatile("ほろびのうた")
 
 
+def test_ほろびのうた_別の揮発性状態の解除では瀕死にならない():
+    """ほろびのうた: ちょうはつなど別の揮発性状態が自然解除されても、
+    ほろびのうたのカウントが0になるまでは瀕死にならない（回帰テスト）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"ほろびのうた": 3, "ちょうはつ": 1},
+    )
+    mon = battle.actives[0]
+
+    t.end_turn(battle)
+    # ちょうはつは1ターンで自然解除されるが、ほろびのうたのカウントは2で瀕死にならない
+    assert not mon.has_volatile("ちょうはつ")
+    assert mon.volatiles["ほろびのうた"].count == 2
+    assert mon.alive
+
+
 def test_マジックコート_unreflectableフラグを持つじこあんじは跳ね返さない():
     """マジックコート: unreflectableフラグを持つじこあんじは跳ね返されない"""
     battle = t.start_battle(
