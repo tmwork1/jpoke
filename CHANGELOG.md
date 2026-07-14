@@ -41,6 +41,9 @@
   `Battle.can_switch()` / `Battle.end_turn()` を新設
   （いずれも `ailment_manager` 等の内部マネージャーへの薄い委譲で、外部コードが
   `battle.<manager>.<method>()` を直接呼ばずに済むようにするための追加）
+- `Command` をトップレベルパッケージから再エクスポート（`from jpoke import Command`。
+  従来は `from jpoke.enums import Command` のみ）。`Battle` / `Player` は既にトップ
+  レベルから使えたが `Command` だけ欠けていたための追加
 - `Battle.has_available_bench(player)` / `Battle.is_floating(pokemon)` /
   `Battle.is_trapped(pokemon)` / `Battle.is_nervous(pokemon)` /
   `Battle.is_hazard_immune(pokemon)` / `Battle.can_use_last_resort(pokemon)` /
@@ -100,6 +103,14 @@
   もの）と衝突しないことが保証される。`Battle.copy(reseed=True)` 側も同様に修正した。
   **同じ `seed` でも `decision_random` が生成する具体的な乱数列は旧バージョンから
   変わる**（ゲーム進行用の `Battle.random` の乱数列には影響しない）
+
+- `examples/` 配下のファイル構成を「1ファイル=1事例」の原則で再点検し、詰め込み
+  過ぎていたファイルを分割・renumberした（`01_basics/` 3→5ファイル、`02_ai/`
+  3→4ファイル、`03_damage_calc/` 3→9ファイル、`04_research/` は
+  `03_janken_nash_cfr.py` / `04_janken_nash_fictitious_play.py` の番号を入れ替え）。
+  `04_research/03_janken_nash_cfr.py` の `hp_bucket()` はHP満タン
+  （fraction=1.0）を専用の最上位バケットとして切り出す仕様に変更し、バケット
+  総数が `HP_BUCKETS` から `HP_BUCKETS + 1` になった
 
 ### Fixed
 

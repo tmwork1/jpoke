@@ -1,7 +1,7 @@
 """jpoke で学べること: 優先度技・素早さ操作技（トリックルーム）が行動順に与える影響、
 TreeSearchPlayer.evaluate_commands() によるコマンド候補・評価値のデバッグ確認。
 
-02のKOFocusedPlayerは「どのコマンドが選ばれたか」だけを見ていたが、
+03のKOFocusedPlayerは「どのコマンドが選ばれたか」だけを見ていたが、
 evaluate_commands()を使うと「選ばれなかったコマンドがどう評価されていたか」まで
 確認できる。木探索AIの読み筋を検証する発展的な使い方。
 """

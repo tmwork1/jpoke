@@ -1,0 +1,58 @@
+"""jpoke で学べること: battle.calc_lethal() を使った確定数・乱数ダメージの基本計算。
+
+対戦を進行させずに「この技を何回当てれば倒せるか」「乱数でダメージ幅はどのくらいか」
+を計算する。ダメージ計算ツール開発ユースケースの入口。
+"""
+from __future__ import annotations
+
+from jpoke import Battle, Player
+
+
+def main() -> None:
+    move_name = "ドラゴンテール"
+
+    attacker_player = Player("Attacker")
+    attacker_player.add_pokemon("ガブリアス", move_names=[move_name])
+
+    defender_player = Player("Defender")
+    defender_player.add_pokemon("カイリュー", item_name="オボンのみ")
+
+    battle = Battle(attacker_player, defender_player, seed=1)
+    battle.start()
+
+    attacker = battle.get_active(attacker_player)
+    defender = battle.get_active(defender_player)
+
+    # こうげき努力値をChampions形式（0〜32、poke-envの0〜252スケールとは異なる）で最大まで振る
+    attacker.set_evs([0, 32, 0, 0, 0, 0])
+
+    # Pokemon.show() で実数値・性格・特性・持ち物・テラスタイプ・技構成をまとめて確認できる
+    attacker.show()
+
+    # moves には技名の文字列 / Move 単体 / (Move, ヒット数) / それらのリストを渡せる
+    results = battle.calc_lethal(
+        attacker=attacker,
+        moves=move_name,
+        max_attack=5,  # 最大5回攻撃するまで計算する（確定数が出た時点で打ち切り）
+    )
+
+    print(f"攻撃側: {attacker.name}（{move_name}, こうげき実数値 {attacker.stats['atk']}）")
+    print(f"防御側: {defender.name}（HP {defender.max_hp}, オボンのみ）")
+    print("-" * 50)
+
+    for result in results:
+        print(
+            f"{result.n_attack}発目: ダメージ {result.min_damage}~{result.max_damage} "
+            f"/ 致死率 {result.lethal_probability:.2%}"
+        )
+
+    final = results[-1]
+    print("-" * 50)
+    print(f"{final.n_attack}回攻撃した時点での致死率: {final.lethal_probability:.2%}")
+
+    # 試してみよう: move_name を別の技に変えたり、defender_player のアイテムを
+    # 変えたりすると、確定数や致死率がどう変わるか比較できる
+
+
+if __name__ == "__main__":
+    main()

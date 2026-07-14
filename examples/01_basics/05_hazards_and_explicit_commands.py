@@ -1,5 +1,3 @@
-# TODO: step()でのコマンド注入は木探索用の仕組みであり、フォールバックなどが整備されていない状態で使うべきではない。Playerの行動を完全に制御したい場合は、Playerを継承してchoose_command()をオーバーライドすべき。
-
 """jpoke で学べること: 設置技（サイドフィールド効果）と交代誘発技の効果、
 交代・テラスタル・メガシンカコマンドを明示的に組み立てる方法、わるあがき（PP切れ）の挙動。
 
@@ -7,6 +5,12 @@
 （先頭のコマンドを選ぶ）に任せていた。ここでは Command.get_switch_command() /
 get_terastal_command() / get_megaevol_command() で自分でコマンドを組み立て、
 battle.step({player: command, ...}) に直接渡す方法を示す。
+
+Warning:
+    ここで示す battle.step() へのコマンド注入は木探索（TreeSearchPlayerの読み筋展開等）
+    向けの仕組みで、不正なコマンドに対するフォールバック等は整備されていない。
+    Playerの行動そのものを恒常的に制御したい場合は、この方法ではなく Player を
+    継承して choose_command() をオーバーライドすべき（02_ai/01_custom_player.py 参照）。
 """
 from __future__ import annotations
 
