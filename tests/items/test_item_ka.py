@@ -1,6 +1,7 @@
 """アイテムハンドラの単体テスト"""
 import pytest
 from jpoke import Pokemon
+from jpoke.utils.math import round_half_down
 from .. import test_utils as t
 
 
@@ -50,6 +51,26 @@ def test_かいがらのすず_与ダメージの1割8回復():
     t.fix_damage(battle, 80)
     t.run_move(battle, 0)
     assert attacker.hp == 1 + 80 // 8
+
+
+def test_かいがらのすず_反動で瀕死になった場合は回復しない():
+    """かいがらのすず: わるあがきの反動でHPが0になった場合、瀕死判定を無視して回復・蘇生しては
+    ならない（docs/spec/items/かいがらのすず.md「反動技や、ひんしになる攻撃技などの効果で攻撃側の
+    HPが0になったときは、回復効果が発動しないままひんしになる」の回帰テスト。
+    fuzz_log seed=60で発見されたバグ: ON_HITでの回復実行時にctx.attacker.faintedを見ておらず、
+    反動で瀕死になった直後のポケモンを蘇生させてしまっていた）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="かいがらのすず", move_names=["わるあがき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    recoil = max(1, round_half_down(attacker.max_hp / 4))
+    attacker.hp = recoil
+    t.fix_damage(battle, 80)
+    t.run_move(battle, 0)
+    assert attacker.hp == 0
+    assert attacker.fainted
 
 
 def test_かいがらのすず_命中後に自分のランクを下げる技でも回復する():
