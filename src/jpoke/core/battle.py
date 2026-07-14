@@ -1358,6 +1358,13 @@ class Battle:
     ) -> float:
         """追加効果補正後の実効確率を返す。
 
+        主に `handlers/*.py`（追加効果の実装）から、ハンドラ関数の引数として
+        受け取った ctx をそのまま渡して呼び出す想定の API。ctx の型
+        （`EventContext` / `AttackContext`）はいずれも `jpoke.core` から
+        `from jpoke.core import EventContext, AttackContext` でインポートできる
+        （`jpoke.core.__init__` で再エクスポート済み）。自作のハンドラ関数に
+        型注釈を付けたい場合はこの経路を使う。
+
         Args:
             ctx: コンテキスト（攻撃フローの場合は通常 AttackContext）
             chance: 補正前の追加効果発動確率
