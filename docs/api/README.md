@@ -115,7 +115,10 @@ move = battle.command_to_move(player1, commands[0])
 
 `battle.query`（`PokemonQuery`）には他にも判定用メソッドがあるが、そのうち `Pokemon`/`Player`
 単体の引数で完結するものは以下の通り `Battle` 直下からも呼べる（`AttackContext`/`EventContext`
-を要求する内部専用メソッドは委譲していない）。
+を要求する内部専用メソッドは委譲していない）。`resolve_secondary_chance(ctx, chance, ...)` など
+`AttackContext`/`EventContext` を引数に取る `Battle` のメソッドは、`handlers/*.py` のハンドラ
+関数が受け取った ctx をそのまま渡す用途を想定した内部専用API。両型は
+`from jpoke.core import EventContext, AttackContext` でインポートできる。
 
 | API | 概要 |
 |---|---|

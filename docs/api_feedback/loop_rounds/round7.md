@@ -50,3 +50,23 @@
   `python scripts/sort_tests.py tests/test_form.py`・`python scripts/generate_test_list.py`を
   実行し、`python -m pytest tests/ -v`で5764件全件パス（既存の5757件+新規テスト6件+examplesスモーク
   1件、flaky testの新規発生なし）を確認した。
+
+- [x] `Battle.resolve_secondary_chance()`の引数`ctx`型（`EventContext`/`AttackContext`）が
+  jpokeトップレベルからimportできず内部実装への直接アクセスを強いる（developer視点、id: r7-3）
+  → 対応内容 (2026-07-14): `src/jpoke/core/battle.py:1352`の`resolve_secondary_chance(ctx:
+  EventContext | AttackContext, ...)`は、`EventContext`/`AttackContext`が`jpoke`トップレベル
+  （`jpoke/__init__.py`）からは未エクスポートである点は事実だが、`jpoke.core.__init__`では
+  `from .context import BaseContext, EventContext, AttackContext`により既に再エクスポート済みで、
+  `from jpoke.core import EventContext, AttackContext`は現状でも動作することを実測で再確認した
+  （`python -c "from jpoke.core import EventContext, AttackContext"`が例外なく成功）。本APIは
+  `handlers/*.py`の追加効果実装がハンドラ関数の引数として受け取った`ctx`をそのまま渡す用途を
+  想定した内部専用APIであり、利用者が`ctx`を自作して呼び出す想定ではないため、シグネチャ変更
+  （例: `Any`型への緩和や独自ラッパー型の新設）はAPIの型安全性を損なう割に実利が薄いと判断し、
+  他loopとの衝突リスクも考慮して見送った。代わりに`resolve_secondary_chance()`のdocstringに
+  「主に`handlers/*.py`からハンドラ引数の`ctx`をそのまま渡す用途のAPIであること」「型が必要な
+  場合は`from jpoke.core import EventContext, AttackContext`で入手できること」を明記し、
+  `docs/api/README.md`の`AttackContext`/`EventContext`を要求する内部専用メソッドに関する記述の
+  直後にも同様の入手方法を追記した。ロジック変更を伴わないため新規の回帰テストは不要と判断し、
+  既存の`tests/test_battle_option.py`（`resolve_secondary_chance`関連19件）が引き続き通ることを
+  確認した。`python -m pytest tests/ -v`で5764件全件パス（既存件数のまま、flaky testの新規発生
+  なし）を確認した。
