@@ -89,3 +89,31 @@
   `python scripts/sort_tests.py tests/test_code_conventions.py`・
   `python scripts/generate_test_list.py`を実行し、`python -m pytest tests/ -v`で5765件全件
   パス（既存の5764件+新規テスト1件、flaky testの新規発生なし）を確認した。
+
+- [x] `Command.is_type()`が公開APIリファレンス（`docs/api/README.md`）のCommand章に載って
+  いない（beginner視点、id: r7-5） → 対応内容 (2026-07-14): `src/jpoke/enums/command.py:130`の
+  `is_type(command_type: CommandType | None) -> bool`（`"any"` / `"move"` / `"switch"`を受理し、
+  `command_manager.py`・`turn_controller.py`・`observation_builder.py`・
+  `handlers/ability.py`・`handlers/item.py`・`handlers/volatile.py`等で汎用の種別判定に使われて
+  いる中核API）が、`docs/api/README.md`のCommand章「インスタンスプロパティ・メソッド」表に
+  `is_regular_move`/`is_switch()`等はあるのに掲載されていなかった。表の先頭に
+  `is_type(command_type)`の行を追加し、`"any"`/`"move"`/`"switch"`の受理値と、`is_regular_move`
+  との違い（`"move"`は通常技コマンドに加えテラスタル・メガシンカ・ダイマックス・Zワザを伴う
+  技コマンドも含む一方、`is_regular_move`は`MOVE_*`のみ）を明記した。実装（`is_type()`本体の
+  `match`文）を確認したところ、`"move"`判定は`self.name[:-2] not in {"SELECT", "SWITCH"}`という
+  除外方式のため、`STRUGGLE`（わるあがき）・`FORCED`（強制行動）も`"move"`側の真になる（両者とも
+  `resolve_move_from_command()`で実際に技オブジェクトへ解決されるため、`command_manager.py`の
+  `if not any(cmd.is_type("move") for cmd in commands): commands += [Command.STRUGGLE]`や
+  `turn_controller.py`の`if not command.is_type("move") or mon.fainted:`という既存利用箇所の
+  前提と整合する意図的な挙動）。この特殊コマンドの扱いは表の一文説明には収まらない細部と判断し、
+  回帰テストの docstring 側に委ねドキュメント本文はbeginner向けの簡潔さを優先した。回帰テストとして
+  `tests/test_command.py`に4件追加した:
+  `test_is_type_anyを指定すると全てのコマンドが真になる`（`MOVE_0`/`SWITCH_0`/`TERASTAL_0`/
+  `STRUGGLE`/`FORCED`すべて真）、
+  `test_is_type_moveを指定すると技系コマンドのみ真になる`（`MOVE_0`/`TERASTAL_0`/`MEGAEVOL_0`/
+  `GIGAMAX_0`/`ZMOVE_0`/`STRUGGLE`/`FORCED`は真、`SWITCH_0`は偽）、
+  `test_is_type_switchを指定すると交代コマンドのみ真になる`（`SWITCH_0`のみ真）、
+  `test_is_type_Noneを渡すと偽を返す`（`command_type=None`は常に偽）。
+  `python scripts/sort_tests.py tests/test_command.py`・`python scripts/generate_test_list.py`を
+  実行し、`python -m pytest tests/ -v`で5769件全件パス（既存の5765件+新規テスト4件、flaky testの
+  新規発生なし）を確認した。
