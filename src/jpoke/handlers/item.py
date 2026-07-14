@@ -694,7 +694,11 @@ def かいがらのすず_drain_on_hit(battle: Battle, ctx: AttackContext, value
         return HandlerReturn(value=value)
 
     heal_amount = total_damage // 8
-    if heal_amount > 0 and battle.modify_hp(ctx.attacker, v=heal_amount):
+    if (
+        not ctx.attacker.fainted
+        and heal_amount > 0
+        and battle.modify_hp(ctx.attacker, v=heal_amount)
+    ):
         _announce_item_triggered(battle, ctx.attacker)
     return HandlerReturn(value=value)
 
