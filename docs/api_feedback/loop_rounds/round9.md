@@ -225,3 +225,18 @@
   `docs/api/README.md`の更新は不要と判断した。ファイル名変更後も
   `tests/test_code_conventions.py`が問題なく通ることを含め、`python -m pytest tests/ -v`で
   5854件全件パス・1件skip（既存件数のまま、flaky testの新規発生なし）を確認した。
+- [x] `05_benchmark/01_step_time_benchmark.py`冒頭に残っていた
+  「TODO: import文をまとめられないか。」（id: r9-9） → 対応内容 (2026-07-15):
+  `from typing import Callable, get_args`を標準ライブラリ群（`argparse`/`statistics`/`time`/
+  `random.Random`）の直後に移動し、標準ライブラリ→自プロジェクト（`jpoke`）の順に整理した
+  （`import X`形式・`from X import Y`形式それぞれの中でアルファベット順を維持）。
+  `jpoke.data.ability`/`jpoke.data.item`/`jpoke.data.move`/`jpoke.data.pokedex`の個別importは
+  参照先モジュールが異なり1行にまとめると意味が変わる（各モジュールが公開する定数名
+  `ABILITIES`/`ITEMS`/`MOVES`/`POKEDEX`をそれぞれ別名前空間から取っている）ため統合せず
+  現状維持とし、TODOコメントは対応済みとして削除した。`PYTHONUTF8=1 python
+  examples/05_benchmark/01_step_time_benchmark.py --n-battles 5 --max-turns 20
+  --progress-every 0`を実行し、import順整理のみでロジック変更が無いことを出力
+  （stepサンプル数・所要時間・battles/sec等が正常に出力され例外が発生しないこと）で確認した。
+  import順序の整理のみでロジック変更を伴わないため新規の回帰テストは不要と判断し、
+  `python -m pytest tests/ -v`で5855件全件パス・1件skip（既存件数のまま、flaky testの
+  新規発生なし）を確認した。
