@@ -311,12 +311,18 @@ add_pokemon(
     item_name: ItemName = "",
     move_names: list[MoveName] | None = None,
     tera_type: Type | None = None,
+    evs: dict[Stat, int] | None = None,
+    ivs: dict[Stat, int] | None = None,
 ) -> Pokemon
 ```
 
 ポケモンを1体作成し `team` に追加する。`from jpoke import Pokemon` を使わずにチームを
-組める正規の追加ルート。引数はそのまま `Pokemon.__init__` に渡される。戻り値の `Pokemon`
-は交代先の参照などに使える。
+組める正規の追加ルート。`evs`/`ivs` 以外の引数はそのまま `Pokemon.__init__` に渡される。
+戻り値の `Pokemon` は交代先の参照などに使える。
+
+`evs`/`ivs` はステータス名をキーとする辞書で、指定したステータスのみ生成後に
+`set_evs()` / `set_ivs()` に委譲して設定する（未指定のステータスは `Pokemon` の既定値の
+まま）。`None`（デフォルト）の場合はどちらも呼ばれない。
 
 ```python
 from jpoke import Player
@@ -325,6 +331,7 @@ player = Player("Player 1")
 attacker = player.add_pokemon(
     "ガブリアス", nature="いじっぱり", ability_name="さめはだ",
     item_name="こだわりスカーフ", move_names=["じしん", "げきりん"],
+    evs={"atk": 32, "spe": 32}, ivs={"spa": 0},
 )
 ```
 
@@ -383,6 +390,21 @@ replays = []
 player1.battle_against(player2, n_battles=100, seed=1, on_battle_end=replays.append)
 ```
 
+### 対戦実行系メソッドの戻り値一覧
+
+対戦を最後まで進めるメソッドは、対象によって戻り値の設計方針が異なる。
+
+| メソッド | 戻り値 | 対戦結果へのアクセス手段 |
+|---|---|---|
+| `Battle.play_out(max_turns=100)` | 勝者（`Player`）。ターン上限で未決着なら `None` | 呼び出し側が既に `battle` インスタンスを保持しているため、戻り値は勝者のみで十分。ログ等が必要なら `battle.print_logs()` / `battle.get_event_logs()` などをそのまま使う |
+| `Player.battle_against(...)` | `None` | 戦績カウンタ（`n_won_battles` 等）を自動更新するだけで、各対戦の `Battle` はループ内で使い捨てる。個々の対戦の `Battle` インスタンスにアクセスしたい場合は `on_battle_end` コールバックを使う |
+
+`play_out()` は既存の `Battle` の上で呼ぶ低レベルAPIなので勝者だけを返せば足りるが、
+`battle_against()` は対戦ごとに `Battle` を新規生成・破棄するループを内包するため、個々の
+`Battle` を（リストとして蓄積するのではなく）`on_battle_end` コールバックで都度受け取る設計に
+している。対戦数に比例して各対戦の `event_logger` の履歴等を保持するリストを返す設計は、
+対戦数が多いほどメモリ使用量が線形に増えるため採用していない。
+
 ## Pokemon
 
 `src/jpoke/model/pokemon.py`。ポケモン1体の全状態（種族値・技・特性・アイテム・状態異常など）を
@@ -415,14 +437,26 @@ mon = Pokemon(
 )
 mon.set_evs([0, 32, 0, 0, 0, 0])   # こうげき努力値をChampions形式（0〜32）で最大まで振る
 mon.set_ivs([31, 31, 31, 31, 31, 0])
+
+# dict指定も可能。指定したステータスのみ更新し、未指定分は既存値を維持する
+mon.set_evs({"atk": 32, "spe": 32})
+mon.set_ivs({"spa": 0})
 ```
 
 ### `set_evs()` / `set_ivs()`
 
-- `set_evs(evs, hp_policy="keep_absolute")`: 努力値を**Champions形式（各値0〜32）**で設定する。
-  poke-envの努力値（各値0〜252）とはスケールが異なるため、poke-env形式の値をそのまま渡さない
-  こと（`types/poke_env.py` の `evs_from_poke_env` で変換する）
-- `set_ivs(ivs, hp_policy="keep_absolute")`: 個体値を設定する
+```python
+set_evs(evs: list[int] | dict[Stat, int], hp_policy: HpPolicy = "keep_absolute")
+set_ivs(ivs: list[int] | dict[Stat, int], hp_policy: HpPolicy = "keep_absolute")
+```
+
+- `set_evs()`: 努力値を**Champions形式（各値0〜32）**で設定する。poke-envの努力値
+  （各値0〜252）とはスケールが異なるため、poke-env形式の値をそのまま渡さないこと
+  （`types/poke_env.py` の `evs_from_poke_env` で変換する）
+- `set_ivs()`: 個体値を設定する
+- `evs`/`ivs` は `list[int]`（HP・攻撃・防御・特攻・特防・素早さの順、6要素で全体を置き換え）
+  と `dict[Stat, int]`（指定したステータスのみ更新し、未指定のステータスは既存値を維持）の
+  どちらでも指定できる
 - どちらも設定後にステータスを自動再計算する。`hp_policy` は最大HPが変化したときの現在HPの
   追従方法を指定する引数（`Pokemon.set_level` など他のステータス変更系メソッドにも共通）
 

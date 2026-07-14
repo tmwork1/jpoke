@@ -4565,6 +4565,14 @@ def よちむ_reveal_strongest_move(battle: Battle, ctx: EventContext, value: An
     mon = ctx.source
     foe = battle.foe(mon)
 
+    # 通常の対戦では相手が技を1つも持たないことはないが、木探索
+    # プレイヤーの内部シミュレーションでは情報隠蔽済み盤面
+    # （build_observation() で未公開の技が削除された Pokemon）を
+    # そのまま使って交代処理を進めることがあり、foe.moves が
+    # 空になりうる。公開できる技が無いだけなので何もせず終える。
+    if not foe.moves:
+        return HandlerReturn(value=value)
+
     max_power = max(_move_power(m) for m in foe.moves)
     candidates = [m for m in foe.moves if _move_power(m) == max_power]
     chosen = battle.random.choice(candidates)
