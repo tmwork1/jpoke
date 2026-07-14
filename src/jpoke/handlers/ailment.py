@@ -28,8 +28,16 @@ def こおり_action(battle: Battle, ctx: AttackContext, value: Any) -> HandlerR
     Champions仕様:
     - わざを出す直前に25%の確率で解凍（SV以前は20%）
     - 行動不能2回の後（3回目の行動時）は必ず解凍
+    - self_thawフラグを持つ技（ハイドロスチーム・フレアドライブ等）を選択した場合は、
+      この確率判定を行わずに素通りする。解凍自体は各技のON_TRY_ACTIONハンドラ
+      （priority=170、こんらん等の行動不能判定より後）で確定的に行われる
+      （docs/spec/turn.md Event.ON_TRY_ACTION参照）。
     """
     mon = ctx.attacker
+
+    # self_thaw技を選択した場合は確率判定をスキップし、後段のハンドラに解凍を委ねる
+    if ctx.move.has_flag("self_thaw"):
+        return HandlerReturn(value=value)
 
     # 3回目の行動時は必ず解凍（elapsed_turns >= 2 = 既に2回行動不能）
     if mon.ailment.elapsed_turns >= 2:
@@ -57,8 +65,12 @@ def こおり_action(battle: Battle, ctx: AttackContext, value: Any) -> HandlerR
 
 
 def こおり_cure_by_thaw_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """thawラベルを持つ技でダメージを受けたら解凍する。
+    """ほのおタイプの攻撃技、またはthawラベルを持つ技でダメージを受けたら解凍する。
 
+    ほのおタイプの攻撃技（第三世代以降）はすべて解凍対象となるため、ctx.move.typeを
+    直接判定する（ウェザーボール等、命中時点でほのおタイプに変化している技も対象になる。
+    逆にそうでん状態・ノーマルスキン等で元がほのおタイプの技が別タイプに変わった場合は
+    ctx.move.typeがほのお以外になるため解凍しない）。
     ほのおタイプ技による解凍はタイプ由来の効果であり追加効果に該当しないため、
     ちからずくの影響を受けない。一方、シャカシャカほう/スチームバースト/
     ねっさのだいち/ねっとう（第六世代以降）等、ほのお以外のタイプでこの効果を
@@ -69,7 +81,7 @@ def こおり_cure_by_thaw_move(battle: Battle, ctx: AttackContext, value: Any) 
     ではないため、使用者がちからずくでもこの効果は常に発動する
     （docs/spec/moves/ハイドロスチーム.md参照）。
     """
-    if not ctx.move.has_flag("thaw"):
+    if ctx.move.type != "ほのお" and not ctx.move.has_flag("thaw"):
         return HandlerReturn(value=value)
     if (
         ctx.move.type != "ほのお"

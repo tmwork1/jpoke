@@ -50,11 +50,11 @@ MOVES_HA: dict[MoveName, MoveData] = {
         pp=16,
         power=80,
         accuracy=100,
-        flags={"thaw"},
+        flags={"thaw", "self_thaw"},
         handlers={
             Event.ON_TRY_ACTION: h.MoveHandler(
                 ha.ハイドロスチーム_thaw_attacker,
-                priority=5,
+                priority=170,
             ),
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
                 ha.ハイドロスチーム_power_modifier,
@@ -1092,11 +1092,11 @@ MOVES_HA: dict[MoveName, MoveData] = {
         pp=16,
         power=120,
         accuracy=100,
-        flags={"contact", "recoil", "secondary_effect", "thaw"},
+        flags={"contact", "recoil", "secondary_effect", "thaw", "self_thaw"},
         handlers={
             Event.ON_TRY_ACTION: h.MoveHandler(
                 ha.フレアドライブ_thaw_attacker,
-                priority=5,
+                priority=170,
             ),
             Event.ON_HIT: h.MoveHandler(
                 ha.フレアドライブ_recoil,
