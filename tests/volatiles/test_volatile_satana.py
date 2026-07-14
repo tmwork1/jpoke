@@ -648,6 +648,36 @@ def test_にげられない_発生源が交代すると解除():
     assert not battle.actives[1].has_volatile("にげられない")
 
 
+def test_ねむけ_あめまみれ解除では移行が早まらない():
+    """ねむけ: 同ターン内であめまみれ（無関係な揮発性状態）が自然解除されても、
+    ねむけからねむりへの移行タイミングが早まらない（fuzz_log seed=207 の回帰テスト）。
+
+    ON_VOLATILE_END は対象ポケモンの何らかの揮発性状態が解除されたことを表す共通
+    イベントで、解除された状態名が value として渡される。修正前は
+    ねむけ_remove_and_apply_sleep がこの value を確認せず常にねむりを付与して
+    いたため、あめまみれがカウント0で自然解除された時点で誤ってねむり状態に
+    なってしまっていた。
+    """
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ")],
+        volatile0={"ねむけ": 2, "あめまみれ": 1},
+    )
+    mon = battle.actives[0]
+
+    # 1ターン目終了時: あめまみれは count=1 で自然解除されるが、
+    # ねむけはまだ残り1ターンのため、ねむり状態にはならない
+    t.end_turn(battle)
+    assert not mon.has_volatile("あめまみれ")
+    assert mon.has_volatile("ねむけ")
+    assert not mon.has_ailment("ねむり")
+
+    # 2ターン目終了時: ねむけが解除され、正しく（1ターン遅延して）ねむり状態になる
+    t.end_turn(battle)
+    assert not mon.has_volatile("ねむけ")
+    assert mon.has_ailment("ねむり")
+
+
 def test_ねむけ_ターン経過でねむりになる():
     """ねむけ: count=2 でターン終了×2回後にねむり状態になる"""
     n_turn = 2

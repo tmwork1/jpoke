@@ -494,6 +494,35 @@ def test_みがわり_音技は貫通する():
     assert defender.volatiles["みがわり"].hp == 999
 
 
+def test_みずびたし_リチャージ解除ではタイプ上書きが解除されない():
+    """みずびたし: 無関係な揮発性状態（リチャージ）が同ターン中に解除されても、
+    みずびたしによるタイプ上書きは維持される（fuzz_log seed=205 の回帰テスト）。
+
+    ON_VOLATILE_END は対象ポケモンの何らかの揮発性状態が解除されたことを表す共通
+    イベントで、解除された状態名が value として渡される。修正前はこの value を
+    確認せず、みずびたしと無関係なリチャージの解除にも反応してタイプ上書きが
+    誤って巻き戻ってしまっていた。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"みずびたし": 99, "リチャージ": 1},
+    )
+    mon = battle.actives[0]
+    assert mon.volatile_override_type == "みず"
+
+    # リチャージにより行動不能になり、リチャージ自身は解除される
+    t.run_move(battle, 0)
+    assert not mon.has_volatile("リチャージ")
+    assert battle.move_executor.action_success is False
+
+    # みずびたしは無関係な状態解除の影響を受けず、タイプ上書きも維持される
+    assert mon.has_volatile("みずびたし")
+    assert mon.volatile_override_type == "みず"
+    assert mon.has_type("みず")
+    assert not mon.has_type("でんき")
+
+
 def test_みちづれ_倒しきれなければ不発():
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
