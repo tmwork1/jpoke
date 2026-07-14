@@ -8,7 +8,7 @@ from pathlib import Path
 import re
 from bs4 import BeautifulSoup, NavigableString, Tag
 
-PROJECT_DIR = Path(__file__).parent.parent
+PROJECT_DIR = Path(__file__).parent.parent.parent
 HTML_DIR = PROJECT_DIR / "docs" / "wiki_html" / "abilities"
 SPEC_DIR = PROJECT_DIR / "docs" / "spec" / "abilities"
 TODAY = "2026-06-03"
