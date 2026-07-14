@@ -41,3 +41,4 @@
 - [第6ラウンド（apiループ）](loop_rounds/round6.md)
 - [examples/ TODOコメントの反映（2026-07-14、手動）](loop_rounds/manual_2026-07-14.md)
 - [第7ラウンド（apiループ）](loop_rounds/round7.md)
+- [第8ラウンド（apiループ）](loop_rounds/round8.md)
