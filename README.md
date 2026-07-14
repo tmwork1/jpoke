@@ -230,4 +230,9 @@ CI（`.github/workflows/test.yml`）で push/PR ごとに Windows + Linux × Pyt
 
 ## ライセンス
 
-MIT License
+本プロジェクトはコードとゲームデータで異なるライセンスを適用する二層構成になっている。
+
+- **コード**（`src/jpoke/` 配下の実装ロジックなど）: MIT License（[LICENSE](LICENSE)）
+- **ゲームデータ**（`src/jpoke/data/`, `docs/wiki/`, `docs/spec/` 配下の技・特性・アイテム等の数値・効果テキスト）:
+  CC BY-NC-SA 4.0（[LICENSE-DATA](LICENSE-DATA)）。出典は
+  [ポケモンWiki](https://wiki.pokemonwiki.com/)（CC BY-NC-SA 3.0）
