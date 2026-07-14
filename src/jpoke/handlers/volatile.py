@@ -1098,13 +1098,18 @@ def ひるみ_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> 
     return remove_volatile(battle, ctx, value, volatile="ひるみ")
 
 
-def _check_protect_success(battle: Battle, ctx: EventContext, protect_non_attack: bool) -> bool:
-    if (
-        (not protect_non_attack and not ctx.move.is_attack)
-        or not ctx.move.is_blocked_by_protect
-    ):
-        return False
-    return battle.events.emit(Event.ON_CHECK_PROTECT, ctx, True)
+def _is_protect_candidate(ctx: EventContext, protect_non_attack: bool) -> bool:
+    """技がそもそもまもる系の保護判定の対象になり得るかを判定する。
+
+    自分自身・味方・場を対象とする技（例: ねむる・つるぎのまい）は、実際の対戦でも
+    まもる側の保護判定自体が発生せず、関連するログも一切表示されない。ここで False を
+    返した場合、`_run_protect` はログを出さずに技をそのまま継続させる
+    （「まもるは失敗した」等の紛らわしいログを防ぐ）。
+    """
+    return (
+        (protect_non_attack or ctx.move.is_attack)
+        and ctx.move.is_blocked_by_protect
+    )
 
 def _run_protect(battle: Battle,
                  ctx: EventContext,
@@ -1124,7 +1129,11 @@ def _run_protect(battle: Battle,
         chip_on_contact: 接触時に攻撃者の最大HPから削る割合（例: 1/8）
         protect_non_attack: False の場合、変化技を保護しない
     """
-    if not _check_protect_success(battle, ctx, protect_non_attack):
+    if not _is_protect_candidate(ctx, protect_non_attack):
+        # 保護判定の対象外の技（自分・味方・場対象の技等）はログを出さずスルーする
+        return HandlerReturn(value=value)
+
+    if not battle.events.emit(Event.ON_CHECK_PROTECT, ctx, True):
         battle.add_event_log(
             ctx.defender, LogCode.PROTECT_FAILED,
             payload=MoveActionPayload(move=ctx.move.name)

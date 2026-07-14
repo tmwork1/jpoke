@@ -1,7 +1,7 @@
 """揮発性状態ハンドラの単体テスト（サ〜ノ行）"""
 import pytest
 from jpoke import Move, Pokemon
-from jpoke.enums import Command
+from jpoke.enums import Command, LogCode
 from .. import test_utils as t
 
 minimize_enhance_moves = [
@@ -245,6 +245,27 @@ def test_じゅうでん_非でんき技では残る():
     t.run_move(battle, 0)
     assert 4096 == battle.damage_calculator.power_modifier
     assert battle.actives[0].has_volatile("じゅうでん")
+
+
+def test_スレッドトラップ_保護失敗ログに実際の技名が表示される():
+    """fuzz_log seed=162 (LogInconsistency@event_logger.py:_get_base_text:204-205) の回帰テスト。
+
+    まもる系が保護に失敗したとき、`LogCode.PROTECT_FAILED` の表示テキストが
+    「まもるは失敗した」という固定文言になっており、実際に使用された技名が
+    反映されていなかった。ふかしのこぶし（接触技でまもる系を貫通する特性）で
+    保護を失敗させ、ログのテキストに実際の技名（たいあたり）が含まれることを確認する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ふかしのこぶし", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        volatile1={"スレッドトラップ": 1},
+    )
+    t.run_move(battle, 0)
+
+    logs = [log for log in battle.event_logger.logs if log.log == LogCode.PROTECT_FAILED]
+    assert len(logs) == 1
+    assert logs[0].payload.move == "たいあたり"
+    assert logs[0].render() == "たいあたり は失敗した"
 
 
 def test_スレッドトラップ_接触技で素早さを下げる():

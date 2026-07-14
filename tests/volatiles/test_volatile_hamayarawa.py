@@ -365,6 +365,29 @@ def test_まもる系_ターン終了で解除(volatile_name):
     assert not mon.has_volatile(volatile_name)
 
 
+def test_まもる系_対象外の技では保護判定ログが記録されない():
+    """まもる保護の対象外の技（自分・味方対象の技）を相手が使用しても、まもる系の
+    保護成否ログ（PROTECT_SUCCEEDED/PROTECT_FAILED）が記録されないことを確認する。
+    修正前は `_run_protect` が保護対象外の技についても一律で「技名 は失敗した」を
+    記録しており、実際には保護判定が発生していないにもかかわらず失敗したかのような
+    紛らわしいログが残っていた（fuzz_log seed=162 の追加調査で判明）。
+    """
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ", move_names=["つるぎのまい"])],
+        team0=[Pokemon("ピカチュウ")],
+    )
+    battle.volatile_manager.apply(battle.actives[0], "スレッドトラップ", count=1)
+    t.run_move(battle, 1)
+
+    assert battle.move_executor.move_success
+    assert battle.actives[1].boosts["atk"] == 2
+    protect_logs = [
+        log for log in battle.event_logger.logs
+        if log.log in (LogCode.PROTECT_SUCCEEDED, LogCode.PROTECT_FAILED)
+    ]
+    assert protect_logs == []
+
+
 @pytest.mark.parametrize("volatile_name", [
     "まもる", "トーチカ", "キングシールド", "スレッドトラップ", "かえんのまもり"
 ])
