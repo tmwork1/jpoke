@@ -350,6 +350,17 @@ def test_サイコフィールド_先制技無効():
     assert battle.move_executor.move_success is False
 
 
+def test_サイコフィールド_場が対象の優先度技は無効化されない():
+    """サイコフィールド: ワイドガード（target=own_side, priority=3）は場が対象のため無効化対象外"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ワイドガード"])],
+        team1=[Pokemon("ピカチュウ")],
+        terrain=("サイコフィールド", 99),
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success is True
+
+
 def test_サイコフィールド_浮遊は先制技有効():
     """サイコフィールド: 浮遊相手には先制技が有効"""
     battle = t.start_battle(
@@ -359,6 +370,18 @@ def test_サイコフィールド_浮遊は先制技有効():
     )
     t.run_move(battle, 0)
     assert battle.move_executor.move_success is True
+
+
+def test_サイコフィールド_自己対象の優先度技は無効化されない():
+    """サイコフィールド: まもる（target=self, priority=4）は使用者自身が対象のため無効化対象外"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まもる"])],
+        team1=[Pokemon("ピカチュウ")],
+        terrain=("サイコフィールド", 99),
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success is True
+    assert battle.actives[0].has_volatile("まもる")
 
 
 @pytest.mark.parametrize("side_field,move_name,expected", [

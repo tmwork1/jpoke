@@ -208,9 +208,14 @@ def グラスフィールド_power_modifier(battle: Battle, ctx: AttackContext, 
 
 
 def サイコフィールド_block_priority_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """サイコフィールドで先制技無効"""
+    """サイコフィールドで先制技無効
+
+    技の使用者自身に対して使われた技（まもるなど）・全体の場が対象の技・
+    相手の場が対象の技は無効化対象外（対象が相手単体の技のみブロックする）。
+    """
     if (
         ctx.move.priority > 0
+        and ctx.move.target == "foe"
         and not battle.query.is_floating(ctx.defender)
     ):
         battle.add_event_log(
