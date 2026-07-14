@@ -4718,10 +4718,14 @@ def わざわいのつるぎ_reduce_B(battle: Battle, ctx: AttackContext, value:
 
 
 def わたげ_lower_spd_on_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """わたげ特性: 攻撃を受けたとき攻撃者のすばやさを1段階下げる。"""
+    """わたげ特性: 攻撃を受けたとき攻撃者のすばやさを1段階下げる。
+
+    攻撃してきたポケモンがみがわり状態であるときは効果を受けない
+    （一次情報: docs/wiki/abilities/わたげ.html 特性の仕様節）。
+    """
     mon = ctx.defender
     attacker = ctx.attacker
-    if attacker is None:
+    if attacker.has_volatile("みがわり"):
         return HandlerReturn(value=value)
     if battle.modify_stats(attacker, {"spe": -1}, source=mon):
         _announce_ability_triggered(battle, mon)
