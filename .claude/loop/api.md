@@ -7,9 +7,10 @@
 
 ## フロー概要
 
-`docs/plan/examples_api_feedback.md` には、手動（Fable本体 + sonnet sub agent）で行った
-4ラウンド分の `examples/`・公開API 改善レビューの記録がある。本フローはこのレビュー→実装
-サイクルを自律ループ化したもの。
+`docs/api_feedback/` には、手動（Fable本体 + sonnet sub agent）で行った4ラウンド分の
+`examples/`・公開API 改善レビューの記録（`docs/api_feedback/pre_loop/01〜05`）と、本フロー
+自身が積み重ねてきた記録（`docs/api_feedback/loop_rounds/round5.md` 以降、1ラウンド1ファイル）
+がある。本フローはこのレビュー→実装サイクルを自律ループ化したもの。
 
 1ラウンドにつき、次の3種類のレビューエージェント（**Explore・読み取り専用・並列3体**）を起動する:
 
@@ -27,8 +28,8 @@
   `build_observation`/`evaluate_commands`等の観測・評価値取得APIが学習・探索ループに
   組み込みやすいか、といった観点。examples/02_ai・examples/04_research 配下を主な参照先とする。
 
-3エージェントの報告を **ディスパッチャー自身**が確認し、`docs/plan/examples_api_feedback.md`
-の既存項目と重複しないか、実際に妥当な指摘かを裏取りする（`fuzz_log` ループの Explore 指摘の
+3エージェントの報告を **ディスパッチャー自身**が確認し、`docs/api_feedback/`（`pre_loop/` +
+`loop_rounds/`）の既存項目と重複しないか、実際に妥当な指摘かを裏取りする（`fuzz_log` ループの Explore 指摘の
 裏取りと同じ立ち位置）。妥当と判断したものだけをキューに積み、1件ずつ `impl`（実装）→
 `review-test`（レビュー・回帰テスト・ドキュメント追記・コミット）の2段階で `loop/api` 上で
 処理する（`todo`/`fuzz_log` と同じ2段階パターン）。
@@ -64,17 +65,18 @@
 ```
 
 - `round`: 現在処理中（未処理なら次に開始する）のラウンド番号。初回起動時は
-  `docs/plan/examples_api_feedback.md` の既存見出し（「N度目のレビュー指摘」「第Nラウンド」等、
-  表記ゆれを許容し見出し中の数字を拾う）から最終ラウンド番号を特定し、その番号をそのまま
-  初期値にする。このループが新規に追記する見出しは `## 第{round}ラウンド（apiループ）` の形式に
-  統一する。**インクリメントのタイミング**: そのラウンドの finding をすべて消化し終えた時点
+  `docs/api_feedback/loop_rounds/round*.md` のファイル名から最大の番号を拾い、その番号を
+  そのまま初期値にする（`docs/api_feedback/pre_loop/05_fresh_coverage.md` までが手動レビュー、
+  `loop_rounds/round5.md` 以降が本フローの記録）。このループが新規に処理したラウンドは
+  `docs/api_feedback/loop_rounds/round{round}.md` を新規ファイルとして作成する（既存ファイルへの
+  追記ではない）。**インクリメントのタイミング**: そのラウンドの finding をすべて消化し終えた時点
   （手順4/5の分岐先）、または指摘0件で一時休止に至らなかった場合（手順3）にのみ `round += 1`
   する。一時休止に至った場合は `round` を進めない（次回同じラウンド番号で再挑戦する）。
 - `pending_findings`: ディスパッチャーが妥当と判断した指摘のキュー。`id` は `r{round}-{連番}`。
 - `current_finding`: 処理中の finding（中断復帰用）。**手順4で `pending_findings` から
   ポップした時点でセットする。中断復帰時は再ポップしない**（手順1.5参照）。
 - `dismissed`: impl エージェントが「対応不要」と判定した finding の記録（`summary` と理由）。
-  手順3の重複判定で `docs/plan/examples_api_feedback.md` と合わせて参照し、同じ指摘が
+  手順3の重複判定で `docs/api_feedback/` と合わせて参照し、同じ指摘が
   次ラウンド以降で再提出されるのを防ぐ（このリストが無いと、対応不要判定は diff を生まず
   記録にも残らないため、同じ指摘が延々と再提出されて `consecutive_empty_rounds` が
   0 にリセットされ続け、ループが一時休止に到達できなくなる）。
@@ -91,9 +93,8 @@
 ### 1. 状態ファイルを読む
 
 `.loop/api_state.json` を Read で読み込む。存在しなければ初回起動:
-`docs/plan/examples_api_feedback.md` を Read し、既存見出し（表記ゆれ「N度目のレビュー指摘」
-「第Nラウンド」等を問わず見出し中の数字を拾う）から最終ラウンド番号を特定して
-`round = 最終ラウンド番号`（見つからない場合は `round = 1`）とし、`pending_findings=[]`,
+`docs/api_feedback/loop_rounds/` を Glob（`round*.md`）し、ファイル名の数字から最終ラウンド
+番号を特定して `round = 最終ラウンド番号`（1件も無ければ `round = 1`）とし、`pending_findings=[]`,
 `current_finding=null`, `dismissed=[]`, `consecutive_empty_rounds=0`, `completed=[]`,
 `failed=[]` で新規作成する。
 
@@ -133,8 +134,9 @@ docs/api/・公開API（jpoke トップレベルおよび jpoke.model / jpoke.pl
 - 実装を読んで気づいたバグ・potential issue（examples や公開APIの使い方に起因して
   利用者が踏みやすい罠）
 
-参考: 過去のレビュー結果は docs/plan/examples_api_feedback.md に記録されている
-（このファイル自体は先に読むこと）。既に「対応済み」「見送り確定」となっている項目と
+参考: 過去のレビュー結果は docs/api_feedback/README.md（目次）から辿れる pre_loop/・
+loop_rounds/ 配下の各ファイルに記録されている（README.md を先に読み、関連しそうな
+ファイルに目を通すこと）。既に「対応済み」「見送り確定」となっている項目と
 同じ指摘は避けること。
 
 出力形式: 指摘ごとに「summary: 一言要約」「detail: 該当ファイル:行、根拠、対応案」を
@@ -155,8 +157,9 @@ docs/api/ のみを読んでレビューしてほしい。
 - 教材としての質（難易度勾配、コメントの分かりやすさ、次に何を試すかの誘導）
 - 公開APIの使い勝手（引数の分かりにくさ、命名の一貫性、冗長な書き方）
 
-参考: 過去のレビュー結果は docs/plan/examples_api_feedback.md に記録されている
-（このファイル自体はドキュメントなので読んでよい。src/jpoke/ を読む代わりにこれを参照してよい）。
+参考: 過去のレビュー結果は docs/api_feedback/README.md（目次）から辿れる pre_loop/・
+loop_rounds/ 配下の各ファイルに記録されている（これらはドキュメントなので読んでよい。
+src/jpoke/ を読む代わりにこれを参照してよい）。
 既に「対応済み」「見送り確定」となっている項目と同じ指摘は避けること。
 
 出力形式: 指摘ごとに「summary: 一言要約」「detail: 該当箇所、根拠、対応案」を箇条書きで。
@@ -187,8 +190,9 @@ jpoke API改善レビュー（第{round}ラウンド、AI開発者視点）
 - src/jpoke/ 内部を読んだからこそ気づく、AI開発・ダメージ計算ツール開発向けの未紹介の
   公開APIやバグ
 
-参考: 過去のレビュー結果は docs/plan/examples_api_feedback.md に記録されている
-（このファイル自体は先に読むこと）。既に「対応済み」「見送り確定」となっている項目、および
+参考: 過去のレビュー結果は docs/api_feedback/README.md（目次）から辿れる pre_loop/・
+loop_rounds/ 配下の各ファイルに記録されている（README.md を先に読み、関連しそうな
+ファイルに目を通すこと）。既に「対応済み」「見送り確定」となっている項目、および
 開発者視点・初心者視点と重複する一般的な指摘は避け、AI開発・ツール開発の負荷という切り口に
 特化すること。
 
@@ -200,7 +204,7 @@ jpoke API改善レビュー（第{round}ラウンド、AI開発者視点）
 
 3エージェントの報告を確認し、それぞれの指摘について:
 
-- `docs/plan/examples_api_feedback.md` の既存項目（対応済み・見送り確定を含む）と重複していないか
+- `docs/api_feedback/`（`pre_loop/` + `loop_rounds/`）の既存項目（対応済み・見送り確定を含む）と重複していないか
 - 状態ファイルの `dismissed`（impl が対応不要と判定した過去の指摘）と重複していないか
 - 状態ファイルの `failed` に同内容（正規化した `summary` が一致）で `attempts >= 2` の
   エントリが無いか（あれば§共通8と同様スキップし、キューに積まない）
@@ -304,9 +308,10 @@ impl エージェントが jpoke API改善指摘（第{round}ラウンド、{fin
    tests/test_examples_smoke.py が存在すれば併せて実行する
 7. python -m pytest tests/ -v を実行し、全テストが通ることを確認する。今回の修正と無関係な
    既存テストが flaky と判明した場合は .claude/loop/_common.md §共通13 に従いその場で修正する
-8. docs/plan/examples_api_feedback.md に対応内容を追記する。第{round}ラウンドの見出し
-   （`## 第{round}ラウンド（apiループ）`）がまだ無ければ新規作成し、既存ラウンドと同じ形式
-   （`- [x] <指摘要約> → 対応内容 (日付): <実施内容>`）で1項目を追記する
+8. `docs/api_feedback/loop_rounds/round{round}.md` に対応内容を追記する。ファイルがまだ無ければ
+   `# 第{round}ラウンド（apiループ）` + `[← 目次に戻る](../README.md)` の見出しで新規作成し、
+   既存ラウンド（`round5.md` 等）と同じ形式（`- [x] <指摘要約> → 対応内容 (日付): <実施内容>`）
+   で1項目を追記する
 9. 変更をすべてコミットする（このブランチ loop/api 上で行う）:
    git add -A
    git commit -m "api: {finding.summary}"
