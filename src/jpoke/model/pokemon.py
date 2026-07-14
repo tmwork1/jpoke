@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 from jpoke.types import Nature, Type, Stat, Gender, HpPolicy, \
     AilmentName, VolatileName, BoostSource, PokemonName, AbilityName, MoveName, ItemName
-from jpoke.utils.constants import STATS
+from jpoke.utils.constants import STATS, STAT_RANK_MIN, STAT_RANK_MAX
 from jpoke.utils import math as m
 from jpoke.utils import fast_copy
 from jpoke.data.pokedex import POKEDEX
@@ -905,6 +905,7 @@ class Pokemon:
         """
         hp_before = self.hp
         self.hp = max(0, min(self.max_hp, hp_before + v))
+        assert 0 <= self.hp <= self.max_hp, f"HP範囲外: hp={self.hp} max_hp={self.max_hp}"
         return self.hp - hp_before
 
     def modify_stat(self, stat: Stat, v: int) -> int:
@@ -922,6 +923,8 @@ class Pokemon:
         """
         old = self.boosts[stat]
         self.boosts[stat] = m.clamp_stats(old + v)
+        assert STAT_RANK_MIN <= self.boosts[stat] <= STAT_RANK_MAX, \
+            f"ランク範囲外: stat={stat} value={self.boosts[stat]}"
         return self.boosts[stat] - old
 
     @property
