@@ -18,6 +18,9 @@ class KOFocusedPlayer(TreeSearchPlayer):
     """相手を瀕死にできる手を優先する簡易AI（evaluate() の拡張例）。"""
 
     def evaluate(self, battle: Battle) -> float:
+        # super().evaluate(battle) は継承元 TreeSearchPlayer の既定実装（未変更の
+        # 評価関数）をそのまま呼び出す記法。オーバーライドしつつ親クラスの処理も
+        # 活かしたいときに使う
         # 既定の評価（残りHP割合の差）に、相手の瀕死数をボーナスとして加える
         base = super().evaluate(battle)
         opponent_team = battle.get_team(battle.opponent(self))
@@ -29,12 +32,16 @@ def main() -> None:
     # max_plies は木探索の深さ（何手先まで読むか）。2にすると相手の応手まで読むが、
     # 分岐が自分の合法手数×相手の合法手数倍に増えるため max_nodes も合わせて調整が必要
     ai_player = KOFocusedPlayer("TreeSearchAI", max_plies=1, max_nodes=50)
-    # TODO: 相手を瀕死にできる技とそうでない技を混ぜて、AIがどの技を選ぶか観察できるようにする
-    ai_player.add_pokemon("カビゴン", move_names=["のしかかり", "じしん"])
+    # じしん（じめんタイプ、威力100）は相手のピカチュウ（でんきタイプ、弱点）に
+    # 抜群が入り確実に瀕死にできるが、みずでっぽう（みずタイプ、威力40、等倍かつ
+    # カビゴンはみずタイプではないためSTABも乗らない）は威力が低く、急所に当たっても
+    # 1発で瀕死にできない。威力・タイプ相性の異なる技を混在させることで、
+    # 「相手を瀕死にできる技」を優先するKOFocusedPlayerの判断を観察しやすくする
+    ai_player.add_pokemon("カビゴン", move_names=["じしん", "みずでっぽう"])
 
     random_player = RandomPlayer("RandomPlayer")
-    # TODO: 弱点をつける相手ポケモンに変更する。ピカチュウなど。
-    random_player.add_pokemon("カビゴン", move_names=["たいあたり", "からげんき"])
+    # カビゴン（じしんで弱点を突かれない）ではなく、じめんが弱点のピカチュウにする
+    random_player.add_pokemon("ピカチュウ", move_names=["でんきショック", "でんこうせっか"])
 
     battle = Battle(ai_player, random_player, seed=1)
     battle.start()

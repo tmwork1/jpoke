@@ -25,17 +25,21 @@ class StrongestMovePlayer(Player):
             # is_type("move") は通常技に加えメガシンカ・テラスタルコマンドも含む
             # （is_regular_move だと通常技コマンドのみになり、メガシンカ・テラスタルを
             # 伴う技コマンドが除外されてしまう）
-            # TODO: is_move() のような名前のほうがわかりやすいのではないか
+            # is_type() は "move"/"switch"/"any" のどの種別かも判定できる汎用メソッド
+            # （Command.switch_commands() 等の内部実装にも使われている）なので、
+            # is_move() のような技専用の名前への改名はしていない
             if not command.is_type("move"):
                 return -1
             move = battle.command_to_move(self, command)
             # 変化技は base_power が None。move.is_attack で判定する
             return move.base_power if move.is_attack else 0
 
+        # key=move_power は「commands の各要素を move_power() に通した結果を
+        # 比較キーにして最大の要素を選ぶ」という意味。ここでは威力が最大の
+        # コマンドを選ぶ（move_power() 自体は変更しない）
         return max(commands, key=move_power)
 
     def choose_command_poke_env_style(self, battle: Battle) -> Command:
-        # TODO: 戻り値も poke-env のように create_order() で作った Command オブジェクトにすべき。poke-env の仕様を確認せよ。
         """poke-env経験者向け: choose_command() と同じ判断の代替実装（未使用）。
 
         choose_command() に渡される battle は観測用コピーで、battle.observer が
@@ -44,6 +48,11 @@ class StrongestMovePlayer(Player):
         battle.available_switches / battle.side_conditions / battle.team）がそのまま
         自分視点の情報として使える。get_available_commands() + command_to_move() の
         組み合わせをこちらに置き換えても同じ結果になる
+
+        補足: poke-envではPlayer.choose_move()がcreate_order(move)で作った
+        BattleOrderを返す仕様だが、jpokeのCommandは技・交代等の選択肢を表す
+        単純なEnum値であり、コマンド生成専用のクラスは存在しない。本メソッドは
+        あくまで比較用の未使用コードのため、戻り値の型を合わせる対応はしていない
         """
         moves = battle.available_moves  # get_available_commands()を技だけ取り出しMoveに変換したもの
         if not moves:
@@ -53,6 +62,9 @@ class StrongestMovePlayer(Player):
             assert battle.is_struggle_only(self)
             return Command.STRUGGLE
         move_commands = [c for c in battle.get_available_commands(self) if c.is_regular_move]
+        # lambda i: ... は def で名前を付けるまでもない使い捨ての関数をその場で書く記法。
+        # ここでは「インデックスiを受け取り、対応する技の威力（変化技なら0）を返す」関数を
+        # key に渡し、moves の中で最も威力が高い技のインデックスを求めている
         best_index = max(
             range(len(moves)),
             key=lambda i: moves[i].base_power if moves[i].is_attack else 0,
@@ -71,9 +83,9 @@ def main() -> None:
     battle.start()
 
     winner = battle.play_out(max_turns=100)
-    # TODO: print_logs()のあとに追加のprint()を入れないと見づらい。他のサンプルコードも同様。
     print(f"勝者: {winner.username if winner else '引き分け（ターン上限）'}")
     battle.print_logs("all")
+    print("-" * 50)  # print_logs() の出力とその後のprint()を視覚的に区切る
 
     # StrongestMovePlayer は威力110の「かみなり」を選び続けるはず
     # （威力40の「でんこうせっか」・変化技の「なきごえ」より優先される）。

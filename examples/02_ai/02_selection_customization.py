@@ -14,6 +14,9 @@ class FastestLeadPlayer(Player):
     """素早さ実数値が高い順に選出する（先発が速いほうが有利、という単純な発想）。"""
 
     def choose_selection(self, battle: Battle) -> list[int]:
+        # sorted(..., key=..., reverse=True) は「keyに渡した関数の戻り値」を基準に
+        # 大きい順（reverse=True）へ並び替える。key=lambda i: self.team[i].stats["spe"]は
+        # 「インデックスiを受け取りteam[i]の素早さ実数値を返す」その場限りの関数を渡している
         order = sorted(range(len(self.team)), key=lambda i: self.team[i].stats["spe"], reverse=True)
         return order[:battle.n_selected]
 

@@ -97,3 +97,59 @@
   更新は不要と判断した。クラス継承除去は表示方法の整理でありコアロジック変更を伴わないため
   新規の回帰テストは不要と判断し、`python -m pytest tests/ -v`で5849件全件パス・1件skip
   （既存件数のまま、flaky testの新規発生なし）を確認した。
+- [x] `02_ai/01_custom_player.py`に「`is_move()`のような名前のほうがわかりやすいのでは」
+  「戻り値もpoke-envのように`create_order()`で作ったオブジェクトにすべき」の2件のTODOが
+  残っており、`02_ai/02_selection_customization.py`の`sorted(key=lambda ...)`・
+  `01_custom_player.py`の`max(commands, key=move_power)`・
+  `03_tree_search_ai.py`の`super().evaluate(battle)`など、Python初心者には
+  読み方が難しい`key=`/`lambda`/`super()`の使い方に補足コメントが無かった（id: r9-6） →
+  対応内容 (2026-07-15): `01_custom_player.py`の`is_move()`改名TODOは、`is_type()`が
+  `"move"`/`"switch"`/`"any"`のどの種別かも判定できる汎用メソッドで
+  `Command.switch_commands()`等の内部実装からも使われている（`r8-2`で`is_switch()`を
+  プロパティ化した際に確認済みの用途）ため改名しない方針とし、その理由をコメントとして
+  明記した。`choose_command_poke_env_style()`のTODOは、poke-envの`Player.choose_move()`が
+  `create_order(move)`で作る`BattleOrder`を返す仕様である一方、jpokeの`Command`は
+  技・交代等の選択肢を表す単純なEnum値でコマンド生成専用クラスが存在しないため、
+  本メソッドが比較用の未使用コードである旨の補足コメントに置き換えた（戻り値の型を
+  合わせる対応はしない）。同ファイルの`move_power()`内の`key=move_power`、
+  `choose_command_poke_env_style()`内の`key=lambda i: ...`、`02_selection_customization.py`の
+  `sorted(..., key=..., reverse=True)`、`03_tree_search_ai.py`の`super().evaluate(battle)`
+  各行に、それぞれ何をしているか（`key=`は各要素を関数に通した結果を比較キーにする、
+  `lambda`はその場限りの名前のない関数、`super()`は親クラスの既定実装をそのまま呼ぶ）を
+  説明するコメントを追加した。`01_custom_player.py`の`print_logs("all")`直後に
+  `print("-" * 50)`を追加し、TODOが指摘していた出力の見づらさを解消した
+  （`02_ai/05〜07`は`print_logs()`が出力の最後尾で後続に別の`print()`が無いため、
+  同種の問題が無いことをレビューで確認した）。`03_tree_search_ai.py`の
+  「相手を瀕死にできる技とそうでない技を混ぜて、AIがどの技を選ぶか観察できるようにする」
+  というTODOについては、実装時の構成（`カビゴン`に`じしん`/`たいあたり`、相手を
+  `ピカチュウ`＋HP努力値32）をレビューで`evaluate_commands()`を使い内部評価値まで
+  確認したところ、対戦相手の技が未公開な1ターン目は`fallback()`（ランダム）に委譲されて
+  評価自体が行われず、2ターン目に実際の探索が働く時点では1ターン目の`たいあたり`chip
+  ダメージで相手が瀕死間際まで減っており、`たいあたり`の急所込み最大ダメージ
+  （`STAB×急所`で通常時の`じしん`最小ダメージを上回る）でも確実に瀕死にできてしまうため、
+  `evaluate_commands()`が両技とも`inf`（同点）を返し、「確実に瀕死にできる技を優先する」
+  という判断が実際には検証できていないことが判明した。技を`たいあたり`から
+  `みずでっぽう`（みずタイプ、威力40、カビゴンはみずタイプでないためSTABも乗らない）に
+  差し替え、相手ピカチュウのHP努力値の底上げ（`evs={"hp": 32}`）を撤去してデフォルトHPに
+  戻すことで、`じしん`の最小ダメージ（急所なし）が相手の最大HPを常に上回って確実に
+  瀕死にでき、`みずでっぽう`は急所が入っても瀕死にできない、という関係をHP調整に依存せず
+  成立させた。この修正後に`evaluate_commands()`で確認すると、2ターン目の評価値は
+  `じしん=inf`・`みずでっぽう`は有限値（残りHP割合差相当）とはっきり分かれ、
+  `KOFocusedPlayer`が`じしん`を選ぶ判断が実際の探索結果として観察できることを確認した。
+  `04_priority_and_command_debug.py`の「合法手の評価値を確認するだけなのに
+  コードの量が多すぎる」というTODOは、`DebugPlayer`の冗長なdocstring（`evaluate_commands()`
+  自身のdocstringと重複していた注意書き）を圧縮する対応にとどめた。本ファイルは
+  `examples/README.md`に優先度・素早さ操作（トリックルーム）の話題と
+  `evaluate_commands()`のデバッグ確認という2つの話題を扱うと明記されており、
+  `show_priority_and_speed_control()`は前者に必須のため削除できず、`DebugPlayer`＋
+  2ターンの`battle.step()`という後者の実装も`choose_command()`内で`evaluate_commands()`を
+  呼んで結果を表示するだけの最小構成に既になっていたため、これ以上の構造簡略化は
+  行わずTODOコメント自体を削除した。`docs/api_feedback/loop_rounds/round8.md`の
+  `r8-2`（`is_switch()`→`is_switch`プロパティ化）は命名からプロパティ化への変更であり、
+  今回の`is_type()`温存判断（プロパティ化ではなく汎用メソッドとしての用途を理由に改名見送り）
+  と矛盾しないことを確認した。ロジック変更を伴う公開APIの追加・変更は無いため
+  `docs/api/README.md`の更新は不要と判断した。`02_ai/`配下全7ファイルを`PYTHONUTF8=1`で
+  実行し、いずれも正常終了・出力内容が説明コメントと一致することを確認した
+  （`03_tree_search_ai.py`は2ターンで`TreeSearchAI`勝利、`じしん`で確定KOする決着を確認）。
+  `python -m pytest tests/ -v`で5849件全件パス・1件skip（既存件数のまま、flaky testの
+  新規発生なし）を確認した。
