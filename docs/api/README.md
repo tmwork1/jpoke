@@ -372,6 +372,17 @@ player1.battle_against(player2, n_battles=100, seed=1)
 print(f"{player1.username} 勝率: {player1.win_rate:.1%}")
 ```
 
+`on_battle_end` を指定すると、各対戦の `play_out()` 完了直後にその対戦の `Battle` インスタンスを
+受け取れる（poke-envにはないjpoke独自の拡張）。自己対戦のリプレイ・観測データ収集（強化学習用
+など）に使う。`battle_against()` 自身は各対戦の `Battle` をループ内で使い捨てるため、これを
+指定しない限り対戦後の `Battle` にアクセスする手段はない。ターン上限で決着がつかず戦績に
+数えられなかった対戦でも呼び出される点に注意する。
+
+```python
+replays = []
+player1.battle_against(player2, n_battles=100, seed=1, on_battle_end=replays.append)
+```
+
 ## Pokemon
 
 `src/jpoke/model/pokemon.py`。ポケモン1体の全状態（種族値・技・特性・アイテム・状態異常など）を

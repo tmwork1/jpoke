@@ -1,12 +1,16 @@
 # test_poke_env_compat
 
-テスト数: 41
+テスト数: 45
 
 - [x] battle_active_pokemonとopponent_active_pokemonはobserver未設定時場の先頭2匹を返す
 - [x] battle_active_pokemonとopponent_active_pokemonはobserver視点で取得できる
 - [x] battle_against_n_battlesを複数指定すると回数分戦績が積み上がる
+- [x] battle_against_on_battle_endはターン上限で未決着の対戦でも呼ばれる
+- [x] battle_against_on_battle_endは各対戦ごとにbattleを渡して呼ばれる
+- [x] battle_against_on_battle_end未指定時は従来通り呼ばれず戦績のみ更新される
 - [x] battle_against_ターン上限で決着しない対戦は戦績にカウントされない
 - [x] battle_against_勝敗が戦績に反映される
+- [x] battle_against_複数opponent指定時はon_battle_endがopponent数times_n_battles回呼ばれる
 - [x] battle_available_movesはobserverが選択可能な技をmoveで返す
 - [x] battle_available_movesは技のppが尽きるとわるあがきのみになる
 - [x] battle_available_switchesはobserverの交代先候補をpokemonで返す
