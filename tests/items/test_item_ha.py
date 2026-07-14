@@ -209,6 +209,19 @@ def test_ばんのうがさ_雨でかみなりが必中にならない():
     assert battle.weather.rainy
 
 
+def test_ばんのうがさ_晴れでかみなりの命中率低下なし():
+    """ばんのうがさ攻撃側: 晴れ状態でもかみなりの命中率が50に下がらない（必中にはならない）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["かみなり"], item_name="ばんのうがさ")],
+        team1=[Pokemon("カビゴン")],
+        weather=("はれ", 99),
+    )
+    attacker = battle.actives[0]
+    # ばんのうがさを持つ攻撃側に対する晴れ天候は「なし」として扱われる
+    assert not battle.weather_for(attacker).sunny
+    assert battle.weather.sunny
+
+
 def test_ばんのうがさ_雨のほのお技弱化が無効():
     """ばんのうがさ防御側: 雨でほのお技の0.5倍補正を受けない"""
     battle = t.start_battle(
@@ -233,6 +246,48 @@ def test_ばんのうがさ_雨のみず技強化が無効():
     t.run_move(battle, 0)
     # 天候補正なし (4096 = 等倍)
     assert battle.damage_calculator.power_modifier == 4096
+
+
+def test_ばんのうがさ_晴れでもこおり状態になる():
+    """ばんのうがさ使用者: 晴れ中でも通常通りこおり状態になる（はれ_こおり防止が働かない）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ばんのうがさ")],
+        team1=[Pokemon("ピカチュウ")],
+        weather=("はれ", 99),
+    )
+    target = battle.actives[0]
+    result = battle.ailment_manager.apply(target, "こおり")
+    assert result, "ばんのうがさ使用者が晴れ中にこおり状態にならなかった"
+    assert target.ailment.name == "こおり"
+
+
+def test_ばんのうがさ_持たないポケモンは晴れ中にこおりにならない():
+    """ばんのうがさを持たないポケモンは、これまで通り晴れ中はこおり状態にならない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+        weather=("はれ", 99),
+    )
+    target = battle.actives[0]
+    result = battle.ailment_manager.apply(target, "こおり")
+    assert not result, "ばんのうがさなしのポケモンが晴れ中にこおりになった"
+    assert not target.ailment.is_active
+
+
+def test_ばんのうがさ_晴れでもソーラービームを溜める():
+    """ばんのうがさ攻撃側: 晴れ状態でもソーラービームの自動溜めスキップが発動せず、1ターン目は溜めるだけになる"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ソーラービーム"], item_name="ばんのうがさ")],
+        team1=[Pokemon("カビゴン")],
+        weather=("はれ", 99),
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)  # 1ターン目: 溜め（本来なら晴れで即攻撃するはず）
+    assert attacker.has_volatile("ソーラービーム")
+    assert defender.hp == hp_before
 
 
 def test_パワフルハーブ_あめ下のエレクトロビームは天候優先で消費されない():
