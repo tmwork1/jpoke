@@ -1,4 +1,3 @@
-# TODO: このサンプルは削除すべき
 """設置技（サイドフィールド効果）と交代誘発技の効果、交代・テラスタル・メガシンカ
 コマンドを明示的に組み立てる方法、わるあがき（PP切れ）の挙動を扱う。
 
@@ -68,21 +67,7 @@ def show_switch_inducing_move() -> None:
 
 def show_struggle_when_out_of_pp() -> None:
     """全ての技のPPが0になると、コマンド候補はStruggle（わるあがき）だけになる。"""
-
-    class ShowCommandsPlayer(Player):
-        """choose_command()内でbattle.get_available_commands()を確認し表示する。
-
-        コマンド候補・選択理由をデバッグ的に確認したいときは、既定方策をこのように
-        オーバーライドしてbattle.get_available_commands(self)を覗くのが手早い
-        （02_ai/02のTreeSearchPlayer.evaluate_commands()はより発展的な読み筋確認手段）。
-        """
-
-        def choose_command(self, battle: Battle) -> Command:
-            commands = battle.get_available_commands(self)
-            print(f"コマンド候補: {commands}")
-            return commands[0]
-
-    player1 = ShowCommandsPlayer("Attacker")
+    player1 = Player("Attacker")
     player1.add_pokemon("ピカチュウ", move_names=["たいあたり"])
     player2 = Player("Defender")
     player2.add_pokemon("カビゴン")
@@ -94,6 +79,11 @@ def show_struggle_when_out_of_pp() -> None:
     mon.moves[0].modify_pp(-99)
     hp_before = mon.hp
     battle.step()
+    # 通常技のPPが尽きているため、コマンド候補はわるあがき（Command.STRUGGLE）だけになり、
+    # コマンドを明示的に指定しなくてもPlayerの既定方策がそれを選ぶ
+    # （commands が「わるあがきだけ」かを事前に確認したい場合は battle.is_struggle_only(player) を
+    # choose_command() 内など phase 解決中のコンテキストで呼ぶ。02_ai/01_custom_player.py 参照）
+    print(f"わるあがき使用後の技名: {mon.last_move.name}")
     print(f"わるあがき使用後、{mon.name}のHP: {hp_before} → {mon.hp}（最大HPの1/4を反動で失う）")
 
 
