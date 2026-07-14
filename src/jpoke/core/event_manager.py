@@ -107,7 +107,8 @@ class EventManager:
     def emit(self,
              event: Event | DomainEvent,
              ctx: BaseContext | None = None,
-             value: Any = None) -> Any:
+             value: Any = None,
+             stop_if_winner_determined: bool = False) -> Any:
         """イベントを発火し、登録されたハンドラを実行する。
 
         優先度とポケモンの素早さに基づいてハンドラを順次実行します。
@@ -117,6 +118,13 @@ class EventManager:
             event: 発火するイベントタイプ
             ctx: コンテキスト（Noneの場合は自動構築）
             value: ハンドラ間で受け渡す初期値
+            stop_if_winner_determined: Trueの場合、ハンドラ実行後に
+                `self.battle.winner` が確定した時点で残りのハンドラの
+                実行を打ち切る。Event.ON_TURN_END のように、異なる
+                ポケモンを対象とする複数のハンドラ（どく・やけど等の
+                継続ダメージ）を素早さ順にまとめて処理するイベントで、
+                先に処理された個体の瀕死により決着した後、決着に無関係な
+                他個体のハンドラが実行され続けるのを防ぐために使う
 
         Returns:
             Any: 全ハンドラ実行後の最終値
@@ -150,6 +158,11 @@ class EventManager:
             # イベント停止フラグの処理
             if result.stop_event:
                 return value
+
+            # このハンドラの実行中に勝敗が確定した場合、以降の
+            # （決着に無関係な別個体向けの）ハンドラは実行しない
+            if stop_if_winner_determined and self.battle.winner is not None:
+                break
 
         return value
 
