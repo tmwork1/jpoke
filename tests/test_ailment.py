@@ -115,6 +115,30 @@ def test_こおり_3回目行動時に強制解凍():
     assert not mon.ailment.is_active
 
 
+def test_こおり_self_thaw技はこんらんの自傷判定より後に解凍される():
+    """こおり: self_thawフラグを持つ技（ハイドロスチーム等）は、こんらんの自傷判定
+    （Event.ON_TRY_ACTION priority=110）より後のpriority=170で解凍される。
+
+    Champions仕様（第五世代以降）では状態変化の判定の後にこおりが治るため、
+    こんらんの自傷で技が実行されなかった場合はこおりが解凍されない。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カメックス", move_names=["ハイドロスチーム"])],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"こんらん": 2},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    battle.ailment_manager.apply(attacker, "こおり")
+    assert attacker.ailment.name == "こおり"
+    # こんらんの自傷を強制
+    battle.test_option.trigger_volatile = True
+    t.run_move(battle, 0)
+    assert not battle.move_executor.action_success
+    # こんらんの自傷で技が実行されなかったため、こおりは解凍されない
+    assert attacker.ailment.name == "こおり"
+
+
 def test_こおり_thaw技被弾で解凍する():
     """thawラベルを持つ技（ねっとう等）で被弾すると解凍する。
 
@@ -128,6 +152,23 @@ def test_こおり_thaw技被弾で解凍する():
         secondary_chance=0.0,
     )
     attacker, defender = battle.actives
+    battle.ailment_manager.apply(defender, "こおり")
+    t.run_move(battle, 0)
+    assert not defender.ailment.is_active
+
+
+def test_こおり_ほのおタイプの技全般で被弾すると解凍する():
+    """こおり: 「thaw」フラグを持たないほのおタイプの攻撃技でも被弾すると解凍する。
+
+    ほのおタイプの攻撃技（第三世代以降）はタイプ由来で全て解凍対象となるため、
+    個別に「thaw」フラグが付与されていない技（オーバーヒート等）でも解凍されることを確認する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["オーバーヒート"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
     battle.ailment_manager.apply(defender, "こおり")
     t.run_move(battle, 0)
     assert not defender.ailment.is_active
@@ -252,6 +293,57 @@ def test_ねむり_カウント3_3ターン目で回復():
     assert not attacker.ailment.is_active
 
 
+def test_ねむり_こんらん状態では眠りカウントが消費されない():
+    """ねむり: いびき・ねごと以外を選んでいる間、こんらん状態なら眠りカウントも消費されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ニャース")],
+    )
+    attacker, defender = battle.actives
+    battle.ailment_manager.apply(attacker, "ねむり", count=2)
+    battle.volatile_manager.apply(attacker, "こんらん", count=5)
+    battle.test_option.trigger_volatile = True  # こんらんの自傷判定が発生しないことも確認する
+
+    t.run_move(battle, 0)
+    assert not battle.move_executor.action_success
+    assert attacker.ailment.count == 2, "こんらん状態のときは眠りカウントが消費されないはず"
+    assert attacker.hp == attacker.max_hp, "こんらん状態でもねむり中は自傷しないはず"
+
+
+def test_ねむり_こんらん状態でもいびきを選べば眠りカウントが消費されこんらんも判定される():
+    """ねむり: いびき・ねごとを選んだ場合は眠りカウントが消費され、こんらんの自傷判定も行われる"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["いびき"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    battle.ailment_manager.apply(attacker, "ねむり", count=3)
+    battle.volatile_manager.apply(attacker, "こんらん", count=5)
+    battle.test_option.trigger_volatile = True  # こんらんで必ず自傷させる
+
+    t.run_move(battle, 0)
+    assert not battle.move_executor.action_success, "こんらんの自傷で行動が中断されるはず"
+    assert attacker.ailment.count == 2, "いびきを選んだ場合は眠りカウントが消費されるはず"
+    assert attacker.hp < attacker.max_hp, "いびきを選んだ場合はこんらんの自傷判定が行われるはず"
+
+
+def test_ねむり_はやおきはこんらん状態のとき追加消費しない():
+    """ねむり: はやおき特性でもこんらん状態のときはねむりカウントの追加消費が行われない"""
+    battle = t.start_battle(
+        team0=[Pokemon("マリルリ", ability_name="はやおき", move_names=["たいあたり"])],
+        team1=[Pokemon("ニャース")],
+    )
+    attacker, defender = battle.actives
+    battle.ailment_manager.apply(attacker, "ねむり", count=3)
+    battle.volatile_manager.apply(attacker, "こんらん", count=5)
+    battle.test_option.trigger_volatile = True
+
+    t.run_move(battle, 0)
+    assert not battle.move_executor.action_success
+    assert attacker.ailment.count == 3, "こんらん状態ではやおきの追加消費も行われないはず"
+
+
 def test_ねむり_通常付与のcountは2か3():
     """ねむり: 通常付与（count省略時）のカウントは2または3（Champions仕様）"""
     results = set()
@@ -346,6 +438,30 @@ def test_もうどく_ダメージ():
         assert damage == mon.max_hp * (i + 1) // 16
 
 
+def test_もうどく_マジックガードでもターン経過は加算される():
+    """もうどく: マジックガードでダメージを受けない間もelapsed_turnsは加算され続け、
+    かがくへんかガスで特性が無効化されたターンには継続していたターン数分のダメージを受ける"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="マジックガード")],
+        team1=[Pokemon("カビゴン"), Pokemon("ドガース", ability_name="かがくへんかガス")],
+    )
+    mon = battle.actives[0]
+    battle.ailment_manager.apply(mon, "もうどく")
+
+    for _ in range(3):
+        t.end_turn(battle)
+    assert mon.hp == mon.max_hp, "マジックガードでダメージを受けない"
+    assert mon.ailment.elapsed_turns == 3, "ダメージを受けなくてもターン経過は記録される"
+
+    # かがくへんかガスでマジックガードを無効化
+    t.run_switch(battle, 1, 1)
+    hp_before = mon.hp
+    t.end_turn(battle)
+    damage = hp_before - mon.hp
+    assert mon.ailment.elapsed_turns == 4
+    assert damage == mon.max_hp * 4 // 16, "特性を失ったターンは継続していたターン数分のダメージを受ける"
+
+
 def test_もうどく_交代でカウントリセット():
     """もうどく: 交代するとダメージカウントが1/16にリセット"""
     battle = t.start_battle(
@@ -371,6 +487,22 @@ def test_もうどく_交代でカウントリセット():
     damage = hp_before - mon.hp
     assert mon.ailment.elapsed_turns == 1
     assert damage == mon.max_hp * 1 // 16  # 交代後1ターン目は1/16ダメージ
+
+
+def test_やけど_こんらん自傷ダメージは半減しない():
+    """やけど: こんらんの自傷ダメージ（内部技名"_こんらん"）は物理技扱いだが、
+    第五世代以降はやけどによる半減の影響を受けない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"こんらん": 2},
+    )
+    attacker, defender = battle.actives
+    battle.ailment_manager.apply(attacker, "やけど")
+    # 自傷を強制
+    battle.test_option.trigger_volatile = True
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.burn_modifier == 4096
 
 
 def test_やけど_ダメージ():
