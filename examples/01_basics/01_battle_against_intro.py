@@ -18,7 +18,10 @@ def main() -> None:
     player2.add_pokemon("フシギダネ", move_names=["たいあたり"])
 
     # seed: 乱数シードを固定し、命中判定・急所判定などを再現可能にする
-    # TODO: battle_against()ではon_battle_end を渡す代わりに、Battleインスタンスのリストを返したほうがよいのではないか。
+    # battle_against()は各対戦のBattleを内部で使い捨てるため戻り値はNone。
+    # 対戦後のBattleインスタンス自体（ログ等）にアクセスしたい場合は
+    # on_battle_end コールバックを渡す（docs/api/README.md の battle_against() 節、
+    # 05_benchmark/01_step_time_benchmark.py の進捗表示例を参照）
     player1.battle_against(player2, seed=1)
 
     # TODO: battle.print_logs("all") でログを表示する
