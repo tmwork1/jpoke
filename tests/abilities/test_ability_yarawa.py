@@ -1105,5 +1105,88 @@ def test_わるいてぐせ_非接触技には反応しない():
     assert attacker.has_item()
 
 
+def test_わるいてぐせ_自分がひんしになった場合は発動しない():
+    """わるいてぐせ: 直接攻撃を受けて自分（わるいてぐせのポケモン）自身がひんしに
+    なった場合、道具は奪えない（docs/spec/abilities/わるいてぐせ.md「効果」）"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="たべのこし", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", ability_name="わるいてぐせ")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    battle.modify_hp(defender, v=-(defender.hp - 1))
+    t.run_move(battle, 0)
+    assert defender.fainted
+    assert attacker.has_item()
+
+
+def test_わるいてぐせ_反動で相手がひんしになっても発動する():
+    """わるいてぐせ: いのちのたまの反動ダメージなどで攻撃側がひんしになった場合でも、
+    わるいてぐせは発動して道具を奪える（自分自身がひんしになった場合とは異なる）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="いのちのたま", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン", ability_name="わるいてぐせ")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    battle.modify_hp(attacker, v=-(attacker.hp - 1))
+    t.run_move(battle, 0)
+    assert attacker.fainted
+    assert defender.item.name == "いのちのたま"
+    assert not attacker.has_item()
+
+
+def test_わるいてぐせ_ねんちゃくの相手からは奪えない():
+    """わるいてぐせ: 特性ねんちゃくを持つ攻撃側からは道具を奪えない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ねんちゃく", item_name="たべのこし", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン", ability_name="わるいてぐせ")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+    assert attacker.has_item()
+    assert not defender.has_item()
+
+
+def test_わるいてぐせ_ねんちゃくの相手が反動でひんしになった場合は奪える():
+    """わるいてぐせ: 攻撃側の特性ねんちゃくは通常道具の奪取を阻止するが、その攻撃の
+    反動ダメージ（いのちのたま等）でひんしになった場合はねんちゃくが発動せず、
+    わるいてぐせで道具を奪える（docs/spec/abilities/わるいてぐせ.md「効果の処理順」
+    「ねんちゃくのポケモンが技の反動などでひんしになったときは、ねんちゃくは
+    発動せずに道具を奪える」）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ねんちゃく", item_name="いのちのたま", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン", ability_name="わるいてぐせ")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    battle.modify_hp(attacker, v=-(attacker.hp - 1))
+    t.run_move(battle, 0)
+    assert attacker.fainted
+    assert defender.item.name == "いのちのたま"
+    assert not attacker.has_item()
+
+
+def test_わるいてぐせ_さまようたましいで渡った直後に発動する():
+    """わるいてぐせ: さまようたましいの相手に直接攻撃を使用すると特性が交換されるが、
+    このとき相手に渡ったわるいてぐせは通常の発動タイミング（ダメージ計算終了後）を
+    待たずに交換直後に発動し、道具を奪える（docs/spec/abilities/わるいてぐせ.md
+    「効果の処理順」「わるいてぐせのポケモンがさまようたましいのポケモンに直接攻撃を
+    使用した場合、特性を交換した直後に相手に渡ったわるいてぐせが発動し、道具を
+    奪われる」）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="わるいてぐせ", item_name="いのちのたま", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン", ability_name="さまようたましい")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+    assert attacker.ability.base_name == "さまようたましい"
+    assert defender.ability.base_name == "わるいてぐせ"
+    assert not attacker.has_item()
+    assert defender.item.name == "いのちのたま"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

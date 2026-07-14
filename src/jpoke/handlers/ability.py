@@ -1634,6 +1634,11 @@ def さまようたましい_swap_ability_on_contact(battle: Battle, ctx: Attack
     ):
         return HandlerReturn(value=value)
     battle.ability_manager.swap_ability(defender, attacker)
+    # docs/spec/abilities/わるいてぐせ.md「効果の処理順」: てつのトゲ等ダメージを受けて
+    # 発動する特性とは異なり、わるいてぐせは特性を交換した直後に発動判定があるため、
+    # 通常の発動タイミング（ON_DAMAGE_HIT priority=180）を待たずにここで即座に判定する。
+    if defender.ability.base_name == "わるいてぐせ":
+        わるいてぐせ_steal_item(battle, ctx, value)
     return HandlerReturn(value=value)
 
 
@@ -4749,10 +4754,16 @@ def わたげ_lower_spd_on_hit(battle: Battle, ctx: AttackContext, value: Any) -
 
 
 def わるいてぐせ_steal_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """わるいてぐせ特性: 直接攻撃を受けた後に相手のアイテムを奪う。"""
+    """わるいてぐせ特性: 直接攻撃を受けた後に相手のアイテムを奪う。
+
+    自身（わるいてぐせのポケモン）がひんしになった場合は発動しない。反動ダメージ等で
+    攻撃側がひんしになった場合は発動する（このとき攻撃側の特性ねんちゃくによる
+    奪取阻止も無視する。docs/spec/abilities/わるいてぐせ.md「ねんちゃくのポケモンが
+    技の反動などでひんしになったときは、ねんちゃくは発動せずに道具を奪える」）。
+    """
     if (
         battle.query.is_contact(ctx)
         and not ctx.defender.fainted
     ):
-        battle.item_manager.take_item(ctx.attacker)
+        battle.item_manager.take_item(ctx.attacker, ignore_sticky_hold=ctx.attacker.fainted)
     return HandlerReturn(value=value)
