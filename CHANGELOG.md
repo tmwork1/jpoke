@@ -174,6 +174,16 @@
   `build_observation()` は `decision_random` だけを本体と共有し（無限交代ループ対策を
   維持）、ゲーム進行用の `random` は元通りdeepcopyによる独立コピーに戻すことで
   先読みを不可能にした
+- `TreeSearchPlayer._worst_case_over_opponent()` 内の `sim = battle.copy()` が
+  `reseed` 引数を省略（既定 `False`）していたため、同じ `my_cmd` に対する各
+  `opp_cmd` 分岐・各 `my_cmd` 分岐が複製元の `random`/`decision_random` の状態を
+  そのまま共有し、探索木の兄弟ノード間で乱数系列が相関していた
+  （`examples/04_research/03_janken_nash_cfr.py` の自作ロールアウトは既に
+  `reseed=True` を使っており対象外）。`battle.copy(reseed=True)` に変更し、
+  各分岐が派生シードで独立に再初期化された乱数系列を使うようにした。
+  `configure_sim` で命中判定・ダメージ乱数等の確率的要素を固定している場合は
+  探索結果（選ばれるコマンド）に変化はないが、固定していない場合は評価値の
+  相関が解消されることで変わりうる
 - `Pokemon.set_stats(stats)` が辞書のキー（`Stat`）を無視し、`enumerate()` による
   挿入順を暗黙の固定順（0=HP, 1=攻撃, 2=防御, ...）とみなして書き込んでいたため、
   `{"atk": 150, "def": 100}` のようにキー順が典型順と異なる辞書や6項目に満たない

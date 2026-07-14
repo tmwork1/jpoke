@@ -265,7 +265,13 @@ class TreeSearchPlayer(Player):
                 # ノード数上限に達した。この my_cmd の残りの相手コマンドは
                 # 展開せず、ここまでに評価済みの分だけで worst を確定する。
                 break
-            sim = battle.copy()
+            sim = battle.copy(reseed=True)
+            # reseed=True により、同じ my_cmd に対する各 opp_cmd 分岐・各 my_cmd 分岐が
+            # 複製元の random/decision_random の状態をそのまま共有せず、分岐ごとに
+            # 派生シードで再初期化された独立の乱数系列を使う（Battle.copy() のdocstring
+            # 参照）。reseedしないと兄弟ノード間で同じ乱数系列を引いてしまい、命中判定・
+            # ダメージ乱数等を固定していない探索では評価値が相関し歪む
+            # （configure_sim で確率的要素を固定している場合は影響しない）。
             # battle が観測済み盤面（is_observation() が真）の場合、Battle.copy() は
             # observer をそのまま引き継ぐ。sim.step() の内部で瀕死交代などの割り込みが
             # 発生すると、エンジンは resolve_command() 経由で（self とは限らない）

@@ -144,3 +144,33 @@
   （でんこうせっか=1・のしかかり=0という優先度、通常時/トリックルーム下での素早さ順反転）を
   確認した。`python -m pytest tests/ -v`で5769件全件パス（既存件数のまま、flaky testの新規発生
   なし）を確認した。
+
+- [x] `TreeSearchPlayer`の内部シミュレーションが`battle.copy(reseed=...)`を使わず、探索の
+  兄弟ノード間で乱数系列が相関する（ai_developer視点、id: r7-7） → 対応内容 (2026-07-14):
+  `src/jpoke/players/tree_search_player.py:268`の`_worst_case_over_opponent()`内`sim =
+  battle.copy()`が`reseed`引数を省略（既定`False`）していたため、同じ`my_cmd`に対する各
+  `opp_cmd`分岐・各`my_cmd`分岐が複製元battleの`random`/`decision_random`の状態をそのまま
+  共有し、探索木の兄弟ノード間で乱数系列が相関していた（`configure_sim`で命中判定・ダメージ
+  乱数等の確率的要素を固定していない探索では評価値が歪みうる不具合。
+  `examples/04_research/03_janken_nash_cfr.py`の自作ロールアウトは既に`reseed=True`相当の
+  独自シード制御をしており対象外）。`sim = battle.copy(reseed=True)`に変更し、変更理由と
+  `Battle.copy()`のdocstring参照コメントを追記した。`Battle.copy(reseed=True)`は
+  複製元battleの`_reseed_count`をインクリメントしたうえで`new.seed = hash((self.seed,
+  self._reseed_count))`により派生シードを生成する仕様（`src/jpoke/core/battle.py:326`）のため、
+  同一の`battle`引数から呼ばれる兄弟ノード（`_worst_case_over_opponent`内のループ・
+  `_best_command`内の`my_cmd`ループ）はそれぞれ一意な派生シードを持つ。`configure_sim`で
+  確率的要素を固定している場合は探索結果（選ばれるコマンド）に変化はないが、固定していない
+  場合は評価値の相関が解消されることで変わりうる点を`CHANGELOG.md`に明記した。回帰テストとして
+  `tests/test_tree_search_framework.py`に2件追加した:
+  `test_reseedTrueにより兄弟ノード間でsimの乱数系列が独立する`は`configure_sim`未固定
+  （`battle.test_option.accuracy`未設定）の状態でmax_plies=1の各分岐（4×4=16件、テラスタル
+  コマンド込み）の`sim.random`/`sim.decision_random`の内部状態（`getstate()`）を収集し、
+  全て重複しないことを確認する。`test_max_plies2でネストしたsimでも全階層のseedが重複しない`は
+  max_plies=2でトップレベルの分岐からさらに再帰した2手目の分岐まで含めて`configure_sim`が
+  観測する全ての`sim.seed`（実測160件）が階層をまたいで重複しないことを確認し、`_reseed_count`が
+  複製元battle基準で単調増加する派生シード生成がネストした`_worst_case_over_opponent`呼び出しでも
+  正しく機能することを検証する。`python scripts/sort_tests.py
+  tests/test_tree_search_framework.py`・`python scripts/generate_test_list.py`を実行し、
+  `python -m pytest tests/ -v`で5779件全件パス・1件skip（新規テスト2件を含む。main側で他ラウンド
+  由来のテストが追加され件数はr7-6時点の5769件から増えている。flaky testの新規発生なし）を
+  確認した。
