@@ -170,3 +170,18 @@
   従来通り正常終了する（威力110の「かみなり」を選び続ける）ことを確認した。
   `python -m pytest tests/ -v`で5842件全件パス・1件skip（既存のflaky無し、新規追加5件を
   含む）を確認した。
+- [x] `Player`の対戦成績属性（`n_won_battles`等）がAPIリファレンスの表に無い
+  （id: r8-7） → 対応内容 (2026-07-14): `docs/api/README.md`の`battle_against()`節の直後に
+  「対戦成績」表を追加し、`n_finished_battles`/`n_won_battles`（int属性）と
+  `n_lost_battles`/`n_tied_battles`/`win_rate`（property）を一覧化した。レビューで
+  `src/jpoke/core/player.py`の実装（`n_lost_battles = n_finished_battles - n_won_battles -
+  n_tied_battles`、`n_tied_battles`は常に0、`win_rate`はゼロ除算ガード付きの
+  `n_won_battles / n_finished_battles`、`battle_against()`がターン上限未決着
+  （`winner is None`）の対戦を`n_finished_battles`に含めない旨）と表の記述を突き合わせ、
+  一致していることを確認した。`tests/test_poke_env_compat.py`の既存回帰テスト
+  （`test_player_n_lost_battlesは対戦数から勝利数と引き分け数を引いた値`・
+  `test_player_n_tied_battlesは常に0`・`test_player_win_rateは勝利数を対戦数で割った値`・
+  `test_player_win_rateは対戦数0のときゼロ除算にならず0を返す`・
+  `test_battle_against_ターン上限で決着しない対戦は戦績にカウントされない`等）とも矛盾が
+  ないことを確認し、ドキュメントのみの変更のため新規テストは追加しなかった。
+  `python -m pytest tests/ -v`で5842件全件パス・1件skip（既存のflaky無し）を確認した。

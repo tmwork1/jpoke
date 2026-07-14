@@ -394,6 +394,25 @@ replays = []
 player1.battle_against(player2, n_battles=100, seed=1, on_battle_end=replays.append)
 ```
 
+### 対戦成績
+
+`battle_against()` が対戦のたびに自動更新する戦績カウンタ。手動で `Battle.play_out()` を
+呼んだ場合は自動更新されないため、必要なら呼び出し側でインクリメントする。
+
+| API | 概要 |
+|---|---|
+| `n_finished_battles` (int) | 成立した対戦数。ターン上限で未決着だった対戦は含まない |
+| `n_won_battles` (int) | 勝利数 |
+| `n_lost_battles` (property, int) | poke-env互換。敗北数（`n_finished_battles - n_won_battles - n_tied_battles`） |
+| `n_tied_battles` (property, int) | poke-env互換。引き分け数。jpokeに引き分けは存在しないため常に0 |
+| `win_rate` (property, float) | poke-env互換。勝率（`n_won_battles / n_finished_battles`）。poke-envと異なり対戦数0のときはゼロ除算を避け0.0を返す |
+
+```python
+player1.battle_against(player2, n_battles=100, seed=1)
+print(f"{player1.n_won_battles}勝{player1.n_lost_battles}敗/{player1.n_finished_battles}戦")
+print(f"勝率: {player1.win_rate:.1%}")
+```
+
 ### 対戦実行系メソッドの戻り値一覧
 
 対戦を最後まで進めるメソッドは、対象によって戻り値の設計方針が異なる。
