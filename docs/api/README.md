@@ -423,6 +423,8 @@ print(mon.fainted, mon.hp, mon.max_hp)
 
 `src/jpoke/enums/command.py`。プレイヤーの1回の行動（技使用・交代・テラスタル等）を表す
 `Enum`。`Player.choose_command()` の戻り値、`Battle.step(commands=...)` の値として使う。
+`from jpoke import Command`（トップレベルパッケージからの再エクスポート）でも
+`from jpoke.enums import Command` と同じものが取得できる。
 
 ### 定数
 

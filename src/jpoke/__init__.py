@@ -4,6 +4,7 @@
 ポケモン図鑑データを提供します。
 """
 from .core import Battle, Player
+from .enums import Command
 from .model import Pokemon, Ability, Item, Move
 from .data import POKEDEX
 
@@ -13,6 +14,7 @@ __version__ = "0.1.0"
 __all__ = [
     "Battle",
     "Player",
+    "Command",
     "Pokemon",
     "Ability",
     "Item",

@@ -1,4 +1,4 @@
-"""jpoke で学べること: jpoke.testing のヘルパーで、01/02で書いた
+"""jpoke で学べること: jpoke.testing のヘルパーで、これまでのサンプルで繰り返し書いてきた
 Battle(...).start() + Player.add_pokemon() の定型処理を1呼び出しにまとめる方法。
 
 jpoke.testing は tests/test_utils.py にあった内部テスト専用ヘルパーが本体パッケージへ

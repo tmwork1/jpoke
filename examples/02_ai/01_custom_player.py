@@ -3,9 +3,6 @@
 choose_command をオーバーライドし、「最も威力の高い技を選ぶ」という単純な
 ヒューリスティックのプレイヤーを作る。
 AI開発ユースケースの最初のステップとして、Player のカスタム方法だけに絞った例。
-
-後半では choose_command とは別の choose_selection（対戦開始前の選出）を
-オーバーライドする例も示す。
 """
 from __future__ import annotations
 
@@ -17,13 +14,18 @@ class StrongestMovePlayer(Player):
     """毎ターン、利用可能な技の中から最も威力の高い技を選ぶプレイヤー。"""
 
     def choose_command(self, battle: Battle) -> Command:
-        # TODO: まず通常のchoose_command()にdocstringを充実させるべき。"""
+        """利用可能なコマンドの中から、最も威力の高い技コマンドを選ぶ。
+
+        メガシンカ・テラスタルを伴う技コマンドも対象に含める。交代・わるあがき等の
+        技以外のコマンドは最低優先度として扱い、通常は選ばれない。
+        """
         commands = battle.get_available_commands(self)
 
         def move_power(command: Command) -> int:
-            # TODO: is_regular_moveだとメガシンカなどの特殊コマンドが除外されてしまうため、技全般を対象にすべき。それとCommand.is_xxxの命名に改善の余地があるかも。
-            # 技コマンド以外（交代・わるあがき等）は最低優先度として扱う
-            if not command.is_regular_move:
+            # is_type("move") は通常技に加えメガシンカ・テラスタルコマンドも含む
+            # （is_regular_move だと通常技コマンドのみになり、メガシンカ・テラスタルを
+            # 伴う技コマンドが除外されてしまう）
+            if not command.is_type("move"):
                 return -1
             move = battle.command_to_move(self, command)
             # 変化技は base_power が None。move.is_attack で判定する
@@ -44,7 +46,6 @@ class StrongestMovePlayer(Player):
         moves = battle.available_moves  # get_available_commands()を技だけ取り出しMoveに変換したもの
         if not moves:
             # わるあがきのみの場合。available_moves はこのときわるあがきを1件返す
-            # TODO: poke-envでは何らかの有効な行動を返す関数があったが、jpokeにも導入すべきかも。
             return battle.get_available_commands(self)[0]
         move_commands = [c for c in battle.get_available_commands(self) if c.is_regular_move]
         best_index = max(
@@ -52,21 +53,6 @@ class StrongestMovePlayer(Player):
             key=lambda i: moves[i].base_power if moves[i].is_attack else 0,
         )
         return move_commands[best_index]
-
-
-# TODO : 選出カスタマイズは別のサンプルコードに分離したい。
-class FastestLeadPlayer(Player):
-    """素早さ実数値が高い順に選出する（先発が速いほうが有利、という単純な発想）。
-
-    choose_command とは別に choose_selection(battle) をオーバーライドすると、
-    対戦開始前の選出番号（n_selected件）を自分で決められる。デフォルト実装は
-    「先頭からn_selected件」という単純な選出のため、手持ちの並び順と選出結果が
-    直結してしまう。
-    """
-
-    def choose_selection(self, battle: Battle) -> list[int]:
-        order = sorted(range(len(self.team)), key=lambda i: self.team[i].stats["spe"], reverse=True)
-        return order[:battle.n_selected]
 
 
 def main() -> None:
@@ -89,25 +75,6 @@ def main() -> None:
     # 対戦中の状態を見るには battle.get_active() で対戦中のインスタンスを取得する
     active = battle.get_active(player1)
     print(f"最終ターンの技: {active.last_move.name if active.last_move else None}")
-
-    # choose_selection() の例: 手持ち4体・選出2体で、並び順に関係なく
-    # 最も素早いポケモンが先発になることを確認する
-    print("-" * 50)
-    lead_player = FastestLeadPlayer("FastestLeadPlayer")
-    lead_player.add_pokemon("カビゴン", move_names=["たいあたり"])
-    lead_player.add_pokemon("ピカチュウ", move_names=["でんこうせっか"])
-    lead_player.add_pokemon("ヤドン", move_names=["みずでっぽう"])
-    lead_player.add_pokemon("ペルシアン", move_names=["ひっかく"])
-    print("手持ちの素早さ:", [(mon.name, mon.stats["spe"]) for mon in lead_player.team])
-
-    opponent = Player("Opponent")
-    opponent.add_pokemon("ゼニガメ", move_names=["たいあたり"])
-    opponent.add_pokemon("コラッタ")  # n_selectedを両陣営2に揃えるためのダミー
-
-    selection_battle = Battle(lead_player, opponent, n_selected=2, seed=1)
-    selection_battle.start()
-    lead = selection_battle.get_active(lead_player)
-    print(f"選出2体の先発: {lead.name}（最も素早い個体が選ばれている）")
 
     # 試してみよう: move_power() に「相手のタイプ相性が悪い技は除外する」といった
     # 条件を加えると、より賢い方策に発展させられる

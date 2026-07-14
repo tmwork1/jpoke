@@ -320,7 +320,7 @@ def test_observationのdecision_randomは共有されrandomは独立している
 
     `decision_random` を共有するのは、技を使わず交代だけが選ばれ続けるターンでも
     本体側の乱数状態を確実に進め、次のターンも同じ乱数状態から観測用コピーが作られて
-    同じ選択が繰り返される無限交代ループを防ぐため（`examples/01_basics/02_team_battle.py` の
+    同じ選択が繰り返される無限交代ループを防ぐため（`examples/01_basics/03_team_battle.py` の
     seed=1,2,3,5 で再現していた重大バグ）。
 
     一方 `random` を独立させたまま（本体と共有しない）にしているのは、これを共有すると
