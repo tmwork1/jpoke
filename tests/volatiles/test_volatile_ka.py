@@ -401,6 +401,28 @@ def test_こらえる_ターン終了後にvolatileが解除される():
     assert not attacker.has_volatile("こらえる")
 
 
+def test_こんらん_カウント満了ターンは自傷判定を行わない():
+    """こんらん: カウントが0になり解除された最終ターンは、自傷抽選に当たっても自傷しない。
+
+    tick() で解除された直後に自傷判定へ進むと、解除済みのこんらんに対して誤って
+    自傷ダメージ・「動けない[こんらん]」ログが発生してしまう不具合の回帰テスト。
+    trigger_volatile=True（自傷を強制する設定）にもかかわらず、カウントが1から0に
+    なって解除されるターンでは通常通り行動が成功することを確認する。
+    """
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ")],
+        volatile0={"こんらん": 1}
+    )
+    attacker, defender = battle.actives
+    # 自傷を強制（本来なら自傷するはずの設定）
+    battle.test_option.trigger_volatile = True
+    t.run_move(battle, 0)
+    assert not attacker.has_volatile("こんらん")
+    assert battle.move_executor.action_success
+    assert attacker.hp == attacker.max_hp
+
+
 def test_こんらん_カウント満了で解除():
     """こんらん: カウントが0になったときに揮発状態が解除される"""
     battle = t.start_battle(

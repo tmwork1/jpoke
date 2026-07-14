@@ -536,6 +536,10 @@ def こんらん_try_action(battle: Battle, ctx: EventContext, value: Any) -> Ha
     mon = ctx.attacker
     battle.volatile_manager.tick(mon, "こんらん")
 
+    if not mon.has_volatile("こんらん"):
+        # このターンでこんらんが解除された場合、自傷判定を行わず通常通り行動できる
+        return HandlerReturn(value=True)
+
     if battle.test_option.trigger_volatile is not None:
         # テスト用に確率を固定
         confused = battle.test_option.trigger_volatile
