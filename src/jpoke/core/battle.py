@@ -7,6 +7,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal
 if TYPE_CHECKING:
     from .lethal import LethalResult
+    from .context import AttackContext
 
 from dataclasses import dataclass
 from contextlib import contextmanager
@@ -1348,10 +1349,31 @@ class Battle:
         """
         return self.item_manager.consume_item(target, track_loss=track_loss)
 
-    def resolve_secondary_chance(self, ctx: EventContext, chance: float) -> float:
-        """追加効果補正後の実効確率を返す。"""
+    def resolve_secondary_chance(
+        self,
+        ctx: EventContext | AttackContext,
+        chance: float,
+        *,
+        target: Literal["attacker", "defender"] = "defender",
+    ) -> float:
+        """追加効果補正後の実効確率を返す。
+
+        Args:
+            ctx: コンテキスト（攻撃フローの場合は通常 AttackContext）
+            chance: 補正前の追加効果発動確率
+            target: 追加効果の対象ロール。"defender"（既定）は相手（防御側）に対する
+                追加効果、"attacker" は自分自身に対する追加効果（例: コメットパンチの
+                自分のこうげき上昇）を表す。りんぷん・おんみつマントは target="attacker"
+                のときは反応しない（一次情報どおり、使用者自身の能力変化はりんぷん・
+                おんみつマントで防げないため）。ちからずく・てんのめぐみはこの値に
+                関わらず常に反応する。ctx が AttackContext でない場合（例: テストで
+                option.effect_chance_threshold のみを検証する呼び出し）は target を
+                反映できないため無視する。
+        """
         if self.test_option.secondary_chance is not None:
             return self.test_option.secondary_chance
+        if hasattr(ctx, "secondary_effect_target"):
+            ctx = ctx.derive(secondary_effect_target=target)
         chance = self.events.emit(Event.ON_MODIFY_SECONDARY_CHANCE, ctx, chance)
         threshold = self.option.effect_chance_threshold
         if threshold is not None and chance < threshold:

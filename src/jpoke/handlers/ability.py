@@ -4640,7 +4640,15 @@ def りゅうのあぎと_modify_atk(battle: Battle, ctx: AttackContext, value: 
 
 
 def りんぷん_block_secondary_chance(battle: Battle, ctx: AttackContext, value: float) -> HandlerReturn:
-    """りんぷん特性: 相手の攻撃技の追加効果を無効化する。"""
+    """りんぷん特性: 相手の攻撃技の追加効果を無効化する。
+
+    コメットパンチなど、使用者自身の能力が変化する追加効果（ctx.secondary_effect_target
+    == "attacker"）は、自分を使用したときも相手から受けたときも発動するため防げない
+    （一次情報: 「チャージビームなど、追加効果で使用者の能力が変化する技の効果は、
+    自分を使用したときも、相手から受けたときも発動する」）。
+    """
+    if ctx.secondary_effect_target != "defender":
+        return HandlerReturn(value=value)
     return HandlerReturn(value=0, stop_event=True)
 
 

@@ -694,6 +694,21 @@ def test_りんぷん_追加効果を受けない():
     assert battle.actives[1].ailment.is_active is False
 
 
+def test_りんぷん_使用者自身への追加効果は防げない():
+    """りんぷん: コメットパンチのように使用者自身の能力が変化する追加効果は、
+    自分を使用したときも相手から受けたときも発動する（一次情報: 「チャージビーム
+    など、追加効果で使用者の能力が変化する技の効果は、自分を使用したときも、
+    相手から受けたときも発動する」）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("メタグロス", move_names=["コメットパンチ"])],
+        team1=[Pokemon("ニャース", ability_name="りんぷん")],
+    )
+    battle.random.random = lambda: 0.1
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.boosts["atk"] == 1
+
+
 @pytest.mark.parametrize(
     "ailment_name",
     ["どく", "もうどく", "まひ", "やけど", "ねむり", "こおり"],
