@@ -380,6 +380,42 @@ def test_よわき_HP半分以下で攻撃補正0_5倍(move_name: str):
     assert 2048 == battle.damage_calculator.atk_modifier
 
 
+def test_ライトメタル_おもさが半分になりくさむすびの威力が下がる():
+    """ライトメタル: 自分のおもさが半分になる。フシギバナ(100.0kg)は50.0kgとなり、
+    くさむすびの威力は100(100kg以上200kg未満)から80(50kg以上100kg未満)に下がる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["くさむすび"])],
+        team1=[Pokemon("フシギバナ", ability_name="ライトメタル")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 80
+
+
+def test_ライトメタル_かたやぶりで無効化されおもさが基本値になる():
+    """ライトメタル: かたやぶり持ちの技を受けると特性が無視され、
+    おもさを参照する技（くさむすび）の威力が基本のおもさ基準になる。
+    フシギバナ(100.0kg)はライトメタルで50.0kg扱いとなり本来威力80だが、
+    かたやぶりを受けると100.0kgのまま(威力100)で計算される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["くさむすび"])],
+        team1=[Pokemon("フシギバナ", ability_name="ライトメタル")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 100
+
+
+def test_ライトメタル_かるいしと重複しておもさが4分の1になる():
+    """ライトメタル: かるいしを持っていると、特性の効果とかるいしの効果は累積し、おもさは1/4になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ライトメタル", item_name="かるいし")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    assert mon.weight == int(mon.data.weight * 0.25 * 10) / 10
+
+
 def test_リベロ_へんげんじざいと同様に技実行直前にタイプが変化する():
     """リベロはへんげんじざいと同一効果（共通ハンドラ）を持ち、技実行直前に技タイプへ変化する。"""
     battle = t.start_battle(
