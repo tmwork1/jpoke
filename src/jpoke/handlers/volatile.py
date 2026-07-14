@@ -592,7 +592,15 @@ def さわぐ_prevent_sleep(battle: Battle, ctx: EventContext, value: Any) -> Ha
 
 
 def さわぐ_remove_さわがしい(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """さわぐ状態が解除されたときの処理（相手のさわがしいも解除する）"""
+    """さわぐ状態が解除されたときの処理（相手のさわがしいも解除する）
+
+    ON_VOLATILE_END は対象ポケモンの何らかの揮発性状態が解除されたことを表す共通
+    イベントであり、解除された揮発性状態名が value に渡される。value がさわぐ自身
+    でない場合は何もしない（無関係な揮発性状態の解除でさわぐがまだ有効なのに
+    相手のさわがしいが誤って解除されるのを防ぐ）。
+    """
+    if value != "さわぐ":
+        return HandlerReturn(value=value)
     foe = battle.foe(ctx.source)
     battle.volatile_manager.remove(foe, "さわがしい")
     return HandlerReturn(value=value)
@@ -884,7 +892,15 @@ def とくせいなし_disable_ability(battle: Battle, ctx: EventContext, value:
 
 
 def とくせいなし_enable_ability(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """とくせいなし終了時に特性有効状態を再計算する。"""
+    """とくせいなし終了時に特性有効状態を再計算する。
+
+    ON_VOLATILE_END は対象ポケモンの何らかの揮発性状態が解除されたことを表す共通
+    イベントであり、解除された揮発性状態名が value に渡される。value がとくせいなし
+    自身でない場合は何もしない（無関係な揮発性状態の解除でとくせいなしがまだ有効な
+    のに特性が誤って再有効化されるのを防ぐ）。
+    """
+    if value != "とくせいなし":
+        return HandlerReturn(value=value)
     battle.remove_ability_disabled_reason(ctx.source, "とくせいなし")
     return HandlerReturn(value=value)
 
@@ -942,22 +958,31 @@ def ねむけ_remove_and_apply_sleep(battle: Battle, ctx: EventContext, value: A
     Champions 仕様: count=2（確率1/3）または count=3（確率2/3）。
     交代によるねむけ解除の場合はねむりを付与しない。
 
+    ON_VOLATILE_END は対象ポケモンの何らかの揮発性状態が解除されたことを表す共通
+    イベントであり、解除された揮発性状態名が value に渡される。value がねむけ自身
+    でない場合は何もしない（無関係な揮発性状態の解除に反応してねむけがまだ有効な
+    のに眠らせてしまうのを防ぐ）。あわせて value をそのまま返し、同じ
+    ON_VOLATILE_END チェーンにある他ハンドラ（value を参照するもの）に誤った値が
+    伝播しないようにする。
+
     Args:
         battle: バトルインスタンス
         ctx: コンテキスト
-        value: イベント値（未使用）
+        value: 解除された揮発性状態名
 
     Returns:
-        HandlerReturn: 常にTrue
+        HandlerReturn: value をそのまま返す
     """
+    if value != "ねむけ":
+        return HandlerReturn(value=value)
     # 交代退場処理中のポケモンはねむりを付与しない
     if battle.switch_manager.switching_out_mon is ctx.source:
-        return HandlerReturn(value=True)
+        return HandlerReturn(value=value)
     # Champions仕様: count=2が1/3、count=3が2/3
     # AilmentManager.apply でも同じ分布で自動決定されるが、ねむけ→ねむり移行は明示指定
     count = 2 if battle.random.random() < 1 / 3 else 3
     battle.ailment_manager.apply(ctx.source, "ねむり", count=count)
-    return HandlerReturn(value=True)
+    return HandlerReturn(value=value)
 
 
 def ねむけ_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -1027,7 +1052,15 @@ def ハロウィン_add_type(battle: Battle, ctx: EventContext, value: Any) -> H
 
 
 def ハロウィン_remove_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ハロウィン解除時: added_types からゴーストタイプを除去する。"""
+    """ハロウィン解除時: added_types からゴーストタイプを除去する。
+
+    ON_VOLATILE_END は対象ポケモンの何らかの揮発性状態が解除されたことを表す共通
+    イベントであり、解除された揮発性状態名が value に渡される。value がハロウィン
+    自身でない場合は何もしない（無関係な揮発性状態の解除でハロウィンがまだ有効なのに
+    ゴーストタイプが誤って外れるのを防ぐ）。
+    """
+    if value != "ハロウィン":
+        return HandlerReturn(value=value)
     if "ゴースト" in ctx.source.added_types:
         ctx.source.added_types.remove("ゴースト")
     return HandlerReturn(value=value)
@@ -1248,7 +1281,15 @@ def マジックコート_turn_end(battle: Battle, ctx: EventContext, value: Any
 
 
 def まほうのこな_clear_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """まほうのこな解除時: volatile_override_type を None に戻す。"""
+    """まほうのこな解除時: volatile_override_type を None に戻す。
+
+    ON_VOLATILE_END は対象ポケモンの何らかの揮発性状態が解除されたことを表す共通
+    イベントであり、解除された揮発性状態名が value に渡される。value がまほうのこな
+    自身でない場合は何もしない（みずびたし_clear_type と同様、無関係な揮発性状態の
+    解除でタイプ変更が誤って巻き戻るのを防ぐ）。
+    """
+    if value != "まほうのこな":
+        return HandlerReturn(value=value)
     ctx.source.volatile_override_type = None
     return HandlerReturn(value=value)
 
@@ -1329,7 +1370,17 @@ def みがわり_immune(battle: Battle, ctx: EventContext, value: Any) -> Handle
 
 
 def みずびたし_clear_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """みずびたし解除時: volatile_override_type を None に戻す。"""
+    """みずびたし解除時: volatile_override_type を None に戻す。
+
+    ON_VOLATILE_END は「対象ポケモンの何らかの揮発性状態が解除された」ことを表す
+    共通イベントであり、解除された揮発性状態名が value に渡される。value がみずびたし
+    自身でない場合（リチャージ等、無関係な揮発性状態が同ターン中に解除された場合）に
+    このハンドラが反応すると、みずびたしがまだ有効なのに volatile_override_type が
+    誤って解除され、本来の水タイプ判定（すなあらし免疫の再計算等）が壊れてしまう。
+    seed=205 (LogInconsistency@handlers/field.py:すなあらし_turn_end) の原因。
+    """
+    if value != "みずびたし":
+        return HandlerReturn(value=value)
     ctx.source.volatile_override_type = None
     return HandlerReturn(value=value)
 
@@ -1437,7 +1488,15 @@ def もりののろい_add_type(battle: Battle, ctx: EventContext, value: Any) -
 
 
 def もりののろい_remove_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """もりののろい解除時: added_types からくさタイプを除去する。"""
+    """もりののろい解除時: added_types からくさタイプを除去する。
+
+    ON_VOLATILE_END は対象ポケモンの何らかの揮発性状態が解除されたことを表す共通
+    イベントであり、解除された揮発性状態名が value に渡される。value がもりののろい
+    自身でない場合は何もしない（無関係な揮発性状態の解除でもりののろいがまだ有効な
+    のにくさタイプが誤って外れるのを防ぐ）。
+    """
+    if value != "もりののろい":
+        return HandlerReturn(value=value)
     if "くさ" in ctx.source.added_types:
         ctx.source.added_types.remove("くさ")
     return HandlerReturn(value=value)
