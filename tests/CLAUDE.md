@@ -13,7 +13,7 @@ battle = t.start_battle(
 )
 
 # 技の実行
-t.run_move(battle, atk_idx=0, move_idx=0)
+t.run_move(battle, player_idx=0, move_idx=0)
 
 # ポケモンの交代
 t.run_switch(battle, player_idx=0, new_idx=1)
@@ -22,7 +22,7 @@ t.run_switch(battle, player_idx=0, new_idx=1)
 t.end_turn(battle)
 
 # 状態異常の適用
-t.apply_ailment(battle, active_index=0, ailment_name="やけど", by_foe=True)
+t.apply_ailment(battle, player_idx=0, ailment_name="やけど", by_foe=True)
 
 # ダメージ固定 / 乱数固定
 t.fix_damage(battle, 100)
@@ -35,5 +35,5 @@ t.change_item(battle, mon, "たべのこし")
 order = t.get_action_order(battle)
 
 # AttackContext の構築
-ctx = t.build_context(battle, atk_idx=0, move_idx=0)
+ctx = t.build_context(battle, player_idx=0, move_idx=0)
 ```

@@ -198,26 +198,26 @@ def reserve_command(battle: Battle,
             state.reserve_command(command)
 
 
-def build_context(battle: Battle, atk_idx: int, move_idx: int = 0) -> AttackContext:
+def build_context(battle: Battle, player_idx: int, move_idx: int = 0) -> AttackContext:
     """AttackContextを構築するヘルパー関数。"""
-    attacker = battle.actives[atk_idx]
+    attacker = battle.actives[player_idx]
     defender = battle.foe(attacker)
     move = attacker.moves[move_idx]
     return AttackContext(attacker=attacker, defender=defender, move=move)
 
 
-def run_move(battle: Battle, atk_idx: int, move_idx: int = 0) -> Move:
+def run_move(battle: Battle, player_idx: int, move_idx: int = 0) -> Move:
     """技を実行するヘルパー関数。
 
     Args:
         battle: Battleインスタンス
-        atk_idx: 技を使用するポケモンのインデックス
+        player_idx: 技を使用するポケモンのインデックス
         move_idx: 使用する技のインデックス（デフォルト: 0）
 
     Returns:
         使用した技のインスタンス
     """
-    attacker = battle.actives[atk_idx]
+    attacker = battle.actives[player_idx]
     move = attacker.moves[move_idx]
     battle.run_move(attacker, move)
     battle.print_logs()
@@ -279,7 +279,7 @@ def end_turn(battle: Battle):
 
 
 def apply_ailment(battle: Battle,
-                  active_index: int,
+                  player_idx: int,
                   ailment_name: AilmentName,
                   count: int = 1,
                   by_foe: bool = False,
@@ -288,7 +288,7 @@ def apply_ailment(battle: Battle,
 
     Args:
         battle: Battleインスタンス
-        active_index: 状態異常を適用するポケモンのインデックス
+        player_idx: 状態異常を適用するポケモンのインデックス
         ailment_name: 適用する状態異常の名前
         count: 状態異常のカウント（デフォルト: 1）
         by_foe: 相手によって状態異常が適用されたかどうか（デフォルト: False）
@@ -297,7 +297,7 @@ def apply_ailment(battle: Battle,
     Returns:
         状態異常の適用が成功したかどうか
     """
-    mon = battle.actives[active_index]
+    mon = battle.actives[player_idx]
     source = battle.foe(mon) if by_foe else None
     return battle.set_ailment(mon, ailment_name, count=count, source=source, overwrite=overwrite)
 
@@ -349,7 +349,7 @@ def fix_random(battle: Battle, value: float):
 
 
 def calc_lethal(battle: Battle,
-                atk_idx: int,
+                player_idx: int,
                 moves: Move | tuple[Move, int] | list[Move | tuple[Move, int]],
                 critical: bool = False,
                 secondary: bool = False,
@@ -358,7 +358,7 @@ def calc_lethal(battle: Battle,
 
     Args:
         battle: Battleインスタンス
-        atk_idx: 攻撃側ポケモンのインデックス
+        player_idx: 攻撃側ポケモンのインデックス
         moves: 技（単体 / (技, ヒット数) / リスト）
         critical: 急所計算をするか（デフォルト: False）
         secondary: 追加効果ハンドラを適用するか（デフォルト: False）
@@ -367,24 +367,24 @@ def calc_lethal(battle: Battle,
     Returns:
         各ヒット後の LethalResult のリスト（確定数が出た時点で打ち切り）
     """
-    attacker = battle.actives[atk_idx]
+    attacker = battle.actives[player_idx]
     return battle.calc_lethal(
         attacker=attacker, moves=moves, critical=critical,
         secondary=secondary, max_attack=max_attack
     )
 
 
-def calc_move_priority(battle: Battle, player_index: int, move_index: int = 0) -> int:
+def calc_move_priority(battle: Battle, player_idx: int, move_index: int = 0) -> int:
     """技を発動したときの優先度を返す。
 
     Args:
         battle: Battleインスタンス
-        player_index: 技を使用するポケモンのインデックス
+        player_idx: 技を使用するポケモンのインデックス
         move_index: 使用する技のインデックス（デフォルト: 0）
 
     Returns:
         技の優先度
     """
-    mon = battle.actives[player_index]
+    mon = battle.actives[player_idx]
     move = mon.moves[move_index]
     return battle.calc_move_priority(mon, move)

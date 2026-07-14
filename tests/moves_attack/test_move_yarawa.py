@@ -981,7 +981,7 @@ def test_ロックブラスト_複数ヒットする():
         accuracy=100,
     )
     hit_count = battle.move_executor._resolve_hit_count(
-        t.build_context(battle, atk_idx=0)
+        t.build_context(battle, player_idx=0)
     )
     assert 2 <= hit_count <= 5
 

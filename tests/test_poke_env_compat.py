@@ -301,7 +301,7 @@ def test_battle_finishedとwonとlostは決着後に更新される():
     assert battle.won(player0) is False
     assert battle.lost(player0) is False
 
-    t.run_move(battle, atk_idx=0)
+    t.run_move(battle, player_idx=0)
 
     assert battle.finished is True
     assert battle.won(player0) is True
@@ -488,7 +488,7 @@ def test_pokemon_first_turnは登場直後True行動後False():
 
     assert mon.first_turn is True
 
-    t.run_move(battle, atk_idx=0)
+    t.run_move(battle, player_idx=0)
 
     assert mon.first_turn is False
 
