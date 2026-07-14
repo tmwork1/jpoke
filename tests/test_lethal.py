@@ -1392,6 +1392,26 @@ def test_メテオビーム_とくこうアップ_secondary無し():
     assert results[1].min_damage == results[0].min_damage
 
 
+def test_もうどく_ポイズンヒール所持でも経過ターンは加算される():
+    """もうどく: ポイズンヒール所持時はダメージを与えないが、
+    実際にダメージを受けたかどうかに関わらず経過ターン数は通常どおり加算される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("グライオン", ability_name="ポイズンヒール")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.apply_ailment(battle, active_index=1, ailment_name="もうどく")
+
+    ctx = LethalContext(attacker, defender, Move("たいあたり"))
+    hp_dist = to_dist(defender.max_hp)
+
+    result = l.もうどく_damage(battle, ctx, hp_dist)
+
+    assert defender.ailment.elapsed_turns == 1, "ポイズンヒール所持時もelapsed_turnsは加算される"
+    assert set(result) == {State(defender.max_hp)}, "ポイズンヒール所持時はダメージを与えない"
+
+
 def test_もうどく_増加ダメージ():
     """もうどく状態のポケモンはターン終了時に経過ターンに応じて増加するダメージを受ける"""
     with_ailment = t.start_battle(
@@ -1411,26 +1431,6 @@ def test_もうどく_増加ダメージ():
     d1 = max(1, max_hp * 1 // 16)
     d2 = max(1, max_hp * 2 // 16)
     assert max(results_without[1].hp_counter) - max(results_with[1].hp_counter) == d1 + d2
-
-
-def test_もうどく_ポイズンヒール所持でも経過ターンは加算される():
-    """もうどく: ポイズンヒール所持時はダメージを与えないが、
-    実際にダメージを受けたかどうかに関わらず経過ターン数は通常どおり加算される"""
-    battle = t.start_battle(
-        team0=[Pokemon("ガブリアス")],
-        team1=[Pokemon("グライオン", ability_name="ポイズンヒール")],
-    )
-    attacker = battle.actives[0]
-    defender = battle.actives[1]
-    t.apply_ailment(battle, active_index=1, ailment_name="もうどく")
-
-    ctx = LethalContext(attacker, defender, Move("たいあたり"))
-    hp_dist = to_dist(defender.max_hp)
-
-    result = l.もうどく_damage(battle, ctx, hp_dist)
-
-    assert defender.ailment.elapsed_turns == 1, "ポイズンヒール所持時もelapsed_turnsは加算される"
-    assert set(result) == {State(defender.max_hp)}, "ポイズンヒール所持時はダメージを与えない"
 
 
 def test_やけど_ターン終了時ダメージ():
