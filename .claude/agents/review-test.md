@@ -22,19 +22,13 @@ tools:
 - `tests/` にテストを追加して全件パスを確認する
 - `docs/progress/` と `docs/test/` を更新する
 
-## ブランチ管理
+## ブランチ・ソート運用
 
-ループから呼ばれる場合、作業ディレクトリは impl 完了済みの `loop/impl/{entry}` ブランチ（impl と
-同一ブランチ）を checkout した使い捨て worktree になっている
-（例: `{config.worktree_base}\review`）。
-その worktree 内で作業し、完了後は同じブランチ上に変更をコミットすること。
-ブランチの統合ブランチへのマージ・worktree の削除はループディスパッチャーが担当するため、
-エージェント側では行わない。
-
-## 結果ファイルの書き込み
-
-作業ディレクトリが worktree の場合、結果ファイルはメインリポジトリの `.loop/review_results/` に書く
-（プロンプトに絶対パスが記載される）。
+作業ディレクトリ（永続ブランチ直下か使い捨て worktree か）、コミット先ブランチ、五十音ソート・
+`sort_tests.py`・`generate_test_list.py` を今回実行するかどうかは、呼び出し元プロンプトの指示に従う
+（フローにより異なる。単一ブランチ系は都度ソート・一覧更新、統合ブランチ系はマージ後に一括実行）。
+統合ブランチへのマージ・worktree の削除はループディスパッチャーが担当するためエージェント側では
+行わない。結果ファイル（`.ok`/`.fail`）の書き込み先はプロンプトに絶対パスで記載される。
 
 ## レビュー観点
 
@@ -59,11 +53,8 @@ tools:
 完了時に確認して報告する：
 
 - [ ] レビュー指摘があれば修正した
-- [ ] handlers を修正した場合は `python scripts/sort_handlers.py src/jpoke/handlers/<category>.py` を実行した
-- [ ] `data/ability.py` / `data/item.py` / `data/move.py` を修正した場合、対応するスクリプト（`scripts/sort_data/sort_abilities.py` / `scripts/sort_data/sort_items.py` / `scripts/sort_data/sort_moves.py`）を実行した
-- [ ] テストを追加して `python scripts/sort_tests.py <テストファイル>` でソートした
-- [ ] `python scripts/generate_test_list.py` を実行して `docs/tests/` を更新した
+- [ ] テストを追加した
 - [ ] `python -m pytest tests/ -v` で全件パスした
 - [ ] `docs/progress/<category>.md` の全列（マーク・効果列の説明文を含む）を実際の状態と照合し、テスト済みマークを更新した
-- [ ] 変更をコミットした（`git add -A && git commit -m "review: {entry}"`）
+- [ ] プロンプトの指示通りにソート・テスト一覧更新・コミット・ブランチ操作を行った
 - [ ] 結果ファイルを書き込んだ（`.ok` または `.fail`）

@@ -22,12 +22,11 @@ tools:
 - `handlers/` に実装関数を追加し、`data/` にハンドラを登録する
 - テストは書かない（`review-test` エージェントが担当）
 
-## ブランチ管理
+## ブランチ・ソート運用
 
-ループから呼ばれる場合、プロンプトに `git checkout -B "loop/impl/{entry}" loop/impl/integration`
-が含まれる（統合ブランチ `loop/impl/integration` の先端から entry ブランチを作成する）。
-必ず指示通りにブランチを作成してから実装を開始し、完了後はコミットして
-`loop/impl/integration` へ detach で戻ること（`git checkout --detach loop/impl/integration`）。
+ブランチの作成・切替・コミットのタイミング、五十音ソートスクリプト（`sort_handlers.py` /
+`sort_data/*.py`）を今回実行するかどうかは、呼び出し元プロンプトの指示に従う
+（フローにより異なる。単一ブランチ系は都度ソート、統合ブランチ系はマージ後に一括ソート）。
 
 ## 成果物チェックリスト
 
@@ -36,9 +35,6 @@ tools:
 - [ ] `handlers/` に関数を追加した
 - [ ] `data/` でハンドラを登録した
 - [ ] 新しい `Literal` 型が必要なら `types/` に追加した
-- [ ] `python scripts/sort_handlers.py src/jpoke/handlers/<category>.py` を実行した
-- [ ] `data/ability.py` / `data/item.py` / `data/move.py` を変更した場合、対応するスクリプト（`scripts/sort_data/sort_abilities.py` / `scripts/sort_data/sort_items.py` / `scripts/sort_data/sort_moves.py`）を実行した
 - [ ] `docs/progress/<category>.md` の実装列（実装）を `x` に更新した
-- [ ] 変更をコミットした（`git add -A && git commit -m "impl: {entry}"`）
-- [ ] `loop/impl/integration` に detach で戻った（`git checkout --detach loop/impl/integration`）
+- [ ] プロンプトの指示通りにコミット・ブランチ操作を行った
 - [ ] `review-test` に渡すべき仕様上の注意点・エッジケースをまとめた
