@@ -1,8 +1,7 @@
 """jpoke で学べること: Player を継承した自作方策（AI）の最小実装。
 
 choose_command をオーバーライドし、「最も威力の高い技を選ぶ」という単純な
-ヒューリスティックのプレイヤーを作る。技で早く相手を倒せるほど反撃を受ける
-ターンが減り、結果として自分のHP割合を高く保ちやすい、という発想の入口。
+ヒューリスティックのプレイヤーを作る。
 AI開発ユースケースの最初のステップとして、Player のカスタム方法だけに絞った例。
 
 後半では choose_command とは別の choose_selection（対戦開始前の選出）を
@@ -18,9 +17,11 @@ class StrongestMovePlayer(Player):
     """毎ターン、利用可能な技の中から最も威力の高い技を選ぶプレイヤー。"""
 
     def choose_command(self, battle: Battle) -> Command:
+        # TODO: まず通常のchoose_command()にdocstringを充実させるべき。"""
         commands = battle.get_available_commands(self)
 
         def move_power(command: Command) -> int:
+            # TODO: is_regular_moveだとメガシンカなどの特殊コマンドが除外されてしまうため、技全般を対象にすべき。それとCommand.is_xxxの命名に改善の余地があるかも。
             # 技コマンド以外（交代・わるあがき等）は最低優先度として扱う
             if not command.is_regular_move:
                 return -1
@@ -43,6 +44,7 @@ class StrongestMovePlayer(Player):
         moves = battle.available_moves  # get_available_commands()を技だけ取り出しMoveに変換したもの
         if not moves:
             # わるあがきのみの場合。available_moves はこのときわるあがきを1件返す
+            # TODO: poke-envでは何らかの有効な行動を返す関数があったが、jpokeにも導入すべきかも。
             return battle.get_available_commands(self)[0]
         move_commands = [c for c in battle.get_available_commands(self) if c.is_regular_move]
         best_index = max(
@@ -52,6 +54,7 @@ class StrongestMovePlayer(Player):
         return move_commands[best_index]
 
 
+# TODO : 選出カスタマイズは別のサンプルコードに分離したい。
 class FastestLeadPlayer(Player):
     """素早さ実数値が高い順に選出する（先発が速いほうが有利、という単純な発想）。
 
