@@ -21,7 +21,7 @@
 | モード | Player | 特徴 | 既定 n_pokemon / max_turns / batch |
 |---|---|---|---|
 | `random` | RandomPlayer | 安価。広い状態空間を広く浅く掘る | 6 / 100 / 500 |
-| `tree_search` | TreeSearchFuzzPlayer（1手先ミニマックス） | 高コスト。実戦的な行動でのみ出るバグを狙う | 3 / 20 / 40 |
+| `tree_search` | TreeSearchFuzzPlayer（1手先ミニマックス） | 高コスト。実戦的な行動でのみ出るバグを狙う | 3 / 20 / 100 |
 
 `batch_size` は `--search` で worker プロセスに分散して並列実行される件数（打ち切りなし）。
 `workers`（既定4）は他の並行セッション・ループへの配慮のため CPU コア数を使い切らないよう
@@ -53,7 +53,7 @@
     },
     "tree_search": {
       "player": "tree_search",
-      "max_turns": 20, "n_pokemon": 3, "batch_size": 40, "max_plies": 1, "workers": 4,
+      "max_turns": 20, "n_pokemon": 3, "batch_size": 100, "max_plies": 1, "workers": 4,
       "failure_dir": "tsfuzz_failures",
       "next_seed": 0, "total_battles": 0
     }
