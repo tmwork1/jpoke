@@ -71,6 +71,14 @@ MOVES_A: dict[MoveName, MoveData] = {
         accuracy=100,
         flags={"contact"},
         handlers={
+            # ON_HIT: いのちのたまの反動（priority=160、Event.ON_HIT で実装）より後に
+            # 実行し、反動で使用者がひんしになった場合の除外判定を成立させるため
+            # priority=180 とする（`docs/plan/moves/アイススピナー.md` 参照）。
+            Event.ON_HIT: h.MoveHandler(
+                ha.アイススピナー_clear_terrain_on_zero_damage_hit,
+                subject_spec="attacker:self",
+                priority=180,
+            ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.アイススピナー_clear_terrain,
                 subject_spec="attacker:self",
