@@ -1,9 +1,11 @@
 # test_tree_search_framework
 
-テスト数: 11
+テスト数: 13
 
 - [x] configure_simが各分岐でsim_step実行前に呼ばれる
+- [x] evaluate_commandsがmax_nodesを無視して全合法手を評価する
 - [x] evaluate_commandsが非破壊的に評価値一覧を返す
+- [x] evaluateの既定実装がget_team経由で対戦中の実データを反映する
 - [x] evaluate関数が例外を投げてもsearchingフラグは解除される
 - [x] fallbackに独自関数を指定するとそれが使われる
 - [x] max_nodesでノード数上限が機能する

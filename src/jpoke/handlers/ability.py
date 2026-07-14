@@ -74,8 +74,18 @@ _EFFECT_SPORE_AILMENTS: list[tuple[float, AilmentName]] = [
     (0.30, "ねむり"),
 ]
 
-# メガソーラー: ON_BEGIN_MOVE で保存した天候状態（current_name, はれのcount）を ON_END_MOVE で復元するための辞書
-_メガソーラー_saved: dict[int, tuple[str, int]] = {}
+_メガソーラー_WEATHER_SETTING_MOVES: frozenset[str] = frozenset({
+    "にほんばれ", "あまごい", "すなあらし", "ゆきげしき", "さむいギャグ",
+})
+"""メガソーラー専用: 天候を実際に変更する技の一覧。
+
+これらの技を使用する際は天候の仮想上書きを行わない。上書きしたまま
+技自身の天候変更処理（weather_manager.apply）を通すと、既に「はれ」に
+上書き済みであるせいで「元から同じ天候」と誤判定され、技自身の天候変更が
+機能しなくなってしまう（一次情報: docs/wiki/abilities/メガソーラー.html
+特性の仕様「この特性であっても技のにほんばれは使用でき、場をにほんばれ
+状態に変えることができる」）。
+"""
 
 class AbilityHandler(Handler):
     def __init__(self,
@@ -178,9 +188,16 @@ def _apply_contact_counter_chip(battle: Battle,
     return HandlerReturn(value=value)
 
 def _trigger_emergency_switch(battle: Battle, mon: Pokemon):
-    """緊急交代を発動する。"""
+    """緊急交代を発動する。
+
+    docs/spec/abilities/にげごし.md の通り、控えのポケモンがいない場合のみ
+    発動しない。特性かげふみ/ありじごく/じりょくの影響や、にげられない/バインド/
+    ねをはる/フェアリーロック状態の効果は無視して発動するため、`can_switch`
+    （とらわれ状態を考慮する）ではなく `has_available_bench`
+    （生存している控えの有無のみを見る）で判定する。
+    """
     player = battle.get_player(mon)
-    if battle.query.can_switch(player):
+    if battle.query.has_available_bench(player):
         battle.player_states[player].interrupt = Interrupt.EMERGENCY
         _announce_ability_triggered(battle, mon=mon)
 
@@ -2334,13 +2351,20 @@ def ダウンロード_raise_stat(battle: Battle, ctx: EventContext, value: Any)
 
 
 def だっぴ_cure_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """だっぴ特性: ターン終了時に30%で状態異常を回復する。"""
+    """だっぴ特性: ターン終了時に30%で状態異常を回復する。
+
+    この30%は技の追加効果確率ではなく特性自身の発動確率であり、りんぷん・
+    おんみつマント・ちからずく・てんのめぐみ等の影響を受けない（一次情報:
+    docs/spec/abilities/だっぴ.md にこれらとの相互作用の記載はない）ため、
+    ON_MODIFY_SECONDARY_CHANCE（attacker/defender前提のAttackContext用イベント）
+    を経由する resolve_secondary_chance は使わず battle.random.random() で
+    直接判定する。
+    """
     mon = ctx.source
     if not mon.ailment.is_active:
         return HandlerReturn(value=value)
 
-    chance = battle.resolve_secondary_chance(ctx, 0.3)
-    if chance < 1 and battle.random.random() >= chance:
+    if battle.random.random() >= 0.3:
         return HandlerReturn(value=value)
     result = HandlerReturn(value=battle.ailment_manager.remove(mon))
     if result.value:
@@ -4203,46 +4227,68 @@ def ムラっけ_boost_stats(battle: Battle, ctx: EventContext, value: Any) -> H
 
 
 def メガソーラー_activate(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """メガソーラー特性: 技使用前に天候を「はれ」に直接変更する（副作用なし）。"""
+    """メガソーラー特性: 技使用前に天候を「はれ」に直接変更する（副作用なし）。
+
+    にほんばれ・あまごい等、天候を実際に変更する技を使用する場合は上書きしない
+    （_メガソーラー_WEATHER_SETTING_MOVES 参照）。
+
+    ねごと・まねっこ等、同じ攻撃者に対して run_move がネストして呼ばれるケースに
+    対応するため、深度カウンター（ability.weather_override_depth）で多重発動を
+    管理する。最も外側の呼び出し時のみ本来の天候を保存する。
+    """
+    if ctx.move.name in _メガソーラー_WEATHER_SETTING_MOVES:
+        return HandlerReturn(value=value)
+
     mon = ctx.attacker
     wm = battle.weather_manager
-    original_name = wm.current_name
-    original_hare_count = wm.fields["はれ"].count
-    _メガソーラー_saved[id(mon)] = (original_name, original_hare_count)
+    if mon.ability.weather_override_depth == 0:
+        original_name = wm.current_name
+        mon.ability.saved_weather_name = original_name
+        mon.ability.saved_weather_count = wm.fields["はれ"].count
 
-    if original_name != "はれ":
-        # 元天候のハンドラを解除してから「はれ」のハンドラを登録する
-        if wm.fields[original_name].is_active:
-            for player in wm.fields[original_name].owners:
-                wm.fields[original_name].unregister_handlers(battle.events, player)
-        wm.fields["はれ"].count = 1
-        for player in wm.fields["はれ"].owners:
-            wm.fields["はれ"].register_handlers(battle.events, player)
+        if original_name != "はれ":
+            # 元天候のハンドラを解除してから「はれ」のハンドラを登録する
+            if wm.fields[original_name].is_active:
+                for player in wm.fields[original_name].owners:
+                    wm.fields[original_name].unregister_handlers(battle.events, player)
+            wm.fields["はれ"].count = 1
+            for player in wm.fields["はれ"].owners:
+                wm.fields["はれ"].register_handlers(battle.events, player)
 
-    wm.current_name = "はれ"
-    mon.ability.state = "active"
+        wm.current_name = "はれ"
+        mon.ability.state = "active"
+    mon.ability.weather_override_depth += 1
     return HandlerReturn(value=value)
 
 
 def メガソーラー_deactivate(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """メガソーラー特性: 技使用後に天候を元に戻す。"""
+    """メガソーラー特性: 技使用後に天候を元に戻す（最も外側の呼び出しでのみ実行）。"""
+    if ctx.move.name in _メガソーラー_WEATHER_SETTING_MOVES:
+        return HandlerReturn(value=value)
+
     mon = ctx.attacker
     if mon.ability.state != "active":
         return HandlerReturn(value=value)
+
+    mon.ability.weather_override_depth -= 1
+    if mon.ability.weather_override_depth > 0:
+        # ねごと・まねっこ等でネストした内側の解除。外側の解除まで天候を維持する
+        return HandlerReturn(value=value)
+
     wm = battle.weather_manager
-    saved = _メガソーラー_saved.pop(id(mon), None)
-    if saved is not None:
-        original_name, original_hare_count = saved
-        if original_name != "はれ":
-            # 「はれ」のハンドラを解除して元天候のハンドラを復元する
-            for player in wm.fields["はれ"].owners:
-                wm.fields["はれ"].unregister_handlers(battle.events, player)
-            wm.fields["はれ"].count = original_hare_count
-            if wm.fields[original_name].is_active:
-                for player in wm.fields[original_name].owners:
-                    wm.fields[original_name].register_handlers(battle.events, player)
-        wm.current_name = original_name
+    original_name = mon.ability.saved_weather_name
+    if original_name != "はれ":
+        # 「はれ」のハンドラを解除して元天候のハンドラを復元する
+        for player in wm.fields["はれ"].owners:
+            wm.fields["はれ"].unregister_handlers(battle.events, player)
+        wm.fields["はれ"].count = mon.ability.saved_weather_count
+        if wm.fields[original_name].is_active:
+            for player in wm.fields[original_name].owners:
+                wm.fields[original_name].register_handlers(battle.events, player)
+    wm.current_name = original_name
     mon.ability.state = ""
+    mon.ability.saved_weather_name = ""
+    mon.ability.saved_weather_count = 0
     return HandlerReturn(value=value)
 
 
@@ -4259,11 +4305,23 @@ def メガランチャー_modify_power(battle: Battle, ctx: AttackContext, value
 
 
 def メロメロボディ_maybe_infatuate_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """メロメロボディ特性: 直接攻撃を受けたとき30%の確率で攻撃者をメロメロにする。"""
-    if battle.query.is_contact_reaction(ctx) and battle.random.random() < 0.3:
+    """メロメロボディ特性: 直接攻撃を受けたとき30%の確率で攻撃者をメロメロにする。
+
+    相手か自分のどちらかが性別不明、または相手と同性の場合は発動しない。
+    """
+    attacker = ctx.attacker
+    defender = ctx.defender
+    if (
+        defender.gender != ""
+        and attacker.gender != ""
+        and attacker.gender != defender.gender
+        and battle.query.is_contact_reaction(ctx)
+        and battle.random.random() < 0.3
+    ):
         battle.volatile_manager.apply(
-            ctx.attacker, "メロメロ", source=ctx.defender,
+            attacker, "メロメロ", source=defender,
         )
+        _announce_ability_triggered(battle, defender)
     return HandlerReturn(value=value)
 
 
@@ -4276,11 +4334,14 @@ def めんえき_cure_poison_on_enable(battle: Battle, ctx: EventContext, value:
 
 
 def ものひろい_pickup_foe_item(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ものひろい特性: ターン終了時に自分がアイテムを持っていなければ相手が消費したアイテムを拾う。"""
+    """ものひろい特性: ターン終了時に自分がアイテムを持っていなければ、
+    そのターン中に相手が消費した道具を拾う。"""
     mon = ctx.source
     if mon is None or mon.has_item():
         return HandlerReturn(value=value)
     foe = battle.foe(mon)
+    if foe.last_lost_item_turn != battle.turn:
+        return HandlerReturn(value=value)
     item_name = foe.last_lost_item_name
     if not item_name:
         return HandlerReturn(value=value)
@@ -4343,10 +4404,9 @@ def もらいび_modify_power(battle: Battle, ctx: AttackContext, value: int) ->
 
 def もらいび_reserve_fire_boost(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
     """もらいび特性: ほのお技使用時に強化適用予約。"""
-    mon = getattr(ctx, "source", None) or getattr(ctx, "attacker", None)
+    mon = ctx.attacker
     if (
         ctx.move.type == "ほのお"
-        and mon is not None
         and mon.ability.state == "charged"
     ):
         mon.ability.state = "active"
@@ -4356,7 +4416,15 @@ def もらいび_reserve_fire_boost(battle: Battle, ctx: AttackContext, value: b
 def やるき_cure_sleep_on_enable(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """やるき特性: 特性が有効化された時点ですでにねむり状態なら即座に回復する。
 
-    かがくへんかガス・かたやぶりの効果が終わって特性が再び有効になった場合などに発動する。
+    なやみのタネ・なかまづくり等で特性がやるきに書き換わった場合や、
+    かがくへんかガス・かたやぶりの効果が終わって特性が再び有効になって
+    ONに戻った場合などに発動する。
+    ON_SWITCH_INにもこの関数を登録しており、すでにねむり状態のやるきの
+    ポケモンが場に出た場合にも即座に回復する（docs/spec/turn.md の
+    ON_SWITCH_IN priority=100「やるき（特性）による状態異常回復」に対応。
+    どくびし等その他のpriority=100効果とは、どくびしが場設置時に一度だけ
+    priority=100が登録されるのに対し、やるきは交代のたびに新規登録される
+    ため、実行順は自然に保たれる）。
     """
     return _cure_ailment_on_enable(battle, ctx, blocked_ailments=["ねむり"])
 

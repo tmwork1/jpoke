@@ -73,7 +73,7 @@ class TreeSearchPlayer(Player):
             return float("-inf")
 
         def hp_ratio(target: Player) -> float:
-            team = battle.player_states[target].team
+            team = battle.get_team(target)
             return sum(mon.hp / mon.max_hp for mon in team if not mon.fainted)
 
         return hp_ratio(self) - hp_ratio(opponent)
@@ -132,6 +132,14 @@ class TreeSearchPlayer(Player):
         変更しない副作用なしのメソッド。相手の合法手が未公開で空
         （かつ opponent_estimator も推定できず、推定後もコマンドが空）の
         場合は空の辞書を返す。
+
+        注意: 呼び出し中は `max_nodes` によるノード数上限を一時的に無効化し、
+        自分の全合法手 × 相手の全合法手を `max_plies` の深さまで打ち切りなく
+        評価する（`choose_command` の探索とは異なりノード数では打ち切らない）。
+        そのため実行コストは `max_plies` が大きいほど大きくなりうる。
+        `choose_command` の呼び出しごと（毎ターン）にこのメソッドも呼ぶような
+        デバッグ表示などに組み込む場合は、探索コストが `max_nodes` で
+        抑えられないことに注意すること。
         """
         opponent = battle.opponent(self)
         my_commands, opponent_commands = self._toplevel_commands(battle, opponent)

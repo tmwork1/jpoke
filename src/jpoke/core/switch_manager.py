@@ -125,8 +125,19 @@ class SwitchManager:
             EventContext(source=mon)
         )
 
-        # リクエストがなくなるまで再帰的に交代する
-        while self.battle.has_interrupt():
+        # だっしゅつパックのリクエストがなくなるまで再帰的に交代する。
+        #
+        # Note:
+        #     ループ条件は `Interrupt.EJECTPACK_REQUESTED` の有無に限定する必要がある。
+        #     `battle.has_interrupt()`（全プレイヤーの割り込み状態を問わず判定）を条件に
+        #     使うと、まだ処理順が回ってきていない別プレイヤーの交代技（PIVOT等）による
+        #     割り込みフラグが残っている間、このループが解消不能な条件で回り続けて
+        #     無限ループになる（このループが処理できるのは EJECTPACK_REQUESTED のみで、
+        #     PIVOT 等の他の割り込み種別はここでは解決されないため）。
+        while any(
+            state.interrupt == Interrupt.EJECTPACK_REQUESTED
+            for state in self.battle.player_states.values()
+        ):
             flag = Interrupt.EJECTPACK_ON_AFTER_SWITCH
             self.override_ejectpack_interrupt(flag)
             self.run_interrupt_switch(flag)

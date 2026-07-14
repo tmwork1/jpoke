@@ -46,6 +46,46 @@ def test_configure_simが各分岐でsim_step実行前に呼ばれる():
     assert len(player1.configure_sim_calls) == player1.nodes_expanded
 
 
+def test_evaluate_commandsがmax_nodesを無視して全合法手を評価する():
+    """r6-9回帰: evaluate_commands() は呼び出し中 max_nodes を一時的に無効化し、
+    自分の全合法手 × 相手の全合法手を打ち切りなく評価すること。
+
+    max_nodes を1という極端に小さい値に設定した状態で呼び出しても、
+    choose_command()（_best_command 経由）のようにノード数上限で打ち切られず
+    （途中で打ち切られると評価未了のコマンドが float("inf") のままになる）、
+    全てのコマンドの評価値が有限値になることを確認する。呼び出し後は
+    max_nodes・nodes_expanded とも呼び出し前の値に復元されることも合わせて
+    確認する。
+    """
+    player1 = TreeSearchPlayer(username="SearchPlayer", max_nodes=1)
+    player1.team = [
+        Pokemon("ヒトカゲ", item_name="", move_names=["たいあたり", "10まんボルト"]),
+    ]
+
+    player2 = Player(username="RandomPlayer")
+    player2.team = [Pokemon("ゼニガメ", item_name="", move_names=["たいあたり", "みずでっぽう"])]
+    for move in player2.team[0].moves:
+        move.revealed = True
+
+    battle = Battle(player1, player2, n_selected=1, seed=1)
+    battle.test_option.accuracy = 100
+    battle.start()
+
+    before_max_nodes, before_nodes = player1.max_nodes, player1.nodes_expanded
+
+    with battle.phase_context("action"):
+        result = player1.evaluate_commands(battle)
+
+    assert len(result) >= 2, "自分の合法手（技2種）が両方とも評価対象になっていない"
+    for command, value in result.items():
+        assert value not in (float("inf"), float("-inf")), (
+            f"{command} の評価値がノード数上限で打ち切られ未評価のままになっている: {value}"
+        )
+    # 呼び出し前の max_nodes・nodes_expanded が復元されていること
+    assert player1.max_nodes == before_max_nodes == 1
+    assert player1.nodes_expanded == before_nodes
+
+
 def test_evaluate_commandsが非破壊的に評価値一覧を返す():
     """FW-U6: evaluate_commands(battle) が探索本体（choose_command）の状態
     （_searching・nodes_expanded）を変更せず、各合法手の評価値一覧を辞書で
@@ -75,6 +115,45 @@ def test_evaluate_commandsが非破壊的に評価値一覧を返す():
     assert set(result.keys()) == expected_commands
     assert player1._searching == before_searching
     assert player1.nodes_expanded == before_nodes
+
+
+def test_evaluateの既定実装がget_team経由で対戦中の実データを反映する():
+    """r6-8回帰: evaluate() の既定実装（残りHP割合差）は battle.get_team() を
+    使って対戦中のチームを取得すること。コンストラクタ時点の player.team
+    スナップショットではなく、対戦開始後のHP変化・瀕死状態が正しく
+    反映されることを、evaluate() の戻り値を手計算した期待値と突き合わせて
+    確認する。
+    """
+    player1 = TreeSearchPlayer(username="SearchPlayer")
+    player1.team = [
+        Pokemon("ヒトカゲ", item_name="", move_names=["たいあたり"]),
+        Pokemon("リザードン", item_name="", move_names=["たいあたり"]),
+    ]
+
+    player2 = Player(username="RandomPlayer")
+    player2.team = [
+        Pokemon("ゼニガメ", item_name="", move_names=["たいあたり"]),
+        Pokemon("カメックス", item_name="", move_names=["たいあたり"]),
+    ]
+
+    battle = Battle(player1, player2, n_selected=2, seed=1)
+    battle.test_option.accuracy = 100
+    battle.start()
+
+    # 対戦開始後にアクティブのHPを変化させ、evaluateが最新状態を反映することを確認する
+    battle.modify_hp(battle.actives[0], r=-0.5)
+    # ベンチのリザードンを瀕死にし、合計HP割合の計算から除外されることを確認する
+    battle.modify_hp(battle.get_team(player1)[1], r=-1.0)
+
+    value = player1.evaluate(battle)
+
+    expected = (
+        sum(mon.hp / mon.max_hp for mon in battle.get_team(player1) if not mon.fainted)
+        - sum(mon.hp / mon.max_hp for mon in battle.get_team(player2) if not mon.fainted)
+    )
+    assert value == pytest.approx(expected)
+    # 生存中の自分のポケモンは1体（ヒトカゲ、HP半分）のみのはず
+    assert value == pytest.approx(0.5 - 2.0)
 
 
 def test_evaluate関数が例外を投げてもsearchingフラグは解除される():

@@ -6,6 +6,24 @@ from jpoke.core import AttackContext
 from . import test_utils as t
 
 
+def test_activate_side_field_ひかりのねんどによる延長は反映されない():
+    """battle.activate_side_field(): 内部で StackableFieldManager.activate() を使うため、
+    SideFieldManager.apply() が発火する ON_MODIFY_DURATION（ひかりのねんど等による
+    持続ターン延長）は反映されない（既知の制約、docstring参照）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ひかりのねんど")],
+        team1=[Pokemon("カビゴン")],
+    )
+
+    result = battle.activate_side_field(battle.players[0], "リフレクター", 5)
+
+    assert result
+    side = battle.get_side(battle.players[0])
+    # run_move()でリフレクターを実際に使わせた場合は8ターンに延長されるが、
+    # activate_side_field()は指定した5ターンのまま変わらない
+    assert side.get("リフレクター").count == 5
+
+
 def test_set_terrain_地形を発動できる():
     """battle.set_terrain(): 地形を直接発動できる"""
     battle = t.start_battle(

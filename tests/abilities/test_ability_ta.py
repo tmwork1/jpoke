@@ -211,6 +211,32 @@ def test_だっぴ_ターン終了時に状態異常を回復する(ailment_name
     assert not mon.ailment.is_active
 
 
+def test_だっぴ_てんのめぐみと同時に場にいてもエラーにならない():
+    """だっぴ: ON_TURN_END（EventContext）から追加効果確率のON_MODIFY_SECONDARY_CHANCE
+    （attacker/defender前提）を誤って発火するとValueErrorになっていた回帰テスト。
+    てんのめぐみのようにON_MODIFY_SECONDARY_CHANCEを購読する特性が場にいても、
+    だっぴのターン終了時判定はエラーにならず正常に動作し、てんのめぐみの影響も受けない。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("コラッタ", ability_name="だっぴ")],
+        team1=[Pokemon("ピカチュウ", ability_name="てんのめぐみ")],
+        ailment0=("どく", None),
+    )
+    mon = battle.actives[0]
+
+    orig_random = battle.random.random
+    # てんのめぐみは追加効果確率を2倍にするが、だっぴの30%判定はその影響を
+    # 受けない。0.3を境に、影響を受けていれば0.4はてんのめぐみ込みで発動する
+    # （0.6未満）が、影響を受けなければ0.3以上なので発動しない。
+    battle.random.random = lambda: 0.4
+    try:
+        t.end_turn(battle)
+    finally:
+        battle.random.random = orig_random
+
+    assert mon.ailment.is_active
+
+
 def test_だっぴ_状態異常がなければ何も起きない():
     """だっぴ: 状態異常がないときは何も起きない（エラーにならない）。"""
     battle = t.start_battle(

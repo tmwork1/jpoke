@@ -12,6 +12,65 @@ from jpoke.types import AilmentName, WeatherName
 from .. import test_utils as t
 
 
+def test_やるき_すでにねむり状態のポケモンを場に出すと即座に回復する():
+    """やるき: 元の特性がやるきのポケモンが、特性を書き換えられてねむり状態になった後、
+    交代でベンチに戻ると特性はやるきに戻る（ねむりは残る）。この状態のポケモンを再び
+    場に出すと、場に出た直後に特性の効果でねむりが治る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["スキルスワップ"])],
+        team1=[
+            Pokemon("カビゴン", ability_name="やるき"),
+            Pokemon("ラッキー", ability_name="しぜんかいふく"),
+        ],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    # スキルスワップで特性を入れ替え、やるきの効果を持たない状態にする
+    t.run_move(battle, 0)
+    assert defender.ability.name == "せいでんき"
+    assert defender.base_ability == "やるき"
+
+    # 特性がやるきでない間にねむり状態にする
+    assert battle.ailment_manager.apply(defender, "ねむり", count=3)
+
+    # ベンチに戻ると特性は元のやるきに戻るが、ねむりはそのまま残る
+    t.run_switch(battle, 1, 1)
+    bench = battle.get_team(battle.players[1])[0]
+    assert bench.ability.name == "やるき"
+    assert bench.ailment.name == "ねむり"
+
+    # 再び場に出すと、場に出た直後にやるきの効果でねむりが治る
+    t.run_switch(battle, 1, 0)
+    active = battle.actives[1]
+    assert active.ability.name == "やるき"
+    assert not active.ailment.is_active
+
+
+def test_やるき_どくびしと同時に発生した場合はどくびしの毒付与が不発してから回復する():
+    """やるき: すでにねむり状態のやるきのポケモンを、どくびしが設置されたサイドに
+    出した場合、どくびしのどく付与判定はねむり状態により不発してから、やるきの
+    効果でねむりが治る（どくびしの効果は防がれる）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["スキルスワップ"])],
+        team1=[
+            Pokemon("カビゴン", ability_name="やるき"),
+            Pokemon("ラッキー", ability_name="しぜんかいふく"),
+        ],
+        accuracy=100,
+        side1={"どくびし": 2},
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert battle.ailment_manager.apply(defender, "ねむり", count=3)
+
+    t.run_switch(battle, 1, 1)
+    t.run_switch(battle, 1, 0)
+    active = battle.actives[1]
+
+    # ねむりは治り、どくびしのどくも付与されない
+    assert not active.ailment.is_active
+
+
 def test_ゆうばく_攻撃側がしめりけを持つ場合発動しない():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ゆうばく")],
