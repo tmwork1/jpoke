@@ -137,8 +137,9 @@ dmypy.json
 # Claude Code ローカル設定（個人の許可設定を含む）
 .claude/settings.local.json
 
-# Ignore generated wiki directory
-docs/wiki/
+# Ignore generated wiki directory（_list/のみ例外的にgit管理対象にする）
+docs/wiki/*
+!docs/wiki/_list/
 
 # ps-champ-ja からダウンロードした外部データ（scripts/ps_champ_ja/download.py で再取得可能）
 /ps-champ-ja/

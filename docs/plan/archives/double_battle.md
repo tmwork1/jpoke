@@ -82,7 +82,7 @@ priority確認は対象外）。
 
 ### 対象技の実データ確認
 
-旧版の計画書に列挙されていた69技を `jpoke.data.MOVES` と `docs/champions/move_list.txt` に
+旧版の計画書に列挙されていた69技を `jpoke.data.MOVES` と `src/jpoke/data/ps-champ-ja/moves.json` に
 突き合わせた結果、7技（かまいたち・グランドフォース・コアパニッシャー・ダークウェーブ・
 ベノムトラップ・シンクロノイズ・マグニチュード）は `MOVES` に存在せず、`champions/move_list.txt`
 にも技名の行が存在しなかったため対象外とした。

@@ -1,5 +1,5 @@
 """ps-champ-ja (https://github.com/tmwork1/ps-champ-ja) の data_jp/pokedex.json を、
-src/jpoke/data/pokedex.json にそのまま配置する。
+src/jpoke/data/ps-champ-ja/pokedex.json にそのまま配置する。
 
 事前に download.py を実行して ps-champ-ja/data_jp/pokedex.json をミラーしておくこと。
 実行すると、置き換え前後の名前一覧の差分（消滅／新規）を標準出力に表示する。
@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).parent.parent.parent
-OLD_POKEDEX = ROOT / "src/jpoke/data/pokedex.json"
+OLD_POKEDEX = ROOT / "src/jpoke/data/ps-champ-ja/pokedex.json"
 NEW_POKEDEX_SOURCE = ROOT / "ps-champ-ja/data_jp/pokedex.json"
 
 

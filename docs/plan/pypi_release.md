@@ -318,7 +318,7 @@ package-check:
 
 - [x] `python -m build` が警告なしで成功する
 - [x] `twine check dist/*` が PASSED
-- [x] wheel に `jpoke/data/pokedex.json` と `jpoke/py.typed` が含まれる
+- [x] wheel に `jpoke/data/ps-champ-ja/pokedex.json` と `jpoke/py.typed` が含まれる
 - [x] sdist に `tests/` / `docs/` / `scripts/` / `.claude/` が混入していない
 - [x] リポジトリ外のクリーン venv で wheel をインストールし、
       `import jpoke` と README クイックスタートが動く

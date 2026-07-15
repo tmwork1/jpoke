@@ -1,0 +1,3751 @@
+{
+  "raticatealolatotem": {
+    "showdown_id": "raticatealolatotem",
+    "showdown_name": "Raticate-Alola-Totem",
+    "num": 20,
+    "forme": "Alola-Totem",
+    "baseForme": "",
+    "types": [
+      "あく",
+      "ノーマル"
+    ],
+    "abilities": [
+      "あついしぼう"
+    ],
+    "baseStats": {
+      "hp": 75,
+      "atk": 71,
+      "def": 70,
+      "spa": 40,
+      "spd": 80,
+      "spe": 77
+    },
+    "weight": 105,
+    "height": 1.4,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "ラッタ(アローラ,ボス)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ラッタ(アローラ,ボス)\")"
+  },
+  "pikachucosplay": {
+    "showdown_id": "pikachucosplay",
+    "showdown_name": "Pikachu-Cosplay",
+    "num": 25,
+    "forme": "Cosplay",
+    "baseForme": "",
+    "types": [
+      "でんき"
+    ],
+    "abilities": [
+      "ひらいしん"
+    ],
+    "baseStats": {
+      "hp": 35,
+      "atk": 55,
+      "def": 40,
+      "spa": 50,
+      "spd": 50,
+      "spe": 90
+    },
+    "weight": 6,
+    "height": 0.4,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 1
+    },
+    "requiredItem": "",
+    "name": "ピカチュウ",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ピカチュウ\")"
+  },
+  "pikachurockstar": {
+    "showdown_id": "pikachurockstar",
+    "showdown_name": "Pikachu-Rock-Star",
+    "num": 25,
+    "forme": "Rock-Star",
+    "baseForme": "",
+    "types": [
+      "でんき"
+    ],
+    "abilities": [
+      "ひらいしん"
+    ],
+    "baseStats": {
+      "hp": 35,
+      "atk": 55,
+      "def": 40,
+      "spa": 50,
+      "spd": 50,
+      "spe": 90
+    },
+    "weight": 6,
+    "height": 0.4,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 1
+    },
+    "requiredItem": "",
+    "name": "ピカチュウ",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ピカチュウ\")"
+  },
+  "pikachubelle": {
+    "showdown_id": "pikachubelle",
+    "showdown_name": "Pikachu-Belle",
+    "num": 25,
+    "forme": "Belle",
+    "baseForme": "",
+    "types": [
+      "でんき"
+    ],
+    "abilities": [
+      "ひらいしん"
+    ],
+    "baseStats": {
+      "hp": 35,
+      "atk": 55,
+      "def": 40,
+      "spa": 50,
+      "spd": 50,
+      "spe": 90
+    },
+    "weight": 6,
+    "height": 0.4,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 1
+    },
+    "requiredItem": "",
+    "name": "ピカチュウ",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ピカチュウ\")"
+  },
+  "pikachupopstar": {
+    "showdown_id": "pikachupopstar",
+    "showdown_name": "Pikachu-Pop-Star",
+    "num": 25,
+    "forme": "Pop-Star",
+    "baseForme": "",
+    "types": [
+      "でんき"
+    ],
+    "abilities": [
+      "ひらいしん"
+    ],
+    "baseStats": {
+      "hp": 35,
+      "atk": 55,
+      "def": 40,
+      "spa": 50,
+      "spd": 50,
+      "spe": 90
+    },
+    "weight": 6,
+    "height": 0.4,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 1
+    },
+    "requiredItem": "",
+    "name": "ピカチュウ",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ピカチュウ\")"
+  },
+  "pikachuphd": {
+    "showdown_id": "pikachuphd",
+    "showdown_name": "Pikachu-PhD",
+    "num": 25,
+    "forme": "PhD",
+    "baseForme": "",
+    "types": [
+      "でんき"
+    ],
+    "abilities": [
+      "ひらいしん"
+    ],
+    "baseStats": {
+      "hp": 35,
+      "atk": 55,
+      "def": 40,
+      "spa": 50,
+      "spd": 50,
+      "spe": 90
+    },
+    "weight": 6,
+    "height": 0.4,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 1
+    },
+    "requiredItem": "",
+    "name": "ピカチュウ",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ピカチュウ\")"
+  },
+  "pikachulibre": {
+    "showdown_id": "pikachulibre",
+    "showdown_name": "Pikachu-Libre",
+    "num": 25,
+    "forme": "Libre",
+    "baseForme": "",
+    "types": [
+      "でんき"
+    ],
+    "abilities": [
+      "ひらいしん"
+    ],
+    "baseStats": {
+      "hp": 35,
+      "atk": 55,
+      "def": 40,
+      "spa": 50,
+      "spd": 50,
+      "spe": 90
+    },
+    "weight": 6,
+    "height": 0.4,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 1
+    },
+    "requiredItem": "",
+    "name": "ピカチュウ",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ピカチュウ\")"
+  },
+  "pikachuoriginal": {
+    "showdown_id": "pikachuoriginal",
+    "showdown_name": "Pikachu-Original",
+    "num": 25,
+    "forme": "Original",
+    "baseForme": "",
+    "types": [
+      "でんき"
+    ],
+    "abilities": [
+      "せいでんき",
+      "ひらいしん"
+    ],
+    "baseStats": {
+      "hp": 35,
+      "atk": 55,
+      "def": 40,
+      "spa": 50,
+      "spd": 50,
+      "spe": 90
+    },
+    "weight": 6,
+    "height": 0.4,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 1,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "ピカチュウ",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ピカチュウ\")"
+  },
+  "pikachuhoenn": {
+    "showdown_id": "pikachuhoenn",
+    "showdown_name": "Pikachu-Hoenn",
+    "num": 25,
+    "forme": "Hoenn",
+    "baseForme": "",
+    "types": [
+      "でんき"
+    ],
+    "abilities": [
+      "せいでんき",
+      "ひらいしん"
+    ],
+    "baseStats": {
+      "hp": 35,
+      "atk": 55,
+      "def": 40,
+      "spa": 50,
+      "spd": 50,
+      "spe": 90
+    },
+    "weight": 6,
+    "height": 0.4,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 1,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "ピカチュウ",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ピカチュウ\")"
+  },
+  "pikachusinnoh": {
+    "showdown_id": "pikachusinnoh",
+    "showdown_name": "Pikachu-Sinnoh",
+    "num": 25,
+    "forme": "Sinnoh",
+    "baseForme": "",
+    "types": [
+      "でんき"
+    ],
+    "abilities": [
+      "せいでんき",
+      "ひらいしん"
+    ],
+    "baseStats": {
+      "hp": 35,
+      "atk": 55,
+      "def": 40,
+      "spa": 50,
+      "spd": 50,
+      "spe": 90
+    },
+    "weight": 6,
+    "height": 0.4,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 1,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "ピカチュウ",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ピカチュウ\")"
+  },
+  "pikachuunova": {
+    "showdown_id": "pikachuunova",
+    "showdown_name": "Pikachu-Unova",
+    "num": 25,
+    "forme": "Unova",
+    "baseForme": "",
+    "types": [
+      "でんき"
+    ],
+    "abilities": [
+      "せいでんき",
+      "ひらいしん"
+    ],
+    "baseStats": {
+      "hp": 35,
+      "atk": 55,
+      "def": 40,
+      "spa": 50,
+      "spd": 50,
+      "spe": 90
+    },
+    "weight": 6,
+    "height": 0.4,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 1,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "ピカチュウ",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ピカチュウ\")"
+  },
+  "pikachukalos": {
+    "showdown_id": "pikachukalos",
+    "showdown_name": "Pikachu-Kalos",
+    "num": 25,
+    "forme": "Kalos",
+    "baseForme": "",
+    "types": [
+      "でんき"
+    ],
+    "abilities": [
+      "せいでんき",
+      "ひらいしん"
+    ],
+    "baseStats": {
+      "hp": 35,
+      "atk": 55,
+      "def": 40,
+      "spa": 50,
+      "spd": 50,
+      "spe": 90
+    },
+    "weight": 6,
+    "height": 0.4,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 1,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "ピカチュウ",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ピカチュウ\")"
+  },
+  "pikachualola": {
+    "showdown_id": "pikachualola",
+    "showdown_name": "Pikachu-Alola",
+    "num": 25,
+    "forme": "Alola",
+    "baseForme": "",
+    "types": [
+      "でんき"
+    ],
+    "abilities": [
+      "せいでんき",
+      "ひらいしん"
+    ],
+    "baseStats": {
+      "hp": 35,
+      "atk": 55,
+      "def": 40,
+      "spa": 50,
+      "spd": 50,
+      "spe": 90
+    },
+    "weight": 6,
+    "height": 0.4,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 1,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "ピカチュウ",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ピカチュウ\")"
+  },
+  "pikachupartner": {
+    "showdown_id": "pikachupartner",
+    "showdown_name": "Pikachu-Partner",
+    "num": 25,
+    "forme": "Partner",
+    "baseForme": "",
+    "types": [
+      "でんき"
+    ],
+    "abilities": [
+      "せいでんき",
+      "ひらいしん"
+    ],
+    "baseStats": {
+      "hp": 35,
+      "atk": 55,
+      "def": 40,
+      "spa": 50,
+      "spd": 50,
+      "spe": 90
+    },
+    "weight": 6,
+    "height": 0.4,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 1,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "ピカチュウ",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ピカチュウ\")"
+  },
+  "pikachuworld": {
+    "showdown_id": "pikachuworld",
+    "showdown_name": "Pikachu-World",
+    "num": 25,
+    "forme": "World",
+    "baseForme": "",
+    "types": [
+      "でんき"
+    ],
+    "abilities": [
+      "せいでんき",
+      "ひらいしん"
+    ],
+    "baseStats": {
+      "hp": 35,
+      "atk": 55,
+      "def": 40,
+      "spa": 50,
+      "spd": 50,
+      "spe": 90
+    },
+    "weight": 6,
+    "height": 0.4,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 1,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "ピカチュウ",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ピカチュウ\")"
+  },
+  "marowakalolatotem": {
+    "showdown_id": "marowakalolatotem",
+    "showdown_name": "Marowak-Alola-Totem",
+    "num": 105,
+    "forme": "Alola-Totem",
+    "baseForme": "",
+    "types": [
+      "ほのお",
+      "ゴースト"
+    ],
+    "abilities": [
+      "いしあたま"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 80,
+      "def": 110,
+      "spa": 50,
+      "spd": 80,
+      "spe": 45
+    },
+    "weight": 98,
+    "height": 1.7,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "ガラガラ(アローラ,ボス)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ガラガラ(アローラ,ボス)\")"
+  },
+  "pichuspikyeared": {
+    "showdown_id": "pichuspikyeared",
+    "showdown_name": "Pichu-Spiky-eared",
+    "num": 172,
+    "forme": "Spiky-eared",
+    "baseForme": "",
+    "types": [
+      "でんき"
+    ],
+    "abilities": [
+      "せいでんき"
+    ],
+    "baseStats": {
+      "hp": 20,
+      "atk": 40,
+      "def": 15,
+      "spa": 35,
+      "spd": 35,
+      "spe": 60
+    },
+    "weight": 2,
+    "height": 0.3,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "ギザみみピチュー",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ギザみみピチュー\")"
+  },
+  "cherrimsunshine": {
+    "showdown_id": "cherrimsunshine",
+    "showdown_name": "Cherrim-Sunshine",
+    "num": 421,
+    "forme": "Sunshine",
+    "baseForme": "",
+    "types": [
+      "くさ"
+    ],
+    "abilities": [
+      "フラワーギフト"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 60,
+      "def": 70,
+      "spa": 87,
+      "spd": 78,
+      "spe": 85
+    },
+    "weight": 9.3,
+    "height": 0.5,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "チェリム",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"チェリム\")"
+  },
+  "shelloseast": {
+    "showdown_id": "shelloseast",
+    "showdown_name": "Shellos-East",
+    "num": 422,
+    "forme": "East",
+    "baseForme": "",
+    "types": [
+      "みず"
+    ],
+    "abilities": [
+      "ねんちゃく",
+      "よびみず",
+      "すなのちから"
+    ],
+    "baseStats": {
+      "hp": 76,
+      "atk": 48,
+      "def": 48,
+      "spa": 57,
+      "spd": 62,
+      "spe": 34
+    },
+    "weight": 6.3,
+    "height": 0.3,
+    "prevo": "",
+    "evos": [
+      "トリトドン"
+    ],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "カラナクシ",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"カラナクシ\")"
+  },
+  "gastrodoneast": {
+    "showdown_id": "gastrodoneast",
+    "showdown_name": "Gastrodon-East",
+    "num": 423,
+    "forme": "East",
+    "baseForme": "",
+    "types": [
+      "みず",
+      "じめん"
+    ],
+    "abilities": [
+      "ねんちゃく",
+      "よびみず",
+      "すなのちから"
+    ],
+    "baseStats": {
+      "hp": 111,
+      "atk": 83,
+      "def": 68,
+      "spa": 92,
+      "spd": 82,
+      "spe": 39
+    },
+    "weight": 29.9,
+    "height": 0.9,
+    "prevo": "カラナクシ",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "トリトドン",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"トリトドン\")"
+  },
+  "arceusbug": {
+    "showdown_id": "arceusbug",
+    "showdown_name": "Arceus-Bug",
+    "num": 493,
+    "forme": "Bug",
+    "baseForme": "",
+    "types": [
+      "むし"
+    ],
+    "abilities": [
+      "マルチタイプ"
+    ],
+    "baseStats": {
+      "hp": 120,
+      "atk": 120,
+      "def": 120,
+      "spa": 120,
+      "spd": 120,
+      "spe": 120
+    },
+    "weight": 320,
+    "height": 3.2,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "アルセウス(むし)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"アルセウス(むし)\")"
+  },
+  "arceusdark": {
+    "showdown_id": "arceusdark",
+    "showdown_name": "Arceus-Dark",
+    "num": 493,
+    "forme": "Dark",
+    "baseForme": "",
+    "types": [
+      "あく"
+    ],
+    "abilities": [
+      "マルチタイプ"
+    ],
+    "baseStats": {
+      "hp": 120,
+      "atk": 120,
+      "def": 120,
+      "spa": 120,
+      "spd": 120,
+      "spe": 120
+    },
+    "weight": 320,
+    "height": 3.2,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "アルセウス(あく)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"アルセウス(あく)\")"
+  },
+  "arceusdragon": {
+    "showdown_id": "arceusdragon",
+    "showdown_name": "Arceus-Dragon",
+    "num": 493,
+    "forme": "Dragon",
+    "baseForme": "",
+    "types": [
+      "ドラゴン"
+    ],
+    "abilities": [
+      "マルチタイプ"
+    ],
+    "baseStats": {
+      "hp": 120,
+      "atk": 120,
+      "def": 120,
+      "spa": 120,
+      "spd": 120,
+      "spe": 120
+    },
+    "weight": 320,
+    "height": 3.2,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "アルセウス(ドラゴン)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"アルセウス(ドラゴン)\")"
+  },
+  "arceuselectric": {
+    "showdown_id": "arceuselectric",
+    "showdown_name": "Arceus-Electric",
+    "num": 493,
+    "forme": "Electric",
+    "baseForme": "",
+    "types": [
+      "でんき"
+    ],
+    "abilities": [
+      "マルチタイプ"
+    ],
+    "baseStats": {
+      "hp": 120,
+      "atk": 120,
+      "def": 120,
+      "spa": 120,
+      "spd": 120,
+      "spe": 120
+    },
+    "weight": 320,
+    "height": 3.2,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "アルセウス(でんき)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"アルセウス(でんき)\")"
+  },
+  "arceusfairy": {
+    "showdown_id": "arceusfairy",
+    "showdown_name": "Arceus-Fairy",
+    "num": 493,
+    "forme": "Fairy",
+    "baseForme": "",
+    "types": [
+      "フェアリー"
+    ],
+    "abilities": [
+      "マルチタイプ"
+    ],
+    "baseStats": {
+      "hp": 120,
+      "atk": 120,
+      "def": 120,
+      "spa": 120,
+      "spd": 120,
+      "spe": 120
+    },
+    "weight": 320,
+    "height": 3.2,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "アルセウス(フェアリー)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"アルセウス(フェアリー)\")"
+  },
+  "arceusfighting": {
+    "showdown_id": "arceusfighting",
+    "showdown_name": "Arceus-Fighting",
+    "num": 493,
+    "forme": "Fighting",
+    "baseForme": "",
+    "types": [
+      "かくとう"
+    ],
+    "abilities": [
+      "マルチタイプ"
+    ],
+    "baseStats": {
+      "hp": 120,
+      "atk": 120,
+      "def": 120,
+      "spa": 120,
+      "spd": 120,
+      "spe": 120
+    },
+    "weight": 320,
+    "height": 3.2,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "アルセウス(かくとう)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"アルセウス(かくとう)\")"
+  },
+  "arceusfire": {
+    "showdown_id": "arceusfire",
+    "showdown_name": "Arceus-Fire",
+    "num": 493,
+    "forme": "Fire",
+    "baseForme": "",
+    "types": [
+      "ほのお"
+    ],
+    "abilities": [
+      "マルチタイプ"
+    ],
+    "baseStats": {
+      "hp": 120,
+      "atk": 120,
+      "def": 120,
+      "spa": 120,
+      "spd": 120,
+      "spe": 120
+    },
+    "weight": 320,
+    "height": 3.2,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "アルセウス(ほのお)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"アルセウス(ほのお)\")"
+  },
+  "arceusflying": {
+    "showdown_id": "arceusflying",
+    "showdown_name": "Arceus-Flying",
+    "num": 493,
+    "forme": "Flying",
+    "baseForme": "",
+    "types": [
+      "ひこう"
+    ],
+    "abilities": [
+      "マルチタイプ"
+    ],
+    "baseStats": {
+      "hp": 120,
+      "atk": 120,
+      "def": 120,
+      "spa": 120,
+      "spd": 120,
+      "spe": 120
+    },
+    "weight": 320,
+    "height": 3.2,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "アルセウス(ひこう)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"アルセウス(ひこう)\")"
+  },
+  "arceusghost": {
+    "showdown_id": "arceusghost",
+    "showdown_name": "Arceus-Ghost",
+    "num": 493,
+    "forme": "Ghost",
+    "baseForme": "",
+    "types": [
+      "ゴースト"
+    ],
+    "abilities": [
+      "マルチタイプ"
+    ],
+    "baseStats": {
+      "hp": 120,
+      "atk": 120,
+      "def": 120,
+      "spa": 120,
+      "spd": 120,
+      "spe": 120
+    },
+    "weight": 320,
+    "height": 3.2,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "アルセウス(ゴースト)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"アルセウス(ゴースト)\")"
+  },
+  "arceusgrass": {
+    "showdown_id": "arceusgrass",
+    "showdown_name": "Arceus-Grass",
+    "num": 493,
+    "forme": "Grass",
+    "baseForme": "",
+    "types": [
+      "くさ"
+    ],
+    "abilities": [
+      "マルチタイプ"
+    ],
+    "baseStats": {
+      "hp": 120,
+      "atk": 120,
+      "def": 120,
+      "spa": 120,
+      "spd": 120,
+      "spe": 120
+    },
+    "weight": 320,
+    "height": 3.2,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "アルセウス(くさ)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"アルセウス(くさ)\")"
+  },
+  "arceusground": {
+    "showdown_id": "arceusground",
+    "showdown_name": "Arceus-Ground",
+    "num": 493,
+    "forme": "Ground",
+    "baseForme": "",
+    "types": [
+      "じめん"
+    ],
+    "abilities": [
+      "マルチタイプ"
+    ],
+    "baseStats": {
+      "hp": 120,
+      "atk": 120,
+      "def": 120,
+      "spa": 120,
+      "spd": 120,
+      "spe": 120
+    },
+    "weight": 320,
+    "height": 3.2,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "アルセウス(じめん)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"アルセウス(じめん)\")"
+  },
+  "arceusice": {
+    "showdown_id": "arceusice",
+    "showdown_name": "Arceus-Ice",
+    "num": 493,
+    "forme": "Ice",
+    "baseForme": "",
+    "types": [
+      "こおり"
+    ],
+    "abilities": [
+      "マルチタイプ"
+    ],
+    "baseStats": {
+      "hp": 120,
+      "atk": 120,
+      "def": 120,
+      "spa": 120,
+      "spd": 120,
+      "spe": 120
+    },
+    "weight": 320,
+    "height": 3.2,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "アルセウス(こおり)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"アルセウス(こおり)\")"
+  },
+  "arceuspoison": {
+    "showdown_id": "arceuspoison",
+    "showdown_name": "Arceus-Poison",
+    "num": 493,
+    "forme": "Poison",
+    "baseForme": "",
+    "types": [
+      "どく"
+    ],
+    "abilities": [
+      "マルチタイプ"
+    ],
+    "baseStats": {
+      "hp": 120,
+      "atk": 120,
+      "def": 120,
+      "spa": 120,
+      "spd": 120,
+      "spe": 120
+    },
+    "weight": 320,
+    "height": 3.2,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "アルセウス(どく)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"アルセウス(どく)\")"
+  },
+  "arceuspsychic": {
+    "showdown_id": "arceuspsychic",
+    "showdown_name": "Arceus-Psychic",
+    "num": 493,
+    "forme": "Psychic",
+    "baseForme": "",
+    "types": [
+      "エスパー"
+    ],
+    "abilities": [
+      "マルチタイプ"
+    ],
+    "baseStats": {
+      "hp": 120,
+      "atk": 120,
+      "def": 120,
+      "spa": 120,
+      "spd": 120,
+      "spe": 120
+    },
+    "weight": 320,
+    "height": 3.2,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "アルセウス(エスパー)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"アルセウス(エスパー)\")"
+  },
+  "arceusrock": {
+    "showdown_id": "arceusrock",
+    "showdown_name": "Arceus-Rock",
+    "num": 493,
+    "forme": "Rock",
+    "baseForme": "",
+    "types": [
+      "いわ"
+    ],
+    "abilities": [
+      "マルチタイプ"
+    ],
+    "baseStats": {
+      "hp": 120,
+      "atk": 120,
+      "def": 120,
+      "spa": 120,
+      "spd": 120,
+      "spe": 120
+    },
+    "weight": 320,
+    "height": 3.2,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "アルセウス(いわ)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"アルセウス(いわ)\")"
+  },
+  "arceussteel": {
+    "showdown_id": "arceussteel",
+    "showdown_name": "Arceus-Steel",
+    "num": 493,
+    "forme": "Steel",
+    "baseForme": "",
+    "types": [
+      "はがね"
+    ],
+    "abilities": [
+      "マルチタイプ"
+    ],
+    "baseStats": {
+      "hp": 120,
+      "atk": 120,
+      "def": 120,
+      "spa": 120,
+      "spd": 120,
+      "spe": 120
+    },
+    "weight": 320,
+    "height": 3.2,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "アルセウス(はがね)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"アルセウス(はがね)\")"
+  },
+  "arceuswater": {
+    "showdown_id": "arceuswater",
+    "showdown_name": "Arceus-Water",
+    "num": 493,
+    "forme": "Water",
+    "baseForme": "",
+    "types": [
+      "みず"
+    ],
+    "abilities": [
+      "マルチタイプ"
+    ],
+    "baseStats": {
+      "hp": 120,
+      "atk": 120,
+      "def": 120,
+      "spa": 120,
+      "spd": 120,
+      "spe": 120
+    },
+    "weight": 320,
+    "height": 3.2,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "アルセウス(みず)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"アルセウス(みず)\")"
+  },
+  "deerlingsummer": {
+    "showdown_id": "deerlingsummer",
+    "showdown_name": "Deerling-Summer",
+    "num": 585,
+    "forme": "Summer",
+    "baseForme": "",
+    "types": [
+      "ノーマル",
+      "くさ"
+    ],
+    "abilities": [
+      "ようりょくそ",
+      "そうしょく",
+      "てんのめぐみ"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 60,
+      "def": 50,
+      "spa": 40,
+      "spd": 50,
+      "spe": 75
+    },
+    "weight": 19.5,
+    "height": 0.6,
+    "prevo": "",
+    "evos": [
+      "メブキジカ"
+    ],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "シキジカ",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"シキジカ\")"
+  },
+  "deerlingautumn": {
+    "showdown_id": "deerlingautumn",
+    "showdown_name": "Deerling-Autumn",
+    "num": 585,
+    "forme": "Autumn",
+    "baseForme": "",
+    "types": [
+      "ノーマル",
+      "くさ"
+    ],
+    "abilities": [
+      "ようりょくそ",
+      "そうしょく",
+      "てんのめぐみ"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 60,
+      "def": 50,
+      "spa": 40,
+      "spd": 50,
+      "spe": 75
+    },
+    "weight": 19.5,
+    "height": 0.6,
+    "prevo": "",
+    "evos": [
+      "メブキジカ"
+    ],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "シキジカ",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"シキジカ\")"
+  },
+  "deerlingwinter": {
+    "showdown_id": "deerlingwinter",
+    "showdown_name": "Deerling-Winter",
+    "num": 585,
+    "forme": "Winter",
+    "baseForme": "",
+    "types": [
+      "ノーマル",
+      "くさ"
+    ],
+    "abilities": [
+      "ようりょくそ",
+      "そうしょく",
+      "てんのめぐみ"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 60,
+      "def": 50,
+      "spa": 40,
+      "spd": 50,
+      "spe": 75
+    },
+    "weight": 19.5,
+    "height": 0.6,
+    "prevo": "",
+    "evos": [
+      "メブキジカ"
+    ],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "シキジカ",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"シキジカ\")"
+  },
+  "genesectdouse": {
+    "showdown_id": "genesectdouse",
+    "showdown_name": "Genesect-Douse",
+    "num": 649,
+    "forme": "Douse",
+    "baseForme": "",
+    "types": [
+      "むし",
+      "はがね"
+    ],
+    "abilities": [
+      "ダウンロード"
+    ],
+    "baseStats": {
+      "hp": 71,
+      "atk": 120,
+      "def": 95,
+      "spa": 120,
+      "spd": 95,
+      "spe": 99
+    },
+    "weight": 82.5,
+    "height": 1.5,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "アクアカセット",
+    "name": "ゲノセクト(ダウズドライブ)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ゲノセクト(ダウズドライブ)\")"
+  },
+  "genesectshock": {
+    "showdown_id": "genesectshock",
+    "showdown_name": "Genesect-Shock",
+    "num": 649,
+    "forme": "Shock",
+    "baseForme": "",
+    "types": [
+      "むし",
+      "はがね"
+    ],
+    "abilities": [
+      "ダウンロード"
+    ],
+    "baseStats": {
+      "hp": 71,
+      "atk": 120,
+      "def": 95,
+      "spa": 120,
+      "spd": 95,
+      "spe": 99
+    },
+    "weight": 82.5,
+    "height": 1.5,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "イナズマカセット",
+    "name": "ゲノセクト(ショックドライブ)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ゲノセクト(ショックドライブ)\")"
+  },
+  "genesectburn": {
+    "showdown_id": "genesectburn",
+    "showdown_name": "Genesect-Burn",
+    "num": 649,
+    "forme": "Burn",
+    "baseForme": "",
+    "types": [
+      "むし",
+      "はがね"
+    ],
+    "abilities": [
+      "ダウンロード"
+    ],
+    "baseStats": {
+      "hp": 71,
+      "atk": 120,
+      "def": 95,
+      "spa": 120,
+      "spd": 95,
+      "spe": 99
+    },
+    "weight": 82.5,
+    "height": 1.5,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "ブレイズカセット",
+    "name": "ゲノセクト(バーンドライブ)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ゲノセクト(バーンドライブ)\")"
+  },
+  "genesectchill": {
+    "showdown_id": "genesectchill",
+    "showdown_name": "Genesect-Chill",
+    "num": 649,
+    "forme": "Chill",
+    "baseForme": "",
+    "types": [
+      "むし",
+      "はがね"
+    ],
+    "abilities": [
+      "ダウンロード"
+    ],
+    "baseStats": {
+      "hp": 71,
+      "atk": 120,
+      "def": 95,
+      "spa": 120,
+      "spd": 95,
+      "spe": 99
+    },
+    "weight": 82.5,
+    "height": 1.5,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "フリーズカセット",
+    "name": "ゲノセクト(チルドライブ)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ゲノセクト(チルドライブ)\")"
+  },
+  "greninjabond": {
+    "showdown_id": "greninjabond",
+    "showdown_name": "Greninja-Bond",
+    "num": 658,
+    "forme": "Bond",
+    "baseForme": "",
+    "types": [
+      "みず",
+      "あく"
+    ],
+    "abilities": [
+      "きずなへんげ"
+    ],
+    "baseStats": {
+      "hp": 72,
+      "atk": 95,
+      "def": 67,
+      "spa": 103,
+      "spd": 71,
+      "spe": 122
+    },
+    "weight": 40,
+    "height": 1.5,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 1,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "ゲッコウガ",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ゲッコウガ\")"
+  },
+  "vivillonicysnow": {
+    "showdown_id": "vivillonicysnow",
+    "showdown_name": "Vivillon-Icy Snow",
+    "num": 666,
+    "forme": "Icy Snow",
+    "baseForme": "",
+    "types": [
+      "むし",
+      "ひこう"
+    ],
+    "abilities": [
+      "りんぷん",
+      "ふくがん",
+      "フレンドガード"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 52,
+      "def": 50,
+      "spa": 90,
+      "spd": 50,
+      "spe": 89
+    },
+    "weight": 17,
+    "height": 1.2,
+    "prevo": "コフーライ",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "ビビヨン",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ビビヨン\")"
+  },
+  "vivillonpolar": {
+    "showdown_id": "vivillonpolar",
+    "showdown_name": "Vivillon-Polar",
+    "num": 666,
+    "forme": "Polar",
+    "baseForme": "",
+    "types": [
+      "むし",
+      "ひこう"
+    ],
+    "abilities": [
+      "りんぷん",
+      "ふくがん",
+      "フレンドガード"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 52,
+      "def": 50,
+      "spa": 90,
+      "spd": 50,
+      "spe": 89
+    },
+    "weight": 17,
+    "height": 1.2,
+    "prevo": "コフーライ",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "ビビヨン",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ビビヨン\")"
+  },
+  "vivillontundra": {
+    "showdown_id": "vivillontundra",
+    "showdown_name": "Vivillon-Tundra",
+    "num": 666,
+    "forme": "Tundra",
+    "baseForme": "",
+    "types": [
+      "むし",
+      "ひこう"
+    ],
+    "abilities": [
+      "りんぷん",
+      "ふくがん",
+      "フレンドガード"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 52,
+      "def": 50,
+      "spa": 90,
+      "spd": 50,
+      "spe": 89
+    },
+    "weight": 17,
+    "height": 1.2,
+    "prevo": "コフーライ",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "ビビヨン",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ビビヨン\")"
+  },
+  "vivilloncontinental": {
+    "showdown_id": "vivilloncontinental",
+    "showdown_name": "Vivillon-Continental",
+    "num": 666,
+    "forme": "Continental",
+    "baseForme": "",
+    "types": [
+      "むし",
+      "ひこう"
+    ],
+    "abilities": [
+      "りんぷん",
+      "ふくがん",
+      "フレンドガード"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 52,
+      "def": 50,
+      "spa": 90,
+      "spd": 50,
+      "spe": 89
+    },
+    "weight": 17,
+    "height": 1.2,
+    "prevo": "コフーライ",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "ビビヨン",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ビビヨン\")"
+  },
+  "vivillongarden": {
+    "showdown_id": "vivillongarden",
+    "showdown_name": "Vivillon-Garden",
+    "num": 666,
+    "forme": "Garden",
+    "baseForme": "",
+    "types": [
+      "むし",
+      "ひこう"
+    ],
+    "abilities": [
+      "りんぷん",
+      "ふくがん",
+      "フレンドガード"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 52,
+      "def": 50,
+      "spa": 90,
+      "spd": 50,
+      "spe": 89
+    },
+    "weight": 17,
+    "height": 1.2,
+    "prevo": "コフーライ",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "ビビヨン",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ビビヨン\")"
+  },
+  "vivillonelegant": {
+    "showdown_id": "vivillonelegant",
+    "showdown_name": "Vivillon-Elegant",
+    "num": 666,
+    "forme": "Elegant",
+    "baseForme": "",
+    "types": [
+      "むし",
+      "ひこう"
+    ],
+    "abilities": [
+      "りんぷん",
+      "ふくがん",
+      "フレンドガード"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 52,
+      "def": 50,
+      "spa": 90,
+      "spd": 50,
+      "spe": 89
+    },
+    "weight": 17,
+    "height": 1.2,
+    "prevo": "コフーライ",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "ビビヨン",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ビビヨン\")"
+  },
+  "vivillonmodern": {
+    "showdown_id": "vivillonmodern",
+    "showdown_name": "Vivillon-Modern",
+    "num": 666,
+    "forme": "Modern",
+    "baseForme": "",
+    "types": [
+      "むし",
+      "ひこう"
+    ],
+    "abilities": [
+      "りんぷん",
+      "ふくがん",
+      "フレンドガード"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 52,
+      "def": 50,
+      "spa": 90,
+      "spd": 50,
+      "spe": 89
+    },
+    "weight": 17,
+    "height": 1.2,
+    "prevo": "コフーライ",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "ビビヨン",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ビビヨン\")"
+  },
+  "vivillonmarine": {
+    "showdown_id": "vivillonmarine",
+    "showdown_name": "Vivillon-Marine",
+    "num": 666,
+    "forme": "Marine",
+    "baseForme": "",
+    "types": [
+      "むし",
+      "ひこう"
+    ],
+    "abilities": [
+      "りんぷん",
+      "ふくがん",
+      "フレンドガード"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 52,
+      "def": 50,
+      "spa": 90,
+      "spd": 50,
+      "spe": 89
+    },
+    "weight": 17,
+    "height": 1.2,
+    "prevo": "コフーライ",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "ビビヨン",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ビビヨン\")"
+  },
+  "vivillonarchipelago": {
+    "showdown_id": "vivillonarchipelago",
+    "showdown_name": "Vivillon-Archipelago",
+    "num": 666,
+    "forme": "Archipelago",
+    "baseForme": "",
+    "types": [
+      "むし",
+      "ひこう"
+    ],
+    "abilities": [
+      "りんぷん",
+      "ふくがん",
+      "フレンドガード"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 52,
+      "def": 50,
+      "spa": 90,
+      "spd": 50,
+      "spe": 89
+    },
+    "weight": 17,
+    "height": 1.2,
+    "prevo": "コフーライ",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "ビビヨン",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ビビヨン\")"
+  },
+  "vivillonhighplains": {
+    "showdown_id": "vivillonhighplains",
+    "showdown_name": "Vivillon-High Plains",
+    "num": 666,
+    "forme": "High Plains",
+    "baseForme": "",
+    "types": [
+      "むし",
+      "ひこう"
+    ],
+    "abilities": [
+      "りんぷん",
+      "ふくがん",
+      "フレンドガード"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 52,
+      "def": 50,
+      "spa": 90,
+      "spd": 50,
+      "spe": 89
+    },
+    "weight": 17,
+    "height": 1.2,
+    "prevo": "コフーライ",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "ビビヨン",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ビビヨン\")"
+  },
+  "vivillonsandstorm": {
+    "showdown_id": "vivillonsandstorm",
+    "showdown_name": "Vivillon-Sandstorm",
+    "num": 666,
+    "forme": "Sandstorm",
+    "baseForme": "",
+    "types": [
+      "むし",
+      "ひこう"
+    ],
+    "abilities": [
+      "りんぷん",
+      "ふくがん",
+      "フレンドガード"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 52,
+      "def": 50,
+      "spa": 90,
+      "spd": 50,
+      "spe": 89
+    },
+    "weight": 17,
+    "height": 1.2,
+    "prevo": "コフーライ",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "ビビヨン",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ビビヨン\")"
+  },
+  "vivillonriver": {
+    "showdown_id": "vivillonriver",
+    "showdown_name": "Vivillon-River",
+    "num": 666,
+    "forme": "River",
+    "baseForme": "",
+    "types": [
+      "むし",
+      "ひこう"
+    ],
+    "abilities": [
+      "りんぷん",
+      "ふくがん",
+      "フレンドガード"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 52,
+      "def": 50,
+      "spa": 90,
+      "spd": 50,
+      "spe": 89
+    },
+    "weight": 17,
+    "height": 1.2,
+    "prevo": "コフーライ",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "ビビヨン",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ビビヨン\")"
+  },
+  "vivillonmonsoon": {
+    "showdown_id": "vivillonmonsoon",
+    "showdown_name": "Vivillon-Monsoon",
+    "num": 666,
+    "forme": "Monsoon",
+    "baseForme": "",
+    "types": [
+      "むし",
+      "ひこう"
+    ],
+    "abilities": [
+      "りんぷん",
+      "ふくがん",
+      "フレンドガード"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 52,
+      "def": 50,
+      "spa": 90,
+      "spd": 50,
+      "spe": 89
+    },
+    "weight": 17,
+    "height": 1.2,
+    "prevo": "コフーライ",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "ビビヨン",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ビビヨン\")"
+  },
+  "vivillonsavanna": {
+    "showdown_id": "vivillonsavanna",
+    "showdown_name": "Vivillon-Savanna",
+    "num": 666,
+    "forme": "Savanna",
+    "baseForme": "",
+    "types": [
+      "むし",
+      "ひこう"
+    ],
+    "abilities": [
+      "りんぷん",
+      "ふくがん",
+      "フレンドガード"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 52,
+      "def": 50,
+      "spa": 90,
+      "spd": 50,
+      "spe": 89
+    },
+    "weight": 17,
+    "height": 1.2,
+    "prevo": "コフーライ",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "ビビヨン",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ビビヨン\")"
+  },
+  "vivillonsun": {
+    "showdown_id": "vivillonsun",
+    "showdown_name": "Vivillon-Sun",
+    "num": 666,
+    "forme": "Sun",
+    "baseForme": "",
+    "types": [
+      "むし",
+      "ひこう"
+    ],
+    "abilities": [
+      "りんぷん",
+      "ふくがん",
+      "フレンドガード"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 52,
+      "def": 50,
+      "spa": 90,
+      "spd": 50,
+      "spe": 89
+    },
+    "weight": 17,
+    "height": 1.2,
+    "prevo": "コフーライ",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "ビビヨン",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ビビヨン\")"
+  },
+  "vivillonocean": {
+    "showdown_id": "vivillonocean",
+    "showdown_name": "Vivillon-Ocean",
+    "num": 666,
+    "forme": "Ocean",
+    "baseForme": "",
+    "types": [
+      "むし",
+      "ひこう"
+    ],
+    "abilities": [
+      "りんぷん",
+      "ふくがん",
+      "フレンドガード"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 52,
+      "def": 50,
+      "spa": 90,
+      "spd": 50,
+      "spe": 89
+    },
+    "weight": 17,
+    "height": 1.2,
+    "prevo": "コフーライ",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "ビビヨン",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ビビヨン\")"
+  },
+  "vivillonjungle": {
+    "showdown_id": "vivillonjungle",
+    "showdown_name": "Vivillon-Jungle",
+    "num": 666,
+    "forme": "Jungle",
+    "baseForme": "",
+    "types": [
+      "むし",
+      "ひこう"
+    ],
+    "abilities": [
+      "りんぷん",
+      "ふくがん",
+      "フレンドガード"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 52,
+      "def": 50,
+      "spa": 90,
+      "spd": 50,
+      "spe": 89
+    },
+    "weight": 17,
+    "height": 1.2,
+    "prevo": "コフーライ",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "ビビヨン",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ビビヨン\")"
+  },
+  "vivillonfancy": {
+    "showdown_id": "vivillonfancy",
+    "showdown_name": "Vivillon-Fancy",
+    "num": 666,
+    "forme": "Fancy",
+    "baseForme": "",
+    "types": [
+      "むし",
+      "ひこう"
+    ],
+    "abilities": [
+      "りんぷん",
+      "ふくがん",
+      "フレンドガード"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 52,
+      "def": 50,
+      "spa": 90,
+      "spd": 50,
+      "spe": 89
+    },
+    "weight": 17,
+    "height": 1.2,
+    "prevo": "コフーライ",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "ビビヨン",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ビビヨン\")"
+  },
+  "vivillonpokeball": {
+    "showdown_id": "vivillonpokeball",
+    "showdown_name": "Vivillon-Pokeball",
+    "num": 666,
+    "forme": "Pokeball",
+    "baseForme": "",
+    "types": [
+      "むし",
+      "ひこう"
+    ],
+    "abilities": [
+      "りんぷん",
+      "ふくがん",
+      "フレンドガード"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 52,
+      "def": 50,
+      "spa": 90,
+      "spd": 50,
+      "spe": 89
+    },
+    "weight": 17,
+    "height": 1.2,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "ビビヨン",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ビビヨン\")"
+  },
+  "gumshoostotem": {
+    "showdown_id": "gumshoostotem",
+    "showdown_name": "Gumshoos-Totem",
+    "num": 735,
+    "forme": "Totem",
+    "baseForme": "",
+    "types": [
+      "ノーマル"
+    ],
+    "abilities": [
+      "てきおうりょく"
+    ],
+    "baseStats": {
+      "hp": 88,
+      "atk": 110,
+      "def": 60,
+      "spa": 55,
+      "spd": 60,
+      "spe": 45
+    },
+    "weight": 60,
+    "height": 1.4,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "デカグース(ボス)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"デカグース(ボス)\")"
+  },
+  "vikavolttotem": {
+    "showdown_id": "vikavolttotem",
+    "showdown_name": "Vikavolt-Totem",
+    "num": 738,
+    "forme": "Totem",
+    "baseForme": "",
+    "types": [
+      "むし",
+      "でんき"
+    ],
+    "abilities": [
+      "ふゆう"
+    ],
+    "baseStats": {
+      "hp": 77,
+      "atk": 70,
+      "def": 90,
+      "spa": 145,
+      "spd": 75,
+      "spe": 43
+    },
+    "weight": 147.5,
+    "height": 2.6,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "クワガノン(ボス)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"クワガノン(ボス)\")"
+  },
+  "ribombeetotem": {
+    "showdown_id": "ribombeetotem",
+    "showdown_name": "Ribombee-Totem",
+    "num": 743,
+    "forme": "Totem",
+    "baseForme": "",
+    "types": [
+      "むし",
+      "フェアリー"
+    ],
+    "abilities": [
+      "スイートベール"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 55,
+      "def": 60,
+      "spa": 95,
+      "spd": 70,
+      "spe": 124
+    },
+    "weight": 2,
+    "height": 0.4,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "アブリボン(ボス)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"アブリボン(ボス)\")"
+  },
+  "rockruffdusk": {
+    "showdown_id": "rockruffdusk",
+    "showdown_name": "Rockruff-Dusk",
+    "num": 744,
+    "forme": "Dusk",
+    "baseForme": "",
+    "types": [
+      "いわ"
+    ],
+    "abilities": [
+      "マイペース"
+    ],
+    "baseStats": {
+      "hp": 45,
+      "atk": 65,
+      "def": 40,
+      "spa": 30,
+      "spd": 40,
+      "spe": 60
+    },
+    "weight": 9.2,
+    "height": 0.5,
+    "prevo": "",
+    "evos": [
+      "ルガルガン(たそがれ)"
+    ],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "イワンコ",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"イワンコ\")"
+  },
+  "araquanidtotem": {
+    "showdown_id": "araquanidtotem",
+    "showdown_name": "Araquanid-Totem",
+    "num": 752,
+    "forme": "Totem",
+    "baseForme": "",
+    "types": [
+      "みず",
+      "むし"
+    ],
+    "abilities": [
+      "すいほう"
+    ],
+    "baseStats": {
+      "hp": 68,
+      "atk": 70,
+      "def": 92,
+      "spa": 50,
+      "spd": 132,
+      "spe": 42
+    },
+    "weight": 217.5,
+    "height": 3.1,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "オニシズクモ(ボス)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"オニシズクモ(ボス)\")"
+  },
+  "lurantistotem": {
+    "showdown_id": "lurantistotem",
+    "showdown_name": "Lurantis-Totem",
+    "num": 754,
+    "forme": "Totem",
+    "baseForme": "",
+    "types": [
+      "くさ"
+    ],
+    "abilities": [
+      "リーフガード"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 105,
+      "def": 90,
+      "spa": 80,
+      "spd": 90,
+      "spe": 45
+    },
+    "weight": 58,
+    "height": 1.5,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "ラランテス(ボス)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ラランテス(ボス)\")"
+  },
+  "salazzletotem": {
+    "showdown_id": "salazzletotem",
+    "showdown_name": "Salazzle-Totem",
+    "num": 758,
+    "forme": "Totem",
+    "baseForme": "",
+    "types": [
+      "どく",
+      "ほのお"
+    ],
+    "abilities": [
+      "ふしょく"
+    ],
+    "baseStats": {
+      "hp": 68,
+      "atk": 64,
+      "def": 60,
+      "spa": 111,
+      "spd": 60,
+      "spe": 117
+    },
+    "weight": 81,
+    "height": 2.1,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 1
+    },
+    "requiredItem": "",
+    "name": "エンニュート(ボス)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"エンニュート(ボス)\")"
+  },
+  "silvallybug": {
+    "showdown_id": "silvallybug",
+    "showdown_name": "Silvally-Bug",
+    "num": 773,
+    "forme": "Bug",
+    "baseForme": "",
+    "types": [
+      "むし"
+    ],
+    "abilities": [
+      "ARシステム"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 95,
+      "def": 95,
+      "spa": 95,
+      "spd": 95,
+      "spe": 95
+    },
+    "weight": 100.5,
+    "height": 2.3,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "バグメモリ",
+    "name": "シルヴァディ(むし)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"シルヴァディ(むし)\")"
+  },
+  "silvallydark": {
+    "showdown_id": "silvallydark",
+    "showdown_name": "Silvally-Dark",
+    "num": 773,
+    "forme": "Dark",
+    "baseForme": "",
+    "types": [
+      "あく"
+    ],
+    "abilities": [
+      "ARシステム"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 95,
+      "def": 95,
+      "spa": 95,
+      "spd": 95,
+      "spe": 95
+    },
+    "weight": 100.5,
+    "height": 2.3,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "ダークメモリ",
+    "name": "シルヴァディ(あく)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"シルヴァディ(あく)\")"
+  },
+  "silvallydragon": {
+    "showdown_id": "silvallydragon",
+    "showdown_name": "Silvally-Dragon",
+    "num": 773,
+    "forme": "Dragon",
+    "baseForme": "",
+    "types": [
+      "ドラゴン"
+    ],
+    "abilities": [
+      "ARシステム"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 95,
+      "def": 95,
+      "spa": 95,
+      "spd": 95,
+      "spe": 95
+    },
+    "weight": 100.5,
+    "height": 2.3,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "ドラゴンメモリ",
+    "name": "シルヴァディ(ドラゴン)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"シルヴァディ(ドラゴン)\")"
+  },
+  "silvallyelectric": {
+    "showdown_id": "silvallyelectric",
+    "showdown_name": "Silvally-Electric",
+    "num": 773,
+    "forme": "Electric",
+    "baseForme": "",
+    "types": [
+      "でんき"
+    ],
+    "abilities": [
+      "ARシステム"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 95,
+      "def": 95,
+      "spa": 95,
+      "spd": 95,
+      "spe": 95
+    },
+    "weight": 100.5,
+    "height": 2.3,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "エレクトロメモリ",
+    "name": "シルヴァディ(でんき)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"シルヴァディ(でんき)\")"
+  },
+  "silvallyfairy": {
+    "showdown_id": "silvallyfairy",
+    "showdown_name": "Silvally-Fairy",
+    "num": 773,
+    "forme": "Fairy",
+    "baseForme": "",
+    "types": [
+      "フェアリー"
+    ],
+    "abilities": [
+      "ARシステム"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 95,
+      "def": 95,
+      "spa": 95,
+      "spd": 95,
+      "spe": 95
+    },
+    "weight": 100.5,
+    "height": 2.3,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "フェアリーメモリ",
+    "name": "シルヴァディ(フェアリー)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"シルヴァディ(フェアリー)\")"
+  },
+  "silvallyfighting": {
+    "showdown_id": "silvallyfighting",
+    "showdown_name": "Silvally-Fighting",
+    "num": 773,
+    "forme": "Fighting",
+    "baseForme": "",
+    "types": [
+      "かくとう"
+    ],
+    "abilities": [
+      "ARシステム"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 95,
+      "def": 95,
+      "spa": 95,
+      "spd": 95,
+      "spe": 95
+    },
+    "weight": 100.5,
+    "height": 2.3,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "ファイトメモリ",
+    "name": "シルヴァディ(かくとう)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"シルヴァディ(かくとう)\")"
+  },
+  "silvallyfire": {
+    "showdown_id": "silvallyfire",
+    "showdown_name": "Silvally-Fire",
+    "num": 773,
+    "forme": "Fire",
+    "baseForme": "",
+    "types": [
+      "ほのお"
+    ],
+    "abilities": [
+      "ARシステム"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 95,
+      "def": 95,
+      "spa": 95,
+      "spd": 95,
+      "spe": 95
+    },
+    "weight": 100.5,
+    "height": 2.3,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "ファイヤーメモリ",
+    "name": "シルヴァディ(ほのお)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"シルヴァディ(ほのお)\")"
+  },
+  "silvallyflying": {
+    "showdown_id": "silvallyflying",
+    "showdown_name": "Silvally-Flying",
+    "num": 773,
+    "forme": "Flying",
+    "baseForme": "",
+    "types": [
+      "ひこう"
+    ],
+    "abilities": [
+      "ARシステム"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 95,
+      "def": 95,
+      "spa": 95,
+      "spd": 95,
+      "spe": 95
+    },
+    "weight": 100.5,
+    "height": 2.3,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "フライングメモリ",
+    "name": "シルヴァディ(ひこう)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"シルヴァディ(ひこう)\")"
+  },
+  "silvallyghost": {
+    "showdown_id": "silvallyghost",
+    "showdown_name": "Silvally-Ghost",
+    "num": 773,
+    "forme": "Ghost",
+    "baseForme": "",
+    "types": [
+      "ゴースト"
+    ],
+    "abilities": [
+      "ARシステム"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 95,
+      "def": 95,
+      "spa": 95,
+      "spd": 95,
+      "spe": 95
+    },
+    "weight": 100.5,
+    "height": 2.3,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "ゴーストメモリ",
+    "name": "シルヴァディ(ゴースト)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"シルヴァディ(ゴースト)\")"
+  },
+  "silvallygrass": {
+    "showdown_id": "silvallygrass",
+    "showdown_name": "Silvally-Grass",
+    "num": 773,
+    "forme": "Grass",
+    "baseForme": "",
+    "types": [
+      "くさ"
+    ],
+    "abilities": [
+      "ARシステム"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 95,
+      "def": 95,
+      "spa": 95,
+      "spd": 95,
+      "spe": 95
+    },
+    "weight": 100.5,
+    "height": 2.3,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "グラスメモリ",
+    "name": "シルヴァディ(くさ)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"シルヴァディ(くさ)\")"
+  },
+  "silvallyground": {
+    "showdown_id": "silvallyground",
+    "showdown_name": "Silvally-Ground",
+    "num": 773,
+    "forme": "Ground",
+    "baseForme": "",
+    "types": [
+      "じめん"
+    ],
+    "abilities": [
+      "ARシステム"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 95,
+      "def": 95,
+      "spa": 95,
+      "spd": 95,
+      "spe": 95
+    },
+    "weight": 100.5,
+    "height": 2.3,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "グラウンドメモリ",
+    "name": "シルヴァディ(じめん)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"シルヴァディ(じめん)\")"
+  },
+  "silvallyice": {
+    "showdown_id": "silvallyice",
+    "showdown_name": "Silvally-Ice",
+    "num": 773,
+    "forme": "Ice",
+    "baseForme": "",
+    "types": [
+      "こおり"
+    ],
+    "abilities": [
+      "ARシステム"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 95,
+      "def": 95,
+      "spa": 95,
+      "spd": 95,
+      "spe": 95
+    },
+    "weight": 100.5,
+    "height": 2.3,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "アイスメモリ",
+    "name": "シルヴァディ(こおり)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"シルヴァディ(こおり)\")"
+  },
+  "silvallypoison": {
+    "showdown_id": "silvallypoison",
+    "showdown_name": "Silvally-Poison",
+    "num": 773,
+    "forme": "Poison",
+    "baseForme": "",
+    "types": [
+      "どく"
+    ],
+    "abilities": [
+      "ARシステム"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 95,
+      "def": 95,
+      "spa": 95,
+      "spd": 95,
+      "spe": 95
+    },
+    "weight": 100.5,
+    "height": 2.3,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "ポイズンメモリ",
+    "name": "シルヴァディ(どく)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"シルヴァディ(どく)\")"
+  },
+  "silvallypsychic": {
+    "showdown_id": "silvallypsychic",
+    "showdown_name": "Silvally-Psychic",
+    "num": 773,
+    "forme": "Psychic",
+    "baseForme": "",
+    "types": [
+      "エスパー"
+    ],
+    "abilities": [
+      "ARシステム"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 95,
+      "def": 95,
+      "spa": 95,
+      "spd": 95,
+      "spe": 95
+    },
+    "weight": 100.5,
+    "height": 2.3,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "サイキックメモリ",
+    "name": "シルヴァディ(エスパー)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"シルヴァディ(エスパー)\")"
+  },
+  "silvallyrock": {
+    "showdown_id": "silvallyrock",
+    "showdown_name": "Silvally-Rock",
+    "num": 773,
+    "forme": "Rock",
+    "baseForme": "",
+    "types": [
+      "いわ"
+    ],
+    "abilities": [
+      "ARシステム"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 95,
+      "def": 95,
+      "spa": 95,
+      "spd": 95,
+      "spe": 95
+    },
+    "weight": 100.5,
+    "height": 2.3,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "ロックメモリ",
+    "name": "シルヴァディ(いわ)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"シルヴァディ(いわ)\")"
+  },
+  "silvallysteel": {
+    "showdown_id": "silvallysteel",
+    "showdown_name": "Silvally-Steel",
+    "num": 773,
+    "forme": "Steel",
+    "baseForme": "",
+    "types": [
+      "はがね"
+    ],
+    "abilities": [
+      "ARシステム"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 95,
+      "def": 95,
+      "spa": 95,
+      "spd": 95,
+      "spe": 95
+    },
+    "weight": 100.5,
+    "height": 2.3,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "スチールメモリ",
+    "name": "シルヴァディ(はがね)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"シルヴァディ(はがね)\")"
+  },
+  "silvallywater": {
+    "showdown_id": "silvallywater",
+    "showdown_name": "Silvally-Water",
+    "num": 773,
+    "forme": "Water",
+    "baseForme": "",
+    "types": [
+      "みず"
+    ],
+    "abilities": [
+      "ARシステム"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 95,
+      "def": 95,
+      "spa": 95,
+      "spd": 95,
+      "spe": 95
+    },
+    "weight": 100.5,
+    "height": 2.3,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "ウオーターメモリ",
+    "name": "シルヴァディ(みず)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"シルヴァディ(みず)\")"
+  },
+  "miniororange": {
+    "showdown_id": "miniororange",
+    "showdown_name": "Minior-Orange",
+    "num": 774,
+    "forme": "Orange",
+    "baseForme": "",
+    "types": [
+      "いわ",
+      "ひこう"
+    ],
+    "abilities": [
+      "リミットシールド"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 100,
+      "def": 60,
+      "spa": 100,
+      "spd": 60,
+      "spe": 120
+    },
+    "weight": 0.3,
+    "height": 0.3,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "メテノ(コア)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"メテノ(コア)\")"
+  },
+  "minioryellow": {
+    "showdown_id": "minioryellow",
+    "showdown_name": "Minior-Yellow",
+    "num": 774,
+    "forme": "Yellow",
+    "baseForme": "",
+    "types": [
+      "いわ",
+      "ひこう"
+    ],
+    "abilities": [
+      "リミットシールド"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 100,
+      "def": 60,
+      "spa": 100,
+      "spd": 60,
+      "spe": 120
+    },
+    "weight": 0.3,
+    "height": 0.3,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "メテノ(コア)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"メテノ(コア)\")"
+  },
+  "miniorgreen": {
+    "showdown_id": "miniorgreen",
+    "showdown_name": "Minior-Green",
+    "num": 774,
+    "forme": "Green",
+    "baseForme": "",
+    "types": [
+      "いわ",
+      "ひこう"
+    ],
+    "abilities": [
+      "リミットシールド"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 100,
+      "def": 60,
+      "spa": 100,
+      "spd": 60,
+      "spe": 120
+    },
+    "weight": 0.3,
+    "height": 0.3,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "メテノ(コア)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"メテノ(コア)\")"
+  },
+  "miniorblue": {
+    "showdown_id": "miniorblue",
+    "showdown_name": "Minior-Blue",
+    "num": 774,
+    "forme": "Blue",
+    "baseForme": "",
+    "types": [
+      "いわ",
+      "ひこう"
+    ],
+    "abilities": [
+      "リミットシールド"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 100,
+      "def": 60,
+      "spa": 100,
+      "spd": 60,
+      "spe": 120
+    },
+    "weight": 0.3,
+    "height": 0.3,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "メテノ(コア)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"メテノ(コア)\")"
+  },
+  "miniorindigo": {
+    "showdown_id": "miniorindigo",
+    "showdown_name": "Minior-Indigo",
+    "num": 774,
+    "forme": "Indigo",
+    "baseForme": "",
+    "types": [
+      "いわ",
+      "ひこう"
+    ],
+    "abilities": [
+      "リミットシールド"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 100,
+      "def": 60,
+      "spa": 100,
+      "spd": 60,
+      "spe": 120
+    },
+    "weight": 0.3,
+    "height": 0.3,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "メテノ(コア)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"メテノ(コア)\")"
+  },
+  "miniorviolet": {
+    "showdown_id": "miniorviolet",
+    "showdown_name": "Minior-Violet",
+    "num": 774,
+    "forme": "Violet",
+    "baseForme": "",
+    "types": [
+      "いわ",
+      "ひこう"
+    ],
+    "abilities": [
+      "リミットシールド"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 100,
+      "def": 60,
+      "spa": 100,
+      "spd": 60,
+      "spe": 120
+    },
+    "weight": 0.3,
+    "height": 0.3,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "メテノ(コア)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"メテノ(コア)\")"
+  },
+  "togedemarutotem": {
+    "showdown_id": "togedemarutotem",
+    "showdown_name": "Togedemaru-Totem",
+    "num": 777,
+    "forme": "Totem",
+    "baseForme": "",
+    "types": [
+      "でんき",
+      "はがね"
+    ],
+    "abilities": [
+      "がんじょう"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 98,
+      "def": 63,
+      "spa": 40,
+      "spd": 73,
+      "spe": 96
+    },
+    "weight": 13,
+    "height": 0.6,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "トゲデマル(ボス)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"トゲデマル(ボス)\")"
+  },
+  "mimikyubusted": {
+    "showdown_id": "mimikyubusted",
+    "showdown_name": "Mimikyu-Busted",
+    "num": 778,
+    "forme": "Busted",
+    "baseForme": "",
+    "types": [
+      "ゴースト",
+      "フェアリー"
+    ],
+    "abilities": [
+      "ばけのかわ"
+    ],
+    "baseStats": {
+      "hp": 55,
+      "atk": 90,
+      "def": 80,
+      "spa": 50,
+      "spd": 105,
+      "spe": 96
+    },
+    "weight": 0.7,
+    "height": 0.2,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "ミミッキュ(ばれたすがた)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ミミッキュ(ばれたすがた)\")"
+  },
+  "mimikyutotem": {
+    "showdown_id": "mimikyutotem",
+    "showdown_name": "Mimikyu-Totem",
+    "num": 778,
+    "forme": "Totem",
+    "baseForme": "",
+    "types": [
+      "ゴースト",
+      "フェアリー"
+    ],
+    "abilities": [
+      "ばけのかわ"
+    ],
+    "baseStats": {
+      "hp": 55,
+      "atk": 90,
+      "def": 80,
+      "spa": 50,
+      "spd": 105,
+      "spe": 96
+    },
+    "weight": 2.8,
+    "height": 0.4,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "ミミッキュ(ボス)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ミミッキュ(ボス)\")"
+  },
+  "mimikyubustedtotem": {
+    "showdown_id": "mimikyubustedtotem",
+    "showdown_name": "Mimikyu-Busted-Totem",
+    "num": 778,
+    "forme": "Busted-Totem",
+    "baseForme": "",
+    "types": [
+      "ゴースト",
+      "フェアリー"
+    ],
+    "abilities": [
+      "ばけのかわ"
+    ],
+    "baseStats": {
+      "hp": 55,
+      "atk": 90,
+      "def": 80,
+      "spa": 50,
+      "spd": 105,
+      "spe": 96
+    },
+    "weight": 2.8,
+    "height": 0.4,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "ミミッキュ(ばれたすがた,ボス)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ミミッキュ(ばれたすがた,ボス)\")"
+  },
+  "kommoototem": {
+    "showdown_id": "kommoototem",
+    "showdown_name": "Kommo-o-Totem",
+    "num": 784,
+    "forme": "Totem",
+    "baseForme": "",
+    "types": [
+      "ドラゴン",
+      "かくとう"
+    ],
+    "abilities": [
+      "ぼうじん"
+    ],
+    "baseStats": {
+      "hp": 75,
+      "atk": 110,
+      "def": 125,
+      "spa": 100,
+      "spd": 105,
+      "spe": 85
+    },
+    "weight": 207.5,
+    "height": 2.4,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "",
+    "name": "ジャラランガ(ボス)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ジャラランガ(ボス)\")"
+  },
+  "magearnaoriginal": {
+    "showdown_id": "magearnaoriginal",
+    "showdown_name": "Magearna-Original",
+    "num": 801,
+    "forme": "Original",
+    "baseForme": "",
+    "types": [
+      "はがね",
+      "フェアリー"
+    ],
+    "abilities": [
+      "ソウルハート"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 95,
+      "def": 115,
+      "spa": 130,
+      "spd": 115,
+      "spe": 65
+    },
+    "weight": 80.5,
+    "height": 1,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "マギアナ",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"マギアナ\")"
+  },
+  "sinisteaantique": {
+    "showdown_id": "sinisteaantique",
+    "showdown_name": "Sinistea-Antique",
+    "num": 854,
+    "forme": "Antique",
+    "baseForme": "",
+    "types": [
+      "ゴースト"
+    ],
+    "abilities": [
+      "くだけるよろい",
+      "のろわれボディ"
+    ],
+    "baseStats": {
+      "hp": 40,
+      "atk": 45,
+      "def": 45,
+      "spa": 74,
+      "spd": 54,
+      "spe": 50
+    },
+    "weight": 0.2,
+    "height": 0.1,
+    "prevo": "",
+    "evos": [
+      "ポットデス"
+    ],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "ヤバチャ",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ヤバチャ\")"
+  },
+  "polteageistantique": {
+    "showdown_id": "polteageistantique",
+    "showdown_name": "Polteageist-Antique",
+    "num": 855,
+    "forme": "Antique",
+    "baseForme": "",
+    "types": [
+      "ゴースト"
+    ],
+    "abilities": [
+      "くだけるよろい",
+      "のろわれボディ"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 65,
+      "def": 65,
+      "spa": 134,
+      "spd": 114,
+      "spe": 70
+    },
+    "weight": 0.4,
+    "height": 0.2,
+    "prevo": "ヤバチャ",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "ポットデス",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ポットデス\")"
+  },
+  "alcremierubycream": {
+    "showdown_id": "alcremierubycream",
+    "showdown_name": "Alcremie-Ruby-Cream",
+    "num": 869,
+    "forme": "Ruby-Cream",
+    "baseForme": "",
+    "types": [
+      "フェアリー"
+    ],
+    "abilities": [
+      "スイートベール",
+      "アロマベール"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 60,
+      "def": 75,
+      "spa": 110,
+      "spd": 121,
+      "spe": 64
+    },
+    "weight": 0.5,
+    "height": 0.3,
+    "prevo": "マホミル",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 1
+    },
+    "requiredItem": "",
+    "name": "マホイップ",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"マホイップ\")"
+  },
+  "alcremiematchacream": {
+    "showdown_id": "alcremiematchacream",
+    "showdown_name": "Alcremie-Matcha-Cream",
+    "num": 869,
+    "forme": "Matcha-Cream",
+    "baseForme": "",
+    "types": [
+      "フェアリー"
+    ],
+    "abilities": [
+      "スイートベール",
+      "アロマベール"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 60,
+      "def": 75,
+      "spa": 110,
+      "spd": 121,
+      "spe": 64
+    },
+    "weight": 0.5,
+    "height": 0.3,
+    "prevo": "マホミル",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 1
+    },
+    "requiredItem": "",
+    "name": "マホイップ",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"マホイップ\")"
+  },
+  "alcremiemintcream": {
+    "showdown_id": "alcremiemintcream",
+    "showdown_name": "Alcremie-Mint-Cream",
+    "num": 869,
+    "forme": "Mint-Cream",
+    "baseForme": "",
+    "types": [
+      "フェアリー"
+    ],
+    "abilities": [
+      "スイートベール",
+      "アロマベール"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 60,
+      "def": 75,
+      "spa": 110,
+      "spd": 121,
+      "spe": 64
+    },
+    "weight": 0.5,
+    "height": 0.3,
+    "prevo": "マホミル",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 1
+    },
+    "requiredItem": "",
+    "name": "マホイップ",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"マホイップ\")"
+  },
+  "alcremielemoncream": {
+    "showdown_id": "alcremielemoncream",
+    "showdown_name": "Alcremie-Lemon-Cream",
+    "num": 869,
+    "forme": "Lemon-Cream",
+    "baseForme": "",
+    "types": [
+      "フェアリー"
+    ],
+    "abilities": [
+      "スイートベール",
+      "アロマベール"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 60,
+      "def": 75,
+      "spa": 110,
+      "spd": 121,
+      "spe": 64
+    },
+    "weight": 0.5,
+    "height": 0.3,
+    "prevo": "マホミル",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 1
+    },
+    "requiredItem": "",
+    "name": "マホイップ",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"マホイップ\")"
+  },
+  "alcremierubyswirl": {
+    "showdown_id": "alcremierubyswirl",
+    "showdown_name": "Alcremie-Ruby-Swirl",
+    "num": 869,
+    "forme": "Ruby-Swirl",
+    "baseForme": "",
+    "types": [
+      "フェアリー"
+    ],
+    "abilities": [
+      "スイートベール",
+      "アロマベール"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 60,
+      "def": 75,
+      "spa": 110,
+      "spd": 121,
+      "spe": 64
+    },
+    "weight": 0.5,
+    "height": 0.3,
+    "prevo": "マホミル",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 1
+    },
+    "requiredItem": "",
+    "name": "マホイップ",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"マホイップ\")"
+  },
+  "alcremiecaramelswirl": {
+    "showdown_id": "alcremiecaramelswirl",
+    "showdown_name": "Alcremie-Caramel-Swirl",
+    "num": 869,
+    "forme": "Caramel-Swirl",
+    "baseForme": "",
+    "types": [
+      "フェアリー"
+    ],
+    "abilities": [
+      "スイートベール",
+      "アロマベール"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 60,
+      "def": 75,
+      "spa": 110,
+      "spd": 121,
+      "spe": 64
+    },
+    "weight": 0.5,
+    "height": 0.3,
+    "prevo": "マホミル",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 1
+    },
+    "requiredItem": "",
+    "name": "マホイップ",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"マホイップ\")"
+  },
+  "alcremierainbowswirl": {
+    "showdown_id": "alcremierainbowswirl",
+    "showdown_name": "Alcremie-Rainbow-Swirl",
+    "num": 869,
+    "forme": "Rainbow-Swirl",
+    "baseForme": "",
+    "types": [
+      "フェアリー"
+    ],
+    "abilities": [
+      "スイートベール",
+      "アロマベール"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 60,
+      "def": 75,
+      "spa": 110,
+      "spd": 121,
+      "spe": 64
+    },
+    "weight": 0.5,
+    "height": 0.3,
+    "prevo": "マホミル",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 1
+    },
+    "requiredItem": "",
+    "name": "マホイップ",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"マホイップ\")"
+  },
+  "mausholdfour": {
+    "showdown_id": "mausholdfour",
+    "showdown_name": "Maushold-Four",
+    "num": 925,
+    "forme": "Four",
+    "baseForme": "",
+    "types": [
+      "ノーマル"
+    ],
+    "abilities": [
+      "フレンドガード",
+      "ほおぶくろ",
+      "テクニシャン"
+    ],
+    "baseStats": {
+      "hp": 74,
+      "atk": 75,
+      "def": 70,
+      "spa": 65,
+      "spd": 75,
+      "spe": 111
+    },
+    "weight": 2.8,
+    "height": 0.3,
+    "prevo": "ワッカネズミ",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "イッカネズミ(よにんかぞく)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"イッカネズミ(よにんかぞく)\")"
+  },
+  "gimmighoulroaming": {
+    "showdown_id": "gimmighoulroaming",
+    "showdown_name": "Gimmighoul-Roaming",
+    "num": 999,
+    "forme": "Roaming",
+    "baseForme": "",
+    "types": [
+      "ゴースト"
+    ],
+    "abilities": [
+      "にげあし"
+    ],
+    "baseStats": {
+      "hp": 45,
+      "atk": 30,
+      "def": 25,
+      "spa": 75,
+      "spd": 45,
+      "spe": 80
+    },
+    "weight": 0.1,
+    "height": 0.1,
+    "prevo": "",
+    "evos": [
+      "サーフゴー"
+    ],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "コレクレー(あるくすがた)",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"コレクレー(あるくすがた)\")"
+  },
+  "poltchageistartisan": {
+    "showdown_id": "poltchageistartisan",
+    "showdown_name": "Poltchageist-Artisan",
+    "num": 1012,
+    "forme": "Artisan",
+    "baseForme": "",
+    "types": [
+      "くさ",
+      "ゴースト"
+    ],
+    "abilities": [
+      "おもてなし",
+      "たいねつ"
+    ],
+    "baseStats": {
+      "hp": 40,
+      "atk": 45,
+      "def": 45,
+      "spa": 74,
+      "spd": 54,
+      "spe": 50
+    },
+    "weight": 1.1,
+    "height": 0.1,
+    "prevo": "",
+    "evos": [
+      "ヤバソチャ"
+    ],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "チャデス",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"チャデス\")"
+  },
+  "sinistchamasterpiece": {
+    "showdown_id": "sinistchamasterpiece",
+    "showdown_name": "Sinistcha-Masterpiece",
+    "num": 1013,
+    "forme": "Masterpiece",
+    "baseForme": "",
+    "types": [
+      "くさ",
+      "ゴースト"
+    ],
+    "abilities": [
+      "おもてなし",
+      "たいねつ"
+    ],
+    "baseStats": {
+      "hp": 71,
+      "atk": 60,
+      "def": 106,
+      "spa": 121,
+      "spd": 80,
+      "spe": 70
+    },
+    "weight": 2.2,
+    "height": 0.2,
+    "prevo": "チャデス",
+    "evos": [],
+    "genderRatio": {
+      "M": 0,
+      "F": 0
+    },
+    "requiredItem": "",
+    "name": "ヤバソチャ",
+    "reason": "langmap/_form_langmap.csv の exclude列により除外指定(和名\"ヤバソチャ\")"
+  }
+}

@@ -60,7 +60,7 @@ class MoveData:
         `type`/`category`/`pp`/`target`は未設定を表す空文字センチネルを持つ。
         ps-champ-jaでカバーされる技はmove_*.py側でこれらを指定せず、
         `data/move.py`の`common_setup()`がインポート時にps-champ-jaのスナップショット
-        （`data/ps_champ_moves.json`）から値を埋める。カバーされない技はmove_*.py側で
+        （`data/ps-champ-ja/moves.json`）から値を埋める。カバーされない技はmove_*.py側で
         明示的にリテラル値を指定する（センチネルのまま残るとcommon_setup()がエラーにする）。
     """
     type: Type | Literal[""] = ""

@@ -54,7 +54,7 @@ _TARGET_MAP = {
 
 
 def _load_ps_champ_moves() -> dict[str, dict]:
-    with open(resource_path("data", "ps_champ_moves.json"), encoding="utf-8") as f:
+    with open(resource_path("data", "ps-champ-ja", "moves.json"), encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -68,7 +68,7 @@ def common_setup() -> None:
     Note:
         ps-champ-jaでカバーされる技（`MOVES_SYMBOL`の擬似技を除く）は、
         `type`/`category`/`pp`/`accuracy`/`priority`/`crit_ratio`/`target`を
-        `data/ps_champ_moves.json`（ps-champ-jaのスナップショット）から読み込み、
+        `data/ps-champ-ja/moves.json`（ps-champ-jaのスナップショット）から読み込み、
         move_*.py側のリテラル値を上書きする。カバーされない技はmove_*.py側で
         明示されたリテラル値をそのまま使う（未設定ならエラーにする）。
 
