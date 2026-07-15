@@ -104,3 +104,13 @@
   `examples/`配下の全`*.py`が（モジュールdocstringがあればその直後の）最初の文として
   `from __future__ import annotations`を持つことをast経由で機械的に検査するようにした。
   `python -m pytest tests/ -v`で全件パス（5953 passed, 1 skipped）を確認した。
+- [x] README「型アノテーションは Python 3.10+ の構文を使用する」の一文が`pip install`直後に
+  脈絡なく置かれており、ポケモンには詳しいPython初心者にとって「jpoke を使う上で自分が
+  何をすべき指示なのか」が読み取れない（id: r10-7）
+  → 対応内容 (2026-07-15): `README.md`の該当文（`requires-python = ">=3.10"`。型アノテーション
+  は Python 3.10+ の構文（`X | Y`, `list[X]`）を使用する。）に続けて
+  「（関数の引数・戻り値の型を書く目印であり、jpoke を利用するだけなら読み飛ばしてよい）。」を
+  追記し、この一文が実行時に必須の設定ではなく開発者向けの補足情報であることを明示した。
+  ドキュメントのみの変更で`src/jpoke`・`examples/`のコード変更は無い。挙動変更が無いため
+  回帰テストの追加は不要と判断した。`python -m pytest tests/ -v`で全件パス（5953 passed,
+  1 skipped）を確認した。
