@@ -1380,8 +1380,14 @@ def ぎたい_change_type(battle: Battle, ctx: EventContext, value: Any) -> Hand
 
     フィールドが無いときは本来のタイプ（種族本来のタイプ）に戻す。
     現在のタイプと変化先のタイプが同じ場合は発動しない。
+    テラスタル中は Pokemon.types が active_tera_type を最優先するため
+    ability_override_type を書き換えても実際のタイプは変化しない。
+    その場合は何もせず発動アナウンスも行わない
+    （テクスチャー/テクスチャー2 の is_terastallized ガードに倣う）。
     """
     mon = ctx.source
+    if mon.is_terastallized:
+        return HandlerReturn(value=value)
     terrain_type = ぎたい_フィールドタイプ対応表.get(battle.terrain.name)
     target_types = [terrain_type] if terrain_type else mon.base_types
     if mon.types == target_types:
