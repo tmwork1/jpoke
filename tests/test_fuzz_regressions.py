@@ -512,6 +512,56 @@ def test_じゅうりょく_ノーガード相手への攻撃でNoneのままTyp
     assert battle.move_executor.accuracy is None  # 倍率は適用されない
 
 
+def test_すいすい_両者ばんのうがさ所持時に素早さ計算がRecursionErrorにならず正しい順序で解決される():
+    """seed=120351 player=random (RecursionError@event_manager.py:_sort_handlers:219) の回帰テスト。
+
+    core/speed_calculator.py の SpeedCalculator.calc_effective_speed() は、素早さ順序の
+    解決（resolve_speed_order等）の中で対象ポケモンごとに呼ばれ、内部でDomainEvent.ON_CALC_SPEED
+    を発火する。すいすい特性のハンドラ（handlers/ability.py の すいすい_modify_speed）はこの中で
+    battle.weather_for(ctx.source) を呼び、これが通常のEvent.ON_CHECK_WEATHER_IMMUNE を発火する。
+
+    このイベントに「ばんのうがさ」等の免疫ハンドラが2体分以上登録されていると
+    （＝場に出ている両者がばんのうがさを持つ場合。ON_CHECK_WEATHER_IMMUNE ハンドラは
+    active化時にのみ登録されるため、シングルバトルでは両アクティブが持つ必要がある）、
+    core/event_manager.py の _sort_handlers が素早さ順にソートしようとして、再度同じ
+    すいすい持ちポケモンの calc_effective_speed() を要求する。修正前はここで
+    calc_effective_speed → ON_CALC_SPEED → weather_for → ON_CHECK_WEATHER_IMMUNE →
+    _sort_handlers → calc_effective_speed →... の循環が無限に続きRecursionErrorになっていた
+    （実際のfuzzシードでは、すいすい・ばんのうがさを併せ持つルナトーンと、ばんのうがさを
+    持つ相手ポケモンの組み合わせで発生した）。
+
+    修正後は SpeedCalculator に再入防止ガード（_computing_speed）を追加し、同一ポケモンについて
+    calc_effective_speed が再入した場合はON_CALC_SPEEDを再発火せず素早さ実数値
+    （mon.stats["spe"]）を返して循環を打ち切る。ON_CHECK_WEATHER_IMMUNE はsubject_specで
+    対象ポケモンに一致するハンドラのみが実際に効果を発揮するブール値の免疫判定イベントであり、
+    ソートに使う速度値が不正確でも判定結果（免疫か否か）自体には影響しない。
+
+    さらに、この再入ガードが働く状況（＝すいすい持ちのポケモン自身がばんのうがさを持ち、
+    かつ相手もばんのうがさを持つ）では、すいすい持ちポケモン自身の天候ボーナスは
+    自分のばんのうがさによって元々無効化されるべきであり、フォールバック値
+    （素の実数値）と最終的に正しい値が一致する。本テストでは、素の実数値ではルナトーン
+    （すいすい・ばんのうがさ持ち、spe=90）よりピカチュウ（ばんのうがさ持ち、spe=110）の方が
+    速いことを前提に、あめ下でも resolve_speed_order() の結果がピカチュウ→ルナトーンの順に
+    なる（＝ルナトーンの実効素早さが誤って2倍化されていない）ことを確認する。誤って
+    ばんのうがさによる自己無効化が働かず2倍化されていれば、ルナトーンの実効素早さ(180)が
+    ピカチュウ(110)を上回り順序が逆転するため、フォールバック値ではなく最終的に正しい
+    素早さで判定されていることを検証できる。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ルナトーン", ability_name="すいすい", item_name="ばんのうがさ")],
+        team1=[Pokemon("ピカチュウ", item_name="ばんのうがさ")],
+        weather=("あめ", 5),
+    )
+    luna, pikachu = battle.actives
+    assert pikachu.stats["spe"] > luna.stats["spe"]  # 前提: 素の実数値はピカチュウの方が速い
+
+    order = battle.resolve_speed_order()  # 修正前はここでRecursionErrorになっていた
+
+    # 両者ばんのうがさ持ちのため、あめによるすいすいの倍化はルナトーン自身に適用されず、
+    # 素の実数値通りピカチュウが先に来る
+    assert order == [pikachu, luna]
+
+
 def test_ターン終了処理_ON_TURN_ENDの継続ダメージで決着した場合発動アナウンスログが勝敗確定ログより先に記録される():
     """seed=509 (LogInconsistency) の回帰テスト。
 
