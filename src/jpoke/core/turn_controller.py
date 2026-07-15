@@ -429,8 +429,22 @@ class TurnController:
         # ついても、残りのハンドラがそのまま実行されてしまう）。
         # stop_if_winner_determined=True で、途中で決着した場合に残りの
         # ハンドラの実行を打ち切る。
+        #
+        # ON_TURN_END は毒・やけど・くろいヘドロ等の継続ダメージハンドラを
+        # まとめて処理するため、ある個体への継続ダメージで勝敗が確定しても、
+        # そのハンドラ自身が続けて記録する発動アナウンス等のログ（例:
+        # くろいヘドロが発動した）が完了するまでは勝敗確定ログ（GAME_WON/
+        # GAME_LOST）の記録を遅延させる。そうしないと「HP変化→勝敗確定→
+        # 発動アナウンス」のような不整合な順序でログが記録されてしまう
+        # （move_executor._execute_hit や VolatileManager.remove() の
+        # 抑制区間と同じ理由。begin_deferred_winner_log/end_deferred_winner_log
+        # はネスト可能なため、それらの既存の抑制区間と共存できる）。
         if self.battle.is_new_turn() and self.battle.winner is None:
-            self._events.emit(Event.ON_TURN_END, stop_if_winner_determined=True)
+            self.battle.begin_deferred_winner_log()
+            try:
+                self._events.emit(Event.ON_TURN_END, stop_if_winner_determined=True)
+            finally:
+                self.battle.end_deferred_winner_log()
 
             # だっしゅつパックによる割り込みフラグをフェーズに合わせて設定
             self._switch.override_ejectpack_interrupt(Interrupt.EJECTPACK_ON_TURN_END)

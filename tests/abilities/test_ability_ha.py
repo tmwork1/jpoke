@@ -1461,6 +1461,20 @@ def test_びびり_すばやさが最大ランクの場合は発動しない():
     assert mon.boosts["spe"] == 6
 
 
+def test_びびり_被弾して瀕死になった場合はすばやさが上がらない():
+    """びびり: あく/ゴースト/むし技を受けて瀕死になった場合、自分自身のランク変化は
+    発動しない（へんしょく・ぎゃくじょう等の既存特性と同じ規約）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="びびり")],
+        team1=[Pokemon("カビゴン", move_names=["かみつく"])],
+    )
+    defender = battle.actives[0]
+    t.fix_damage(battle, defender.max_hp)
+    t.run_move(battle, 1)
+    assert defender.fainted is True
+    assert defender.boosts["spe"] == 0
+
+
 def test_びんじょう_味方のランク上昇はコピーしない():
     """びんじょう: 味方（自分自身）のランク上昇では発動しない"""
     battle = t.start_battle(
