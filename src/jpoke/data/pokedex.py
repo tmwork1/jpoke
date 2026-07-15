@@ -17,5 +17,5 @@ with open(file, encoding='utf-8') as f:
     data = json.load(f)
 
 POKEDEX: dict[PokemonName, PokemonData] = {
-    d["name"]: PokemonData(d) for d in data.values()
+    name: PokemonData(name, entry) for name, entry in data.items()
 }

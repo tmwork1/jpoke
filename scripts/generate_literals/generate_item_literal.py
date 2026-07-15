@@ -7,10 +7,10 @@
 処理内容:
 - src/jpoke/data/item.py を AST 解析し、ITEMS 辞書のトップレベルキーを
   定義順のまま抽出する（実行時 import は行わない）
-- src/jpoke/data/megaevol.py を AST 解析し、MEGA_STONES 辞書のトップレベルキー
-  （メガストーン名）を定義順のまま抽出する。メガストーンは common_setup() 内の
-  _add_mega_stones() で実行時に ITEMS 辞書へ追加されるため、静的な ITEMS 辞書
-  リテラルには含まれず、別途抽出して末尾に連結する
+- src/jpoke/data/megaevol.py の MEGA_STONES は pokedex.json（requiredItem）から実行時に
+  動的に構築されるため、実際に import して辞書キー（メガストーン名）を抽出する。
+  メガストーンは common_setup() 内の _add_mega_stones() で実行時に ITEMS 辞書へ追加されるため、
+  静的な ITEMS 辞書リテラルには含まれず、別途抽出して末尾に連結する
 - src/jpoke/types/item.py 内の `ItemName = Literal[...]` の
   複数行ブロックを、抽出したキーから再構築した内容（1行1要素）で置換する
 - 冪等に実行できる（再実行しても同じ結果になる）
@@ -21,7 +21,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent.parent.parent
 ITEM_PY = ROOT / "src/jpoke/data/item.py"
-MEGAEVOL_PY = ROOT / "src/jpoke/data/megaevol.py"
 TYPE_DEFS_PY = ROOT / "src/jpoke/types/item.py"
 
 GENERATED_COMMENT = (
@@ -64,38 +63,10 @@ def extract_item_keys(target: Path) -> list[str]:
     sys.exit(1)
 
 
-def extract_mega_stone_keys(target: Path) -> list[str]:
-    """MEGA_STONES辞書のトップレベルキー（メガストーン名）を定義順に抽出する。"""
-    source = target.read_text(encoding="utf-8-sig")
-    tree = ast.parse(source)
-
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Assign):
-            if not any(
-                isinstance(t, ast.Name) and t.id == "MEGA_STONES"
-                for t in node.targets
-            ):
-                continue
-        elif isinstance(node, ast.AnnAssign):
-            if not (isinstance(node.target, ast.Name) and node.target.id == "MEGA_STONES"):
-                continue
-        else:
-            continue
-
-        if node.value is None or not isinstance(node.value, ast.Dict):
-            continue
-
-        keys = []
-        for key_node in node.value.keys:
-            if not isinstance(key_node, ast.Constant) or not isinstance(key_node.value, str):
-                print("エラー: MEGA_STONES辞書に文字列以外のキーがあります", file=sys.stderr)
-                sys.exit(1)
-            keys.append(key_node.value)
-
-        return keys
-
-    print("エラー: MEGA_STONES辞書が見つかりません", file=sys.stderr)
-    sys.exit(1)
+def extract_mega_stone_keys() -> list[str]:
+    """MEGA_STONES辞書（pokedex.jsonから実行時に構築される）のキーを定義順に抽出する。"""
+    from jpoke.data.megaevol import MEGA_STONES
+    return list(MEGA_STONES.keys())
 
 
 def build_literal_block(keys: list[str]) -> list[str]:
@@ -143,7 +114,7 @@ def update_literal_file(target: Path, new_block: list[str]) -> None:
 
 def main() -> None:
     keys = extract_item_keys(ITEM_PY)
-    mega_stone_keys = extract_mega_stone_keys(MEGAEVOL_PY)
+    mega_stone_keys = extract_mega_stone_keys()
     # メガストーンは common_setup() 実行時に ITEMS 辞書へ追加されるため、末尾に連結する
     all_keys = keys + mega_stone_keys
     print(f"抽出したキー数: {len(keys)} + メガストーン数: {len(mega_stone_keys)} = {len(all_keys)}")
