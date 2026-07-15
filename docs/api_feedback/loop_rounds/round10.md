@@ -89,3 +89,58 @@
   に対して`build_observation()`を呼んだ場合も`self.copy(copy_logs=copy_logs)`経由で`copy_logs`
   が正しく伝播すること、を確認した。`python -m pytest tests/ -v`で全件パス（5950 passed, 1
   skipped）を確認した。
+- [x] 全examplesファイル冒頭の`from __future__ import annotations`が一度も説明されておらず、
+  ポケモンには詳しいPython初心者が「これは消してよいのか、必須なのか」を判断できない
+  （id: r10-6）
+  → 対応内容 (2026-07-15): `examples/`配下30ファイル全てが`from __future__ import
+  annotations`をモジュールdocstring直後の最初の文として持っており（構文上docstring以外の
+  文より前に置く必要があるPythonの制約に従う位置）、既存コード自体に問題は無かったが、
+  この1行が何のためにあるか・削除してよいかを説明する記述が`examples/README.md`にも
+  `docs/api/README.md`にも存在しなかった。`examples/README.md`冒頭に「型アノテーションの
+  前方参照を有効にするためのおまじないで、動作に必要なので消さずにそのまま残してよい」旨を
+  3行追加した。`src/jpoke`の実装コード・examplesファイル自体の変更は無い（ドキュメントのみの
+  変更）。再発防止のため`tests/test_code_conventions.py`に
+  `test_examplesが全ファイルでfrom_future_import_annotationsを冒頭に持つ`を追加し、
+  `examples/`配下の全`*.py`が（モジュールdocstringがあればその直後の）最初の文として
+  `from __future__ import annotations`を持つことをast経由で機械的に検査するようにした。
+  `python -m pytest tests/ -v`で全件パス（5953 passed, 1 skipped）を確認した。
+- [x] README「型アノテーションは Python 3.10+ の構文を使用する」の一文が`pip install`直後に
+  脈絡なく置かれており、ポケモンには詳しいPython初心者にとって「jpoke を使う上で自分が
+  何をすべき指示なのか」が読み取れない（id: r10-7）
+  → 対応内容 (2026-07-15): `README.md`の該当文（`requires-python = ">=3.10"`。型アノテーション
+  は Python 3.10+ の構文（`X | Y`, `list[X]`）を使用する。）に続けて
+  「（関数の引数・戻り値の型を書く目印であり、jpoke を利用するだけなら読み飛ばしてよい）。」を
+  追記し、この一文が実行時に必須の設定ではなく開発者向けの補足情報であることを明示した。
+  ドキュメントのみの変更で`src/jpoke`・`examples/`のコード変更は無い。挙動変更が無いため
+  回帰テストの追加は不要と判断した。`python -m pytest tests/ -v`で全件パス（5953 passed,
+  1 skipped）を確認した。
+- [x] README「モンキーパッチ」という用語が未解説のまま使われている（id: r10-8）
+  → 対応内容 (2026-07-15): `README.md`「テストヘルパーを使った検証」節の
+  `fix_damage`/`fix_random`の説明文（「対戦オブジェクトの内部属性を直接差し替えるモンキー
+  パッチのため、テスト・デバッグ専用であり本番の対戦進行では使わないこと。」）は元々
+  「内部属性を直接差し替える」という言い換えを伴っていたが、それだけでは「モンキー
+  パッチ」という一般的なプログラミング用語を知らないポケモンには詳しいPython初心者に
+  とって、具体的に何が起こり得るのかまでは読み取れなかった。続けて「（本来の実装を
+  無視して値を強制的に上書きするため、通常のゲームルールでは起こらない状態になり得る）」
+  を追記し、r10-7と同じ「用語の直後に括弧書きで実務上の意味・注意点を補足する」文体に
+  揃えた。`docs/api/README.md`側（`fix_damage()`/`fix_random()`の節、表内の「デバッグ専用
+  モンキーパッチ」表記）は同じ`fix_damage`/`fix_random`について既に「デバッグ用の
+  ユーティリティであり、本番の対戦進行（bot 運用等）では使わないこと」という説明があり
+  今回の指摘（README.md）の対象外のため変更していない。ドキュメントのみの変更で
+  `src/jpoke`・`examples/`のコード変更は無く挙動変更も無いため、回帰テストの追加は不要と
+  判断した。`python -m pytest tests/ -v`で全件パス（5953 passed, 1 skipped）を確認した。
+- [x] `examples/05_benchmark/01_step_time_benchmark.py`が`player.team`への直接代入で
+  `add_pokemon()`規約から外れている（id: r10-9）
+  → 対応内容 (2026-07-15): `run_benchmark()`内の`player1.team = build_random_team(...)`/
+  `player2.team = build_random_team(...)`は、`build_random_pokemon()`が種族・性別・性格・
+  レベル・特性・持ち物・技などすべてをその場で乱数生成して`Pokemon`インスタンスを組み立てる
+  ため、「種族名を渡して`Player`側に構築させる」`add_pokemon(name, ...)`の名前渡し
+  インターフェースでは表現できないという理由によるものだった。理由が自明でなく初心者が
+  規約違反と誤解しかねないため、直前に「`build_random_pokemon()`は種族・技構成をその場で
+  ランダム生成するため、名前を渡して構築する`add_pokemon()`では表現できず、`team`へ直接
+  代入する」旨の1行コメントを追加した。挙動変更は無い（コメント追加のみ）。
+  `PYTHONIOENCODING=utf-8 python examples/05_benchmark/01_step_time_benchmark.py --n-battles 5
+  --max-turns 20 --seed 42`を修正前後で実行し、`perf_counter`計測値そのもの以外
+  （バトル数・stepサンプル数・seed）が完全一致することを確認した。コメントのみの変更で
+  挙動変更が無いため回帰テストの追加は不要と判断した。`python -m pytest tests/ -v`で全件
+  パス（5953 passed, 1 skipped）を確認した。これで第10ラウンドの9件すべてが対応済みになった。
