@@ -66,6 +66,10 @@ def remove_volatile(battle: Battle,
                     reason: str = "") -> HandlerReturn:
     """揮発状態の解除処理
 
+    Note:
+        ログ記録は battle.volatile_manager.remove() 内で行われるため、
+        ここで重複してログを記録しない（reason はそちらへ渡す）。
+
     Args:
         battle: バトルインスタンス
         ctx: コンテキスト
@@ -74,12 +78,7 @@ def remove_volatile(battle: Battle,
         reason: 解除理由
     """
     mon = getattr(ctx, "source", None) or getattr(ctx, "attacker", None)
-    if battle.volatile_manager.remove(mon, volatile):
-        battle.add_event_log(
-            mon,
-            LogCode.VOLATILE_REMOVED,
-            payload=VolatilePayload(volatile=volatile, display_reason=reason)
-        )
+    battle.volatile_manager.remove(mon, volatile, reason=reason)
     return HandlerReturn(value=value)
 
 def force_command(battle: Battle, ctx: EventContext, value: list[Command]) -> HandlerReturn:
@@ -112,6 +111,12 @@ def can_hit_hidden_target(battle: Battle,
     Returns:
         HandlerReturn: 命中可ならTrue、回避するならFalse
     """
+    # AttackContext.defender は技のtargetに関わらず常にfoe(attacker)が設定されるため、
+    # こらえる等のtarget="self"の技では「相手を狙っていない」のにdefenderが相手（潜伏中の
+    # ポケモン）と一致してしまう。この回避判定は相手を直接狙う技（target="foe"）にのみ
+    # 適用する（自分自身や場・自陣を対象とする技は潜伏による回避の対象外）。
+    if ctx.move.target != "foe":
+        return HandlerReturn(value=value)
     if ctx.attacker.ability.name == "ノーガード" or ctx.defender.ability.name == "ノーガード":
         return HandlerReturn(value=value)
     allowed_moves = HIDDEN_MOVE_ALLOWED_MOVES.get(volatile, [])

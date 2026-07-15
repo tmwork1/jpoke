@@ -107,12 +107,13 @@ class VolatileManager:
         )
         return True
 
-    def remove(self, target: Pokemon, name: VolatileName) -> bool:
+    def remove(self, target: Pokemon, name: VolatileName, reason: str = "") -> bool:
         """揮発性状態を解除する。
 
         Args:
             target: 対象のポケモン
             name: 揮発性状態名
+            reason: 解除理由（ログの display_reason に表示する。既定は理由なし）
 
         Returns:
             解除に成功したTrue
@@ -136,7 +137,7 @@ class VolatileManager:
         self.battle.add_event_log(
             target,
             LogCode.VOLATILE_REMOVED,
-            payload=VolatilePayload(volatile=name)
+            payload=VolatilePayload(volatile=name, display_reason=reason)
         )
 
         return True
