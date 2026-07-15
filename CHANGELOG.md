@@ -9,6 +9,12 @@
 
 ### Added
 
+- `Battle.swap_items()` に `source: Pokemon | None = None` 引数を追加。従来は
+  `ItemManager.swap_items()` が持つ `source`（交換の発生源となるポケモン。`source`
+  自身が持つねんちゃくのみ無効化する判定に使う）を `Battle` ファサードから渡す
+  手段がなく、内部ハンドラの「すりかえ」実装が `battle.item_manager.swap_items(...)`
+  と内部実装へ直接アクセスせざるを得なかった。既定値 `None` のため既存呼び出しの
+  挙動は変わらない
 - `Battle.get_team(player)` — 対戦中のプレイヤーのチーム実体を取得する公開アクセサ
   （`player_states[player].team` への直接アクセスを置き換える）
 - `Player.add_pokemon(name, **kwargs)` — `Pokemon` を直接importせずにチームへ

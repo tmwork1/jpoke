@@ -186,7 +186,7 @@ one_damage = battle.roll_damage(attacker, defender, "ドラゴンテール")
 | `set_item(target, name, source=None)` | 現在の持ち物に関わらず任意の持ち物に直接差し替える（`name=""` で取り外し） |
 | `remove_item(target, source=None, track_loss=True)` | 持ち物を取り外す |
 | `take_item(target, ignore_sticky_hold=False)` | `target`（持ち物を奪われる側）の持ち物を、相手（foe）が持ち物を持っていない場合のみ奪う |
-| `swap_items(ignore_sticky_hold=False)` | 場に出ている2体の持ち物を入れ替える。`take_item` と異なり双方が持ち物を持っていても実行できる |
+| `swap_items(source=None, ignore_sticky_hold=False)` | 場に出ている2体の持ち物を入れ替える。`take_item` と異なり双方が持ち物を持っていても実行できる。`source` に交換の発生源となるポケモンを渡すと、`source` 自身が持つねんちゃくは発動しない（自分から道具を交換するときは防がれない） |
 | `consume_item(target, track_loss=True)` | 持ち物を消費する（きのみの場合は食べたフラグを立ててから `remove_item` を呼ぶ） |
 
 ```python

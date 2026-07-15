@@ -467,6 +467,34 @@ def test_ねつぼうそう_やけど状態で特殊技の威力が1_5倍(move_n
     assert expected_modifier == battle.damage_calculator.power_modifier
 
 
+def test_ねんちゃく_battle_swap_itemsでsourceが相手なら相手のねんちゃくが交換を阻止する():
+    """`source` に対象自身以外（例: 交換元となった別のポケモン）を渡した場合は、
+    `ItemManager.swap_items()` と同様にねんちゃくを持つポケモンの交換阻止が通常どおり
+    機能する（id: r10-2）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ねんちゃく", item_name="たべのこし")],
+        team1=[Pokemon("コラッタ", item_name="いのちのたま")],
+    )
+    holder, other = battle.actives
+    before = [mon.item.name for mon in battle.actives]
+    assert not battle.swap_items(source=other)
+    assert [mon.item.name for mon in battle.actives] == before
+
+
+def test_ねんちゃく_battle_swap_itemsでsourceが自分自身なら自分のねんちゃくは無視される():
+    """`Battle.swap_items()` に `source` 引数を渡す手段がなかった不具合の回帰テスト
+    （id: r10-2）。`source` に対象自身を渡した場合、`ItemManager.swap_items()` と
+    同様にその自分のねんちゃくは阻止条件から除外され、交換が成立する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ねんちゃく", item_name="たべのこし")],
+        team1=[Pokemon("コラッタ", item_name="いのちのたま")],
+    )
+    holder, other = battle.actives
+    assert battle.swap_items(source=holder)
+    assert holder.item.name == "いのちのたま"
+    assert other.item.name == "たべのこし"
+
+
 def test_ねんちゃく_相手による道具変更をブロックする():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ねんちゃく", item_name="たべのこし")],

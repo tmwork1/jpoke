@@ -1353,10 +1353,17 @@ class Battle:
         """
         return self.item_manager.remove_item(target, source=source, track_loss=track_loss)
 
-    def swap_items(self, *, ignore_sticky_hold: bool = False) -> bool:
+    def swap_items(self,
+                  *,
+                  source: Pokemon | None = None,
+                  ignore_sticky_hold: bool = False) -> bool:
         """場に出ている2体のアイテムを入れ替える（ItemManagerへの委譲）。
 
         Args:
+            source: 交換の発生源となるポケモン（トリック・すりかえ・どろぼう等の
+                使用者）。ねんちゃくを持つポケモン自身がこの交換を起こした場合
+                （= source が対象自身と同一の場合）は、ねんちゃくの効果は
+                発動しない（自分から道具を交換するときは防がれない）
             ignore_sticky_hold: True の場合、ねんちゃくによる奪取阻止のみを
                 無視する（むしくい・ついばむが対象をひんしにさせた場合の
                 第五世代以降の仕様）
@@ -1364,7 +1371,7 @@ class Battle:
         Returns:
             bool: 入れ替えに成功した場合True
         """
-        return self.item_manager.swap_items(ignore_sticky_hold=ignore_sticky_hold)
+        return self.item_manager.swap_items(source=source, ignore_sticky_hold=ignore_sticky_hold)
 
     def take_item(self, target: Pokemon, *, ignore_sticky_hold: bool = False) -> bool:
         """対象のアイテムを奪う（ItemManagerへの委譲）。
