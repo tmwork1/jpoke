@@ -390,22 +390,30 @@ class MoveExecutor:
         # 発動成功判定(1)
         self.move_success = self._events.emit(Event.ON_TRY_MOVE_1, ctx, True)
         if not self.move_success:
+            # ここに到達する時点でPPは既に消費済み（_consume_ppはrun_move側で
+            # ON_MOVE_CHARGEより前に無条件で呼ばれる）。実機ではPP消費後の
+            # 不発でもこだわり系アイテム等のロックはかかるため、ON_MOVE_ENDを
+            # 発火してこだわり_lock_move等の後処理を確実に実行させる。
+            self._events.emit(Event.ON_MOVE_END, ctx)
             return
 
         # 攻撃技のタイプ相性判定
         if ctx.move.is_attack and not self._check_hit_by_type(ctx):
             # タイプ相性による無効化も「技が失敗した」ことになる（やけっぱち・じだんだ用）
             self.move_success = False
+            self._events.emit(Event.ON_MOVE_END, ctx)
             return
 
         # 発動成功判定(2): priority=110 のハンドラ群（ぼうじんゴーグル等）
         self.move_success = self._events.emit(Event.ON_TRY_MOVE_2, ctx, True)
         if not self.move_success:
+            self._events.emit(Event.ON_MOVE_END, ctx)
             return
 
         # くさタイプ: 粉技無効 (priority=120 相当のコアルール)
         if not self._check_grass_type_powder_immunity(ctx):
             self.move_success = False
+            self._events.emit(Event.ON_MOVE_END, ctx)
             return
 
         # 発動した技の確定
@@ -483,6 +491,14 @@ class MoveExecutor:
                 # 無効化されたら中断
                 self.move_applied = self._events.emit(Event.ON_BEFORE_APPLY_MOVE, ctx, True)
                 if not self.move_applied:
+                    # TODO: ON_BEFORE_APPLY_MOVE失敗経路（みがわりでの変化技ブロック等）でも
+                    # ON_MOVE_ENDが発火しないため、こだわり系アイテム/ごりむちゅうのロックが
+                    # かからない（例: みがわり状態の相手にどくどくを使うとPPは消費されるが
+                    # こだわりロックはかからない）。ON_TRY_MOVE_1/2・タイプ相性・くさ粉技無効化の
+                    # 4経路については move_executor.py の対応する分岐で ON_MOVE_END を発火する
+                    # 修正済みだが、このヒットループ内の分岐は影響範囲調査（のどスプレー等
+                    # move_applied を見ずに move_success のみで判定しているON_MOVE_ENDハンドラの
+                    # 洗い出しを含む）が必要なため意図的に未対応としている。
                     return
 
                 # 技が当たったときの処理を実行
@@ -579,14 +595,25 @@ class MoveExecutor:
         """
         # 状態変化技の命中処理は、通常のダメージ処理とは別にON_STATUS_HITイベントで行う。
         # これにより、ダメージを与えない状態変化技（でんじはなど）も同様のフローで処理できる。
+        logs = self.battle.event_logger.logs
+        log_count_before = len(logs)
         result = self._events.emit(Event.ON_STATUS_HIT, ctx, True)
         if not result:
             self.move_success = False
-            self.battle.add_event_log(
-                ctx.attacker,
-                LogCode.MOVE_FAILED,
-                payload=FailureLogPayload(move=ctx.move.name)
+            # ひっくりかえす・ねむる・ねごと・いやしのねがい等、ON_STATUS_HITに
+            # 登録されたハンドラ自身が理由付きのMOVE_FAILEDログを記録して失敗する
+            # ケースがある。その場合は汎用フォールバックログを重ねて出さないよう、
+            # このemit呼び出し中に新たにMOVE_FAILEDログが追加されたかどうかで判定する。
+            already_logged = (
+                len(logs) > log_count_before
+                and logs[-1].log == LogCode.MOVE_FAILED
             )
+            if not already_logged:
+                self.battle.add_event_log(
+                    ctx.attacker,
+                    LogCode.MOVE_FAILED,
+                    payload=FailureLogPayload(move=ctx.move.name)
+                )
 
     def resolve_move_type(self, attacker: Pokemon, move: Move) -> Type:
         """技の有効タイプを取得する。
