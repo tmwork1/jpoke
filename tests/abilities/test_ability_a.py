@@ -586,6 +586,37 @@ def test_いかく_登場時に相手攻撃1段階ダウン():
     assert battle.actives[0].boosts["atk"] == -1
 
 
+def test_いかく_設置技のダメージで瀕死になった場合は発動しない():
+    """設置技の効果は特性より前に発動するため、場に出た直後に設置技ダメージで
+    瀕死になった場合は入場特性（いかく）が発動しない。
+    （一次情報: docs/spec/abilities/エレキメイカー.md
+    「場に出た直後に設置技のダメージでひんしになった場合、エレキメイカーは発動しない」
+    と同様の仕様がいかく等の入場特性全般に適用される）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("カビゴン", ability_name="いかく")],
+        team1=[Pokemon("ピカチュウ")],
+        side0={"ステルスロック": 1},
+    )
+    entrant = battle.player_states[battle.players[0]].team[1]
+    entrant.hp = 1
+    t.run_switch(battle, 0, 1)
+    assert entrant.fainted
+    assert battle.actives[1].boosts["atk"] == 0
+
+
+def test_いかく_設置技のダメージで瀕死にならなければ発動する():
+    """設置技のダメージを受けても瀕死にならなければ、従来通り入場特性が発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("カビゴン", ability_name="いかく")],
+        team1=[Pokemon("ピカチュウ")],
+        side0={"ステルスロック": 1},
+    )
+    entrant = battle.player_states[battle.players[0]].team[1]
+    t.run_switch(battle, 0, 1)
+    assert not entrant.fainted
+    assert battle.actives[1].boosts["atk"] == -1
+
+
 def test_いかりのこうら_HP半分超から半分以下でACSアップBDダウン():
     """いかりのこうら: HPが半分を下回ったとき A/C/S↑1、B/D↓1。"""
     battle = t.start_battle(
@@ -1159,6 +1190,21 @@ def test_エレキメイカー_特性再有効化時にも発動する():
     battle.remove_ability_disabled_reason(mon, "かがくへんかガス")
     assert battle.terrain.name == "エレキフィールド"
     assert battle.terrain.count == 5
+
+
+def test_エレキメイカー_設置技のダメージで瀕死になった場合は発動しない():
+    """エレキメイカー: 場に出た直後に設置技のダメージでひんしになった場合は発動しない
+    （一次情報: docs/spec/abilities/エレキメイカー.md）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("ピカチュウ", ability_name="エレキメイカー")],
+        team1=[Pokemon("ピカチュウ")],
+        side0={"ステルスロック": 1},
+    )
+    entrant = battle.player_states[battle.players[0]].team[1]
+    entrant.hp = 1
+    t.run_switch(battle, 0, 1)
+    assert entrant.fainted
+    assert battle.terrain.name == ""
 
 
 def test_えんかく_直接攻撃でさめはだが発動しない():
