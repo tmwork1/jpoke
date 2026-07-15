@@ -2660,12 +2660,16 @@ def はめつのねがい_charge(battle: Battle, ctx: AttackContext, value: Any)
     相手側にまだフィールドが存在しない場合、ダメージを計算して「はめつのねがい」
     サイドフィールドを相手陣営に設置し、即時攻撃を抑制する。
     すでに存在する場合は通過して ON_TRY_MOVE_1 の失敗チェックに委ねる。
+
+    カウントは3を指定する: ON_TURN_END でのカウントダウンは設置したそのターンの
+    終了時にも1回発生するため（使用ターンを含めず2ターン後に着弾させるには、
+    使用ターン分の1回＋2ターン分の2回で計3回のカウントダウンが必要）。
     """
     foe_side = battle.get_side(ctx.defender)
     field = foe_side.get("はめつのねがい")
     if not field.is_active:
         damage = battle.roll_damage(ctx.attacker, ctx.defender, ctx.move)
-        foe_side.activate("はめつのねがい", 2)
+        foe_side.activate("はめつのねがい", 3)
         field.damage = damage
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -3364,12 +3368,16 @@ def みらいよち_charge(battle: Battle, ctx: AttackContext, value: Any) -> Ha
     相手側にまだフィールドが存在しない場合、ダメージを計算して「みらいよち」
     サイドフィールドを相手陣営に設置し、即時攻撃を抑制する。
     すでに存在する場合は通過して ON_TRY_MOVE_1 の失敗チェックに委ねる。
+
+    カウントは3を指定する: ON_TURN_END でのカウントダウンは設置したそのターンの
+    終了時にも1回発生するため（使用ターンを含めず2ターン後に着弾させるには、
+    使用ターン分の1回＋2ターン分の2回で計3回のカウントダウンが必要）。
     """
     foe_side = battle.get_side(ctx.defender)
     field = foe_side.get("みらいよち")
     if not field.is_active:
         damage = battle.roll_damage(ctx.attacker, ctx.defender, ctx.move)
-        foe_side.activate("みらいよち", 2)
+        foe_side.activate("みらいよち", 3)
         field.damage = damage
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
