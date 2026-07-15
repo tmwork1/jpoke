@@ -33,10 +33,10 @@
 ```json
 {
   "worktree": "{ROOTの親}\\jpoke-loop\\flaky",
-  "batch_size": 10,
-  "isolate_reruns": 20,
+  "batch_size": 100,
+  "isolate_reruns": 100,
   "extra_fullsuite_reruns": 5,
-  "verify_reruns": 30,
+  "verify_reruns": 100,
   "total_runs": 0,
   "current_investigation": null,
   "pending_investigation": [],
@@ -62,7 +62,7 @@
 ### 1. 状態ファイルを読む
 
 `.loop/flaky_state.json` を Read で読み込む（存在しなければ上記スキーマの初期値
-`batch_size=10, isolate_reruns=20, extra_fullsuite_reruns=5, verify_reruns=30, total_runs=0` で
+`batch_size=100, isolate_reruns=100, extra_fullsuite_reruns=5, verify_reruns=100, total_runs=0` で
 新規作成）。
 
 ### 1.5. 中断していた調査が残っていないか確認
