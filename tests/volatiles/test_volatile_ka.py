@@ -196,6 +196,39 @@ def test_かくれる_特定技は命中する(hidden_move_name, hit_move_name):
 
 
 @pytest.mark.parametrize("hidden_move_name", ["あなをほる", "そらをとぶ", "ダイビング", "シャドーダイブ"])
+def test_かくれる_相手が潜伏中でも自分を対象とする技は回避判定を受けない(hidden_move_name):
+    """相手が潜伏中でも、target="self"の技（こらえる）は相手を狙っていないため
+    can_hit_hidden_targetの回避判定の対象外で正常に成功する
+    （fuzz_log seed=226で確認されたバグの回帰: AttackContext.defenderが技のtargetに
+    関わらず常にfoeを指すため、自己対象技まで誤って回避判定に捕捉されていた）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["こらえる"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker, defender = battle.actives
+    battle.volatile_manager.apply(defender, hidden_move_name, count=1)
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success
+    assert attacker.has_volatile("こらえる")
+
+
+@pytest.mark.parametrize("hidden_move_name", ["あなをほる", "そらをとぶ", "ダイビング", "シャドーダイブ"])
+def test_かくれる_相手が潜伏中でも自陣の場を対象とする技は回避判定を受けない(hidden_move_name):
+    """相手が潜伏中でも、target="own_side"の技（リフレクター）は相手を狙っていないため
+    can_hit_hidden_targetの回避判定の対象外で正常に成功する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["リフレクター"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker, defender = battle.actives
+    battle.volatile_manager.apply(defender, hidden_move_name, count=1)
+    t.run_move(battle, 0)
+
+    side = battle.get_side(attacker)
+    assert side.fields["リフレクター"].is_active
+
+
+@pytest.mark.parametrize("hidden_move_name", ["あなをほる", "そらをとぶ", "ダイビング", "シャドーダイブ"])
 def test_かくれる_通常技は回避する(hidden_move_name):
     """潜伏中は通常技を回避する"""
     battle = t.start_battle(
