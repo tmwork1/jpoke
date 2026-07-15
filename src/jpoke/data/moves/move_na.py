@@ -28,11 +28,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "ナイトバースト": MoveData(
-        type="あく",
-        category="special",
-        pp=12,
-        power=90,
-        accuracy=95,
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
@@ -41,11 +36,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "ナイトヘッド": MoveData(
-        type="ゴースト",
-        category="special",
-        pp=16,
-        power=0,
-        accuracy=100,
         flags={"fixed_damage"},
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
@@ -56,10 +46,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "なかまづくり": MoveData(
-        type="ノーマル",
-        category="status",
-        pp=16,
-        accuracy=100,
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.なかまづくり_can_apply,
@@ -94,11 +80,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "なげつける": MoveData(
-        type="あく",
-        category="physical",
-        pp=12,
         power=1,
-        accuracy=100,
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
                 ha.なげつける_check_item,
@@ -130,10 +112,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         },
     ),
     "なまける": MoveData(
-        type="ノーマル",
-        category="status",
-        pp=8,
-        target="self",
         flags={"heal"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -142,9 +120,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "なみだめ": MoveData(
-        type="ノーマル",
-        category="status",
-        pp=20,
         accuracy=None,  # 必中
         flags={"unprotectable"},
         handlers={
@@ -154,11 +129,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "なみのり": MoveData(
-        type="みず",
-        category="special",
-        pp=16,
-        power=90,
-        accuracy=100,
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
                 ha.reduce_damage_in_double_battle,
@@ -166,10 +136,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         },
     ),
     "なやみのタネ": MoveData(
-        type="くさ",
-        category="status",
-        pp=12,
-        accuracy=100,
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.なやみのタネ_can_apply,
@@ -180,9 +146,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "なりきり": MoveData(
-        type="エスパー",
-        category="status",
-        pp=12,
         accuracy=None,  # 必中
         flags={"unprotectable", "unreflectable", "bypass_substitute"},
         handlers={
@@ -214,11 +177,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "ニトロチャージ": MoveData(
-        type="ほのお",
-        category="physical",
-        pp=20,
-        power=50,
-        accuracy=100,
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
@@ -242,10 +200,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "にほんばれ": MoveData(
-        type="ほのお",
-        category="status",
-        pp=8,
-        target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.にほんばれ_activate_weather,
@@ -264,11 +218,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "ニードルガード": MoveData(
-        type="くさ",
-        category="status",
-        pp=8,
-        priority=4,
-        target="self",
         flags={"protect"},
         handlers={
             Event.ON_TRY_MOVE_2: h.MoveHandler(
@@ -280,10 +229,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "ねがいごと": MoveData(
-        type="ノーマル",
-        category="status",
-        pp=12,
-        target="self",
         flags={"heal"},
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
@@ -295,12 +240,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "ねこだまし": MoveData(
-        type="ノーマル",
-        category="physical",
-        pp=12,
-        power=40,
-        accuracy=100,
-        priority=3,
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
@@ -322,10 +261,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "ねごと": MoveData(
-        type="ノーマル",
-        category="status",
-        pp=12,
-        target="self",
         flags={"non_encore", "non_negoto"},
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
@@ -344,11 +279,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         },
     ),
     "ネズミざん": MoveData(
-        type="ノーマル",
-        category="physical",
-        pp=12,
-        power=20,
-        accuracy=90,
         flags={"contact", "slash", "check_hit_each_time"},
         multi_hit={
             "min": 10,
@@ -379,11 +309,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "ねっさのだいち": MoveData(
-        type="じめん",
-        category="special",
-        pp=12,
-        power=70,
-        accuracy=100,
         flags={"secondary_effect", "thaw", "self_thaw"},
         handlers={
             Event.ON_TRY_ACTION: h.MoveHandler(
@@ -396,11 +321,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "ねっとう": MoveData(
-        type="みず",
-        category="special",
-        pp=16,
-        power=80,
-        accuracy=100,
         flags={"secondary_effect", "thaw", "self_thaw"},
         handlers={
             Event.ON_TRY_ACTION: h.MoveHandler(
@@ -413,11 +333,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "ねっぷう": MoveData(
-        type="ほのお",
-        category="special",
-        pp=12,
-        power=95,
-        accuracy=90,
         flags={"wind", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
@@ -429,10 +344,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "ねばねばネット": MoveData(
-        type="むし",
-        category="status",
-        pp=20,
-        target="foe_side",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ねばねばネット_set_side_field,
@@ -440,10 +351,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "ねむりごな": MoveData(
-        type="くさ",
-        category="status",
         pp=16,  # champions基準（move_list.txt）。Gen9本家は15
-        accuracy=75,
         flags={"powder"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -452,10 +360,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "ねむる": MoveData(
-        type="エスパー",
-        category="status",
-        pp=8,
-        target="self",
         flags={"heal"},
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
@@ -477,14 +381,10 @@ MOVES_NA: dict[MoveName, MoveData] = {
         pp=15,
         power=80,
         accuracy=100,
-        critical_rank=1,
+        crit_ratio=1,
         handlers={},  # 追加効果なし
     ),
     "ねをはる": MoveData(
-        type="くさ",
-        category="status",
-        pp=20,
-        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ねをはる_apply,
@@ -505,11 +405,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "のしかかり": MoveData(
-        type="ノーマル",
-        category="physical",
-        pp=16,
-        power=85,
-        accuracy=100,
         flags={"minimize", "contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
@@ -518,10 +413,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "のみこむ": MoveData(
-        type="ノーマル",
-        category="status",
-        pp=12,
-        target="self",
         flags={"heal"},
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
@@ -534,9 +425,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "のろい": MoveData(
-        type="ゴースト",
-        category="status",
-        pp=12,
         # まもる・ダイウォールを無視し、マジックコートで跳ね返されず、みがわりを貫通する
         flags={"unprotectable", "unreflectable", "bypass_substitute"},
         handlers={

@@ -3008,7 +3008,7 @@ def test_ドゲザン_タイプ威力PPが仕様通り():
     assert move_data.power == 85
     assert move_data.accuracy is None
     assert move_data.pp == 12
-    assert move_data.critical_rank == 1
+    assert move_data.crit_ratio == 0
     assert "contact" in move_data.flags
     assert "slash" in move_data.flags
 

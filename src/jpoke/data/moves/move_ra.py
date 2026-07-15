@@ -31,11 +31,6 @@ MOVES_RA: dict[MoveName, MoveData] = {
         }
     ),
     "ライジングボルト": MoveData(
-        type="でんき",
-        category="special",
-        pp=20,
-        power=70,
-        accuracy=100,
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
                 ha.ライジングボルト_calc_power,
@@ -57,11 +52,6 @@ MOVES_RA: dict[MoveName, MoveData] = {
         }
     ),
     "ラスターカノン": MoveData(
-        type="はがね",
-        category="special",
-        pp=12,
-        power=80,
-        accuracy=100,
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
@@ -83,10 +73,6 @@ MOVES_RA: dict[MoveName, MoveData] = {
         }
     ),
     "リサイクル": MoveData(
-        type="ノーマル",
-        category="status",
-        pp=12,
-        target="self",
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.リサイクル_can_apply,
@@ -98,10 +84,6 @@ MOVES_RA: dict[MoveName, MoveData] = {
         }
     ),
     "リフレクター": MoveData(
-        type="エスパー",
-        category="status",
-        pp=20,
-        target="own_side",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.リフレクター_set_side_field,
@@ -109,11 +91,6 @@ MOVES_RA: dict[MoveName, MoveData] = {
         }
     ),
     "りゅうせいぐん": MoveData(
-        type="ドラゴン",
-        category="special",
-        pp=8,
-        power=130,
-        accuracy=90,
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 ha.りゅうせいぐん_sharply_lower_attacker_spa,
@@ -137,19 +114,10 @@ MOVES_RA: dict[MoveName, MoveData] = {
         }
     ),
     "りゅうのはどう": MoveData(
-        type="ドラゴン",
-        category="special",
-        pp=12,
-        power=85,
-        accuracy=100,
         flags={"pulse"},
         handlers={},  # 追加効果なし
     ),
     "りゅうのまい": MoveData(
-        type="ドラゴン",
-        category="status",
-        pp=20,
-        target="self",
         flags={"dance"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -158,11 +126,6 @@ MOVES_RA: dict[MoveName, MoveData] = {
         }
     ),
     "りんごさん": MoveData(
-        type="くさ",
-        category="special",
-        pp=12,
-        power=90,
-        accuracy=100,
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
@@ -174,11 +137,6 @@ MOVES_RA: dict[MoveName, MoveData] = {
         }
     ),
     "りんしょう": MoveData(
-        type="ノーマル",
-        category="special",
-        pp=16,
-        power=60,
-        accuracy=100,
         flags={"sound"},
         handlers={
             Event.ON_BEGIN_MOVE: h.MoveHandler(
@@ -187,11 +145,6 @@ MOVES_RA: dict[MoveName, MoveData] = {
         }
     ),
     "リーフストーム": MoveData(
-        type="くさ",
-        category="special",
-        pp=8,
-        power=130,
-        accuracy=90,
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 ha.リーフストーム_sharply_lower_attacker_spa,
@@ -202,21 +155,10 @@ MOVES_RA: dict[MoveName, MoveData] = {
         }
     ),
     "リーフブレード": MoveData(
-        type="くさ",
-        category="physical",
-        pp=16,
-        power=90,
-        accuracy=100,
-        critical_rank=1,
         flags={"contact", "slash"},
         handlers={},  # 追加効果なし
     ),
     "ルミナコリジョン": MoveData(
-        type="エスパー",
-        category="special",
-        pp=12,
-        power=80,
-        accuracy=100,
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
@@ -228,11 +170,6 @@ MOVES_RA: dict[MoveName, MoveData] = {
         }
     ),
     "レイジングブル": MoveData(
-        type="ノーマル",
-        category="physical",
-        pp=12,
-        power=90,
-        accuracy=100,
         flags={"contact"},
         handlers={
             Event.ON_MODIFY_MOVE_TYPE: h.MoveHandler(
@@ -244,11 +181,6 @@ MOVES_RA: dict[MoveName, MoveData] = {
         },
     ),
     "れいとうパンチ": MoveData(
-        type="こおり",
-        category="physical",
-        pp=16,
-        power=75,
-        accuracy=100,
         flags={"contact", "punch", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
@@ -257,11 +189,6 @@ MOVES_RA: dict[MoveName, MoveData] = {
         }
     ),
     "れいとうビーム": MoveData(
-        type="こおり",
-        category="special",
-        pp=12,
-        power=90,
-        accuracy=100,
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
@@ -270,11 +197,6 @@ MOVES_RA: dict[MoveName, MoveData] = {
         }
     ),
     "れんごく": MoveData(
-        type="ほのお",
-        category="special",
-        pp=8,
-        power=100,
-        accuracy=50,
         flags={"secondary_effect", "thaw"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
@@ -308,9 +230,6 @@ MOVES_RA: dict[MoveName, MoveData] = {
         },
     ),
     "ロックオン": MoveData(
-        type="ノーマル",
-        category="status",
-        pp=8,
         # マジックコートで跳ね返されない
         flags={"unreflectable"},
         handlers={
@@ -320,10 +239,6 @@ MOVES_RA: dict[MoveName, MoveData] = {
         }
     ),
     "ロックカット": MoveData(
-        type="いわ",
-        category="status",
-        pp=20,
-        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ロックカット_boost_attacker_spe,
@@ -344,11 +259,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
         }
     ),
     "ロックブラスト": MoveData(
-        type="いわ",
-        category="physical",
         pp=12,  # チャンピオンズ基準（docs/champions/move_list.txt）。第9世代本家基準は10
-        power=25,
-        accuracy=90,
         flags={"bullet"},
         multi_hit={
             "min": 2,
@@ -359,11 +270,6 @@ MOVES_RA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "ローキック": MoveData(
-        type="かくとう",
-        category="physical",
-        pp=20,
-        power=65,
-        accuracy=100,
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(

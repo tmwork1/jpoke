@@ -53,19 +53,29 @@ class MultiHit(TypedDict):
 
 @dataclass
 class MoveData:
-    type: Type
-    category: MoveCategory
-    pp: int
+    """技の静的パラメータとハンドラを保持する。
+
+    Note:
+        `type`/`category`/`pp`/`target`は未設定を表す空文字センチネルを持つ。
+        ps-champ-jaでカバーされる技はmove_*.py側でこれらを指定せず、
+        `data/move.py`の`common_setup()`がインポート時にps-champ-jaのスナップショット
+        （`data/ps_champ_moves.json`）から値を埋める。カバーされない技はmove_*.py側で
+        明示的にリテラル値を指定する（センチネルのまま残るとcommon_setup()がエラーにする）。
+    """
+    type: Type | Literal[""] = ""
+    category: MoveCategory | Literal[""] = ""
+    pp: int = 0
     power: int | None = None
     accuracy: int | None = None
     priority: int = 0
-    critical_rank: int = 0
-    target: MoveTarget = "foe"
+    crit_ratio: int = 0
+    target: MoveTarget | Literal[""] = ""
     multi_hit: MultiHit | None = None
     flags: set[MoveFlag] = field(default_factory=set)
     handlers: dict[Event | DomainEvent, Handler | list[Handler]] = field(default_factory=dict)
     lethal_handlers: dict[LethalEvent, LethalHandler] = field(default_factory=dict)
     name: MoveName | Literal[""] = ""
+    exist: bool = False
 
 
 @dataclass

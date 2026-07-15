@@ -2,6 +2,21 @@
 
 更新日: 2026-07-15
 
+## 更新履歴
+
+- **2026-07-16（実行）**: 技の静的パラメータ（type/category/pp/accuracy/priority/急所ランク
+  ［`critical_rank`→`crit_ratio`に改名］/target）について、「照合・差分検出ツールとして使う」
+  という当初方針から一歩進め、ps-champ-jaでカバーされる技（716件中500件）は
+  `src/jpoke/data/moves/move_*.py`側のリテラル指定を削除し、起動時（`common_setup()`）に
+  `src/jpoke/data/ps_champ_moves.json`（ps-champ-jaの`moves.json`スナップショット）から
+  読み込む方式に変更した（`feature/sync-moves-from-ps-champ-ja`）。可変威力（`power=1`）・
+  必ず急所（`crit_ratio=3`）のセンチネルを持つ技のみリテラル値を維持する。`target`は
+  ps-champ-jaの13分類（ダブルバトルの隣接関係区別）をシングル専用の5分類へ縮約する
+  マッピングで導出し、大部分の技で手入力していた`target=`を削除できた。副次効果として、
+  既存の不整合（PP5件・急所ランク2件）が正しい値に修正された。moves/abilities/itemsの
+  ハンドラ実装自体は今回も対象外（既存方針どおり）。再同期用スクリプト
+  `scripts/ps_champ_ja/sync_moves.py`をチェックイン
+
 ## ゴール
 
 https://github.com/tmwork1/ps-champ-ja の `data_jp/` を、jpoke の技・ポケモン等データの

@@ -63,7 +63,7 @@ MOVES_SYMBOL: dict[MoveName, MoveData] = {
         pp=12,
         power=90,
         accuracy=100,
-        critical_rank=1,
+        crit_ratio=1,
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: [
