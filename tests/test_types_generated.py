@@ -95,7 +95,7 @@ def test_movename_既知の技名を含む():
 
 def test_pokemonname_件数がpokedexのユニーク名数と一致する():
     pokedex = json.loads(POKEDEX_JSON.read_text(encoding="utf-8"))
-    unique_names = {entry["name"] for entry in pokedex.values()}
+    unique_names = set(pokedex.keys())
     assert len(get_args(PokemonName)) == len(unique_names)
 
 

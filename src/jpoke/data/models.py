@@ -11,13 +11,14 @@ from jpoke.types import AbilityFlag, Type, MoveCategory, MoveTarget, MoveFlag, P
 
 
 class PokemonData:
-    def __init__(self, data) -> None:
-        self.name: PokemonName = data["name"]
-        self.pre_evolution: PokemonName | Literal[""] = data.get("pre_evolution", "")
+    def __init__(self, name, data) -> None:
+        self.name: PokemonName = name
+        self.pre_evolution: PokemonName | Literal[""] = data.get("prevo", "")
         self.weight: float = data["weight"]
-        self.types: list[Type] = [data[f"type-{i+1}"] for i in range(2) if data[f"type-{i+1}"]]
-        self.abilities: list[AbilityName] = [data[f"ability-{i+1}"] for i in range(3) if data[f"ability-{i+1}"]]
-        self.base: list[int] = [data[s] for s in ["H", "A", "B", "C", "D", "S"]]
+        self.types: list[Type] = list(data["types"])
+        self.abilities: list[AbilityName] = list(data["abilities"])
+        stats = data["baseStats"]
+        self.base: list[int] = [stats["hp"], stats["atk"], stats["def"], stats["spa"], stats["spd"], stats["spe"]]
 
         if not self.abilities:
             self.abilities = [""]

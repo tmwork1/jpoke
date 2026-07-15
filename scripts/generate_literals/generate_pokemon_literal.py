@@ -5,8 +5,8 @@
     python scripts/generate_literals/generate_pokemon_literal.py
 
 処理内容:
-- src/jpoke/data/pokedex.json を json.load で読み込み、各エントリの
-  "name" フィールド（ポケモン名）を定義順のまま抽出する
+- src/jpoke/data/pokedex.json を json.load で読み込み、各エントリのキー（ポケモン名）を
+  定義順のまま抽出する
 - src/jpoke/types/pokemon.py 内の `PokemonName = Literal[...]` の
   複数行ブロックを、抽出した名前から再構築した内容（1行1要素）で置換する
 - 冪等に実行できる（再実行しても同じ結果になる）
@@ -26,19 +26,14 @@ GENERATED_COMMENT = (
 
 
 def extract_pokemon_names(target: Path) -> list[str]:
-    """pokedex.jsonの各エントリからポケモン名(name)を定義順に抽出する（重複除去）。"""
+    """pokedex.jsonの各エントリのキー(ポケモン名)を定義順に抽出する（重複除去）。"""
     data = json.loads(target.read_text(encoding="utf-8"))
 
     names = []
     seen = set()
-    for entry in data.values():
-        if not isinstance(entry, dict) or "name" not in entry:
-            print("エラー: pokedex.jsonのエントリにnameフィールドがありません", file=sys.stderr)
-            sys.exit(1)
-
-        name = entry["name"]
+    for name in data.keys():
         if not isinstance(name, str):
-            print("エラー: nameフィールドが文字列ではありません", file=sys.stderr)
+            print("エラー: キーが文字列ではありません", file=sys.stderr)
             sys.exit(1)
 
         if name in seen:
