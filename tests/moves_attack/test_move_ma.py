@@ -1372,16 +1372,20 @@ def test_メテオビーム_2ターンで攻撃する():
     attacker = battle.actives[0]
     defender = battle.actives[1]
     hp_before = defender.hp
+    move = attacker.moves[0]
+    pp_before = move.pp
 
-    # 1ターン目: 揮発状態付与のみ、ダメージなし
+    # 1ターン目: 揮発状態付与のみ、ダメージなし（PPを1消費）
     t.run_move(battle, 0)
     assert defender.hp == hp_before
     assert attacker.has_volatile("メテオビーム")
+    assert move.pp == pp_before - 1
 
-    # 2ターン目: ダメージあり、揮発状態解除
+    # 2ターン目: ダメージあり、揮発状態解除（PPは消費しない）
     t.run_move(battle, 0)
     assert defender.hp < hp_before
     assert not attacker.has_volatile("メテオビーム")
+    assert move.pp == pp_before - 1
 
 
 def test_メテオビーム_2ターン目の攻撃実行ターンにとくこうが重複上昇しない():
@@ -1487,12 +1491,16 @@ def test_メテオビーム_パワフルハーブ使用時1ターンで攻撃し
     attacker = battle.actives[0]
     defender = battle.actives[1]
     hp_before = defender.hp
+    move = attacker.moves[0]
+    pp_before = move.pp
 
     # 1ターンで攻撃
     t.run_move(battle, 0)
     assert defender.hp < hp_before
     assert not attacker.has_item()
     assert attacker.boosts["spa"] == 1
+    # パワフルハーブで即時発動した場合もPP消費は1のみ
+    assert move.pp == pp_before - 1
 
 
 def test_もえあがるいかり_ひるみが発動する():

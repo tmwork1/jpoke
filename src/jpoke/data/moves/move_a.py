@@ -345,6 +345,9 @@ MOVES_A: dict[MoveName, MoveData] = {
             Event.ON_MOVE_CHARGE: h.MoveHandler(
                 lambda b, c, v: h.charge_into_volatile(b, c, v, "あなをほる"),
             ),
+            Event.ON_MODIFY_PP_CONSUMED: h.MoveHandler(
+                lambda b, c, v: h.suppress_pp_on_charge_continuation(b, c, v, "あなをほる"),
+            ),
         }
     ),
     "あばれる": MoveData(
@@ -1135,6 +1138,9 @@ MOVES_A: dict[MoveName, MoveData] = {
                     ha.エレクトロビーム_charge,
                 ),
             ],
+            Event.ON_MODIFY_PP_CONSUMED: h.MoveHandler(
+                lambda b, c, v: h.suppress_pp_on_charge_continuation(b, c, v, "エレクトロビーム"),
+            ),
         },
         lethal_handlers={
             LethalEvent.ON_BEFORE_MOVE: LethalHandler(l.エレクトロビーム_boost_spa)

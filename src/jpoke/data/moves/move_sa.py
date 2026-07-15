@@ -495,6 +495,9 @@ MOVES_SA: dict[MoveName, MoveData] = {
             Event.ON_MOVE_CHARGE: h.MoveHandler(
                 lambda b, c, v: h.charge_into_volatile(b, c, v, "シャドーダイブ"),
             ),
+            Event.ON_MODIFY_PP_CONSUMED: h.MoveHandler(
+                lambda b, c, v: h.suppress_pp_on_charge_continuation(b, c, v, "シャドーダイブ"),
+            ),
         }
     ),
     "シャドーパンチ": MoveData(
@@ -1351,6 +1354,9 @@ MOVES_SA: dict[MoveName, MoveData] = {
             Event.ON_MOVE_CHARGE: h.MoveHandler(
                 lambda b, c, v: h.charge_into_volatile(b, c, v, "そらをとぶ"),
             ),
+            Event.ON_MODIFY_PP_CONSUMED: h.MoveHandler(
+                lambda b, c, v: h.suppress_pp_on_charge_continuation(b, c, v, "そらをとぶ"),
+            ),
         }
     ),
     "ソーラービーム": MoveData(
@@ -1370,6 +1376,9 @@ MOVES_SA: dict[MoveName, MoveData] = {
                     ha.ソーラービーム_charge,
                 ),
             ],
+            Event.ON_MODIFY_PP_CONSUMED: h.MoveHandler(
+                lambda b, c, v: h.suppress_pp_on_charge_continuation(b, c, v, "ソーラービーム"),
+            ),
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
                 ha.ソーラービーム_halve_power,
             ),
@@ -1392,6 +1401,9 @@ MOVES_SA: dict[MoveName, MoveData] = {
                     ha.ソーラーブレード_charge,
                 ),
             ],
+            Event.ON_MODIFY_PP_CONSUMED: h.MoveHandler(
+                lambda b, c, v: h.suppress_pp_on_charge_continuation(b, c, v, "ソーラーブレード"),
+            ),
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
                 ha.ソーラービーム_halve_power,
             ),

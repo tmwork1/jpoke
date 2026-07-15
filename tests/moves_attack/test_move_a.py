@@ -2297,6 +2297,25 @@ def test_エレクトロビーム_2ターン目をコマンド経由で強制続
     assert not attacker.has_volatile("エレクトロビーム")
 
 
+def test_エレクトロビーム_PPは1ターン目のみ消費され2ターン目は消費しない():
+    """エレクトロビーム: 1ターン目にPPを1消費し、強制続行される2ターン目はPPを消費しない
+    （2ターン合計でPP消費は1のみ）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["エレクトロビーム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    move = attacker.moves[0]
+    pp_before = move.pp
+    # 1ターン目: 揮発状態付与（PPを1消費）
+    t.run_move(battle, 0)
+    assert move.pp == pp_before - 1
+    # 2ターン目: 強制続行で攻撃（PPは消費しない）
+    t.run_move(battle, 0)
+    assert move.pp == pp_before - 1
+
+
 def test_エレクトロビーム_あめとパワフルハーブ両方所持時は天候優先で消費されない():
     """エレクトロビーム: あめによる溜めスキップがパワフルハーブの消費より優先される。"""
     battle = t.start_battle(
@@ -2327,12 +2346,16 @@ def test_エレクトロビーム_あめ時1ターンで攻撃してとくこう
     attacker = battle.actives[0]
     defender = battle.actives[1]
     hp_before = defender.hp
+    move = attacker.moves[0]
+    pp_before = move.pp
 
     # 1ターンで攻撃（あめによるスキップ）
     t.run_move(battle, 0)
     assert defender.hp < hp_before
     assert not attacker.has_volatile("エレクトロビーム")
     assert attacker.boosts["spa"] == 1
+    # 溜めをスキップして単ターンで発動した場合もPP消費は1のみ
+    assert move.pp == pp_before - 1
 
 
 def test_エレクトロビーム_ばんのうがさ持ちはあめでも2ターンかかる():
