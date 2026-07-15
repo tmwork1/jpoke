@@ -118,6 +118,39 @@ def test_docs_examplesがjpoke_testingモジュールに言及している():
     )
 
 
+def test_docs_examplesがアイテム操作系APIに言及している():
+    """`Battle.gain_item`/`set_item`/`remove_item`/`take_item`/`swap_items`/`consume_item`
+    は`src/jpoke/core/battle.py`に実装（`ItemManager`への薄い委譲）が揃っている一方、
+    状態異常・揮発性状態・天候・地形が`set_ailment`/`set_volatile`/`set_weather`/
+    `set_terrain`としてそれぞれ`docs/api/README.md`「シナリオ構築系」表と`examples/`の
+    サンプル両方に掲載されているのに対し、持ち物操作系だけ`docs/api/README.md`にも
+    `examples/`にも一度も登場しない状態が長期間放置されていた（id: r10-1）。再発防止のため、
+    6メソッドすべてが`docs/api/README.md`に記載されていること、`examples/`配下のいずれかの
+    サンプルで実際に呼び出されていることを確認する。
+    """
+    item_api_names = [
+        "gain_item", "set_item", "remove_item",
+        "take_item", "swap_items", "consume_item",
+    ]
+
+    docs_path = Path(__file__).resolve().parent.parent / "docs" / "api" / "README.md"
+    docs_text = docs_path.read_text(encoding="utf-8")
+    missing_in_docs = [name for name in item_api_names if name not in docs_text]
+    assert not missing_in_docs, (
+        "docs/api/README.md に未掲載のアイテム操作系APIを検出: " + ", ".join(missing_in_docs)
+    )
+
+    examples_texts = "\n".join(
+        path.read_text(encoding="utf-8") for path in EXAMPLES_ROOT.rglob("*.py")
+    )
+    missing_in_examples = [
+        name for name in item_api_names if f".{name}(" not in examples_texts
+    ]
+    assert not missing_in_examples, (
+        "examples/ 配下で未使用のアイテム操作系APIを検出: " + ", ".join(missing_in_examples)
+    )
+
+
 def test_examplesがjudge_winnerのis_None比較を使っていない():
     """`battle.judge_winner()` は決着判定のたびにTOD判定込みで再計算する重い遅延判定APIで、
     決着したかどうかのチェックには軽量な `battle.finished`（キャッシュされた `battle.winner`
