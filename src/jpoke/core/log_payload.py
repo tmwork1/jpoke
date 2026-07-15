@@ -38,6 +38,7 @@ LogCode ごとに必要な詳細情報を dataclass として定義する。
 | VOLATILE_IMMUNE / VOLATILE_APPLIED / VOLATILE_DISPLAY | `VolatilePayload` | `volatile`=揮発状態名, `source`=原因ポケモン名（あれば） |
 | VOLATILE_REMOVED / VOLATILE_PREVENTED | `VolatilePayload` | `volatile`=揮発状態名, `source`=原因ポケモン名（あれば）, `display_reason`=理由 |
 | FIELD_STARTED / FIELD_ENDED | `FieldPayload` | `field`=場の状態名, `count`=残りターン数（あれば） |
+| FIELD_STACKED | `FieldPayload` | `field`=場の状態名, `count`=増加後の層数（まきびし・どくびし等） |
 | TERASALLIZED | `TerastalPayload` | `type`=テラスタイプ |
 | MEGA_EVOLVED | None | メガシンカしたポケモン名は `EventLog.pokemon` |
 

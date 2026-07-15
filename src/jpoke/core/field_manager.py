@@ -96,7 +96,7 @@ class BaseFieldManager(Generic[T]):
         for player in field.owners:
             field.register_handlers(self._events, player)
         self.battle.add_event_log(
-            0, LogCode.FIELD_STARTED,
+            field.owners[0], LogCode.FIELD_STARTED,
             payload=FieldPayload(field=field.name, count=count)
         )
         self._events.emit(Event.ON_FIELD_ACTIVATE, value=field)
@@ -106,7 +106,7 @@ class BaseFieldManager(Generic[T]):
         field_name = field.data.name
         field.count = 0
         self.battle.add_event_log(
-            0, LogCode.FIELD_ENDED,
+            field.owners[0], LogCode.FIELD_ENDED,
             payload=FieldPayload(field=field_name)
         )
         self._events.emit(Event.ON_FIELD_DEACTIVATE, value=field)
@@ -268,6 +268,10 @@ class StackableFieldManager(BaseFieldManager[T]):
         if max_count <= 1 or field.count >= max_count:
             return False
         field.count += 1
+        self.battle.add_event_log(
+            field.owners[0], LogCode.FIELD_STACKED,
+            payload=FieldPayload(field=field.name, count=field.count)
+        )
         return True
 
     def deactivate(self, name: T) -> bool:

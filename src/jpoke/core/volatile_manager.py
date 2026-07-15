@@ -126,19 +126,27 @@ class VolatileManager:
 
         volatile = target.volatiles.pop(name)
 
-        # 終了時ハンドラ内では、現在の保持状態に基づく再計算が行えるよう先に辞書から外す。
-        self._events.emit(
-            Event.ON_VOLATILE_END,
-            EventContext(source=target),
-            name
-        )
+        # 終了時ハンドラ（例: ほろびのうた_faint）が modify_hp で致死ダメージを
+        # 与えて即座に勝敗を決めてしまうと、VOLATILE_REMOVED ログより先に
+        # GAME_WON/GAME_LOST が記録されてしまう。この一連の処理が完了するまで
+        # 勝敗ログの記録を遅延させ、順序（HP変化→解除ログ→勝敗ログ）を保つ。
+        self.battle.begin_deferred_winner_log()
+        try:
+            # 終了時ハンドラ内では、現在の保持状態に基づく再計算が行えるよう先に辞書から外す。
+            self._events.emit(
+                Event.ON_VOLATILE_END,
+                EventContext(source=target),
+                name
+            )
 
-        volatile.unregister_handlers(self._events, target)
-        self.battle.add_event_log(
-            target,
-            LogCode.VOLATILE_REMOVED,
-            payload=VolatilePayload(volatile=name, display_reason=reason)
-        )
+            volatile.unregister_handlers(self._events, target)
+            self.battle.add_event_log(
+                target,
+                LogCode.VOLATILE_REMOVED,
+                payload=VolatilePayload(volatile=name, display_reason=reason)
+            )
+        finally:
+            self.battle.end_deferred_winner_log()
 
         return True
 
