@@ -221,6 +221,9 @@ MOVES_TA: dict[MoveName, MoveData] = {
             Event.ON_MOVE_CHARGE: h.MoveHandler(
                 lambda b, c, v: h.charge_into_volatile(b, c, v, "ダイビング"),
             ),
+            Event.ON_MODIFY_PP_CONSUMED: h.MoveHandler(
+                lambda b, c, v: h.suppress_pp_on_charge_continuation(b, c, v, "ダイビング"),
+            ),
         }
     ),
     "だいふんげき": MoveData(
@@ -1154,6 +1157,9 @@ MOVES_TA: dict[MoveName, MoveData] = {
             ),
             Event.ON_MOVE_CHARGE: h.MoveHandler(
                 lambda b, c, v: h.charge_into_volatile(b, c, v, "そらをとぶ"),
+            ),
+            Event.ON_MODIFY_PP_CONSUMED: h.MoveHandler(
+                lambda b, c, v: h.suppress_pp_on_charge_continuation(b, c, v, "そらをとぶ"),
             ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.とびはねる_apply_paralysis_to_defender,

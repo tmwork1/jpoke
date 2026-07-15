@@ -2665,6 +2665,29 @@ def test_プレッシャー_場に出たときに開示される():
     assert battle.actives[0].ability.revealed
 
 
+def test_プレッシャー_溜め技は最初の行動でのみPP消費が増える():
+    """プレッシャー: あなをほる等の溜め技（2ターン技）は、1ターン目（最初の行動）で
+    プレッシャーのポケモンを対象にしたときのみPP消費が+1になり、強制続行される
+    2ターン目はPPを消費しないため、プレッシャーによる加算も発生しない。
+
+    2ターン合計のPP消費は 2（1ターン目: 通常1+プレッシャー1）+ 0（2ターン目） = 2。
+    suppress_pp_on_charge_continuationがstop_eventを付けていないと、実行順序
+    （素早さによるタイブレーク）次第でプレッシャーのハンドラが後から実行され、
+    2ターン目にも余分に1消費してしまう不具合の回帰確認。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ディグダ", move_names=["あなをほる"])],
+        team1=[Pokemon("カビゴン", ability_name="プレッシャー")],
+        accuracy=100,
+    )
+    attacker, _ = battle.actives
+    move = attacker.moves[0]
+    pp_before = move.pp
+    t.run_move(battle, 0)  # 1ターン目: 通常1消費+プレッシャー1消費
+    assert pp_before - move.pp == 2
+    t.run_move(battle, 0)  # 2ターン目: 強制続行、PP消費なし
+    assert pp_before - move.pp == 2
+
+
 def test_プレッシャー_相手のPP消費が1増える():
     """プレッシャー: プレッシャー持ちを対象にした技のPP消費が通常+1になる"""
     battle = t.start_battle(

@@ -1358,6 +1358,9 @@ MOVES_KA: dict[MoveName, MoveData] = {
             Event.ON_MOVE_CHARGE: h.MoveHandler(
                 lambda b, c, v: h.charge_into_volatile(b, c, v, "コールドフレア"),
             ),
+            Event.ON_MODIFY_PP_CONSUMED: h.MoveHandler(
+                lambda b, c, v: h.suppress_pp_on_charge_continuation(b, c, v, "コールドフレア"),
+            ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.コールドフレア_apply_burn_to_defender,
             )
@@ -1375,6 +1378,9 @@ MOVES_KA: dict[MoveName, MoveData] = {
             Event.ON_MOVE_CHARGE: h.MoveHandler(
                 lambda b, c, v: h.charge_into_volatile(b, c, v, "ゴッドバード"),
             ),
+            Event.ON_MODIFY_PP_CONSUMED: h.MoveHandler(
+                lambda b, c, v: h.suppress_pp_on_charge_continuation(b, c, v, "ゴッドバード"),
+            ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ゴッドバード_apply_flinch,
             )
@@ -1390,6 +1396,9 @@ MOVES_KA: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_MOVE_CHARGE: h.MoveHandler(
                 lambda b, c, v: h.charge_into_volatile(b, c, v, "シャドーダイブ"),
+            ),
+            Event.ON_MODIFY_PP_CONSUMED: h.MoveHandler(
+                lambda b, c, v: h.suppress_pp_on_charge_continuation(b, c, v, "シャドーダイブ"),
             ),
         }
     ),

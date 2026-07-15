@@ -747,6 +747,9 @@ MOVES_MA: dict[MoveName, MoveData] = {
                     ha.メテオビーム_charge,
                 ),
             ],
+            Event.ON_MODIFY_PP_CONSUMED: h.MoveHandler(
+                lambda b, c, v: h.suppress_pp_on_charge_continuation(b, c, v, "メテオビーム"),
+            ),
         },
         lethal_handlers={
             LethalEvent.ON_BEFORE_MOVE: LethalHandler(
