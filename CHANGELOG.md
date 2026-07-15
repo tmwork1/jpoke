@@ -91,6 +91,16 @@
   の内部シミュレーション（`evaluate()` の既定実装はログを一切参照しない）で
   `copy_logs=False` を使うように変更し、探索ノードごとに発生していた
   全履歴の無駄なdeepcopyを削減した
+- `Battle.build_observation(observer, copy_logs=True)` に `copy_logs` 引数を追加。
+  従来は内部実装（`observation_builder.build()`）が `deepcopy(battle)` を直接呼んで
+  おり、`copy()` の `copy_logs=False` 最適化の恩恵を受けられなかった。
+  `build_observation()` は `command_manager.py`/`turn_controller.py` から毎ターンの
+  行動選択フェーズで必ず呼ばれるホットパスのため、ログを一切参照しない方策でも
+  ターンが進むほど肥大化する全履歴を無条件にdeepcopyし続けるコストがあった。
+  既定は `Battle.copy()` と同じ `True` で従来通りログを引き継ぐ挙動を維持する
+  （`choose_command()`/`choose_selection()` の実装がログを参照する可能性がある
+  汎用の呼び出し経路の既定は変更していない）。ログを参照しないと分かっている
+  用途でのみ明示的に `copy_logs=False` を指定してコピー負荷を削減できる
 - `Player.battle_against()` に `on_battle_end: Callable[[Battle], None] | None = None`
   引数を追加。従来は `n_battles` ループ内で各対戦の `Battle` を勝敗判定にのみ使い
   破棄しており、自己対戦データ収集（強化学習用リプレイ等）のために `battle_against()`

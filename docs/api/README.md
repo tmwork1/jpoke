@@ -257,6 +257,7 @@ critical_hits = [
 | API | 概要 |
 |---|---|
 | `copy(reseed=False, copy_logs=True)` | `Battle` インスタンスを複製する。`reseed=True` にすると複製側の `random`/`decision_random` を派生シードで再初期化し、木探索で兄弟ノード間の乱数系列が相関するのを避けられる（複製元の乱数系列は消費されない）。`copy_logs=False` にすると `event_logger`/`command_log`（対戦開始からの全履歴）をdeepcopyせず、複製先に空の新規ログを持たせる（複製元のログには影響しない）。木探索の内部シミュレーションのようにログを参照しない用途では、ターン数に比例して増える全履歴コピーのコストを避けられる |
+| `build_observation(observer, copy_logs=True)` | 指定した `observer` 視点で情報を隠蔽した `Battle` の複製を作る（`choose_command()`/`choose_selection()` に渡される盤面）。`command_manager.py`/`turn_controller.py` から毎ターンの行動選択フェーズで呼ばれるホットパス。`copy_logs` の意味は `copy()` と同じで、既定は `True`（ログを引き継ぐ）。方策実装がログを参照する可能性がある汎用の呼び出し経路では既定のまま使うこと。ログを参照しないと分かっている用途（木探索の内部シミュレーション等）でのみ明示的に `copy_logs=False` を指定してコピー負荷を減らせる |
 
 ```python
 sim = battle.copy(reseed=True, copy_logs=False)

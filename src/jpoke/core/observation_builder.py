@@ -6,6 +6,7 @@ if TYPE_CHECKING:
 
 from copy import deepcopy
 
+from jpoke.core.event_logger import EventLogger
 from jpoke.model.ability import Ability
 from jpoke.model.item import Item
 
@@ -13,12 +14,18 @@ from jpoke.model.item import Item
 OBSERVED_MOVE_INDEXES: dict[Pokemon, dict[int, int]] = {}  # 技のインデックス変更を記録する辞書. dict[Pokemon, dict[old_index, new_index]]
 
 
-def build(battle: Battle, observer: Player) -> Battle:
+def build(battle: Battle, observer: Player, copy_logs: bool = True) -> Battle:
     """Battle インスタンスから Observation インスタンスを構築する。
 
     Args:
         battle: Battle インスタンス
         observer: 観測対象のプレイヤー
+        copy_logs: Falseの場合、event_logger/command_log（対戦開始からの
+            全履歴）をdeepcopyせず、複製先に空の新規ログを持たせる
+            （複製元のログは変更されない）。全履歴のdeepcopyはターン数に
+            比例してコストが増えるため、ログを参照しない用途で使うと
+            コピー負荷を削減できる。既定はTrueで、従来通り履歴を
+            引き継いだ複製を作る（Battle.copy()のdocstring参照）。
 
     Returns:
         Observation インスタンス
@@ -30,11 +37,28 @@ def build(battle: Battle, observer: Player) -> Battle:
         ProcessPoolExecutor 等のプロセス並列を使うこと。
         ThreadPoolExecutor 等で複数スレッドから同時に build() を呼び出すと、
         インデックス対応表が競合して壊れる可能性がある。
+        copy_logs=Falseの場合はさらに、deepcopy実行中に battle の
+        event_logger/command_log を一時的に空へ差し替える（完了後は
+        直ちに元へ復元する）。この間に別スレッドが同じ battle の
+        event_logger/command_log へ読み書きすると競合しうる。
+
+    Note:
+        copy_logs=Falseは Battle.copy(copy_logs=False) と同じ「ログを
+        一時的に空へ差し替えてから deepcopy し、完了後直ちに復元する」
+        方式を再利用している。
     """
     opponent = battle.opponent(observer)
 
     # Battle インスタンスをコピーして、相手プレイヤーの情報を隠蔽する
-    new = deepcopy(battle)
+    if copy_logs:
+        new = deepcopy(battle)
+    else:
+        saved_event_logger, saved_command_log = battle.event_logger, battle.command_log
+        battle.event_logger, battle.command_log = EventLogger(), []
+        try:
+            new = deepcopy(battle)
+        finally:
+            battle.event_logger, battle.command_log = saved_event_logger, saved_command_log
     # ゲーム進行用の random は deepcopy のまま独立させる（本体と共有すると、方策が
     # choose_command() 内で sim.random を直接触った場合に、本来は技実行後（ダメージ
     # ロール・命中判定・急所判定等）に消費されるはずの乱数列を行動選択時点で先取り

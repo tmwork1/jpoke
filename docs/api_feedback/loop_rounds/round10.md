@@ -68,3 +68,24 @@
   `tests/moves_attack/test_move_sa.py`の確率検定テストが単発で失敗したが、今回の変更対象
   ファイルとは無関係で単独再実行・全体再実行とも再現せず、既存の確率的flakyテストと判断し
   今回の対応範囲には含めていない）。
+- [x] `build_observation()`が実戦の全ターンで対戦履歴を毎回まるごと`deepcopy`し、r7-8で導入済みの
+  `copy_logs=False`最適化の恩恵を受けていない（id: r10-5）
+  → 対応内容 (2026-07-15): `src/jpoke/core/observation_builder.py`の`build(battle, observer,
+  copy_logs: bool = True)`に引数を追加し、`Battle.copy()`と同じ「複製元の`event_logger`/
+  `command_log`を一時的に空へ差し替えてから`deepcopy`し、完了後直ちに`finally`で復元する」方式を
+  再利用した。`src/jpoke/core/battle.py`の`Battle.build_observation(observer, copy_logs: bool =
+  True)`にも引数を追加して`observation_builder.build()`へ委譲し、`is_observation()`が真の分岐
+  （`self.copy(...)`を呼ぶ経路）にも`copy_logs`を伝播させた。`command_manager.py`/
+  `turn_controller.py`の`build_observation()`呼び出し元は意図的に変更していない
+  （方策実装の`choose_command()`/`choose_selection()`がログを参照するかどうかを汎用の呼び出し
+  経路からは判断できないため、既定`True`を維持し安全側に倒した）。`TreeSearchPlayer`は元々
+  `battle.copy(reseed=True, copy_logs=False)`を直接使っており`build_observation()`経由ではない
+  ため変更不要。`docs/api/README.md`「対戦進行系」表の`build_observation`行と`CHANGELOG.md`を
+  更新した。`tests/test_observation.py`に`test_copy.py`と同じ命名・検証パターンで回帰テストを
+  4件追加し、(1) `copy_logs=False`指定時に複製先の`event_logger.logs`/`command_log`が空になり
+  かつ複製元と別オブジェクトであること、(2) `copy_logs=False`後も複製元のログ内容が変わらず
+  複製先への書き込みが複製元へ波及しないこと、(3) `copy_logs`省略時（既定`True`）は従来通り
+  全履歴が引き継がれること、(4) 既に`is_observation()`が真の盤面（観測用コピー済みの`Battle`）
+  に対して`build_observation()`を呼んだ場合も`self.copy(copy_logs=copy_logs)`経由で`copy_logs`
+  が正しく伝播すること、を確認した。`python -m pytest tests/ -v`で全件パス（5950 passed, 1
+  skipped）を確認した。
