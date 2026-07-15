@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 import pytest
 
 from jpoke import Pokemon
-from jpoke.enums import Command, Interrupt
+from jpoke.enums import Command, Interrupt, LogCode
 from jpoke.types import AilmentName, WeatherName, SideFieldName
 
 from .. import test_utils as t
@@ -882,7 +882,9 @@ def test_シンクロ_状態異常が相手に伝染する(ailment_name: Ailment
 
 
 def test_シンクロ_相手が既に状態異常のときは発動しない():
-    """シンクロ: 相手が既に状態異常のときは状態異常を付与できず伝染しない"""
+    """シンクロ: 相手が既に状態異常のときは状態異常を付与できず伝染しない。
+    このとき「シンクロが発動した」という発動ログ（ABILITY_TRIGGERED）自体も
+    出ないことを確認する（fuzzログ回帰）。"""
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", ability_name="シンクロ")],
         team1=[Pokemon("カビゴン")],
@@ -894,6 +896,13 @@ def test_シンクロ_相手が既に状態異常のときは発動しない():
     # 相手は既にまひ状態のため、どくは伝染しない
     assert foe.has_ailment("まひ")
     assert not foe.has_ailment("どく")
+    triggered = [
+        log for log in battle.event_logger.logs
+        if log.log == LogCode.ABILITY_TRIGGERED
+        and log.payload is not None
+        and getattr(log.payload, "ability", None) == "シンクロ"
+    ]
+    assert triggered == []
 
 
 def test_シンクロ_自発的な状態異常は伝染しない():
