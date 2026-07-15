@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from jpoke.core import Battle, AttackContext, EventContext
+    from jpoke.model import Pokemon
 
 from jpoke.enums import Event, Interrupt, LogCode
 from jpoke.core.handler import HandlerReturn
@@ -2344,28 +2345,22 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
     return HandlerReturn(value=value)
 
 
-def なげつける_check_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """なげつける: 使用者のアイテムを確認し、威力を設定する。
+def _なげつける_is_item_throwable(attacker: Pokemon) -> bool:
+    """なげつける: 使用者が持つアイテムが投げられる（fling可能な）ものかどうかを判定する。
 
     アイテムを持っていない場合、fling_power=0の対象外アイテムの場合、
-    またはno_fling=Trueの投げられないアイテム（ジュエル等）の場合は失敗する。
+    またはno_fling=Trueの投げられないアイテム（ジュエル等）の場合はFalse。
     ぶきよう・マジックルームなどでアイテムが無効化されている場合も、
-    アイテムを持っていない場合と同様に失敗する。
-    はっきんだまはギラティナ(アナザー/オリジン問わず)が使用した場合のみ失敗する
+    アイテムを持っていない場合と同様にFalse。
+    はっきんだまはギラティナ(アナザー/オリジン問わず)が使用した場合のみFalse
     （それ以外のポケモンが使用した場合は通常通り威力60で成功する）。
-    ブーストエナジーはこだいかっせい/クォークチャージ持ちが使用した場合のみ失敗する
+    ブーストエナジーはこだいかっせい/クォークチャージ持ちが使用した場合のみFalse
     （それ以外のポケモンが使用した場合は通常通り威力30で成功する）。
-    仮面（いしずえのめん・いどのめん・かまどのめん）はオーガポンが使用した場合のみ失敗する
+    仮面（いしずえのめん・いどのめん・かまどのめん）はオーガポンが使用した場合のみFalse
     （それ以外のポケモンが使用した場合は通常通り威力60で成功する）。
-    成功した場合はアイテムのfling_powerをctx.move.powerに設定する。
     """
-    attacker = ctx.attacker
     if not attacker.has_item(consider_enabled=True):
-        battle.add_event_log(
-            attacker, LogCode.MOVE_FAILED,
-            payload=FailureLogPayload(move=ctx.move.name, display_reason="なげつける_アイテムなし")
-        )
-        return HandlerReturn(value=False, stop_event=True)
+        return False
 
     item_data = attacker.item.data
     if (
@@ -2381,13 +2376,37 @@ def なげつける_check_item(battle: Battle, ctx: AttackContext, value: Any) -
             and attacker.name.startswith("オーガポン")
         )
     ):
+        return False
+
+    return True
+
+
+def なげつける_check_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """なげつける: 使用者のアイテムを確認し、威力を設定する。
+
+    投げられないアイテムの場合は失敗する（詳細は_なげつける_is_item_throwableを参照）。
+    成功した場合はアイテムのfling_powerをctx.move.powerに設定する。
+
+    この判定に失敗した場合はEvent.ON_MOVE_ENDへ到達してもアイテムを消費しない
+    （なげつける_consume_itemが_なげつける_is_item_throwableで再度ガードする）。
+    そもそも投げる対象のアイテムが存在しない/無効なため、実機でもアイテムは失われない。
+    """
+    attacker = ctx.attacker
+    if not attacker.has_item(consider_enabled=True):
+        battle.add_event_log(
+            attacker, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="なげつける_アイテムなし")
+        )
+        return HandlerReturn(value=False, stop_event=True)
+
+    if not _なげつける_is_item_throwable(attacker):
         battle.add_event_log(
             attacker, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="なげつける_対象外アイテム")
         )
         return HandlerReturn(value=False, stop_event=True)
 
-    ctx.move.base_power = item_data.fling_power
+    ctx.move.base_power = attacker.item.data.fling_power
     return HandlerReturn(value=value)
 
 
@@ -2400,6 +2419,12 @@ def なげつける_consume_item(battle: Battle, ctx: AttackContext, value: Any)
     remove_itemは対象がすでにアイテムを持っていない場合は何もしないため、
     ON_HITで消費済みの場合にON_MOVE_ENDで再度呼び出しても副作用はない。
 
+    なげつける_check_item（Event.ON_TRY_MOVE_1）自身の判定に失敗した場合も
+    Event.ON_MOVE_ENDは発火する（こだわり系アイテムのロック等、他の汎用的な
+    ON_MOVE_END処理を確実に動かすため）。しかしその場合はそもそも投げられる
+    アイテムを確認できていないため、ここで_なげつける_is_item_throwableに
+    より再度ガードし、アイテムを消費しない。
+
     ItemManager.consume_itemを経由しないため、使用者自身がきのみを投げたときは
     ここで明示的にEvent.ON_BERRY_CONSUMEDを発火し、はんすうの再発動対象にする
     （2回目呼び出し時は既に手放しているためis_berryがFalseとなり二重発火しない）。
@@ -2407,6 +2432,8 @@ def なげつける_consume_item(battle: Battle, ctx: AttackContext, value: Any)
     （ほおぶくろはこの経路では発動しない。詳細は EventContext.is_self_fling を参照）。
     """
     attacker = ctx.attacker
+    if not _なげつける_is_item_throwable(attacker):
+        return HandlerReturn(value=value)
     if attacker.item.is_berry():
         from jpoke.core.context import EventContext
         battle.events.emit(

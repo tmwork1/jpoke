@@ -3,7 +3,7 @@
 import pytest
 from jpoke import Pokemon
 from jpoke.data.move import MOVES
-from jpoke.enums import Event, Interrupt
+from jpoke.enums import Event, Interrupt, LogCode
 from .. import test_utils as t
 
 
@@ -1466,6 +1466,25 @@ def test_ひっくりかえす_ものまねハーブが発動しない():
     assert defender.boosts["def"] == 1
     assert attacker.boosts["def"] == 0
     assert attacker.has_item("ものまねハーブ")
+
+
+def test_ひっくりかえす_全ランク0での失敗時のログはMOVE_FAILEDが1行のみ():
+    """ひっくりかえす: 全ランク0による失敗時、_execute_status_hitの汎用フォールバック
+    ログが重複して記録されず、ハンドラ自身が記録した理由付きログのみが残ること
+    （MOVE_FAILEDの二重ログ回帰の確認）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ひっくりかえす"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    before = len(battle.event_logger.logs)
+    t.run_move(battle, 0)
+    logs = battle.event_logger.logs[before:]
+    failed_logs = [log for log in logs if log.log == LogCode.MOVE_FAILED]
+
+    assert len(failed_logs) == 1
+    assert failed_logs[0].payload.display_reason == "能力ランクに変化がない"
 
 
 def test_ひっくりかえす_全ランク0なら失敗する():
