@@ -376,13 +376,21 @@ class Battle:
         finally:
             self.phase = old_phase
 
-    def build_observation(self, observer: Player) -> Battle:
+    def build_observation(self, observer: Player, copy_logs: bool = True) -> Battle:
         """指定したプレイヤー視点で情報を隠蔽した Battle インスタンスのコピーを作成。
 
         すでに観測状態の場合はそのままコピーを返す。
 
         Args:
             observer: 観測対象のプレイヤー。Noneの場合は全ての情報をコピー。
+            copy_logs: Falseの場合、event_logger/command_log（対戦開始からの
+                全履歴）をdeepcopyせず、複製先に空の新規ログを持たせる
+                （複製元のログは変更されない）。全履歴のdeepcopyはターン数に
+                比例してコストが増えるため、ログを参照しない用途で使うと
+                コピー負荷を削減できる。既定はTrueで、従来通り履歴を
+                引き継いだ複製を作る（Battle.copy()のdocstring参照）。
+                choose_command()/choose_selection() の実装がログを参照する
+                可能性がある汎用の呼び出し経路では既定のTrueのまま使うこと。
 
         Returns:
             Battle インスタンスのコピー
@@ -396,8 +404,8 @@ class Battle:
             を呼び出すと、内部状態が競合して壊れる可能性がある。
         """
         if self.is_observation():
-            return self.copy()
-        return observation_builder.build(self, observer)
+            return self.copy(copy_logs=copy_logs)
+        return observation_builder.build(self, observer, copy_logs=copy_logs)
 
     def is_observation(self) -> bool:
         """Battle インスタンスが観測用かどうかを判定する。
