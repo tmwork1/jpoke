@@ -2611,6 +2611,36 @@ def test_そらをとぶ_2ターンで攻撃する():
     assert "そらをとぶ" not in attacker.volatiles
 
 
+def test_そらをとぶ_2ターン目が外れると溜め状態が解除され3ターン目は改めて溜める():
+    """そらをとぶ: 2ターン目の攻撃が外れた場合でも揮発状態が解除され、
+    3ターン目は改めて溜めから始まる（ダメージを与えない）。
+    ON_HITのみに解除ハンドラを登録していると命中失敗時に解除されず、
+    3ターン目も強制続行の攻撃コマンドが再選択され続けてしまう不具合の回帰確認。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["そらをとぶ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=0,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+
+    # 1ターン目: 揮発状態付与のみ、ダメージなし
+    t.run_move(battle, 0)
+    assert "そらをとぶ" in attacker.volatiles
+
+    hp_before = defender.hp
+    # 2ターン目: 攻撃が外れる
+    t.run_move(battle, 0)
+    assert "そらをとぶ" not in attacker.volatiles
+    assert defender.hp == hp_before
+
+    # 3ターン目: 改めて溜める（直接攻撃しない）
+    t.run_move(battle, 0)
+    assert "そらをとぶ" in attacker.volatiles
+    assert defender.hp == hp_before
+
+
 def test_そらをとぶ_2ターン目にわるあがきへすり替わらない():
     """そらをとぶ: 1ターン目で付与される揮発状態のmove_nameが「わるあがき」に
     すり替わらず、そらをとぶ自身が設定されること（charge_into_volatileが
@@ -2681,6 +2711,32 @@ def test_ソーラービーム_1ターン目は溜めてダメージを与えな
     defender = battle.actives[1]
     hp_before = defender.hp
     t.run_move(battle, 0)
+    assert attacker.has_volatile("ソーラービーム")
+    assert defender.hp == hp_before
+
+
+def test_ソーラービーム_2ターン目が外れると溜め状態が解除され3ターン目は改めて溜める():
+    """ソーラービーム: 2ターン目の攻撃が外れた場合でも揮発状態が解除され、
+    3ターン目は改めて溜めから始まる（ダメージを与えない）。
+    ON_HITのみに解除ハンドラを登録していると命中失敗時に解除されず、
+    3ターン目も強制続行の攻撃コマンドが再選択され続けてしまう不具合の回帰確認。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ソーラービーム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=0,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)  # 1ターン目: 溜め
+    assert attacker.has_volatile("ソーラービーム")
+
+    hp_before = defender.hp
+    t.run_move(battle, 0)  # 2ターン目: 攻撃が外れる
+    assert not attacker.has_volatile("ソーラービーム")
+    assert defender.hp == hp_before
+
+    t.run_move(battle, 0)  # 3ターン目: 改めて溜める
     assert attacker.has_volatile("ソーラービーム")
     assert defender.hp == hp_before
 
