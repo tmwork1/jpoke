@@ -1148,6 +1148,28 @@ def test_こだわり系_交代でロック解除(item_name):
     assert not mon.has_volatile("こだわり")
 
 
+def test_こだわり系_対象がすでに全員ひんしで技が不発でも技ロック():
+    """こだわり系アイテム: ON_TRY_MOVE_1（対象がすでに全員ひんし）で
+    技が不発した場合も、こだわりロックがかかること。
+
+    同一ターン内で相手が先に瀕死になり、瀕死交代（ターン終了時）より前に
+    自分の行動が実行されるケースを想定する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="こだわりメガネ", move_names=["おだてる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.modify_hp(defender, v=-defender.max_hp)  # 瀕死交代前に相手をあらかじめ瀕死にする
+    t.run_move(battle, 0)
+    mon = battle.actives[0]
+    assert defender.fainted
+    assert defender.boosts["spa"] == 0  # 不発のため効果は適用されない
+    assert mon.has_volatile("こだわり")
+    assert mon.volatiles["こだわり"].move_name == "おだてる"
+
+
 @pytest.mark.parametrize(
     "item_name",
     ["こだわりスカーフ", "こだわりハチマキ", "こだわりメガネ"]
