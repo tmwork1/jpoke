@@ -92,7 +92,7 @@ class Move(GameEffect):
     @property
     def crit_ratio(self) -> int:
         """急所ランク補正値を取得する。"""
-        return self.data.critical_rank
+        return self.data.crit_ratio
 
     @property
     def target(self) -> MoveTarget:

@@ -574,7 +574,7 @@ def test_ハサミギロチン_タイプ分類命中率PPが仕様通り():
     move_data = MOVES["ハサミギロチン"]
     assert move_data.type == "ノーマル"
     assert move_data.category == "physical"
-    assert move_data.power == 0
+    assert move_data.power is None
     assert move_data.accuracy == 30
     assert move_data.pp == 8
     assert "ohko" in move_data.flags
@@ -2532,7 +2532,7 @@ def test_ブリザードランス_Champions基準のPPを持つ():
     assert move_data.power == 120
     assert move_data.accuracy == 100
     assert move_data.pp == 8
-    assert move_data.critical_rank == 0
+    assert move_data.crit_ratio == 0
 
 
 def test_ブリザードランス_タイプ分類威力命中が正しく反映されダメージのみ与える():

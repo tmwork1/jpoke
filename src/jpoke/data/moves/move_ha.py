@@ -18,9 +18,6 @@ from ..models import MoveData
 
 MOVES_HA: dict[MoveName, MoveData] = {
     "はいすいのじん": MoveData(
-        type="かくとう",
-        category="status",
-        pp=5,
         target="self",
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
@@ -33,11 +30,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         },
     ),
     "ハイドロカノン": MoveData(
-        type="みず",
-        category="special",
-        pp=8,
-        power=150,
-        accuracy=90,
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.リチャージ_apply,
@@ -62,11 +54,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         },
     ),
     "ハイドロポンプ": MoveData(
-        type="みず",
-        category="special",
-        pp=8,
-        power=110,
-        accuracy=80,
         handlers={},  # 追加効果なし
     ),
     "ハイパードリル": MoveData(
@@ -79,11 +66,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "ハイパーボイス": MoveData(
-        type="ノーマル",
-        category="special",
-        pp=12,
-        power=90,
-        accuracy=100,
         flags={"sound"},
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
@@ -92,11 +74,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         },
     ),
     "はいよるいちげき": MoveData(
-        type="むし",
-        category="physical",
-        pp=12,
-        power=70,
-        accuracy=90,
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
@@ -105,11 +82,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "はかいこうせん": MoveData(
-        type="ノーマル",
-        category="special",
-        pp=8,
-        power=150,
-        accuracy=90,
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.リチャージ_apply,
@@ -117,11 +89,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "はがねのつばさ": MoveData(
-        type="はがね",
-        category="physical",
-        pp=20,
-        power=70,
-        accuracy=90,
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
@@ -130,11 +97,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "はきだす": MoveData(
-        type="ノーマル",
-        category="special",
-        pp=12,
-        power=0,
-        accuracy=100,
         handlers={
             Event.ON_TRY_MOVE_1: [
                 h.MoveHandler(
@@ -151,11 +113,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ハサミギロチン": MoveData(
-        type="ノーマル",
-        category="physical",
-        pp=8,
-        power=0,
-        accuracy=30,
         flags={"ohko", "contact"},
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
@@ -174,11 +131,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "はたきおとす": MoveData(
-        type="あく",
-        category="physical",
-        pp=20,
-        power=65,
-        accuracy=100,
         flags={"contact"},
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
@@ -196,11 +148,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "はたく": MoveData(
-        type="ノーマル",
-        category="physical",
-        pp=20,
-        power=40,
-        accuracy=100,
         flags={"contact"},
         handlers={},  # 追加効果なし
     ),
@@ -223,7 +170,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         pp=25,
         power=55,
         accuracy=95,
-        critical_rank=1,
+        crit_ratio=1,
         flags={"slash"},
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
@@ -239,20 +186,11 @@ MOVES_HA: dict[MoveName, MoveData] = {
         handlers={},  # 効果のないわざ（戦闘上の効果なし）
     ),
     "はどうだん": MoveData(
-        type="かくとう",
-        category="special",
-        pp=20,
-        power=80,
         accuracy=None,  # 必中
         flags={"bullet", "pulse"},
         handlers={},  # 追加効果なし
     ),
     "はなびらのまい": MoveData(
-        type="くさ",
-        category="special",
-        pp=12,
-        power=120,
-        accuracy=100,
         flags={"contact", "dance"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
@@ -261,11 +199,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "はなふぶき": MoveData(
-        type="くさ",
-        category="physical",
-        pp=16,
-        power=90,
-        accuracy=100,
         flags={"wind"},
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
@@ -274,9 +207,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         },
     ),
     "はねやすめ": MoveData(
-        type="ひこう",
-        category="status",
-        pp=8,
         target="self",
         flags={"heal"},
         handlers={
@@ -301,9 +231,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         },
     ),
     "ハバネロエキス": MoveData(
-        type="くさ",
-        category="status",
-        pp=16,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ハバネロエキス_apply,
@@ -327,11 +254,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         },
     ),
     "はめつのひかり": MoveData(
-        type="フェアリー",
-        category="special",
-        pp=8,
-        power=140,
-        accuracy=90,
         flags={"recoil"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
@@ -340,12 +262,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "はやてがえし": MoveData(
-        type="かくとう",
-        category="physical",
-        pp=16,
-        power=65,
-        accuracy=100,
-        priority=3,
         flags={"contact"},
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
@@ -358,9 +274,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "はらだいこ": MoveData(
-        type="ノーマル",
-        category="status",
-        pp=12,
         target="self",
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
@@ -388,10 +301,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ハロウィン": MoveData(
-        type="ゴースト",
-        category="status",
-        pp=20,
-        accuracy=100,
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.ハロウィン_can_apply,
@@ -415,11 +324,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ハードプラント": MoveData(
-        type="くさ",
-        category="special",
-        pp=8,
-        power=150,
-        accuracy=90,
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.リチャージ_apply,
@@ -427,11 +331,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ハードプレス": MoveData(
-        type="はがね",
-        category="physical",
-        pp=12,
         power=1,
-        accuracy=100,
         flags={"contact"},
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
@@ -440,11 +340,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ばかぢから": MoveData(
-        type="かくとう",
-        category="physical",
-        pp=8,
-        power=120,
-        accuracy=100,
         flags={"contact"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
@@ -456,11 +351,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ばくおんぱ": MoveData(
-        type="ノーマル",
-        category="special",
-        pp=12,
-        power=140,
-        accuracy=100,
         flags={"sound"},
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
@@ -469,11 +359,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         },
     ),
     "ばくれつパンチ": MoveData(
-        type="かくとう",
-        category="physical",
-        pp=8,
-        power=100,
-        accuracy=50,
         flags={"contact", "punch", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
@@ -482,9 +367,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "バトンタッチ": MoveData(
-        type="ノーマル",
-        category="status",
-        pp=20,
         target="self",
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
@@ -510,11 +392,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "バリアーラッシュ": MoveData(
-        type="エスパー",
-        category="physical",
-        pp=12,
-        power=90,
-        accuracy=90,
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
@@ -523,21 +400,10 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "バレットパンチ": MoveData(
-        type="はがね",
-        category="physical",
-        pp=20,
-        power=40,
-        accuracy=100,
-        priority=1,
         flags={"contact", "punch"},
         handlers={},  # 追加効果なし
     ),
     "バークアウト": MoveData(
-        type="あく",
-        category="special",
-        pp=16,
-        power=55,
-        accuracy=95,
         flags={"secondary_effect", "sound"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
@@ -567,11 +433,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "パラボラチャージ": MoveData(
-        type="でんき",
-        category="special",
-        pp=20,
-        power=65,
-        accuracy=100,
         flags={"heal"},
         handlers={
             Event.ON_HIT: h.MoveHandler(ha.パラボラチャージ_drain, priority=20),
@@ -590,18 +451,10 @@ MOVES_HA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "パワーウィップ": MoveData(
-        type="くさ",
-        category="physical",
-        pp=12,
-        power=120,
-        accuracy=85,
         flags={"contact"},
         handlers={},  # 追加効果なし
     ),
     "パワーシェア": MoveData(
-        type="エスパー",
-        category="status",
-        pp=12,
         accuracy=None,  # 必中
         # マジックコートで跳ね返されない
         flags={"unreflectable"},
@@ -612,17 +465,9 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "パワージェム": MoveData(
-        type="いわ",
-        category="special",
-        pp=20,
-        power=80,
-        accuracy=100,
         handlers={},  # 追加効果なし
     ),
     "パワースワップ": MoveData(
-        type="エスパー",
-        category="status",
-        pp=12,
         accuracy=None,  # 必中
         # マジックコートで跳ね返されず、みがわりを貫通する
         flags={"unreflectable", "bypass_substitute"},
@@ -633,9 +478,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "パワートリック": MoveData(
-        type="エスパー",
-        category="status",
-        pp=12,
         target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -644,9 +486,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ひかりのかべ": MoveData(
-        type="エスパー",
-        category="status",
-        pp=20,
         target="own_side",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -655,11 +494,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ひけん・ちえなみ": MoveData(
-        type="あく",
-        category="physical",
-        pp=16,
-        power=65,
-        accuracy=90,
         flags={"contact", "slash", "secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
@@ -677,9 +511,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "ひっくりかえす": MoveData(
-        type="あく",
-        category="status",
-        pp=20,
         accuracy=None,  # 必中
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -701,11 +532,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ひゃっきやこう": MoveData(
-        type="ゴースト",
-        category="special",
-        pp=16,
-        power=65,
-        accuracy=100,
         flags={"secondary_effect"},
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
@@ -717,11 +543,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ひやみず": MoveData(
-        type="みず",
-        category="special",
-        pp=20,
-        power=50,
-        accuracy=100,
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
@@ -730,11 +551,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ひょうざんおろし": MoveData(
-        type="こおり",
-        category="physical",
-        pp=12,
-        power=120,
-        accuracy=85,
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
@@ -743,11 +559,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ヒートスタンプ": MoveData(
-        type="ほのお",
-        category="physical",
-        pp=12,
         power=1,
-        accuracy=100,
         flags={"minimize", "contact"},
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
@@ -769,9 +581,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ビルドアップ": MoveData(
-        type="かくとう",
-        category="status",
-        pp=20,
         target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -780,10 +589,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ファストガード": MoveData(
-        type="かくとう",
-        category="status",
         pp=16,  # champions基準（docs/champions/move_list.txt）。Gen9本家は15
-        priority=3,
         target="self",
         flags={"protect"},
         handlers={
@@ -796,12 +602,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ふいうち": MoveData(
-        type="あく",
-        category="physical",
-        pp=8,
-        power=70,
-        accuracy=100,
-        priority=1,
         flags={"contact"},
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
@@ -811,9 +611,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ふういん": MoveData(
-        type="エスパー",
-        category="status",
-        pp=12,
         target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -822,9 +619,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "フェアリーロック": MoveData(
-        type="フェアリー",
-        category="status",
-        pp=12,
         target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -833,11 +627,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "フェイタルクロー": MoveData(
-        type="どく",
-        category="physical",
-        pp=16,
-        power=80,
-        accuracy=100,
         flags={"contact", "secondary_effect", "slash"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
@@ -846,12 +635,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "フェイント": MoveData(
-        type="ノーマル",
-        category="physical",
-        pp=12,
-        power=30,
-        accuracy=100,
-        priority=2,
         flags={"unprotectable", "non_copycat"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
@@ -860,10 +643,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "フェザーダンス": MoveData(
-        type="ひこう",
-        category="status",
-        pp=16,
-        accuracy=100,
         flags={"dance"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -891,10 +670,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         },
     ),
     "ふきとばし": MoveData(
-        type="ノーマル",
-        category="status",
-        pp=20,
-        priority=-6,
         flags={"wind", "unprotectable", "bypass_substitute", "non_copycat"},
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: [
@@ -911,11 +686,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ふくろだたき": MoveData(
-        type="あく",
-        category="physical",
-        pp=12,
         power=1,
-        accuracy=100,
         multi_hit={"min": 1, "max": 6, "check_hit_each_time": False, "power_sequence": ()},
         handlers={
             Event.ON_MODIFY_HIT_COUNT: h.MoveHandler(
@@ -929,10 +700,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         },
     ),
     "ふしょくガス": MoveData(
-        type="どく",
-        category="status",
-        pp=20,
-        accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ふしょくガス_remove_item,
@@ -943,11 +710,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ふぶき": MoveData(
-        type="こおり",
-        category="special",
-        pp=8,
-        power=110,
-        accuracy=70,
         flags={"wind", "secondary_effect"},
         handlers={
             Event.ON_MODIFY_ACCURACY: h.MoveHandler(
@@ -976,11 +738,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "フライングプレス": MoveData(
-        type="かくとう",
-        category="physical",
-        pp=12,
-        power=100,
-        accuracy=95,
         flags={"contact", "gravity_restricted", "minimize"},
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
@@ -994,10 +751,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "フラフラダンス": MoveData(
-        type="ノーマル",
-        category="status",
-        pp=20,
-        accuracy=100,
         flags={"dance", "unreflectable"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -1017,11 +770,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "フリーズドライ": MoveData(
-        type="こおり",
-        category="special",
-        pp=20,
-        power=70,
-        accuracy=100,
         handlers={
             Event.ON_CALC_DEF_TYPE_MODIFIER: h.MoveHandler(
                 ha.フリーズドライ_water_effectiveness,
@@ -1074,11 +822,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "フレアソング": MoveData(
-        type="ほのお",
-        category="special",
-        pp=12,
-        power=80,
-        accuracy=100,
         flags={"sound", "secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
@@ -1090,11 +833,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "フレアドライブ": MoveData(
-        type="ほのお",
-        category="physical",
-        pp=16,
-        power=120,
-        accuracy=100,
         flags={"contact", "recoil", "secondary_effect", "thaw", "self_thaw"},
         handlers={
             Event.ON_TRY_ACTION: h.MoveHandler(
@@ -1110,11 +848,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ふんえん": MoveData(
-        type="ほのお",
-        category="special",
-        pp=16,
-        power=80,
-        accuracy=100,
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
@@ -1126,11 +859,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ふんか": MoveData(
-        type="ほのお",
-        category="special",
-        pp=8,
-        power=150,
-        accuracy=100,
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
                 ha.ふんか_calc_power,
@@ -1141,11 +869,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ふんどのこぶし": MoveData(
-        type="ゴースト",
-        category="physical",
-        pp=10,
-        power=50,
-        accuracy=100,
         flags={"contact", "punch"},
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
@@ -1154,11 +877,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ぶきみなじゅもん": MoveData(
-        type="エスパー",
-        category="special",
-        pp=8,
-        power=80,
-        accuracy=100,
         # PP減少効果自体に確率判定は無いが、ちからずく対象技として
         # 明記されている技のため secondary_effect フラグを設定する
         # （docs/spec/abilities/ちからずく.md参照）。
@@ -1170,11 +888,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ぶちかまし": MoveData(
-        type="じめん",
-        category="physical",
-        pp=8,
-        power=120,
-        accuracy=100,
         flags={"contact", "punch"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
@@ -1183,11 +896,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ブラストバーン": MoveData(
-        type="ほのお",
-        category="special",
-        pp=8,
-        power=150,
-        accuracy=90,
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.リチャージ_apply,
@@ -1221,11 +929,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         },
     ),
     "ブレイククロー": MoveData(
-        type="ノーマル",
-        category="physical",
-        pp=12,
-        power=75,
-        accuracy=95,
         flags={"contact", "secondary_effect", "slash"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
@@ -1234,12 +937,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ブレイズキック": MoveData(
-        type="ほのお",
-        category="physical",
-        pp=12,
-        power=85,
-        accuracy=90,
-        critical_rank=1,
         flags={"contact", "secondary_effect", "thaw"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
@@ -1259,11 +956,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         },
     ),
     "ブレイブバード": MoveData(
-        type="ひこう",
-        category="physical",
-        pp=16,
-        power=120,
-        accuracy=100,
         flags={"contact", "recoil"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
@@ -1272,11 +964,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ぶんまわす": MoveData(
-        type="あく",
-        category="physical",
-        pp=20,
-        power=60,
-        accuracy=100,
         flags={"contact"},
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
@@ -1309,11 +996,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         },
     ),
     "ヘドロウェーブ": MoveData(
-        type="どく",
-        category="special",
-        pp=12,
-        power=95,
-        accuracy=100,
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
@@ -1338,11 +1020,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ヘドロばくだん": MoveData(
-        type="どく",
-        category="special",
-        pp=12,
-        power=90,
-        accuracy=100,
         flags={"bullet", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
@@ -1351,10 +1028,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "へびにらみ": MoveData(
-        type="ノーマル",
-        category="status",
-        pp=20,
-        accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.へびにらみ_apply_ailment_to_defender,
@@ -1362,11 +1035,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ヘビーボンバー": MoveData(
-        type="はがね",
-        category="physical",
-        pp=12,
         power=1,
-        accuracy=100,
         flags={"minimize", "contact"},
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
@@ -1375,8 +1044,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "へんしん": MoveData(
-        type="ノーマル",
-        category="status",
         pp=12,  # champions基準（docs/champions/move_list.txt）。旧値10はSV本家基準の移行漏れ。
         # accuracy省略=必中。潜伏中の相手への失敗はHIDDEN_MOVE_ALLOWED_MOVES側で処理される。
         flags={"non_encore", "non_copycat", "unprotectable", "unreflectable"},
@@ -1386,11 +1053,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         handlers={},
     ),
     "ベノムショック": MoveData(
-        type="どく",
-        category="special",
-        pp=12,
-        power=65,
-        accuracy=100,
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
                 ha.ベノムショック_double_power_when_poisoned,
@@ -1412,11 +1074,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ほうでん": MoveData(
-        type="でんき",
-        category="special",
-        pp=16,
-        power=80,
-        accuracy=100,
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
@@ -1428,11 +1085,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ほうふく": MoveData(
-        type="あく",
-        category="physical",
-        pp=12,
-        power=0,
-        accuracy=100,
         flags={"contact"},
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
@@ -1447,10 +1099,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         },
     ),
     "ほえる": MoveData(
-        type="ノーマル",
-        category="status",
-        pp=20,
-        priority=-6,
         flags={"sound", "unprotectable", "non_copycat"},
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: [
@@ -1467,9 +1115,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ほおばる": MoveData(
-        type="ノーマル",
-        category="status",
-        pp=12,
         target="self",
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
@@ -1486,11 +1131,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ほしがる": MoveData(
-        type="ノーマル",
-        category="physical",
         pp=20,  # champions基準（docs/champions/move_list.txt）。旧値25はSV本家基準の移行漏れ。
-        power=60,
-        accuracy=100,
         flags={"contact", "non_copycat"},
         handlers={
             # docs/spec/turn.md ON_DAMAGE: 「100 はたきおとす等のアイテム効果」
@@ -1512,11 +1153,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ほっぺすりすり": MoveData(
-        type="でんき",
-        category="physical",
-        pp=20,
-        power=20,
-        accuracy=100,
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
@@ -1525,11 +1161,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ほのおのうず": MoveData(
-        type="ほのお",
-        category="special",
-        pp=16,
-        power=35,
-        accuracy=85,
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(ha.apply_bind_to_defender)
         },
@@ -1538,11 +1169,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ほのおのキバ": MoveData(
-        type="ほのお",
-        category="physical",
-        pp=16,
-        power=65,
-        accuracy=95,
         flags={"bite", "contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: [
@@ -1560,11 +1186,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "ほのおのパンチ": MoveData(
-        type="ほのお",
-        category="physical",
-        pp=16,
-        power=75,
-        accuracy=100,
         flags={"contact", "punch", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
@@ -1573,11 +1194,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ほのおのまい": MoveData(
-        type="ほのお",
-        category="special",
-        pp=12,
-        power=80,
-        accuracy=100,
         flags={"dance", "secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
@@ -1589,11 +1205,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ほのおのムチ": MoveData(
-        type="ほのお",
-        category="physical",
-        pp=16,
-        power=90,
-        accuracy=100,
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
@@ -1605,9 +1216,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ほろびのうた": MoveData(
-        type="ノーマル",
-        category="status",
-        pp=8,
         flags={"sound", "unprotectable"},
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
@@ -1631,11 +1239,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ぼうふう": MoveData(
-        type="ひこう",
-        category="special",
-        pp=12,
-        power=110,
-        accuracy=70,
         flags={"wind", "secondary_effect"},
         handlers={
             Event.ON_MODIFY_ACCURACY: h.MoveHandler(
@@ -1648,20 +1251,10 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ボディプレス": MoveData(
-        type="かくとう",
-        category="physical",
-        pp=12,
-        power=80,
-        accuracy=100,
         flags={"contact"},
         handlers={},  # 追加効果なし
     ),
     "ボルテッカー": MoveData(
-        type="でんき",
-        category="physical",
-        pp=16,
-        power=120,
-        accuracy=100,
         flags={"contact", "recoil", "secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
@@ -1673,21 +1266,11 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ボルトチェンジ": MoveData(
-        type="でんき",
-        category="special",
-        pp=20,
-        power=70,
-        accuracy=100,
         handlers={
             Event.ON_HIT: h.MoveHandler(ha.pivot)
         }
     ),
     "ボーンラッシュ": MoveData(
-        type="じめん",
-        category="physical",
-        pp=12,
-        power=30,
-        accuracy=90,
         multi_hit={
             "min": 2,
             "max": 5,
@@ -1715,7 +1298,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         pp=25,
         power=50,
         accuracy=100,
-        critical_rank=1,
+        crit_ratio=1,
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
@@ -1724,11 +1307,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ポルターガイスト": MoveData(
-        type="ゴースト",
-        category="physical",
-        pp=8,
-        power=110,
-        accuracy=90,
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 ha.ポルターガイスト_check_item,
