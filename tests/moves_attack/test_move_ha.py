@@ -817,7 +817,10 @@ def test_はなふぶき_相手にダメージを与える():
 
 
 def test_はめつのねがい_2ターン後に相手にダメージが入る():
-    """はめつのねがい: 使用から2ターン後のターン終了時に相手へダメージが発生する。"""
+    """はめつのねがい: 使用ターンを含めず2ターン後（使用ターンをTurn1とするとTurn3）の
+    ターン終了時に相手へダメージが発生する。count: 3 → 2 → 1 → 0 で発動するため、
+    使用ターン・1ターン後の終了時点ではまだダメージが入らないことも確認する
+    （1ターン早く着弾する不具合の回帰確認）。"""
     battle = t.start_battle(
         team0=[Pokemon("ジバコイル", move_names=["はめつのねがい"])],
         team1=[Pokemon("カビゴン")],
@@ -826,7 +829,9 @@ def test_はめつのねがい_2ターン後に相手にダメージが入る():
     defender = battle.actives[1]
     hp_before = defender.hp
     t.run_move(battle, 0)
-    t.end_turn(battle)  # count: 2 → 1、まだダメージなし
+    t.end_turn(battle)  # count: 3 → 2、まだダメージなし
+    assert defender.hp == hp_before
+    t.end_turn(battle)  # count: 2 → 1、まだダメージなし（早期発動していないことを確認）
     assert defender.hp == hp_before
     t.end_turn(battle)  # count: 1 → 0 → フィールド解除 → ダメージ発生
     assert defender.hp < hp_before
