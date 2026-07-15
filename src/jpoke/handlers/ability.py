@@ -2701,11 +2701,18 @@ def とびだすなかみ_save_hp(battle: Battle, ctx: AttackContext, value: Any
 
 
 def とびだすハバネロ_burn_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """とびだすハバネロ特性: 攻撃技を受けたとき攻撃者をやけど状態にする。"""
+    """とびだすハバネロ特性: 攻撃技を受けたとき攻撃者をやけど状態にする。
+
+    ほのおのからだと異なり直接攻撃でない技にも100%発動するが、みがわりに攻撃を
+    防がれたとき（実HPダメージ0）は発動しない。
+    """
+    if ctx.substitute_damage:
+        return HandlerReturn(value=value)
     attacker = ctx.attacker
     if attacker is None:
         return HandlerReturn(value=value)
-    battle.ailment_manager.apply(attacker, "やけど", source=ctx.defender)
+    if battle.ailment_manager.apply(attacker, "やけど", source=ctx.defender):
+        _announce_ability_triggered(battle, ctx.defender)
     return HandlerReturn(value=value)
 
 
