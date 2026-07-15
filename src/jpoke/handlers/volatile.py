@@ -561,12 +561,15 @@ def こんらん_try_action(battle: Battle, ctx: EventContext, value: Any) -> Ha
         move="_こんらん",
     )
 
-    # ダメージ適用
-    battle.modify_hp(ctx.attacker, v=-damage, reason="self_attack")
+    # 動けない理由のログを先に記録してから自傷ダメージを適用する
+    # （modify_hpが致死ダメージの場合、内部でflush_winner_logが即座に発火し
+    # 勝敗確定ログがこのログを追い越してしまうため）
     battle.add_event_log(
         ctx.attacker, LogCode.ACTION_BLOCKED,
         payload=FailureLogPayload(move=ctx.move.name, display_reason="こんらん")
     )
+    # 自傷ダメージの適用
+    battle.modify_hp(ctx.attacker, v=-damage, reason="self_attack")
     return HandlerReturn(value=False, stop_event=True)
 
 

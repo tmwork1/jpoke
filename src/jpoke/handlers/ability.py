@@ -3278,8 +3278,11 @@ def ばけのかわ_block_confusion_damage(battle: Battle, ctx: EventContext, va
         return HandlerReturn(value=value)
     mon = ctx.target
     battle.add_ability_disabled_reason(mon, "consumed")
-    battle.modify_hp(mon, r=-1/8)
+    # 特性発動アナウンスを先に記録してからHPを変化させる
+    # （このmodify_hpが致死ダメージの場合、内部でflush_winner_logが即座に発火し
+    # 勝敗確定ログがこのアナウンスログを追い越してしまうため）
     _announce_ability_triggered(battle, mon)
+    battle.modify_hp(mon, r=-1/8)
     return HandlerReturn(value=0)
 
 
