@@ -1001,9 +1001,15 @@ def test_じきゅうりょく_被弾でBが1段階上がる(move_name: str):
 
 
 def test_じきゅうりょく_連続攻撃技は1発ごとに発動する():
+    """物理技の連続攻撃技を受けた場合、1発ごとにぼうぎょが1段階上がる。
+
+    防御側をHP・防御ともに高いカビゴンにすることで、2発ヒットしてもひんしに
+    ならないようにする（ひんしになる一撃ではじきゅうりょくが発動しない仕様のため、
+    ちょうどひんしになるレアケースを踏むと発動回数がずれてflakyになる）。
+    """
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="じきゅうりょく")],
-        team1=[Pokemon("カビゴン", move_names=["ダブルアタック"])],
+        team0=[Pokemon("カビゴン", ability_name="じきゅうりょく")],
+        team1=[Pokemon("ピカチュウ", move_names=["ダブルアタック"])],
         accuracy=100,
     )
     t.run_move(battle, 1)
