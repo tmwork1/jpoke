@@ -4,6 +4,7 @@ import pytest
 
 from jpoke import Pokemon
 from jpoke.data.move import MOVES
+from jpoke.enums import LogCode
 from .. import test_utils as t
 
 
@@ -176,6 +177,26 @@ def test_ねごと_候補技がすべてnon_negotoの場合は失敗():
 
     assert negoto.pp == 11, "失敗してもねごとのPPは消費される"
     assert defender.hp == hp_before, "候補技なしの場合はダメージを与えない"
+
+
+def test_ねごと_候補技なし失敗時のログはMOVE_FAILEDが1行のみ():
+    """ねごと: 候補技なしによる失敗時、_execute_status_hitの汎用フォールバックログが
+    重複して記録されず、ハンドラ自身が記録した理由付きログのみが残ること
+    （MOVE_FAILEDの二重ログ回帰の確認）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ねごと"])],
+        team1=[Pokemon("カビゴン")],
+        ailment0=("ねむり", 3),
+        accuracy=100,
+    )
+    before = len(battle.event_logger.logs)
+    t.run_move(battle, 0, 0)
+    logs = battle.event_logger.logs[before:]
+    failed_logs = [log for log in logs if log.log == LogCode.MOVE_FAILED]
+
+    assert len(failed_logs) == 1
+    assert failed_logs[0].payload.display_reason == "ねごと_候補技なし"
 
 
 def test_ねごと_変化技を選んでも無限再帰にならない():
@@ -361,6 +382,25 @@ def test_ねむる_ぜったいねむりのゆめうつつ状態では失敗しH
     assert not battle.move_executor.move_success
     assert mon.hp == hp_before
     assert mon.ailment.name == "ゆめうつつ"
+
+
+def test_ねむる_ねむり付与失敗時のログはMOVE_FAILEDが1行のみ():
+    """ねむる: ふみん等によりねむり付与に失敗した場合、_execute_status_hitの汎用
+    フォールバックログが重複して記録されず、ハンドラ自身が記録した理由付きログのみが
+    残ること（MOVE_FAILEDの二重ログ回帰の確認）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="ふみん", move_names=["ねむる"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    before = len(battle.event_logger.logs)
+    t.run_move(battle, 0)
+    logs = battle.event_logger.logs[before:]
+    failed_logs = [log for log in logs if log.log == LogCode.MOVE_FAILED]
+
+    assert len(failed_logs) == 1
+    assert failed_logs[0].payload.display_reason == "ねむる"
 
 
 @pytest.mark.parametrize("ability_name", ["やるき", "ふみん", "スイートベール", "きよめのしお"])
