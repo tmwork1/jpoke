@@ -3,6 +3,9 @@
 `pip install jpoke` だけで実行できる、導入・学習用のサンプルスクリプト集。
 `jpoke.*` の公開APIのみに依存しており、リポジトリを clone しなくても動く。
 
+各ファイル冒頭にある `from __future__ import annotations` は、型アノテーションの
+前方参照を有効にするためのおまじない。動作に必要なので、消さずにそのまま残してよい。
+
 ```bash
 pip install jpoke
 python examples/01_basics/01_battle_against_intro.py
