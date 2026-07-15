@@ -20,3 +20,14 @@
   docstring・コメントの説明と一致することを確認した。`tests/test_examples_smoke.py`は
   `examples/**/*.py`を自動収集するため新規サンプルも自動でスモーク対象になり、
   `python -m pytest tests/ -v`で全件パスを確認した。
+- [x] `Battle.swap_items()`が`ItemManager.swap_items()`の`source`引数を落としており、
+  公開APIだけでは「すりかえ」相当の挙動を再現できない（id: r10-2）
+  → 対応内容 (2026-07-15): `Battle.swap_items()`に`source: Pokemon | None = None`引数を
+  追加し`ItemManager.swap_items()`へそのまま委譲するようにした（既定値`None`のため既存
+  呼び出しの挙動は変わらない）。`docs/api/README.md`「シナリオ構築系」表と`CHANGELOG.md`を
+  更新した。`handlers/move_status.py`内部の「すりかえ」実装は既存慣習（内部ハンドラは
+  `battle.item_manager.<method>()`を直接呼ぶ）に合わせ意図的に変更していない。
+  `tests/abilities/test_ability_na.py`に`battle.swap_items(source=...)`を使った回帰テストを
+  2件追加し、`source`に対象自身を渡した場合は自分のねんちゃくが無視されて交換が成立すること、
+  `source`に対象以外（交換元となった相手側）を渡した場合はねんちゃくによる交換阻止が
+  通常どおり機能することを確認した。`python -m pytest tests/ -v`で全件パスを確認した。
