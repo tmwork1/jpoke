@@ -4,6 +4,7 @@
 実行時に property 化するとテストのセットアップ代入（`mon.hp = ...`）を壊すため、
 代わりに src/jpoke 配下のソースを静的に走査して違反を検出する。
 """
+import ast
 import re
 from pathlib import Path
 
@@ -267,6 +268,47 @@ def test_examplesがtest_option経由で命中率等を固定していない():
     assert not violations, (
         "examples/ 配下で battle.test_option の使用を検出"
         "（accuracy_fix_threshold 等の公開APIに置き換えること）:\n" + "\n".join(violations)
+    )
+
+
+def test_examplesが全ファイルでfrom_future_import_annotationsを冒頭に持つ():
+    """`examples/README.md` は「各ファイル冒頭にある `from __future__ import annotations` は
+    型アノテーションの前方参照を有効にするためのおまじないで、動作に必要なので消さずに
+    そのまま残してよい」と説明している（id: r10-6）。この説明がexamples/配下の実態と
+    食い違っていないか（全ファイルに実際に存在するか、モジュールdocstringの直後という
+    「冒頭」と呼べる位置にあるか）を機械的に検証する。`from __future__ import annotations`は
+    構文上モジュールdocstring以外の文より前に置く必要があるPythonの制約があるため、
+    「モジュールdocstringの直後の最初の実行文」であることをast経由で確認する。
+    """
+    violations = []
+    for path in EXAMPLES_ROOT.rglob("*.py"):
+        rel_path = path.relative_to(EXAMPLES_ROOT).as_posix()
+        text = path.read_text(encoding="utf-8")
+        tree = ast.parse(text, filename=rel_path)
+
+        body = tree.body
+        # モジュールdocstringがあれば読み飛ばす
+        if (
+            body
+            and isinstance(body[0], ast.Expr)
+            and isinstance(body[0].value, ast.Constant)
+            and isinstance(body[0].value.value, str)
+        ):
+            body = body[1:]
+
+        is_future_import = (
+            body
+            and isinstance(body[0], ast.ImportFrom)
+            and body[0].module == "__future__"
+            and any(alias.name == "annotations" for alias in body[0].names)
+        )
+        if not is_future_import:
+            violations.append(rel_path)
+
+    assert not violations, (
+        "examples/ 配下で from __future__ import annotations が冒頭（モジュールdocstring"
+        "直後の最初の文）に無いファイルを検出。examples/README.md の説明と食い違うため"
+        "追加すること:\n" + "\n".join(violations)
     )
 
 

@@ -89,3 +89,18 @@
   に対して`build_observation()`を呼んだ場合も`self.copy(copy_logs=copy_logs)`経由で`copy_logs`
   が正しく伝播すること、を確認した。`python -m pytest tests/ -v`で全件パス（5950 passed, 1
   skipped）を確認した。
+- [x] 全examplesファイル冒頭の`from __future__ import annotations`が一度も説明されておらず、
+  ポケモンには詳しいPython初心者が「これは消してよいのか、必須なのか」を判断できない
+  （id: r10-6）
+  → 対応内容 (2026-07-15): `examples/`配下30ファイル全てが`from __future__ import
+  annotations`をモジュールdocstring直後の最初の文として持っており（構文上docstring以外の
+  文より前に置く必要があるPythonの制約に従う位置）、既存コード自体に問題は無かったが、
+  この1行が何のためにあるか・削除してよいかを説明する記述が`examples/README.md`にも
+  `docs/api/README.md`にも存在しなかった。`examples/README.md`冒頭に「型アノテーションの
+  前方参照を有効にするためのおまじないで、動作に必要なので消さずにそのまま残してよい」旨を
+  3行追加した。`src/jpoke`の実装コード・examplesファイル自体の変更は無い（ドキュメントのみの
+  変更）。再発防止のため`tests/test_code_conventions.py`に
+  `test_examplesが全ファイルでfrom_future_import_annotationsを冒頭に持つ`を追加し、
+  `examples/`配下の全`*.py`が（モジュールdocstringがあればその直後の）最初の文として
+  `from __future__ import annotations`を持つことをast経由で機械的に検査するようにした。
+  `python -m pytest tests/ -v`で全件パス（5953 passed, 1 skipped）を確認した。
