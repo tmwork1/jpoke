@@ -87,7 +87,7 @@ class TreeSearchPlayer(Player):
         `Battle(seed=...)` で固定した対戦全体の再現性を壊さない。
         差し替える場合はオーバーライドする。
         """
-        return battle.decision_random.choice(battle.get_available_commands(self))
+        return battle.decision_random.choice(self._available_commands_with_recovery(battle, self))
 
     def opponent_estimator(self, battle: Battle, opponent: Player) -> None:
         """相手の合法手が未公開で空のときに呼ばれる推定フック。
@@ -172,12 +172,50 @@ class TreeSearchPlayer(Player):
         やり直させて補う。それでも空なら空リストのまま返し、
         呼び出し元でフォールバック判定に使わせる。
         """
-        my_commands = battle.get_available_commands(self)
+        my_commands = self._available_commands_with_recovery(battle, self)
         opponent_commands = battle.get_available_commands(opponent)
         if not opponent_commands and self._has_opponent_estimator():
             self.opponent_estimator(battle, opponent)
             opponent_commands = self._resolve_estimated_commands(battle, opponent)
         return my_commands, opponent_commands
+
+    def _available_commands_with_recovery(self, battle: Battle, player: Player) -> list[Command]:
+        """`battle.get_available_commands(player)` を呼び、switch フェーズで
+        結果が空になった場合のみ `state.team`（選出制限を無視したチーム全体）
+        から交代先候補を復元するフォールバック付きの合法手取得。
+
+        背景: 木探索の内部シミュレーション（`sim.step()`）中に、相手プレイヤー
+        自身が PIVOT（とんぼがえり等）・EMERGENCY（ききかいひ等）・
+        だっしゅつボタン/パックなどの割り込み交代を要求されることがある。
+        この時 `battle` は「探索している側（player の相手）の視点で情報隠蔽
+        された観測」の子孫であることがあり、`observation_builder._mask()` が
+        `state.selected_indexes` を「相手から見て公開済みの控えのみ」に
+        絞り込んでいる（`state.bench`/`state.selection` はこの値を使う）。
+        PIVOT/EMERGENCY等の割り込みは本来「有効な交代先が実在する」ことが
+        前提で発火するため、この局面で `get_available_commands()` が空を
+        返すのは情報隠蔽による見かけ上の欠落であり、実際に交代先が
+        存在しないわけではない（fuzz seed=4698 で発見: `_best_command()` が
+        `my_commands[0]` で `IndexError` になっていた）。
+
+        ここでは `state.team` から生存している非アクティブの個体を交代先
+        候補として復元する。実際には選出されていない個体を誤って含める
+        可能性があるが、この経路は探索専用の使い捨てシミュレーション内でしか
+        使われず、実対戦の状態には一切影響しない（`TreeSearchPlayer` の
+        トップレベル `choose_command()` は常に「観測している側自身」の
+        `state` を渡されるため、自分自身のデータが隠蔽されることはなく、
+        この復元が必要になるのは相手プレイヤーの `choose_command()` が
+        探索内から再帰的に呼ばれた場合に限られる）。
+        """
+        commands = battle.get_available_commands(player)
+        if commands or battle.phase != "switch":
+            return commands
+        state = battle.player_states[player]
+        active = state.active
+        return [
+            Command.get_switch_command(i)
+            for i, mon in enumerate(state.team)
+            if mon is not active and mon.alive
+        ]
 
     def _has_opponent_estimator(self) -> bool:
         """opponent_estimator がサブクラスでオーバーライドされているか判定する。
@@ -216,11 +254,14 @@ class TreeSearchPlayer(Player):
             # 探索の最上位（実際のゲームエンジンから choose_command() が
             # 呼ばれた最初の1回）。
             my_commands, opponent_commands = self._toplevel_commands(battle, opponent)
-            if not opponent_commands:
-                # 相手の合法手が未公開で空のまま（推定手も得られなかった）。
-                # 探索を行わず即座にフォールバック方策に委譲する。このトップ
-                # レベル分岐は choose_command から1回しか呼ばれないため、
-                # score（nan）を捨てて command だけ使う呼び出し元には安全。
+            if not opponent_commands or not my_commands:
+                # 相手の合法手が未公開で空のまま（推定手も得られなかった）、
+                # または自分の合法手が観測マスクの副作用で空になっている
+                # （`_available_commands_with_recovery()` のフォールバックでも
+                # 復元できなかった稀なケース）。探索を行わず即座にフォール
+                # バック方策に委譲する。このトップレベル分岐は choose_command
+                # から1回しか呼ばれないため、score（nan）を捨てて command
+                # だけ使う呼び出し元には安全。
                 return self.fallback(battle), float("nan")
         else:
             # 2手目以降の内部シミュレーション。sim.step(commands) は
