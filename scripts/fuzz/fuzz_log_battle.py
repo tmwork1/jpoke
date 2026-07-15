@@ -1,10 +1,13 @@
 """完全ランダムな対戦をシード付きでバッチ実行し、各バトルの全ターン分イベントログを
 レポートファイルに書き出すスクリプト。
 
-`fuzz_battle.py` が「未捕捉例外」を検出するのに対し、こちらは対戦の成否を問わず
-（正常終了・道中クラッシュの両方で）ログをそのまま書き出す。書き出したログを
+`fuzz_battle.py` が「未捕捉例外」の検出に特化しているのに対し、こちらは対戦の成否を問わず
+（正常終了・道中クラッシュの両方で）ログをそのまま書き出す。正常終了したログは
 `.claude/loop/fuzz_log.md` フローが sub agent（Explore）に読ませ、HP・ランク変化等の
-数値がログの記述と食い違っていないかという「整合性」の観点でレビューさせる。
+数値がログの記述と食い違っていないかという「整合性」の観点でレビューさせる。道中クラッシュ
+（crashed=True）した場合は `fuzz_battle.py` と同じ形式の signature（`failure_signature()`）を
+算出してレポートに書き出し、`fuzz_log.md` フローがその場で impl/review-test エージェントに
+修正を委託する。
 
 チーム生成・行動選択（RandomPlayer）は fuzz_battle.py と同じ
 （`fuzz_common.py` に共通化されたロジックを再利用する）。ただし本スクリプトのみ
@@ -32,7 +35,7 @@ from random import Random
 from jpoke import Battle
 
 from fuzz_battle import RandomPlayer
-from fuzz_common import build_team, format_full_log, format_team, random_team_spec
+from fuzz_common import build_team, failure_signature, format_full_log, format_team, random_team_spec
 
 _ROOT = Path(__file__).resolve().parent.parent.parent
 
@@ -41,10 +44,11 @@ DEFAULT_N_POKEMON = 3
 REPORT_DIR_NAME = "fuzz_log_reports"
 
 
-def run_one(seed: int, max_turns: int, n_pokemon: int, effect_bias: float = 0.0) -> tuple[Path, bool]:
+def run_one(seed: int, max_turns: int, n_pokemon: int, effect_bias: float = 0.0) -> tuple[Path, bool, str | None]:
     """指定シードで1バトルを実行し、成否によらずログレポートを書き出す。
 
-    戻り値はレポートパスと crashed フラグ（未捕捉例外で終了したか）。
+    戻り値はレポートパス・crashed フラグ（未捕捉例外で終了したか）・signature
+    （crashed のときのみ `fuzz_battle.py` と同じ形式の文字列、それ以外は None）。
     effect_bias > 0 の場合、状態異常・揮発性状態・場の状態を誘発する特性・持ち物・技が
     選ばれる確率を高める（`fuzz_common.random_team_spec()` を参照）。
     """
@@ -62,6 +66,7 @@ def run_one(seed: int, max_turns: int, n_pokemon: int, effect_bias: float = 0.0)
 
     crashed = False
     error_text = ""
+    signature = None
     try:
         battle.start()
         while battle.judge_winner() is None and battle.turn < max_turns:
@@ -71,6 +76,7 @@ def run_one(seed: int, max_turns: int, n_pokemon: int, effect_bias: float = 0.0)
     except Exception as e:
         crashed = True
         error_text = f"{type(e).__name__}: {e}\n{traceback.format_exc()}"
+        signature = failure_signature(e)
         winner_name = None
 
     report_dir = _ROOT / ".loop" / REPORT_DIR_NAME
@@ -87,6 +93,7 @@ def run_one(seed: int, max_turns: int, n_pokemon: int, effect_bias: float = 0.0)
     parts = [
         f"再現コマンド: {repro_cmd}",
         f"crashed: {crashed}",
+        f"signature: {signature}" if crashed else "",
         f"n_selected（seedから自動決定）: {n_selected}",
         f"turn: {battle.turn}",
         f"winner: {winner_name}",
@@ -104,7 +111,7 @@ def run_one(seed: int, max_turns: int, n_pokemon: int, effect_bias: float = 0.0)
         format_full_log(battle),
     ]
     path.write_text("\n".join(parts), encoding="utf-8")
-    return path, crashed
+    return path, crashed, signature
 
 
 def main():
@@ -126,8 +133,9 @@ def main():
                       effect_bias=args.effect_bias)
     with Pool(workers) as pool:
         results = pool.map(worker, seeds)
-    for seed, (path, crashed) in zip(seeds, results):
-        print(f"report: {path} crashed={crashed}")
+    for seed, (path, crashed, signature) in zip(seeds, results):
+        suffix = f" signature={signature}" if crashed else ""
+        print(f"report: {path} crashed={crashed}{suffix}")
 
 
 if __name__ == "__main__":
