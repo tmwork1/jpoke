@@ -1511,7 +1511,9 @@ def やどりぎのタネ_drain_hp(battle: Battle, ctx: EventContext, value: Any
     from_mon = ctx.source
     to_mon = battle.foe(from_mon)
     damage = battle.modify_hp(from_mon, r=-1/8, reason="drain")
-    if damage:
+    # 吸収の受益者（to_mon）が同ターン内の別要因で既に瀕死になっている場合、
+    # 回復を適用しない（ひんし後に回復してしまう不整合を防ぐ）
+    if damage and not to_mon.fainted:
         # 回復量へのおおきなねっこ補正は、回復するポケモン（to_mon）の所持アイテムで判定する
         heal = battle.events.emit(Event.ON_CALC_DRAIN, ctx.derive(source=to_mon), -damage)
         battle.modify_hp(to_mon, v=heal, reason="drain")
