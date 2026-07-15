@@ -587,6 +587,10 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "ちょうはつ": VolatileData(
         handlers={
+            Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
+                h.ちょうはつ_modify_command_options,
+                subject_spec="source:self",
+            ),
             Event.ON_TRY_ACTION: h.VolatileHandler(
                 h.ちょうはつ_try_action,
                 subject_spec="attacker:self",

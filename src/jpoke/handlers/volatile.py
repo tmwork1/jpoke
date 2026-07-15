@@ -840,6 +840,27 @@ def ちいさくなる_guaranteed_hit(battle: Battle, ctx: AttackContext, value:
     return HandlerReturn(value=value)
 
 
+def ちょうはつ_modify_command_options(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ちょうはつによるコマンドオプション変更
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト
+        value: コマンドオプションのリスト
+
+    Returns:
+        HandlerReturn: 新しいコマンドオプションのリスト
+    """
+    new_options = []
+    for cmd in value:
+        if (
+            not cmd.is_type("move")
+            or ctx.source.moves[cmd.index].category != "status"
+        ):
+            new_options.append(cmd)
+    return HandlerReturn(value=new_options)
+
+
 def ちょうはつ_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return tick_volatile(battle, ctx, value, volatile="ちょうはつ")
 
