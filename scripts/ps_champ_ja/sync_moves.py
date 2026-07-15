@@ -1,10 +1,10 @@
 """ps-champ-ja (https://github.com/tmwork1/ps-champ-ja) の data_jp/moves.json を
-src/jpoke/data/ps_champ_moves.json にそのまま配置し、ps-champ-jaでカバーされる技について
+src/jpoke/data/ps-champ-ja/moves.json にそのまま配置し、ps-champ-jaでカバーされる技について
 src/jpoke/data/moves/move_*.py 内の静的パラメータ（type/category/pp/accuracy/priority、
 および可変威力・必ず急所センチネル以外のpower/crit_ratio）のリテラル指定を削除する。
 また、targetについても縮約後の値（TARGET_MAP参照）と一致する明示指定であれば削除する。
 
-削除後は起動時に data/move.py の common_setup() が data/ps_champ_moves.json から
+削除後は起動時に data/move.py の common_setup() が data/ps-champ-ja/moves.json から
 これらの値を読み込むため、move_*.py側との二重保持が無くなる。
 
 対象外:
@@ -23,7 +23,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent.parent.parent
 PS_CHAMP_MOVES_SOURCE = ROOT / "ps-champ-ja/data_jp/moves.json"
-SNAPSHOT_PATH = ROOT / "src/jpoke/data/ps_champ_moves.json"
+SNAPSHOT_PATH = ROOT / "src/jpoke/data/ps-champ-ja/moves.json"
 MOVES_DIR = ROOT / "src/jpoke/data/moves"
 
 NAME_ANCHOR = re.compile(r'^\s*"([^"]+)":\s*MoveData\(\s*$')
@@ -140,7 +140,7 @@ def strip_file(path: Path, ps_champ: dict) -> tuple[list[str], int]:
 
 def main():
     ps_champ = sync_snapshot()
-    print(f"ps_champ_moves.json 更新: {len(ps_champ)}件")
+    print(f"moves.json 更新: {len(ps_champ)}件")
 
     total_removed = 0
     for path_str in sorted(glob.glob(str(MOVES_DIR / "move_*.py"))):

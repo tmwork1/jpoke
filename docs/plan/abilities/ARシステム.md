@@ -56,7 +56,7 @@
 
 ## 保留・論点
 
-- マルチアタックは `docs/champions/move_list.txt` に存在しないため実装対象外
+- マルチアタックは `src/jpoke/data/ps-champ-ja/moves.json` に存在しないため実装対象外
   （本シミュレーターの対象範囲はポケモンチャンピオンズシングルバトルのみ）。
 - へんしん（Transform）は `docs/progress/move.md` で実装保留のため、
   「へんしん先がARシステムをコピーする」仕様は未実装（へんしん実装時に対応する）。

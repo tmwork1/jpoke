@@ -12,7 +12,7 @@ def resource_path(*path_parts: str) -> str:
     return str(resources.files("jpoke").joinpath(*path_parts))
 
 
-file = resource_path('data', "pokedex.json")
+file = resource_path('data', 'ps-champ-ja', "pokedex.json")
 with open(file, encoding='utf-8') as f:
     data = json.load(f)
 

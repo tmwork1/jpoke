@@ -21,7 +21,7 @@ from jpoke.data.move import MOVES
 from jpoke.types import AbilityName, ItemName, MoveName, PokemonName
 
 ROOT = Path(__file__).resolve().parent.parent
-POKEDEX_JSON = ROOT / "src/jpoke/data/pokedex.json"
+POKEDEX_JSON = ROOT / "src/jpoke/data/ps-champ-ja/pokedex.json"
 
 GENERATE_SCRIPTS = [
     ("generate_ability_literal.py", "src/jpoke/types/ability.py"),

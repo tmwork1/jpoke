@@ -2,7 +2,7 @@ from typing import Literal
 
 
 PokemonName = Literal[
-    # 自動生成: python scripts/generate_literals/generate_pokemon_literal.py で更新（元: src/jpoke/data/pokedex.json）
+    # 自動生成: python scripts/generate_literals/generate_pokemon_literal.py で更新（元: src/jpoke/data/ps-champ-ja/pokedex.json）
     "フシギダネ",
     "フシギソウ",
     "フシギバナ",

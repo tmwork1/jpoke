@@ -47,7 +47,7 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 jpoke = ["py.typed"]
-"jpoke.data" = ["*.json"]
+"jpoke.data" = ["*.json", "ps-champ-ja/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
