@@ -3538,14 +3538,19 @@ def メテオドライブ_restore_defender_ability(battle: Battle, ctx: AttackCo
 
 
 def メテオビーム_boost_spa(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """メテオビーム: とくこうを1段階上げる（追加効果ではないため必ず発動）。
+    """メテオビーム: 1ターン目（充電ターン）にとくこうを1段階上げる（追加効果ではないため必ず発動）。
 
     仕様:
     - ちからずくの追加効果ではないため、battle.modify_stats を直接呼ぶ。
     - パワフルハーブ使用時もこのハンドラ（priority=50）が先に実行されるため、
       とくこう上昇は必ず発動する。
+    - ON_MOVE_CHARGE は2ターン目（攻撃実行ターン）にも発火する
+      （メテオビーム_charge が揮発状態ありのまま通過させるため）。
+      揮発状態「メテオビーム」がすでに付与されている場合はそのターンであり、
+      とくこう上昇は1ターン目にのみ行うべきなのでスキップする。
     """
-    battle.modify_stats(ctx.attacker, {"spa": 1}, source=ctx.attacker)
+    if not ctx.attacker.has_volatile("メテオビーム"):
+        battle.modify_stats(ctx.attacker, {"spa": 1}, source=ctx.attacker)
     return HandlerReturn(value=value)
 
 
