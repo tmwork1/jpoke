@@ -182,6 +182,12 @@ one_damage = battle.roll_damage(attacker, defender, "ドラゴンテール")
 | `set_terrain(name, count=5)` | 地形を直接発動する |
 | `activate_global_field(name, count)` | グローバルフィールド効果（じゅうりょく・トリックルーム等）を直接発動する |
 | `activate_side_field(player, name, count)` | 指定プレイヤーのサイドフィールド効果（リフレクター・ステルスロック等）を直接発動する |
+| `gain_item(target, name)` | 持ち物を持たないポケモンに新規で持たせる（既に持ち物を持っている場合は失敗） |
+| `set_item(target, name, source=None)` | 現在の持ち物に関わらず任意の持ち物に直接差し替える（`name=""` で取り外し） |
+| `remove_item(target, source=None, track_loss=True)` | 持ち物を取り外す |
+| `take_item(target, ignore_sticky_hold=False)` | `target`（持ち物を奪われる側）の持ち物を、相手（foe）が持ち物を持っていない場合のみ奪う |
+| `swap_items(ignore_sticky_hold=False)` | 場に出ている2体の持ち物を入れ替える。`take_item` と異なり双方が持ち物を持っていても実行できる |
+| `consume_item(target, track_loss=True)` | 持ち物を消費する（きのみの場合は食べたフラグを立ててから `remove_item` を呼ぶ） |
 
 ```python
 battle.modify_hp(defender, r=-0.6, reason="シナリオ構築用")   # 最大HPの60%分ダメージ
@@ -191,6 +197,10 @@ battle.set_volatile(defender, "やどりぎのタネ")
 battle.activate_global_field("トリックルーム", 5)
 battle.activate_side_field(player1, "ステルスロック", 1)
 battle.faint(defender)
+
+battle.gain_item(defender, "たべのこし")     # 持ち物なし → 新規で持たせる
+battle.set_item(defender, "きあいのタスキ")  # 現在の持ち物に関わらず直接差し替える
+battle.remove_item(defender)                 # 取り外す
 ```
 
 #### `set_*` と `activate_*` の使い分け

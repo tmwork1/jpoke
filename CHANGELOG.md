@@ -66,6 +66,18 @@
   「テストユーティリティ」節のインデックス指定版 `jpoke.testing.calc_move_priority(battle,
   player_index, move_index=0)` のみが記載されていたための対応。両者の違い
   （`Pokemon`/`Move` オブジェクト指定かインデックス指定か）を相互に明記した
+- `docs/api/README.md`（Battle「シナリオ構築系」）に `Battle.gain_item(target, name)` /
+  `Battle.set_item(target, name, source=None)` / `Battle.remove_item(target, source=None,
+  track_loss=True)` / `Battle.take_item(target, ignore_sticky_hold=False)` /
+  `Battle.swap_items(ignore_sticky_hold=False)` / `Battle.consume_item(target,
+  track_loss=True)` を追記。実装済み（`item_manager` への薄い委譲）ながら
+  `docs/api/README.md`・`examples/` のどちらにも未掲載だったための対応。状態異常・
+  揮発性状態・天候・地形にはそれぞれ `set_ailment`/`set_volatile`/`set_weather`/
+  `set_terrain` 用のサンプルがあるのに、持ち物操作系だけシナリオ構築用の直接操作
+  手段が丸ごと欠落していたため。合わせて `examples/03_damage_calc/12_item_manipulation.py`
+  を新設し、6メソッドの成功/失敗条件の違い（`gain_item`は持ち物なしが前提、
+  `take_item`は奪う側が持ち物なしが前提、`swap_items`は双方が持ち物を持っていても
+  実行できる等）を単体で確認するサンプルを追加
 - `Battle.copy(copy_logs=False)` — `event_logger`/`command_log`（対戦開始からの
   全履歴）をdeepcopyせず、複製先に空の新規ログを持たせるオプション引数を追加。
   `copy_logs=False` を指定すると、複製元のログには影響を与えずにコピー負荷を

@@ -62,6 +62,7 @@ PYTHONUTF8=1 python examples/01_basics/01_battle_against_intro.py
 | `03_damage_calc/09_ability_and_item_logs.py` | `battle.step()` を伴う進行での特性・アイテムの発動ログ確認 | ダメージ計算ツール開発 |
 | `03_damage_calc/10_testing_helpers.py` | `jpoke.testing` の `start_battle()` / `apply_ailment()` / `run_move()` / `calc_lethal()` による、定型的なセットアップを短く書くショートカット | ダメージ計算ツール開発 |
 | `03_damage_calc/11_form_change_comparison.py` | `Pokemon.set_form()` によるフォルム変化（ロトムの姿）がタイプ・種族値の違いを通じてダメージ・致死率に与える影響の比較 | ダメージ計算ツール開発 |
+| `03_damage_calc/12_item_manipulation.py` | `gain_item()` / `remove_item()` / `set_item()` / `take_item()` / `consume_item()` / `swap_items()` による持ち物の直接操作、成功/失敗条件の違い | ダメージ計算ツール開発 |
 | `04_research/01_bulk_simulation.py` | `Player.battle_against()` による多数回対戦・構成比較 | 戦術研究（構成比較） |
 | `04_research/02_replay.py` | `Battle.build_replay_data()` / `ReplayPlayer` / `replay_battle()` によるリプレイの記録・再生 | 戦術研究（対戦の記録・解析） |
 | `04_research/03_janken_nash_fictitious_play.py` | 実バトルのモンテカルロ推定 + 反復最適反応（fictitious play）によるNash均衡（固定の混合戦略）の近似、`ProcessPoolExecutor` による並列化 | 戦術研究（読み合いの定量分析、発展） |
