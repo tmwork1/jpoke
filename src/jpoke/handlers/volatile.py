@@ -111,6 +111,12 @@ def can_hit_hidden_target(battle: Battle,
     Returns:
         HandlerReturn: 命中可ならTrue、回避するならFalse
     """
+    # AttackContext.defender は技のtargetに関わらず常にfoe(attacker)が設定されるため、
+    # こらえる等のtarget="self"の技では「相手を狙っていない」のにdefenderが相手（潜伏中の
+    # ポケモン）と一致してしまう。この回避判定は相手を直接狙う技（target="foe"）にのみ
+    # 適用する（自分自身や場・自陣を対象とする技は潜伏による回避の対象外）。
+    if ctx.move.target != "foe":
+        return HandlerReturn(value=value)
     if ctx.attacker.ability.name == "ノーガード" or ctx.defender.ability.name == "ノーガード":
         return HandlerReturn(value=value)
     allowed_moves = HIDDEN_MOVE_ALLOWED_MOVES.get(volatile, [])
