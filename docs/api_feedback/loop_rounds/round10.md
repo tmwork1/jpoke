@@ -31,3 +31,40 @@
   2件追加し、`source`に対象自身を渡した場合は自分のねんちゃくが無視されて交換が成立すること、
   `source`に対象以外（交換元となった相手側）を渡した場合はねんちゃくによる交換阻止が
   通常どおり機能することを確認した。`python -m pytest tests/ -v`で全件パスを確認した。
+- [x] `examples/02_ai/05_opponent_estimation.py`が`battle.player_states[opponent].active`
+  という未文書化の内部属性に直接アクセスする書き方に逆戻りしていた（id: r10-3）
+  → 対応内容 (2026-07-15): `examples/02_ai/05_opponent_estimation.py:24`を
+  `battle.get_active(opponent)`に置き換えた（挙動は同一、公開API変更なし）。`get_active()`は
+  既に`docs/api/README.md`「シナリオ構築系」表に掲載済みのため、ドキュメント側の追記は不要と
+  判断した。再発防止のため`tests/test_code_conventions.py`に
+  `test_examplesがplayer_states経由で内部属性に直接アクセスしていない`を追加し、
+  `examples/`配下に`player_states[`の使用が無いことを機械的に検査するようにした。
+  `PYTHONUTF8=1 python examples/02_ai/05_opponent_estimation.py`を実行し修正前と同じ出力
+  （1ターン目のノード数8、以降のログ）になることを確認したうえで、
+  `python -m pytest tests/ -v`で全件パスを確認した。なお`battle.get_active()`は型注釈上
+  `Pokemon | None`だが実装は`active_index`が`None`の場合に`None`を返さず`ValueError`を
+  送出する既存の不一致があり、これは今回の修正対象外として次ラウンド以降のfinding候補に
+  留める。
+- [x] `examples/03_damage_calc/10_testing_helpers.py:25-26`が`battle.actives[0]`/
+  `battle.actives[1]`という未文書化の内部プロパティに直接アクセスする書き方を使っていた
+  （id: r10-4）
+  → 対応内容 (2026-07-15): `battle.actives`（`src/jpoke/core/battle.py`の`@property`）は
+  「現在場に出ているポケモンのリスト」を返すが、瀕死・交代中で場が空いているプレイヤーが
+  いると要素がその分詰まってリストの長さが2未満になり得るため、`battle.actives[0]`/`[1]`は
+  プレイヤーとインデックスの対応が崩れる危険な書き方であり、かつ`docs/api/README.md`にも
+  一度も掲載されていなかった。`examples/03_damage_calc/10_testing_helpers.py`を
+  `player0, player1 = battle.players`でPlayerインスタンスを取得したうえで
+  `battle.get_active(player0)`/`battle.get_active(player1)`に置き換えた（挙動は同一、
+  公開API変更なし）。`battle.players`（`Battle.__init__`で`self.players: tuple[Player,
+  ...] = players`として公開されている参加プレイヤーのタプル）自体は
+  `docs/api/README.md`のコンストラクタ引数説明には言及があったが、インスタンス属性としての
+  「対戦進行系」表への掲載が漏れていたため1行追加した。再発防止のため
+  `tests/test_code_conventions.py`に
+  `test_examplesがactives経由でインデックスアクセスしていない`を追加し、
+  `examples/`配下に`.actives[`の使用が無いことを機械的に検査するようにした。
+  `PYTHONUTF8=1 python examples/03_damage_calc/10_testing_helpers.py`を実行し修正前と同じ
+  出力（致死率・防御側の状態異常・HP変化のログ）になることを確認したうえで、
+  `python -m pytest tests/ -v`で全件パスを確認した（実行中1回だけ
+  `tests/moves_attack/test_move_sa.py`の確率検定テストが単発で失敗したが、今回の変更対象
+  ファイルとは無関係で単独再実行・全体再実行とも再現せず、既存の確率的flakyテストと判断し
+  今回の対応範囲には含めていない）。

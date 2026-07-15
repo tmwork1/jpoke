@@ -151,6 +151,30 @@ def test_docs_examplesがアイテム操作系APIに言及している():
     )
 
 
+def test_examplesがactives経由でインデックスアクセスしていない():
+    """`battle.actives` は「現在場に出ているポケモンのリスト」であり、瀕死・交代中で場が
+    空いているプレイヤーがいると要素数が2未満になり得るため、`battle.actives[0]`/`[1]` という
+    書き方はプレイヤーとインデックスの対応が崩れる危険な未文書化アクセスになる。プレイヤーを
+    明示して対応するポケモンを取得したい場合は `battle.get_active(player)` を使うべきという
+    規約になっている。かつて `examples/03_damage_calc/10_testing_helpers.py` が
+    `battle.actives[0]`/`battle.actives[1]` を直接使っていた（id: r10-4）。再発防止のため
+    examples/ 配下に `.actives[` の使用が無いことを確認する。
+    """
+    violations = []
+    for path in EXAMPLES_ROOT.rglob("*.py"):
+        text = path.read_text(encoding="utf-8")
+        for lineno, line in enumerate(text.splitlines(), start=1):
+            if ".actives[" in line:
+                rel_path = path.relative_to(EXAMPLES_ROOT).as_posix()
+                violations.append(f"{rel_path}:{lineno}: {line.strip()}")
+
+    assert not violations, (
+        "examples/ 配下で battle.actives[...] への直接アクセスを検出"
+        "（player0, player1 = battle.players; battle.get_active(player) 等の"
+        "公開APIに置き換えること）:\n" + "\n".join(violations)
+    )
+
+
 def test_examplesがjudge_winnerのis_None比較を使っていない():
     """`battle.judge_winner()` は決着判定のたびにTOD判定込みで再計算する重い遅延判定APIで、
     決着したかどうかのチェックには軽量な `battle.finished`（キャッシュされた `battle.winner`
@@ -175,6 +199,28 @@ def test_examplesがjudge_winnerのis_None比較を使っていない():
     assert not violations, (
         "examples/ 配下で judge_winner() の is None / is not None 直接比較を検出"
         "（battle.finished / battle.winner に置き換えること）:\n" + "\n".join(violations)
+    )
+
+
+def test_examplesがplayer_states経由で内部属性に直接アクセスしていない():
+    """`battle.player_states[player].active` は `Battle` 内部の実装詳細であり、公開APIとしては
+    `battle.get_active(player)` を使うべきという規約になっている。かつて
+    `examples/02_ai/05_opponent_estimation.py` の `opponent_estimator()` 実装が
+    `battle.player_states[opponent].active` という未文書化の内部属性に直接アクセスする書き方に
+    逆戻りしており、`get_active()` への置き換え漏れが発生していた（id: r10-3）。再発防止のため
+    examples/ 配下に `player_states[` の使用が無いことを確認する。
+    """
+    violations = []
+    for path in EXAMPLES_ROOT.rglob("*.py"):
+        text = path.read_text(encoding="utf-8")
+        for lineno, line in enumerate(text.splitlines(), start=1):
+            if "player_states[" in line:
+                rel_path = path.relative_to(EXAMPLES_ROOT).as_posix()
+                violations.append(f"{rel_path}:{lineno}: {line.strip()}")
+
+    assert not violations, (
+        "examples/ 配下で battle.player_states[...] への直接アクセスを検出"
+        "（battle.get_active(player) 等の公開APIに置き換えること）:\n" + "\n".join(violations)
     )
 
 
