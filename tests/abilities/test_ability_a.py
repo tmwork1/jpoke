@@ -637,6 +637,82 @@ def test_いかりのこうら_HP半分超から半分以下でACSアップBDダ
     assert defender.boosts["spd"] == -1
 
 
+def test_いかりのこうら_さまようたましいで多段技のヒット途中に特性を獲得しても正しく判定する():
+    """いかりのこうら: さまようたましいでコンタクト技のヒット途中に本特性を獲得した場合、
+    1発目の時点ではまだ特性を持っておらずハンドラが呼ばれないため、獲得後最初のヒット
+    （このケースでは2発目）を受ける前のHPを基準に判定する
+    （かつてはこのケースで基準HPが未設定のまま最終ヒットで参照されAttributeErrorになっていた）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="さまようたましい")],
+        team1=[Pokemon("ピカチュウ", ability_name="いかりのこうら", move_names=["トリプルアクセル"])],
+        accuracy=100,
+        damage_roll="max",
+    )
+    t.fix_random(battle, 0.99)  # 急所を回避する
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+    move = attacker.moves[0]
+    power_sequence = move.data.multi_hit["power_sequence"]
+
+    expected_damages = []
+    for power in power_sequence:
+        move.base_power = power
+        expected_damages.append(battle.roll_damage(attacker, defender, move, critical=False))
+
+    # 2発目終了時点（＝特性獲得後最初のヒット直前）ではまだ半分を上回るように調整する。
+    half = defender.max_hp // 2
+    start_hp = half + expected_damages[0] + expected_damages[1] // 2 + 1
+    defender.hp = start_hp
+    assert (start_hp - expected_damages[0]) * 2 > defender.max_hp  # 2発目直前では下回らない
+    assert (start_hp - sum(expected_damages)) * 2 <= defender.max_hp  # 3発目で下回る
+
+    t.run_move(battle, 1)
+
+    assert defender.alive
+    assert defender.ability.base_name == "いかりのこうら"
+    assert attacker.ability.base_name == "さまようたましい"
+    assert defender.hp == start_hp - sum(expected_damages)
+    assert defender.boosts["atk"] == 1
+    assert defender.boosts["spa"] == 1
+    assert defender.boosts["spe"] == 1
+    assert defender.boosts["def"] == -1
+    assert defender.boosts["spd"] == -1
+
+
+def test_いかりのこうら_さまようたましいで特性獲得時点で既に半分以下なら発動しない():
+    """いかりのこうら: さまようたましいでコンタクト技のヒット途中に本特性を獲得した時点
+    （このケースでは2発目直前）で既にHPが半分以下の場合は発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="さまようたましい")],
+        team1=[Pokemon("ピカチュウ", ability_name="いかりのこうら", move_names=["トリプルアクセル"])],
+        accuracy=100,
+        damage_roll="max",
+    )
+    t.fix_random(battle, 0.99)  # 急所を回避する
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+    move = attacker.moves[0]
+    power_sequence = move.data.multi_hit["power_sequence"]
+
+    expected_damages = []
+    for power in power_sequence:
+        move.base_power = power
+        expected_damages.append(battle.roll_damage(attacker, defender, move, critical=False))
+
+    half = defender.max_hp // 2
+    start_hp = half + expected_damages[0]
+    defender.hp = start_hp
+    assert (start_hp - expected_damages[0]) * 2 <= defender.max_hp  # 2発目直前で既に半分以下
+
+    t.run_move(battle, 1)
+
+    assert defender.alive
+    assert defender.ability.base_name == "いかりのこうら"
+    assert defender.boosts["atk"] == 0
+    assert defender.boosts["def"] == 0
+
+
 def test_いかりのこうら_ひんし時は発動しない():
     """いかりのこうら: 瀕死になった場合は発動しない。"""
     battle = t.start_battle(
