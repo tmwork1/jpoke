@@ -165,10 +165,10 @@ def _apply_contact_counter_ailment(battle: Battle,
         battle.query.is_contact_reaction(ctx)
         and battle.random.random() < chance
     ):
-        battle.ailment_manager.apply(
+        if battle.ailment_manager.apply(
             ctx.attacker, ailment, source=ctx.defender,
-        )
-        _announce_ability_triggered(battle, ctx.defender)
+        ):
+            _announce_ability_triggered(battle, ctx.defender)
     return HandlerReturn(value=value)
 
 def _apply_contact_counter_chip(battle: Battle,
@@ -599,13 +599,15 @@ def いかりのこうら_boost_on_half_hp(battle: Battle, ctx: AttackContext, v
 
     ひんしになった場合は発動しない（ON_DAMAGE_HIT はKO後にも発火するため明示的に除外する）。
     連続攻撃技はすべてのヒットが終わった後（攻撃側がひんしになって中断した場合はその時点）に、
-    1発目を受ける前のHPを基準にまとめて判定する（かいがらのすずの合計ダメージ集計と同じ idiom）。
+    このハンドラが最初に呼ばれた時点（通常は1発目、さまようたましい等でヒットの途中に
+    この特性を獲得した場合はその獲得後最初のヒット）を受ける前のHPを基準にまとめて判定する
+    （かいがらのすずの合計ダメージ集計と同じ idiom）。
     """
     mon = ctx.defender
     if not mon.alive:
         return HandlerReturn(value=value)
 
-    if ctx.hit_index == 1:
+    if not hasattr(ctx, "_angershell_hp_before"):
         ctx._angershell_hp_before = mon.hp + value
 
     is_last_hit = ctx.hit_index == ctx.hit_count or ctx.attacker.fainted
@@ -627,6 +629,8 @@ def いかりのつぼ_max_atk_on_crit(battle: Battle, ctx: AttackContext, value
     if not battle.move_executor.critical:
         return HandlerReturn(value=value)
     mon = ctx.defender
+    if mon.fainted:
+        return HandlerReturn(value=value)
     diff = 6 - mon.boosts["atk"]
     if diff > 0 and battle.modify_stats(mon, {"atk": diff}, source=ctx.attacker):
         _announce_ability_triggered(battle, mon)
@@ -1391,13 +1395,15 @@ def ぎゃくじょう_boost_spa_on_half_hp(battle: Battle, ctx: AttackContext, 
     """ぎゃくじょう特性: HPが最大HPの1/2超から1/2以下になったとき、とくこうが1段階上がる。
 
     連続攻撃技はすべてのヒットが終わった後（攻撃側がひんしになって中断した場合はその時点）に、
-    1発目を受ける前のHPを基準にまとめて判定する（いかりのこうらと同じ idiom）。
+    このハンドラが最初に呼ばれた時点（通常は1発目、さまようたましい等でヒットの途中に
+    この特性を獲得した場合はその獲得後最初のヒット）を受ける前のHPを基準にまとめて判定する
+    （いかりのこうらと同じ idiom）。
     """
     mon = ctx.defender
     if not mon.alive:
         return HandlerReturn(value=value)
 
-    if ctx.hit_index == 1:
+    if not hasattr(ctx, "_berserk_hp_before"):
         ctx._berserk_hp_before = mon.hp + value
 
     is_last_hit = ctx.hit_index == ctx.hit_count or ctx.attacker.fainted
@@ -1485,6 +1491,8 @@ def くだけるよろい_drop_B_boost_S(battle: Battle, ctx: AttackContext, val
     if ctx.move.category != "physical":
         return HandlerReturn(value=value)
     mon = ctx.defender
+    if mon.fainted:
+        return HandlerReturn(value=value)
     battle.modify_stats(mon, {"def": -1}, source=mon)
     if battle.modify_stats(mon, {"spe": +2}, source=mon):
         _announce_ability_triggered(battle, mon)
@@ -1804,8 +1812,8 @@ def シンクロ_return_ailment(battle: Battle, ctx: EventContext, value: Any) -
     foe = ctx.source
     if foe is None:
         return HandlerReturn(value=value)
-    _announce_ability_triggered(battle, ctx.target)
-    battle.ailment_manager.apply(foe, ailment_name, source=ctx.target)
+    if battle.ailment_manager.apply(foe, ailment_name, source=ctx.target):
+        _announce_ability_triggered(battle, ctx.target)
     return HandlerReturn(value=value)
 
 
@@ -1853,6 +1861,8 @@ def じきゅうりょく_boost_B_on_hit(battle: Battle, ctx: AttackContext, val
     if ctx.substitute_damage:
         return HandlerReturn(value=value)
     mon = ctx.defender
+    if mon.fainted:
+        return HandlerReturn(value=value)
     if battle.modify_stats(mon, {"def": +1}, source=ctx.attacker):
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
@@ -1875,6 +1885,8 @@ def じょうききかん_max_boost_speed(battle: Battle, ctx: AttackContext, va
     if ctx.move.type not in ("みず", "ほのお"):
         return HandlerReturn(value=value)
     mon = ctx.defender
+    if mon.fainted:
+        return HandlerReturn(value=value)
     if battle.modify_stats(mon, {"spe": +6}, source=ctx.attacker):
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
@@ -2205,6 +2217,8 @@ def せいぎのこころ_boost_atk_on_dark(battle: Battle, ctx: AttackContext, 
     if ctx.move.type != "あく":
         return HandlerReturn(value=value)
     mon = ctx.defender
+    if mon.fainted:
+        return HandlerReturn(value=value)
     if battle.modify_stats(mon, {"atk": +1}, source=ctx.attacker):
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
@@ -2687,11 +2701,18 @@ def とびだすなかみ_save_hp(battle: Battle, ctx: AttackContext, value: Any
 
 
 def とびだすハバネロ_burn_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """とびだすハバネロ特性: 攻撃技を受けたとき攻撃者をやけど状態にする。"""
+    """とびだすハバネロ特性: 攻撃技を受けたとき攻撃者をやけど状態にする。
+
+    ほのおのからだと異なり直接攻撃でない技にも100%発動するが、みがわりに攻撃を
+    防がれたとき（実HPダメージ0）は発動しない。
+    """
+    if ctx.substitute_damage:
+        return HandlerReturn(value=value)
     attacker = ctx.attacker
     if attacker is None:
         return HandlerReturn(value=value)
-    battle.ailment_manager.apply(attacker, "やけど", source=ctx.defender)
+    if battle.ailment_manager.apply(attacker, "やけど", source=ctx.defender):
+        _announce_ability_triggered(battle, ctx.defender)
     return HandlerReturn(value=value)
 
 
@@ -2982,11 +3003,11 @@ def のろわれボディ_maybe_disable_move(battle: Battle, ctx: AttackContext,
     volatile_manager.apply（ON_BEFORE_APPLY_VOLATILE）側で処理される。
     """
     if battle.random.random() < 0.3:
-        battle.volatile_manager.apply(
+        if battle.volatile_manager.apply(
             ctx.attacker, "かなしばり",
             source=ctx.defender, move_name=ctx.move.name,
-        )
-        _announce_ability_triggered(battle, ctx.defender)
+        ):
+            _announce_ability_triggered(battle, ctx.defender)
     return HandlerReturn(value=value)
 
 
@@ -3264,8 +3285,11 @@ def ばけのかわ_block_confusion_damage(battle: Battle, ctx: EventContext, va
         return HandlerReturn(value=value)
     mon = ctx.target
     battle.add_ability_disabled_reason(mon, "consumed")
-    battle.modify_hp(mon, r=-1/8)
+    # 特性発動アナウンスを先に記録してからHPを変化させる
+    # （このmodify_hpが致死ダメージの場合、内部でflush_winner_logが即座に発火し
+    # 勝敗確定ログがこのアナウンスログを追い越してしまうため）
     _announce_ability_triggered(battle, mon)
+    battle.modify_hp(mon, r=-1/8)
     return HandlerReturn(value=0)
 
 
@@ -3420,6 +3444,8 @@ def びびり_boost_spd_on_fear_move(battle: Battle, ctx: AttackContext, value: 
     if ctx.move.type not in ("あく", "ゴースト", "むし"):
         return HandlerReturn(value=value)
     mon = ctx.defender
+    if mon.fainted:
+        return HandlerReturn(value=value)
     if battle.modify_stats(mon, {"spe": +1}, source=ctx.attacker):
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
@@ -4167,6 +4193,8 @@ def みずがため_boost_B_on_water(battle: Battle, ctx: AttackContext, value: 
     if ctx.move.type != "みず":
         return HandlerReturn(value=value)
     mon = ctx.defender
+    if mon.fainted:
+        return HandlerReturn(value=value)
     if battle.modify_stats(mon, {"def": +2}, source=ctx.attacker):
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
@@ -4336,10 +4364,10 @@ def メロメロボディ_maybe_infatuate_attacker(battle: Battle, ctx: AttackCo
         and battle.query.is_contact_reaction(ctx)
         and battle.random.random() < 0.3
     ):
-        battle.volatile_manager.apply(
+        if battle.volatile_manager.apply(
             attacker, "メロメロ", source=defender,
-        )
-        _announce_ability_triggered(battle, defender)
+        ):
+            _announce_ability_triggered(battle, defender)
     return HandlerReturn(value=value)
 
 
@@ -4672,8 +4700,16 @@ def りんぷん_block_secondary_chance(battle: Battle, ctx: AttackContext, valu
     == "attacker"）は、自分を使用したときも相手から受けたときも発動するため防げない
     （一次情報: 「チャージビームなど、追加効果で使用者の能力が変化する技の効果は、
     自分を使用したときも、相手から受けたときも発動する」）。
+
+    でんじは・どくどく等の変化技（ctx.move.category == "status"）は、状態異常等の
+    付与そのものが技の唯一の効果であり「追加効果」には当たらないため対象外とする
+    （一次情報: 「相手の“攻撃技”による追加効果を受けない」。docs/spec/abilities/りんぷん.md）。
+    どくしゅ・どくのくさり等、攻撃技への接触・命中を契機に発動する特性由来の効果は
+    攻撃技（ctx.move.category != "status"）を経由するため、この分岐では従来どおり防げる。
     """
     if ctx.secondary_effect_target != "defender":
+        return HandlerReturn(value=value)
+    if ctx.move.category == "status":
         return HandlerReturn(value=value)
     return HandlerReturn(value=0, stop_event=True)
 

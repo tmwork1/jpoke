@@ -57,6 +57,7 @@ class LogCode(Enum):
 
     # 場関連
     FIELD_STARTED = auto()  # 場の状態開始
+    FIELD_STACKED = auto()  # 場の状態の層数増加（まきびし・どくびし等の重ね掛け）
     FIELD_ENDED = auto()  # 場の状態終了
 
     # その他

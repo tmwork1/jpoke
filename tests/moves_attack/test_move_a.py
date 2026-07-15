@@ -2239,6 +2239,83 @@ def test_エレクトロビーム_2ターンで攻撃する():
     assert not attacker.has_volatile("エレクトロビーム")
 
 
+def test_エレクトロビーム_2ターン目の攻撃実行ターンにとくこうが重複上昇しない():
+    """エレクトロビーム: とくこう上昇は1ターン目（充電ターン）のみで、2ターン目（攻撃実行ターン）
+    には ON_MOVE_CHARGE が再度発火してもとくこうは重複して上昇しない
+    （fuzz_log seed=231 で検出された不具合の回帰）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["エレクトロビーム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+
+    # 1ターン目（充電ターン）: とくこう+1
+    t.run_move(battle, 0)
+    assert attacker.boosts["spa"] == 1
+
+    # 2ターン目（攻撃実行ターン）: とくこうは上昇済みのまま変化しない
+    t.run_move(battle, 0)
+    assert attacker.boosts["spa"] == 1
+
+
+def test_エレクトロビーム_2ターン目をコマンド経由で強制続行しても正しく発動する():
+    """エレクトロビーム: 2ターン目の強制続行をコマンド解決経由
+    （battle.get_available_commands→battle.step）で行った場合でも、
+    正しくエレクトロビームが発動する（move_name未設定でわるあがきに
+    フォールバックしていた不具合の回帰）。
+
+    t.run_move() は Command 解決層を経由しないため、この不具合は検出できない。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["エレクトロビーム"])],
+        team1=[Pokemon("カビゴン", move_names=["つるぎのまい"])],
+        accuracy=100,
+    )
+    player0, player1 = battle.players
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+
+    # 1ターン目: コマンド経由で選択し溜める
+    battle.step({
+        player0: Command.get_move_command(0),
+        player1: Command.get_move_command(0),
+    })
+    assert attacker.has_volatile("エレクトロビーム")
+    assert attacker.volatiles["エレクトロビーム"].move_name == "エレクトロビーム"
+
+    # 2ターン目: 強制続行コマンドのみが選択可能になっているはず
+    with battle.phase_context("action"):
+        commands = battle.get_available_commands(player0)
+    assert commands == [Command.FORCED]
+
+    hp_before = defender.hp
+    battle.step({player0: Command.FORCED, player1: Command.get_move_command(0)})
+    # わるあがきにフォールバックしていれば反動でHPが減るが、エレクトロビームなら反動なし
+    assert attacker.hp == attacker.max_hp
+    assert defender.hp < hp_before
+    assert not attacker.has_volatile("エレクトロビーム")
+
+
+def test_エレクトロビーム_PPは1ターン目のみ消費され2ターン目は消費しない():
+    """エレクトロビーム: 1ターン目にPPを1消費し、強制続行される2ターン目はPPを消費しない
+    （2ターン合計でPP消費は1のみ）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["エレクトロビーム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    move = attacker.moves[0]
+    pp_before = move.pp
+    # 1ターン目: 揮発状態付与（PPを1消費）
+    t.run_move(battle, 0)
+    assert move.pp == pp_before - 1
+    # 2ターン目: 強制続行で攻撃（PPは消費しない）
+    t.run_move(battle, 0)
+    assert move.pp == pp_before - 1
+
+
 def test_エレクトロビーム_あめとパワフルハーブ両方所持時は天候優先で消費されない():
     """エレクトロビーム: あめによる溜めスキップがパワフルハーブの消費より優先される。"""
     battle = t.start_battle(
@@ -2269,12 +2346,16 @@ def test_エレクトロビーム_あめ時1ターンで攻撃してとくこう
     attacker = battle.actives[0]
     defender = battle.actives[1]
     hp_before = defender.hp
+    move = attacker.moves[0]
+    pp_before = move.pp
 
     # 1ターンで攻撃（あめによるスキップ）
     t.run_move(battle, 0)
     assert defender.hp < hp_before
     assert not attacker.has_volatile("エレクトロビーム")
     assert attacker.boosts["spa"] == 1
+    # 溜めをスキップして単ターンで発動した場合もPP消費は1のみ
+    assert move.pp == pp_before - 1
 
 
 def test_エレクトロビーム_ばんのうがさ持ちはあめでも2ターンかかる():

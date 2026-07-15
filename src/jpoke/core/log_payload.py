@@ -34,10 +34,11 @@ LogCode ごとに必要な詳細情報を dataclass として定義する。
 | ABILITY_TRIGGERED | `AbilityPayload` | `ability`=発動した特性名。発動したポケモン名は `EventLog.pokemon` |
 | ITEM_TRIGGERED / ITEM_GAINED / ITEM_LOST | `ItemPayload` | `item`=対象アイテム名。対象ポケモン名は `EventLog.pokemon` |
 | ITEM_REVEALED | `ItemRevealPayload` | `target`=持ち物を公開された相手のポケモン名, `item`=公開されたアイテム名（おみとおし等） |
-| AILMENT_APPLIED / AILMENT_REMOVED / AILMENT_PREVENTED | `AilmentPayload` | `ailment`=状態異常名, `source`=原因となったポケモン名（あれば）。AILMENT_PREVENTED は特性名を `display_reason` に持つ |
+| AILMENT_APPLIED / AILMENT_REMOVED / AILMENT_PREVENTED | `AilmentPayload` | `ailment`=状態異常名, `source`=原因となったポケモン名（あれば）。AILMENT_PREVENTED は無効化理由（特性名または「タイプ無効」）を `display_reason` に持つ |
 | VOLATILE_IMMUNE / VOLATILE_APPLIED / VOLATILE_DISPLAY | `VolatilePayload` | `volatile`=揮発状態名, `source`=原因ポケモン名（あれば） |
 | VOLATILE_REMOVED / VOLATILE_PREVENTED | `VolatilePayload` | `volatile`=揮発状態名, `source`=原因ポケモン名（あれば）, `display_reason`=理由 |
 | FIELD_STARTED / FIELD_ENDED | `FieldPayload` | `field`=場の状態名, `count`=残りターン数（あれば） |
+| FIELD_STACKED | `FieldPayload` | `field`=場の状態名, `count`=増加後の層数（まきびし・どくびし等） |
 | TERASALLIZED | `TerastalPayload` | `type`=テラスタイプ |
 | MEGA_EVOLVED | None | メガシンカしたポケモン名は `EventLog.pokemon` |
 
@@ -97,7 +98,7 @@ class StatChangePayload(LogPayload):
 @dataclass(frozen=True)
 class AilmentPayload(LogPayload):
     """AILMENT_APPLIED/REMOVED は display_reason 未使用。
-    AILMENT_PREVENTED は特性名を display_reason に入れる。
+    AILMENT_PREVENTED は無効化理由（特性名または「タイプ無効」）を display_reason に入れる。
     """
     ailment: str = ""
     source: str | None = None

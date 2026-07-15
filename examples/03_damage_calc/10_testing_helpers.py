@@ -22,8 +22,10 @@ def main() -> None:
         team1=[Pokemon("カイリュー", item_name="オボンのみ")],
         accuracy=100,
     )
-    attacker = battle.actives[0]
-    defender = battle.actives[1]
+    # start_battle() は Player インスタンスを返さないため、battle.players から取得する
+    player0, player1 = battle.players
+    attacker = battle.get_active(player0)
+    defender = battle.get_active(player1)
 
     # calc_lethal() は player_idx（アクティブのインデックス）を渡すだけで済む
     # battle.calc_lethal() のショートカット

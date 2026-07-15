@@ -4,6 +4,7 @@
 実行時に property 化するとテストのセットアップ代入（`mon.hp = ...`）を壊すため、
 代わりに src/jpoke 配下のソースを静的に走査して違反を検出する。
 """
+import ast
 import re
 from pathlib import Path
 
@@ -118,6 +119,63 @@ def test_docs_examplesがjpoke_testingモジュールに言及している():
     )
 
 
+def test_docs_examplesがアイテム操作系APIに言及している():
+    """`Battle.gain_item`/`set_item`/`remove_item`/`take_item`/`swap_items`/`consume_item`
+    は`src/jpoke/core/battle.py`に実装（`ItemManager`への薄い委譲）が揃っている一方、
+    状態異常・揮発性状態・天候・地形が`set_ailment`/`set_volatile`/`set_weather`/
+    `set_terrain`としてそれぞれ`docs/api/README.md`「シナリオ構築系」表と`examples/`の
+    サンプル両方に掲載されているのに対し、持ち物操作系だけ`docs/api/README.md`にも
+    `examples/`にも一度も登場しない状態が長期間放置されていた（id: r10-1）。再発防止のため、
+    6メソッドすべてが`docs/api/README.md`に記載されていること、`examples/`配下のいずれかの
+    サンプルで実際に呼び出されていることを確認する。
+    """
+    item_api_names = [
+        "gain_item", "set_item", "remove_item",
+        "take_item", "swap_items", "consume_item",
+    ]
+
+    docs_path = Path(__file__).resolve().parent.parent / "docs" / "api" / "README.md"
+    docs_text = docs_path.read_text(encoding="utf-8")
+    missing_in_docs = [name for name in item_api_names if name not in docs_text]
+    assert not missing_in_docs, (
+        "docs/api/README.md に未掲載のアイテム操作系APIを検出: " + ", ".join(missing_in_docs)
+    )
+
+    examples_texts = "\n".join(
+        path.read_text(encoding="utf-8") for path in EXAMPLES_ROOT.rglob("*.py")
+    )
+    missing_in_examples = [
+        name for name in item_api_names if f".{name}(" not in examples_texts
+    ]
+    assert not missing_in_examples, (
+        "examples/ 配下で未使用のアイテム操作系APIを検出: " + ", ".join(missing_in_examples)
+    )
+
+
+def test_examplesがactives経由でインデックスアクセスしていない():
+    """`battle.actives` は「現在場に出ているポケモンのリスト」であり、瀕死・交代中で場が
+    空いているプレイヤーがいると要素数が2未満になり得るため、`battle.actives[0]`/`[1]` という
+    書き方はプレイヤーとインデックスの対応が崩れる危険な未文書化アクセスになる。プレイヤーを
+    明示して対応するポケモンを取得したい場合は `battle.get_active(player)` を使うべきという
+    規約になっている。かつて `examples/03_damage_calc/10_testing_helpers.py` が
+    `battle.actives[0]`/`battle.actives[1]` を直接使っていた（id: r10-4）。再発防止のため
+    examples/ 配下に `.actives[` の使用が無いことを確認する。
+    """
+    violations = []
+    for path in EXAMPLES_ROOT.rglob("*.py"):
+        text = path.read_text(encoding="utf-8")
+        for lineno, line in enumerate(text.splitlines(), start=1):
+            if ".actives[" in line:
+                rel_path = path.relative_to(EXAMPLES_ROOT).as_posix()
+                violations.append(f"{rel_path}:{lineno}: {line.strip()}")
+
+    assert not violations, (
+        "examples/ 配下で battle.actives[...] への直接アクセスを検出"
+        "（player0, player1 = battle.players; battle.get_active(player) 等の"
+        "公開APIに置き換えること）:\n" + "\n".join(violations)
+    )
+
+
 def test_examplesがjudge_winnerのis_None比較を使っていない():
     """`battle.judge_winner()` は決着判定のたびにTOD判定込みで再計算する重い遅延判定APIで、
     決着したかどうかのチェックには軽量な `battle.finished`（キャッシュされた `battle.winner`
@@ -142,6 +200,28 @@ def test_examplesがjudge_winnerのis_None比較を使っていない():
     assert not violations, (
         "examples/ 配下で judge_winner() の is None / is not None 直接比較を検出"
         "（battle.finished / battle.winner に置き換えること）:\n" + "\n".join(violations)
+    )
+
+
+def test_examplesがplayer_states経由で内部属性に直接アクセスしていない():
+    """`battle.player_states[player].active` は `Battle` 内部の実装詳細であり、公開APIとしては
+    `battle.get_active(player)` を使うべきという規約になっている。かつて
+    `examples/02_ai/05_opponent_estimation.py` の `opponent_estimator()` 実装が
+    `battle.player_states[opponent].active` という未文書化の内部属性に直接アクセスする書き方に
+    逆戻りしており、`get_active()` への置き換え漏れが発生していた（id: r10-3）。再発防止のため
+    examples/ 配下に `player_states[` の使用が無いことを確認する。
+    """
+    violations = []
+    for path in EXAMPLES_ROOT.rglob("*.py"):
+        text = path.read_text(encoding="utf-8")
+        for lineno, line in enumerate(text.splitlines(), start=1):
+            if "player_states[" in line:
+                rel_path = path.relative_to(EXAMPLES_ROOT).as_posix()
+                violations.append(f"{rel_path}:{lineno}: {line.strip()}")
+
+    assert not violations, (
+        "examples/ 配下で battle.player_states[...] への直接アクセスを検出"
+        "（battle.get_active(player) 等の公開APIに置き換えること）:\n" + "\n".join(violations)
     )
 
 
@@ -188,6 +268,47 @@ def test_examplesがtest_option経由で命中率等を固定していない():
     assert not violations, (
         "examples/ 配下で battle.test_option の使用を検出"
         "（accuracy_fix_threshold 等の公開APIに置き換えること）:\n" + "\n".join(violations)
+    )
+
+
+def test_examplesが全ファイルでfrom_future_import_annotationsを冒頭に持つ():
+    """`examples/README.md` は「各ファイル冒頭にある `from __future__ import annotations` は
+    型アノテーションの前方参照を有効にするためのおまじないで、動作に必要なので消さずに
+    そのまま残してよい」と説明している（id: r10-6）。この説明がexamples/配下の実態と
+    食い違っていないか（全ファイルに実際に存在するか、モジュールdocstringの直後という
+    「冒頭」と呼べる位置にあるか）を機械的に検証する。`from __future__ import annotations`は
+    構文上モジュールdocstring以外の文より前に置く必要があるPythonの制約があるため、
+    「モジュールdocstringの直後の最初の実行文」であることをast経由で確認する。
+    """
+    violations = []
+    for path in EXAMPLES_ROOT.rglob("*.py"):
+        rel_path = path.relative_to(EXAMPLES_ROOT).as_posix()
+        text = path.read_text(encoding="utf-8")
+        tree = ast.parse(text, filename=rel_path)
+
+        body = tree.body
+        # モジュールdocstringがあれば読み飛ばす
+        if (
+            body
+            and isinstance(body[0], ast.Expr)
+            and isinstance(body[0].value, ast.Constant)
+            and isinstance(body[0].value.value, str)
+        ):
+            body = body[1:]
+
+        is_future_import = (
+            body
+            and isinstance(body[0], ast.ImportFrom)
+            and body[0].module == "__future__"
+            and any(alias.name == "annotations" for alias in body[0].names)
+        )
+        if not is_future_import:
+            violations.append(rel_path)
+
+    assert not violations, (
+        "examples/ 配下で from __future__ import annotations が冒頭（モジュールdocstring"
+        "直後の最初の文）に無いファイルを検出。examples/README.md の説明と食い違うため"
+        "追加すること:\n" + "\n".join(violations)
     )
 
 

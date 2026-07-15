@@ -61,6 +61,11 @@ VOLATILES: dict[str, VolatileData] = {
                 h.あなをほる_remove_volatile,
                 subject_spec="attacker:self",
             ),
+            # 2ターン目の攻撃が外れた場合もため状態を解除する（ON_HITは命中時のみ発火するため）
+            Event.ON_MISS: h.VolatileHandler(
+                h.あなをほる_remove_volatile,
+                subject_spec="attacker:self",
+            ),
         }
     ),
     "あばれる": VolatileData(
@@ -283,6 +288,11 @@ VOLATILES: dict[str, VolatileData] = {
                 h.コールドフレア_remove_volatile,
                 subject_spec="attacker:self",
             ),
+            # 2ターン目の攻撃が外れた場合もため状態を解除する（ON_HITは命中時のみ発火するため）
+            Event.ON_MISS: h.VolatileHandler(
+                h.コールドフレア_remove_volatile,
+                subject_spec="attacker:self",
+            ),
         }
     ),
     "さわぐ": VolatileData(
@@ -336,6 +346,11 @@ VOLATILES: dict[str, VolatileData] = {
                 priority=50,
             ),
             Event.ON_HIT: h.VolatileHandler(
+                h.シャドーダイブ_remove_volatile,
+                subject_spec="attacker:self",
+            ),
+            # 2ターン目の攻撃が外れた場合もため状態を解除する（ON_HITは命中時のみ発火するため）
+            Event.ON_MISS: h.VolatileHandler(
                 h.シャドーダイブ_remove_volatile,
                 subject_spec="attacker:self",
             ),
@@ -418,6 +433,11 @@ VOLATILES: dict[str, VolatileData] = {
                 h.そらをとぶ_remove_volatile,
                 subject_spec="attacker:self",
             ),
+            # 2ターン目の攻撃が外れた場合もため状態を解除する（ON_HITは命中時のみ発火するため）
+            Event.ON_MISS: h.VolatileHandler(
+                h.そらをとぶ_remove_volatile,
+                subject_spec="attacker:self",
+            ),
         }
     ),
     "ソーラービーム": VolatileData(
@@ -428,6 +448,11 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="source:self",
             ),
             Event.ON_HIT: h.VolatileHandler(
+                h.ソーラービーム_remove_volatile,
+                subject_spec="attacker:self",
+            ),
+            # 2ターン目の攻撃が外れた場合もため状態を解除する（ON_HITは命中時のみ発火するため）
+            Event.ON_MISS: h.VolatileHandler(
                 h.ソーラービーム_remove_volatile,
                 subject_spec="attacker:self",
             ),
@@ -444,6 +469,11 @@ VOLATILES: dict[str, VolatileData] = {
                 h.ソーラーブレード_remove_volatile,
                 subject_spec="attacker:self",
             ),
+            # 2ターン目の攻撃が外れた場合もため状態を解除する（ON_HITは命中時のみ発火するため）
+            Event.ON_MISS: h.VolatileHandler(
+                h.ソーラーブレード_remove_volatile,
+                subject_spec="attacker:self",
+            ),
         }
     ),
     "ゴッドバード": VolatileData(
@@ -454,6 +484,11 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="source:self",
             ),
             Event.ON_HIT: h.VolatileHandler(
+                h.ゴッドバード_remove_volatile,
+                subject_spec="attacker:self",
+            ),
+            # 2ターン目の攻撃が外れた場合もため状態を解除する（ON_HITは命中時のみ発火するため）
+            Event.ON_MISS: h.VolatileHandler(
                 h.ゴッドバード_remove_volatile,
                 subject_spec="attacker:self",
             ),
@@ -470,6 +505,11 @@ VOLATILES: dict[str, VolatileData] = {
                 h.メテオビーム_remove_volatile,
                 subject_spec="attacker:self",
             ),
+            # 2ターン目の攻撃が外れた場合もため状態を解除する（ON_HITは命中時のみ発火するため）
+            Event.ON_MISS: h.VolatileHandler(
+                h.メテオビーム_remove_volatile,
+                subject_spec="attacker:self",
+            ),
         }
     ),
     "エレクトロビーム": VolatileData(
@@ -480,6 +520,11 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="source:self",
             ),
             Event.ON_HIT: h.VolatileHandler(
+                h.エレクトロビーム_remove_volatile,
+                subject_spec="attacker:self",
+            ),
+            # 2ターン目の攻撃が外れた場合もため状態を解除する（ON_HITは命中時のみ発火するため）
+            Event.ON_MISS: h.VolatileHandler(
                 h.エレクトロビーム_remove_volatile,
                 subject_spec="attacker:self",
             ),
@@ -521,6 +566,11 @@ VOLATILES: dict[str, VolatileData] = {
                 h.ダイビング_remove_volatile,
                 subject_spec="attacker:self",
             ),
+            # 2ターン目の攻撃が外れた場合もため状態を解除する（ON_HITは命中時のみ発火するため）
+            Event.ON_MISS: h.VolatileHandler(
+                h.ダイビング_remove_volatile,
+                subject_spec="attacker:self",
+            ),
         }
     ),
     "ちいさくなる": VolatileData(
@@ -537,6 +587,10 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "ちょうはつ": VolatileData(
         handlers={
+            Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
+                h.ちょうはつ_modify_command_options,
+                subject_spec="source:self",
+            ),
             Event.ON_TRY_ACTION: h.VolatileHandler(
                 h.ちょうはつ_try_action,
                 subject_spec="attacker:self",
@@ -697,6 +751,11 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="source:self",
             ),
             Event.ON_HIT: h.VolatileHandler(
+                h.フリーズボルト_remove_volatile,
+                subject_spec="attacker:self",
+            ),
+            # 2ターン目の攻撃が外れた場合もため状態を解除する（ON_HITは命中時のみ発火するため）
+            Event.ON_MISS: h.VolatileHandler(
                 h.フリーズボルト_remove_volatile,
                 subject_spec="attacker:self",
             ),

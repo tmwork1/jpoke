@@ -586,6 +586,37 @@ def test_いかく_登場時に相手攻撃1段階ダウン():
     assert battle.actives[0].boosts["atk"] == -1
 
 
+def test_いかく_設置技のダメージで瀕死になった場合は発動しない():
+    """設置技の効果は特性より前に発動するため、場に出た直後に設置技ダメージで
+    瀕死になった場合は入場特性（いかく）が発動しない。
+    （一次情報: docs/spec/abilities/エレキメイカー.md
+    「場に出た直後に設置技のダメージでひんしになった場合、エレキメイカーは発動しない」
+    と同様の仕様がいかく等の入場特性全般に適用される）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("カビゴン", ability_name="いかく")],
+        team1=[Pokemon("ピカチュウ")],
+        side0={"ステルスロック": 1},
+    )
+    entrant = battle.player_states[battle.players[0]].team[1]
+    entrant.hp = 1
+    t.run_switch(battle, 0, 1)
+    assert entrant.fainted
+    assert battle.actives[1].boosts["atk"] == 0
+
+
+def test_いかく_設置技のダメージで瀕死にならなければ発動する():
+    """設置技のダメージを受けても瀕死にならなければ、従来通り入場特性が発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("カビゴン", ability_name="いかく")],
+        team1=[Pokemon("ピカチュウ")],
+        side0={"ステルスロック": 1},
+    )
+    entrant = battle.player_states[battle.players[0]].team[1]
+    t.run_switch(battle, 0, 1)
+    assert not entrant.fainted
+    assert battle.actives[1].boosts["atk"] == -1
+
+
 def test_いかりのこうら_HP半分超から半分以下でACSアップBDダウン():
     """いかりのこうら: HPが半分を下回ったとき A/C/S↑1、B/D↓1。"""
     battle = t.start_battle(
@@ -604,6 +635,82 @@ def test_いかりのこうら_HP半分超から半分以下でACSアップBDダ
     assert defender.boosts["spe"] == 1
     assert defender.boosts["def"] == -1
     assert defender.boosts["spd"] == -1
+
+
+def test_いかりのこうら_さまようたましいで多段技のヒット途中に特性を獲得しても正しく判定する():
+    """いかりのこうら: さまようたましいでコンタクト技のヒット途中に本特性を獲得した場合、
+    1発目の時点ではまだ特性を持っておらずハンドラが呼ばれないため、獲得後最初のヒット
+    （このケースでは2発目）を受ける前のHPを基準に判定する
+    （かつてはこのケースで基準HPが未設定のまま最終ヒットで参照されAttributeErrorになっていた）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="さまようたましい")],
+        team1=[Pokemon("ピカチュウ", ability_name="いかりのこうら", move_names=["トリプルアクセル"])],
+        accuracy=100,
+        damage_roll="max",
+    )
+    t.fix_random(battle, 0.99)  # 急所を回避する
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+    move = attacker.moves[0]
+    power_sequence = move.data.multi_hit["power_sequence"]
+
+    expected_damages = []
+    for power in power_sequence:
+        move.base_power = power
+        expected_damages.append(battle.roll_damage(attacker, defender, move, critical=False))
+
+    # 2発目終了時点（＝特性獲得後最初のヒット直前）ではまだ半分を上回るように調整する。
+    half = defender.max_hp // 2
+    start_hp = half + expected_damages[0] + expected_damages[1] // 2 + 1
+    defender.hp = start_hp
+    assert (start_hp - expected_damages[0]) * 2 > defender.max_hp  # 2発目直前では下回らない
+    assert (start_hp - sum(expected_damages)) * 2 <= defender.max_hp  # 3発目で下回る
+
+    t.run_move(battle, 1)
+
+    assert defender.alive
+    assert defender.ability.base_name == "いかりのこうら"
+    assert attacker.ability.base_name == "さまようたましい"
+    assert defender.hp == start_hp - sum(expected_damages)
+    assert defender.boosts["atk"] == 1
+    assert defender.boosts["spa"] == 1
+    assert defender.boosts["spe"] == 1
+    assert defender.boosts["def"] == -1
+    assert defender.boosts["spd"] == -1
+
+
+def test_いかりのこうら_さまようたましいで特性獲得時点で既に半分以下なら発動しない():
+    """いかりのこうら: さまようたましいでコンタクト技のヒット途中に本特性を獲得した時点
+    （このケースでは2発目直前）で既にHPが半分以下の場合は発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="さまようたましい")],
+        team1=[Pokemon("ピカチュウ", ability_name="いかりのこうら", move_names=["トリプルアクセル"])],
+        accuracy=100,
+        damage_roll="max",
+    )
+    t.fix_random(battle, 0.99)  # 急所を回避する
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+    move = attacker.moves[0]
+    power_sequence = move.data.multi_hit["power_sequence"]
+
+    expected_damages = []
+    for power in power_sequence:
+        move.base_power = power
+        expected_damages.append(battle.roll_damage(attacker, defender, move, critical=False))
+
+    half = defender.max_hp // 2
+    start_hp = half + expected_damages[0]
+    defender.hp = start_hp
+    assert (start_hp - expected_damages[0]) * 2 <= defender.max_hp  # 2発目直前で既に半分以下
+
+    t.run_move(battle, 1)
+
+    assert defender.alive
+    assert defender.ability.base_name == "いかりのこうら"
+    assert defender.boosts["atk"] == 0
+    assert defender.boosts["def"] == 0
 
 
 def test_いかりのこうら_ひんし時は発動しない():
@@ -719,6 +826,23 @@ def test_いかりのつぼ_急所被弾でこうげき最大():
 
     assert battle.move_executor.critical is True
     assert defender.boosts["atk"] == 6
+
+
+def test_いかりのつぼ_被弾して瀕死になった場合はこうげきが上がらない():
+    """いかりのつぼ: 急所被弾で瀕死になった場合、自分自身のランク変化は発動しない
+    （へんしょく・ぎゃくじょう等の既存特性と同じ規約）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="いかりのつぼ")],
+        team1=[Pokemon("ピカチュウ", move_names=["トリックフラワー"])],
+        accuracy=100,
+    )
+    defender = battle.actives[0]
+    t.fix_damage(battle, defender.max_hp)
+    t.run_move(battle, 1)
+
+    assert battle.move_executor.critical is True
+    assert defender.fainted is True
+    assert defender.boosts["atk"] == 0
 
 
 def test_いしあたま_はかいこうせんのリチャージは防げない():
@@ -1159,6 +1283,21 @@ def test_エレキメイカー_特性再有効化時にも発動する():
     battle.remove_ability_disabled_reason(mon, "かがくへんかガス")
     assert battle.terrain.name == "エレキフィールド"
     assert battle.terrain.count == 5
+
+
+def test_エレキメイカー_設置技のダメージで瀕死になった場合は発動しない():
+    """エレキメイカー: 場に出た直後に設置技のダメージでひんしになった場合は発動しない
+    （一次情報: docs/spec/abilities/エレキメイカー.md）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("ピカチュウ", ability_name="エレキメイカー")],
+        team1=[Pokemon("ピカチュウ")],
+        side0={"ステルスロック": 1},
+    )
+    entrant = battle.player_states[battle.players[0]].team[1]
+    entrant.hp = 1
+    t.run_switch(battle, 0, 1)
+    assert entrant.fainted
+    assert battle.terrain.name == ""
 
 
 def test_えんかく_直接攻撃でさめはだが発動しない():

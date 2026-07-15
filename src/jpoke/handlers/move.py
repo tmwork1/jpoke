@@ -209,3 +209,45 @@ def charge_into_volatile(battle: Battle,
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
+
+
+def suppress_pp_on_charge_continuation(battle: Battle,
+                                       ctx: AttackContext,
+                                       value: Any,
+                                       volatile: VolatileName) -> HandlerReturn:
+    """半透明技（溜め技）の2ターン目：強制続行時はPPを消費しない。
+
+    本家ポケモンでは、ソーラービーム・ダイビング・そらをとぶ等の2ターン技は
+    1ターン目（技を選択したターン）にのみPPを1消費し、2ターン目（プレイヤーの
+    選択を介さない強制続行ターン）ではPPを消費しない。
+
+    `charge_into_volatile`（または同等の溜めロジック）が1ターン目に付与する揮発状態
+    `volatile` がすでに存在する場合（＝このターンが2ターン目の強制続行）はPP消費を
+    0に抑制する。1ターン目（揮発状態がまだ付与されていない）は通常通り消費する。
+
+    Event.ON_MODIFY_PP_CONSUMED は `_consume_pp` から Event.ON_MOVE_CHARGE より先に
+    発火するため、2ターン目の判定時点でも1ターン目に付与された揮発状態は
+    まだ解除されておらず、`has_volatile` による判定が有効に機能する。
+
+    2ターン目に抑制する場合は stop_event=True で以降のハンドラを止める
+    （ねごと_suppress_pp と同じパターン）。プレッシャー特性（defender側の
+    ON_MODIFY_PP_CONSUMEDハンドラ）は同じ優先度100かつ素早さ順のタイブレークで
+    実行順が確定しないため、stop_event を付けずに value=0 のみ返すと、
+    このハンドラの後にプレッシャーのハンドラが実行された場合に value に+1され、
+    2ターン目にもPPが1消費されてしまう（本家仕様では溜め技のプレッシャー加算は
+    最初の行動＝1ターン目のみ）。stop_event=True により、このハンドラの実行順に
+    関わらず2ターン目のPP消費は常に0に固定される。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト
+        value: 現在のPP消費量
+        volatile: 1ターン目の溜め処理で付与される揮発状態名
+
+    Returns:
+        HandlerReturn: 2ターン目ならPP消費0（stop_event=True）、
+            1ターン目なら value をそのまま返す
+    """
+    if ctx.attacker.has_volatile(volatile):
+        return HandlerReturn(value=0, stop_event=True)
+    return HandlerReturn(value=value)

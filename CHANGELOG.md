@@ -9,6 +9,12 @@
 
 ### Added
 
+- `Battle.swap_items()` に `source: Pokemon | None = None` 引数を追加。従来は
+  `ItemManager.swap_items()` が持つ `source`（交換の発生源となるポケモン。`source`
+  自身が持つねんちゃくのみ無効化する判定に使う）を `Battle` ファサードから渡す
+  手段がなく、内部ハンドラの「すりかえ」実装が `battle.item_manager.swap_items(...)`
+  と内部実装へ直接アクセスせざるを得なかった。既定値 `None` のため既存呼び出しの
+  挙動は変わらない
 - `Battle.get_team(player)` — 対戦中のプレイヤーのチーム実体を取得する公開アクセサ
   （`player_states[player].team` への直接アクセスを置き換える）
 - `Player.add_pokemon(name, **kwargs)` — `Pokemon` を直接importせずにチームへ
@@ -66,6 +72,18 @@
   「テストユーティリティ」節のインデックス指定版 `jpoke.testing.calc_move_priority(battle,
   player_index, move_index=0)` のみが記載されていたための対応。両者の違い
   （`Pokemon`/`Move` オブジェクト指定かインデックス指定か）を相互に明記した
+- `docs/api/README.md`（Battle「シナリオ構築系」）に `Battle.gain_item(target, name)` /
+  `Battle.set_item(target, name, source=None)` / `Battle.remove_item(target, source=None,
+  track_loss=True)` / `Battle.take_item(target, ignore_sticky_hold=False)` /
+  `Battle.swap_items(ignore_sticky_hold=False)` / `Battle.consume_item(target,
+  track_loss=True)` を追記。実装済み（`item_manager` への薄い委譲）ながら
+  `docs/api/README.md`・`examples/` のどちらにも未掲載だったための対応。状態異常・
+  揮発性状態・天候・地形にはそれぞれ `set_ailment`/`set_volatile`/`set_weather`/
+  `set_terrain` 用のサンプルがあるのに、持ち物操作系だけシナリオ構築用の直接操作
+  手段が丸ごと欠落していたため。合わせて `examples/03_damage_calc/12_item_manipulation.py`
+  を新設し、6メソッドの成功/失敗条件の違い（`gain_item`は持ち物なしが前提、
+  `take_item`は奪う側が持ち物なしが前提、`swap_items`は双方が持ち物を持っていても
+  実行できる等）を単体で確認するサンプルを追加
 - `Battle.copy(copy_logs=False)` — `event_logger`/`command_log`（対戦開始からの
   全履歴）をdeepcopyせず、複製先に空の新規ログを持たせるオプション引数を追加。
   `copy_logs=False` を指定すると、複製元のログには影響を与えずにコピー負荷を
@@ -73,6 +91,16 @@
   の内部シミュレーション（`evaluate()` の既定実装はログを一切参照しない）で
   `copy_logs=False` を使うように変更し、探索ノードごとに発生していた
   全履歴の無駄なdeepcopyを削減した
+- `Battle.build_observation(observer, copy_logs=True)` に `copy_logs` 引数を追加。
+  従来は内部実装（`observation_builder.build()`）が `deepcopy(battle)` を直接呼んで
+  おり、`copy()` の `copy_logs=False` 最適化の恩恵を受けられなかった。
+  `build_observation()` は `command_manager.py`/`turn_controller.py` から毎ターンの
+  行動選択フェーズで必ず呼ばれるホットパスのため、ログを一切参照しない方策でも
+  ターンが進むほど肥大化する全履歴を無条件にdeepcopyし続けるコストがあった。
+  既定は `Battle.copy()` と同じ `True` で従来通りログを引き継ぐ挙動を維持する
+  （`choose_command()`/`choose_selection()` の実装がログを参照する可能性がある
+  汎用の呼び出し経路の既定は変更していない）。ログを参照しないと分かっている
+  用途でのみ明示的に `copy_logs=False` を指定してコピー負荷を削減できる
 - `Player.battle_against()` に `on_battle_end: Callable[[Battle], None] | None = None`
   引数を追加。従来は `n_battles` ループ内で各対戦の `Battle` を勝敗判定にのみ使い
   破棄しており、自己対戦データ収集（強化学習用リプレイ等）のために `battle_against()`

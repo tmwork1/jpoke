@@ -218,6 +218,10 @@ class EventLog:
                 field_ = payload.field if isinstance(payload, FieldPayload) else "場の状態"
                 return f"{field_} が始まった"
 
+            case LogCode.FIELD_STACKED:
+                field_ = payload.field if isinstance(payload, FieldPayload) else "場の状態"
+                return f"{field_} の層が増えた"
+
             case LogCode.FIELD_ENDED:
                 field_ = payload.field if isinstance(payload, FieldPayload) else "場の状態"
                 return f"{field_} が終わった"

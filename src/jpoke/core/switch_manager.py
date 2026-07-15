@@ -115,17 +115,49 @@ class SwitchManager:
         """ON_SWITCH_INイベントの処理。
 
         交代で場に出たポケモンに対して、ON_SWITCH_INイベントを発火する。
-        だっしゅつパックなどの割り込み交代が発生した場合は、再帰的に処理する。
+        だっしゅつパック・ききかいひなどの割り込み交代が発生した場合は、再帰的に処理する。
 
         Args:
             mon: 場に出たポケモン
         """
         self._events.emit(
             Event.ON_SWITCH_IN,
-            EventContext(source=mon)
+            EventContext(source=mon),
+            skip_if_subject_fainted=True,
         )
 
         self._resolve_ejectpack_after_switch()
+        self._resolve_emergency_after_switch()
+
+    def _resolve_emergency_after_switch(self):
+        """ききかいひ・にげごしによる緊急交代がなくなるまで再帰的に交代する。
+
+        まきびし・ステルスロックなどの入場時ダメージで、交代してきた本人自身の
+        ききかいひ・にげごしが発動することがある（docs/spec/abilities/ききかいひ.md
+        「設置技の効果で発動した場合、即座に交代する」）。この`Interrupt.EMERGENCY`は
+        TurnController._run_switch_phase（通常の交代コマンド実行時）や_run_move_phase
+        （PIVOT・だっしゅつボタン交代後）から`run_switch`経由で呼ばれるこのメソッドの
+        中で立つが、ここで解決せずに放置すると`battle.is_new_turn()`
+        （= `not battle.has_interrupt()`）がFalseのまま呼び出し元へ処理が戻ってしまう。
+        `is_new_turn()`は行動順解決・テラスタル・メガシンカ・もう一方のプレイヤーの
+        技実行フェーズ等、多くのフェーズのガード条件に使われているため、解決し忘れると
+        それらのフェーズが丸ごとスキップされ、まだ実行されていない行動コマンドが
+        pop_command()されないまま予約リストに残留する（次ターンの新しいコマンドの手前に
+        古いコマンドが残り、交代後のポケモンに対して不正なインデックスで解決され
+        IndexErrorになる。fuzz seed=117420 で発見）。そのため、この交代でさらに
+        入場時ダメージを受けて連鎖的にききかいひが発動する可能性も含め、発動しなく
+        なるまで繰り返し解決する。
+
+        Note:
+            瀕死交代（`run_faint_switch`）はこのメソッドを経由しない別経路
+            （`process_event_on_each_switch=False`によるON_SWITCH_INの遅延・一括発火）
+            で、`run_faint_switch`自身の再帰処理により同種の連鎖を解決している。
+        """
+        while any(
+            state.interrupt == Interrupt.EMERGENCY
+            for state in self.battle.player_states.values()
+        ):
+            self.run_interrupt_switch(Interrupt.EMERGENCY)
 
     def _resolve_ejectpack_after_switch(self):
         """だっしゅつパックのリクエストがなくなるまで再帰的に交代する。
@@ -163,7 +195,7 @@ class SwitchManager:
             self._switch_in(state, new)
 
         # ポケモンが場に出たときの処理は、両者の交代が完了した後に行う
-        self._events.emit(Event.ON_SWITCH_IN)
+        self._events.emit(Event.ON_SWITCH_IN, skip_if_subject_fainted=True)
 
         # だっしゅつパックによる割り込みフラグをフェーズに合わせて設定
         self.override_ejectpack_interrupt(Interrupt.EJECTPACK_ON_START)
@@ -219,7 +251,11 @@ class SwitchManager:
         for mon in self.battle.resolve_speed_order():
             player = self.battle.get_player(mon)
             if player in switched_players:
-                self._events.emit(Event.ON_SWITCH_IN, EventContext(source=mon))
+                self._events.emit(
+                    Event.ON_SWITCH_IN,
+                    EventContext(source=mon),
+                    skip_if_subject_fainted=True,
+                )
 
         # 上記の着地処理（例: ねばねばネットによるすばやさ低下）でだっしゅつパックの
         # 発動条件が新たに満たされた場合、ここで解決しないと `Interrupt.EJECTPACK_REQUESTED`

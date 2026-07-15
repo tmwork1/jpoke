@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from jpoke.core import Battle, AttackContext, EventContext
+    from jpoke.model import Pokemon
 
 from jpoke.enums import Event, Interrupt, LogCode
 from jpoke.core.handler import HandlerReturn
@@ -479,8 +480,13 @@ def エレクトロビーム_boost_spa(battle: Battle, ctx: AttackContext, value
     - ちからずくの追加効果ではないため、battle.modify_stats を直接呼ぶ。
     - パワフルハーブ使用時・あめでスキップ時もこのハンドラ（priority=50）が
       先に実行されるため、とくこう上昇は必ず発動する。
+    - ON_MOVE_CHARGE は2ターン目（攻撃実行ターン）にも発火する
+      （エレクトロビーム_charge が揮発状態ありのまま通過させるため）。
+      揮発状態「エレクトロビーム」がすでに付与されている場合はそのターンであり、
+      とくこう上昇は1ターン目にのみ行うべきなのでスキップする。
     """
-    battle.modify_stats(ctx.attacker, {"spa": 1}, source=ctx.attacker)
+    if not ctx.attacker.has_volatile("エレクトロビーム"):
+        battle.modify_stats(ctx.attacker, {"spa": 1}, source=ctx.attacker)
     return HandlerReturn(value=value)
 
 
@@ -497,7 +503,12 @@ def エレクトロビーム_charge(battle: Battle, ctx: AttackContext, value: A
     """
     attacker = ctx.attacker
     if not attacker.has_volatile("エレクトロビーム"):
-        battle.volatile_manager.apply(attacker, "エレクトロビーム", count=1, source=attacker)
+        # move_name には実際に使用した技名（ctx.move.name）を渡す。これにより
+        # 2ターン目の強制続行時（Command.FORCED → get_forced_move_name）に
+        # 正しい技名が解決される（未設定だとわるあがきにフォールバックしてしまう）。
+        battle.volatile_manager.apply(
+            attacker, "エレクトロビーム", count=1, source=attacker, move_name=ctx.move.name
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -1674,7 +1685,12 @@ def ソーラービーム系_charge(
     """
     attacker = ctx.attacker
     if not attacker.has_volatile(volatile_name):
-        battle.volatile_manager.apply(attacker, volatile_name, count=1, source=attacker)
+        # move_name には実際に使用した技名（ctx.move.name）を渡す。これにより
+        # 2ターン目の強制続行時（Command.FORCED → get_forced_move_name）に
+        # 正しい技名が解決される（未設定だとわるあがきにフォールバックしてしまう）。
+        battle.volatile_manager.apply(
+            attacker, volatile_name, count=1, source=attacker, move_name=ctx.move.name
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -2329,28 +2345,22 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
     return HandlerReturn(value=value)
 
 
-def なげつける_check_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """なげつける: 使用者のアイテムを確認し、威力を設定する。
+def _なげつける_is_item_throwable(attacker: Pokemon) -> bool:
+    """なげつける: 使用者が持つアイテムが投げられる（fling可能な）ものかどうかを判定する。
 
     アイテムを持っていない場合、fling_power=0の対象外アイテムの場合、
-    またはno_fling=Trueの投げられないアイテム（ジュエル等）の場合は失敗する。
+    またはno_fling=Trueの投げられないアイテム（ジュエル等）の場合はFalse。
     ぶきよう・マジックルームなどでアイテムが無効化されている場合も、
-    アイテムを持っていない場合と同様に失敗する。
-    はっきんだまはギラティナ(アナザー/オリジン問わず)が使用した場合のみ失敗する
+    アイテムを持っていない場合と同様にFalse。
+    はっきんだまはギラティナ(アナザー/オリジン問わず)が使用した場合のみFalse
     （それ以外のポケモンが使用した場合は通常通り威力60で成功する）。
-    ブーストエナジーはこだいかっせい/クォークチャージ持ちが使用した場合のみ失敗する
+    ブーストエナジーはこだいかっせい/クォークチャージ持ちが使用した場合のみFalse
     （それ以外のポケモンが使用した場合は通常通り威力30で成功する）。
-    仮面（いしずえのめん・いどのめん・かまどのめん）はオーガポンが使用した場合のみ失敗する
+    仮面（いしずえのめん・いどのめん・かまどのめん）はオーガポンが使用した場合のみFalse
     （それ以外のポケモンが使用した場合は通常通り威力60で成功する）。
-    成功した場合はアイテムのfling_powerをctx.move.powerに設定する。
     """
-    attacker = ctx.attacker
     if not attacker.has_item(consider_enabled=True):
-        battle.add_event_log(
-            attacker, LogCode.MOVE_FAILED,
-            payload=FailureLogPayload(move=ctx.move.name, display_reason="なげつける_アイテムなし")
-        )
-        return HandlerReturn(value=False, stop_event=True)
+        return False
 
     item_data = attacker.item.data
     if (
@@ -2366,13 +2376,37 @@ def なげつける_check_item(battle: Battle, ctx: AttackContext, value: Any) -
             and attacker.name.startswith("オーガポン")
         )
     ):
+        return False
+
+    return True
+
+
+def なげつける_check_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """なげつける: 使用者のアイテムを確認し、威力を設定する。
+
+    投げられないアイテムの場合は失敗する（詳細は_なげつける_is_item_throwableを参照）。
+    成功した場合はアイテムのfling_powerをctx.move.powerに設定する。
+
+    この判定に失敗した場合はEvent.ON_MOVE_ENDへ到達してもアイテムを消費しない
+    （なげつける_consume_itemが_なげつける_is_item_throwableで再度ガードする）。
+    そもそも投げる対象のアイテムが存在しない/無効なため、実機でもアイテムは失われない。
+    """
+    attacker = ctx.attacker
+    if not attacker.has_item(consider_enabled=True):
+        battle.add_event_log(
+            attacker, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="なげつける_アイテムなし")
+        )
+        return HandlerReturn(value=False, stop_event=True)
+
+    if not _なげつける_is_item_throwable(attacker):
         battle.add_event_log(
             attacker, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="なげつける_対象外アイテム")
         )
         return HandlerReturn(value=False, stop_event=True)
 
-    ctx.move.base_power = item_data.fling_power
+    ctx.move.base_power = attacker.item.data.fling_power
     return HandlerReturn(value=value)
 
 
@@ -2385,6 +2419,12 @@ def なげつける_consume_item(battle: Battle, ctx: AttackContext, value: Any)
     remove_itemは対象がすでにアイテムを持っていない場合は何もしないため、
     ON_HITで消費済みの場合にON_MOVE_ENDで再度呼び出しても副作用はない。
 
+    なげつける_check_item（Event.ON_TRY_MOVE_1）自身の判定に失敗した場合も
+    Event.ON_MOVE_ENDは発火する（こだわり系アイテムのロック等、他の汎用的な
+    ON_MOVE_END処理を確実に動かすため）。しかしその場合はそもそも投げられる
+    アイテムを確認できていないため、ここで_なげつける_is_item_throwableに
+    より再度ガードし、アイテムを消費しない。
+
     ItemManager.consume_itemを経由しないため、使用者自身がきのみを投げたときは
     ここで明示的にEvent.ON_BERRY_CONSUMEDを発火し、はんすうの再発動対象にする
     （2回目呼び出し時は既に手放しているためis_berryがFalseとなり二重発火しない）。
@@ -2392,6 +2432,8 @@ def なげつける_consume_item(battle: Battle, ctx: AttackContext, value: Any)
     （ほおぶくろはこの経路では発動しない。詳細は EventContext.is_self_fling を参照）。
     """
     attacker = ctx.attacker
+    if not _なげつける_is_item_throwable(attacker):
+        return HandlerReturn(value=value)
     if attacker.item.is_berry():
         from jpoke.core.context import EventContext
         battle.events.emit(
@@ -2645,12 +2687,16 @@ def はめつのねがい_charge(battle: Battle, ctx: AttackContext, value: Any)
     相手側にまだフィールドが存在しない場合、ダメージを計算して「はめつのねがい」
     サイドフィールドを相手陣営に設置し、即時攻撃を抑制する。
     すでに存在する場合は通過して ON_TRY_MOVE_1 の失敗チェックに委ねる。
+
+    カウントは3を指定する: ON_TURN_END でのカウントダウンは設置したそのターンの
+    終了時にも1回発生するため（使用ターンを含めず2ターン後に着弾させるには、
+    使用ターン分の1回＋2ターン分の2回で計3回のカウントダウンが必要）。
     """
     foe_side = battle.get_side(ctx.defender)
     field = foe_side.get("はめつのねがい")
     if not field.is_active:
         damage = battle.roll_damage(ctx.attacker, ctx.defender, ctx.move)
-        foe_side.activate("はめつのねがい", 2)
+        foe_side.activate("はめつのねがい", 3)
         field.damage = damage
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -3349,12 +3395,16 @@ def みらいよち_charge(battle: Battle, ctx: AttackContext, value: Any) -> Ha
     相手側にまだフィールドが存在しない場合、ダメージを計算して「みらいよち」
     サイドフィールドを相手陣営に設置し、即時攻撃を抑制する。
     すでに存在する場合は通過して ON_TRY_MOVE_1 の失敗チェックに委ねる。
+
+    カウントは3を指定する: ON_TURN_END でのカウントダウンは設置したそのターンの
+    終了時にも1回発生するため（使用ターンを含めず2ターン後に着弾させるには、
+    使用ターン分の1回＋2ターン分の2回で計3回のカウントダウンが必要）。
     """
     foe_side = battle.get_side(ctx.defender)
     field = foe_side.get("みらいよち")
     if not field.is_active:
         damage = battle.roll_damage(ctx.attacker, ctx.defender, ctx.move)
-        foe_side.activate("みらいよち", 2)
+        foe_side.activate("みらいよち", 3)
         field.damage = damage
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -3528,14 +3578,19 @@ def メテオドライブ_restore_defender_ability(battle: Battle, ctx: AttackCo
 
 
 def メテオビーム_boost_spa(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """メテオビーム: とくこうを1段階上げる（追加効果ではないため必ず発動）。
+    """メテオビーム: 1ターン目（充電ターン）にとくこうを1段階上げる（追加効果ではないため必ず発動）。
 
     仕様:
     - ちからずくの追加効果ではないため、battle.modify_stats を直接呼ぶ。
     - パワフルハーブ使用時もこのハンドラ（priority=50）が先に実行されるため、
       とくこう上昇は必ず発動する。
+    - ON_MOVE_CHARGE は2ターン目（攻撃実行ターン）にも発火する
+      （メテオビーム_charge が揮発状態ありのまま通過させるため）。
+      揮発状態「メテオビーム」がすでに付与されている場合はそのターンであり、
+      とくこう上昇は1ターン目にのみ行うべきなのでスキップする。
     """
-    battle.modify_stats(ctx.attacker, {"spa": 1}, source=ctx.attacker)
+    if not ctx.attacker.has_volatile("メテオビーム"):
+        battle.modify_stats(ctx.attacker, {"spa": 1}, source=ctx.attacker)
     return HandlerReturn(value=value)
 
 
@@ -3551,7 +3606,12 @@ def メテオビーム_charge(battle: Battle, ctx: AttackContext, value: Any) ->
     """
     attacker = ctx.attacker
     if not attacker.has_volatile("メテオビーム"):
-        battle.volatile_manager.apply(attacker, "メテオビーム", count=1, source=attacker)
+        # move_name には実際に使用した技名（ctx.move.name）を渡す。これにより
+        # 2ターン目の強制続行時（Command.FORCED → get_forced_move_name）に
+        # 正しい技名が解決される（未設定だとわるあがきにフォールバックしてしまう）。
+        battle.volatile_manager.apply(
+            attacker, "メテオビーム", count=1, source=attacker, move_name=ctx.move.name
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 

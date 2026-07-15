@@ -646,8 +646,16 @@ def おんみつマント_negate_secondary(_battle: Battle, ctx: AttackContext, 
     == "attacker"）は、所持者が使用したときも所持者に対して使われたときも発動するため
     防げない（一次情報: 「自分のランクを上げる追加効果は、所持者が使用したときも、
     所持者に対して使われたときも発動する」）。
+
+    でんじは・どくどく等の変化技（ctx.move.category == "status"）は、状態異常等の
+    付与そのものが技の唯一の効果であり「追加効果」には当たらないため対象外とする
+    （一次情報: 「相手の“攻撃技”による追加効果を受けなくなる」。
+    docs/spec/items/おんみつマント.md）。りんぷんの同種修正（handlers/ability.py の
+    りんぷん_block_secondary_chance）と揃える。
     """
     if ctx.secondary_effect_target != "defender":
+        return HandlerReturn(value=value)
+    if ctx.move.category == "status":
         return HandlerReturn(value=value)
     return HandlerReturn(value=0, stop_event=True)
 

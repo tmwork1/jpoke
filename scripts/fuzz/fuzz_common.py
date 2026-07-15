@@ -104,8 +104,12 @@ def random_team_spec(rng: Random, n_pokemon: int = 6, effect_bias: float = 0.0) 
     pokemon_names = list(POKEDEX.keys())
     ability_names = list(ABILITIES.keys())
     item_names = list(ITEMS.keys())
-    # "_"始まりはこんらん自傷などエンジン内部専用の技で、実際のポケモンは覚えられない
-    move_names = [name for name in MOVES if not name.startswith("_")]
+    # "_"始まりはこんらん自傷などエンジン内部専用の技で、実際のポケモンは覚えられない。
+    # 「わるあがき」もPP切れ時の自動代替技であり、実際のポケモンが技として覚えることはない
+    move_names = [
+        name for name in MOVES
+        if not name.startswith("_") and name != "わるあがき"
+    ]
 
     inducing_abilities: list[str] = []
     inducing_items: list[str] = []

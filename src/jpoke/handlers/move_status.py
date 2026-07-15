@@ -2570,8 +2570,14 @@ def ふういん_apply(battle: Battle, ctx: AttackContext, value: Any) -> Handle
 
 
 def フェアリーロック_activate_global_field(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """フェアリーロック: グローバルフィールドを「フェアリーロック」状態にする（次のターン終了まで）。"""
-    return HandlerReturn(value=battle.global_manager.activate("フェアリーロック", 1))
+    """フェアリーロック: グローバルフィールドを「フェアリーロック」状態にする（次のターン終了まで）。
+
+    ON_TURN_END のカウントダウンは非Turn0発動時、発動ターン自身の終了フェーズでも
+    即座にティックされる仕様のため、count=1では発動した同一ターンでカウントが1→0になり
+    即座に終了してしまう。「使用した次のターンが終了するまで」を満たすには、
+    発動ターン分＋次のターン分の count=2 が必要。
+    """
+    return HandlerReturn(value=battle.global_manager.activate("フェアリーロック", 2))
 
 
 def フェザーダンス_lower_defender_atk(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

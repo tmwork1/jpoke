@@ -376,13 +376,21 @@ class Battle:
         finally:
             self.phase = old_phase
 
-    def build_observation(self, observer: Player) -> Battle:
+    def build_observation(self, observer: Player, copy_logs: bool = True) -> Battle:
         """指定したプレイヤー視点で情報を隠蔽した Battle インスタンスのコピーを作成。
 
         すでに観測状態の場合はそのままコピーを返す。
 
         Args:
             observer: 観測対象のプレイヤー。Noneの場合は全ての情報をコピー。
+            copy_logs: Falseの場合、event_logger/command_log（対戦開始からの
+                全履歴）をdeepcopyせず、複製先に空の新規ログを持たせる
+                （複製元のログは変更されない）。全履歴のdeepcopyはターン数に
+                比例してコストが増えるため、ログを参照しない用途で使うと
+                コピー負荷を削減できる。既定はTrueで、従来通り履歴を
+                引き継いだ複製を作る（Battle.copy()のdocstring参照）。
+                choose_command()/choose_selection() の実装がログを参照する
+                可能性がある汎用の呼び出し経路では既定のTrueのまま使うこと。
 
         Returns:
             Battle インスタンスのコピー
@@ -396,8 +404,8 @@ class Battle:
             を呼び出すと、内部状態が競合して壊れる可能性がある。
         """
         if self.is_observation():
-            return self.copy()
-        return observation_builder.build(self, observer)
+            return self.copy(copy_logs=copy_logs)
+        return observation_builder.build(self, observer, copy_logs=copy_logs)
 
     def is_observation(self) -> bool:
         """Battle インスタンスが観測用かどうかを判定する。
@@ -1353,10 +1361,17 @@ class Battle:
         """
         return self.item_manager.remove_item(target, source=source, track_loss=track_loss)
 
-    def swap_items(self, *, ignore_sticky_hold: bool = False) -> bool:
+    def swap_items(self,
+                  *,
+                  source: Pokemon | None = None,
+                  ignore_sticky_hold: bool = False) -> bool:
         """場に出ている2体のアイテムを入れ替える（ItemManagerへの委譲）。
 
         Args:
+            source: 交換の発生源となるポケモン（トリック・すりかえ・どろぼう等の
+                使用者）。ねんちゃくを持つポケモン自身がこの交換を起こした場合
+                （= source が対象自身と同一の場合）は、ねんちゃくの効果は
+                発動しない（自分から道具を交換するときは防がれない）
             ignore_sticky_hold: True の場合、ねんちゃくによる奪取阻止のみを
                 無視する（むしくい・ついばむが対象をひんしにさせた場合の
                 第五世代以降の仕様）
@@ -1364,7 +1379,7 @@ class Battle:
         Returns:
             bool: 入れ替えに成功した場合True
         """
-        return self.item_manager.swap_items(ignore_sticky_hold=ignore_sticky_hold)
+        return self.item_manager.swap_items(source=source, ignore_sticky_hold=ignore_sticky_hold)
 
     def take_item(self, target: Pokemon, *, ignore_sticky_hold: bool = False) -> bool:
         """対象のアイテムを奪う（ItemManagerへの委譲）。

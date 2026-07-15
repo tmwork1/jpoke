@@ -678,6 +678,20 @@ def test_みずがため_みず技でBが2段階上がる(move_name: str, expect
     assert battle.actives[0].boosts["def"] == expected_rank
 
 
+def test_みずがため_被弾して瀕死になった場合はぼうぎょが上がらない():
+    """みずがため: みず技を受けて瀕死になった場合、自分自身のランク変化は発動しない
+    （へんしょく・ぎゃくじょう等の既存特性と同じ規約）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="みずがため")],
+        team1=[Pokemon("カビゴン", move_names=["みずでっぽう"])],
+    )
+    defender = battle.actives[0]
+    t.fix_damage(battle, defender.max_hp)
+    t.run_move(battle, 1)
+    assert defender.fainted is True
+    assert defender.boosts["def"] == 0
+
+
 def test_みずのベール_すでにやけど状態のポケモンを場に出すと即座に回復する():
     """みずのベール: 元の特性がみずのベールのポケモンが、特性を書き換えられてやけど状態に
     なった後、交代でベンチに戻ると特性はみずのベールに戻る（やけどは残る）。この状態の
@@ -1108,6 +1122,26 @@ def test_メロメロボディ_接触攻撃30パーセントでメロメロ():
     battle.random.random = lambda: 0.29
     t.run_move(battle, 1)
     assert battle.actives[1].has_volatile("メロメロ")
+
+
+def test_メロメロボディ_攻撃者が既にメロメロ状態のときは発動ログが出ない():
+    """メロメロボディ: 攻撃者が既にメロメロ状態のときは揮発性状態の再付与に失敗し、
+    発動ログ（ABILITY_TRIGGERED）自体が出ない（fuzzログ回帰）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="メロメロボディ", gender="female")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"], gender="male")],
+    )
+    attacker, defender = battle.actives[1], battle.actives[0]
+    battle.volatile_manager.apply(attacker, "メロメロ", source=defender)
+    battle.random.random = lambda: 0.0
+    t.run_move(battle, 1)
+    triggered = [
+        log for log in battle.event_logger.logs
+        if log.log == LogCode.ABILITY_TRIGGERED
+        and log.payload is not None
+        and getattr(log.payload, "ability", None) == "メロメロボディ"
+    ]
+    assert triggered == []
 
 
 def test_ものひろい_ターン終了時の毒ダメージで消費されたアイテムも同ターンに拾う():

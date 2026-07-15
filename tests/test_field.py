@@ -1134,13 +1134,17 @@ def test_フェアリーロック_ゴーストタイプも交代できない():
 
 
 def test_フェアリーロック_ターン終了でフィールドが解除される():
-    """フェアリーロック: ターン終了後にグローバルフィールドが解除される"""
+    """フェアリーロック: 発動した次のターンが終了するまで持続し、その後解除される"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["フェアリーロック"])],
         team1=[Pokemon("カビゴン")],
         accuracy=100,
     )
     t.run_move(battle, 0)
+    assert battle.global_manager.fields["フェアリーロック"].is_active
+
+    # 発動ターン終了時点ではまだ持続する（次のターンが終了するまで）
+    t.end_turn(battle)
     assert battle.global_manager.fields["フェアリーロック"].is_active
 
     t.end_turn(battle)
@@ -1182,6 +1186,12 @@ def test_フェアリーロック_解除後は交代できる():
         accuracy=100,
     )
     t.run_move(battle, 0)
+    t.end_turn(battle)
+
+    # 発動ターン終了時点ではまだ交代できない（次のターンが終了するまで）
+    assert not t.can_switch(battle, 0)
+    assert not t.can_switch(battle, 1)
+
     t.end_turn(battle)
 
     assert t.can_switch(battle, 0)

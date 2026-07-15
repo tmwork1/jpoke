@@ -66,6 +66,10 @@ def remove_volatile(battle: Battle,
                     reason: str = "") -> HandlerReturn:
     """揮発状態の解除処理
 
+    Note:
+        ログ記録は battle.volatile_manager.remove() 内で行われるため、
+        ここで重複してログを記録しない（reason はそちらへ渡す）。
+
     Args:
         battle: バトルインスタンス
         ctx: コンテキスト
@@ -74,12 +78,7 @@ def remove_volatile(battle: Battle,
         reason: 解除理由
     """
     mon = getattr(ctx, "source", None) or getattr(ctx, "attacker", None)
-    if battle.volatile_manager.remove(mon, volatile):
-        battle.add_event_log(
-            mon,
-            LogCode.VOLATILE_REMOVED,
-            payload=VolatilePayload(volatile=volatile, display_reason=reason)
-        )
+    battle.volatile_manager.remove(mon, volatile, reason=reason)
     return HandlerReturn(value=value)
 
 def force_command(battle: Battle, ctx: EventContext, value: list[Command]) -> HandlerReturn:
@@ -112,6 +111,12 @@ def can_hit_hidden_target(battle: Battle,
     Returns:
         HandlerReturn: 命中可ならTrue、回避するならFalse
     """
+    # AttackContext.defender は技のtargetに関わらず常にfoe(attacker)が設定されるため、
+    # こらえる等のtarget="self"の技では「相手を狙っていない」のにdefenderが相手（潜伏中の
+    # ポケモン）と一致してしまう。この回避判定は相手を直接狙う技（target="foe"）にのみ
+    # 適用する（自分自身や場・自陣を対象とする技は潜伏による回避の対象外）。
+    if ctx.move.target != "foe":
+        return HandlerReturn(value=value)
     if ctx.attacker.ability.name == "ノーガード" or ctx.defender.ability.name == "ノーガード":
         return HandlerReturn(value=value)
     allowed_moves = HIDDEN_MOVE_ALLOWED_MOVES.get(volatile, [])
@@ -556,12 +561,15 @@ def こんらん_try_action(battle: Battle, ctx: EventContext, value: Any) -> Ha
         move="_こんらん",
     )
 
-    # ダメージ適用
-    battle.modify_hp(ctx.attacker, v=-damage, reason="self_attack")
+    # 動けない理由のログを先に記録してから自傷ダメージを適用する
+    # （modify_hpが致死ダメージの場合、内部でflush_winner_logが即座に発火し
+    # 勝敗確定ログがこのログを追い越してしまうため）
     battle.add_event_log(
         ctx.attacker, LogCode.ACTION_BLOCKED,
         payload=FailureLogPayload(move=ctx.move.name, display_reason="こんらん")
     )
+    # 自傷ダメージの適用
+    battle.modify_hp(ctx.attacker, v=-damage, reason="self_attack")
     return HandlerReturn(value=False, stop_event=True)
 
 
@@ -830,6 +838,27 @@ def ちいさくなる_guaranteed_hit(battle: Battle, ctx: AttackContext, value:
     if ctx.move.has_flag("minimize"):
         return HandlerReturn(value=None, stop_event=True)
     return HandlerReturn(value=value)
+
+
+def ちょうはつ_modify_command_options(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ちょうはつによるコマンドオプション変更
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト
+        value: コマンドオプションのリスト
+
+    Returns:
+        HandlerReturn: 新しいコマンドオプションのリスト
+    """
+    new_options = []
+    for cmd in value:
+        if (
+            not cmd.is_type("move")
+            or ctx.source.moves[cmd.index].category != "status"
+        ):
+            new_options.append(cmd)
+    return HandlerReturn(value=new_options)
 
 
 def ちょうはつ_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -1506,7 +1535,9 @@ def やどりぎのタネ_drain_hp(battle: Battle, ctx: EventContext, value: Any
     from_mon = ctx.source
     to_mon = battle.foe(from_mon)
     damage = battle.modify_hp(from_mon, r=-1/8, reason="drain")
-    if damage:
+    # 吸収の受益者（to_mon）が同ターン内の別要因で既に瀕死になっている場合、
+    # 回復を適用しない（ひんし後に回復してしまう不整合を防ぐ）
+    if damage and not to_mon.fainted:
         # 回復量へのおおきなねっこ補正は、回復するポケモン（to_mon）の所持アイテムで判定する
         heal = battle.events.emit(Event.ON_CALC_DRAIN, ctx.derive(source=to_mon), -damage)
         battle.modify_hp(to_mon, v=heal, reason="drain")

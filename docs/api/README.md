@@ -77,6 +77,7 @@ battle.start()
 
 | API | 概要 |
 |---|---|
+| `players` (attribute) | 参加プレイヤーのタプル（コンストラクタに渡した順）。`start_battle()` のように `Player` を直接受け取れないヘルパーからでも `battle.players` で取得できる |
 | `start()` | 選出と初期繰り出しを完了し、以降の `step()` を可能にする |
 | `step(commands=None)` | ターンを1つ進める。`commands` を省略すると各 `Player.choose_command()` に従う |
 | `play_out(max_turns=100)` | 決着がつくかターン上限に達するまで `step()` を自動的に繰り返す。勝者（`Player`）を返し、ターン上限で決着しなければ `None` |
@@ -182,6 +183,12 @@ one_damage = battle.roll_damage(attacker, defender, "ドラゴンテール")
 | `set_terrain(name, count=5)` | 地形を直接発動する |
 | `activate_global_field(name, count)` | グローバルフィールド効果（じゅうりょく・トリックルーム等）を直接発動する |
 | `activate_side_field(player, name, count)` | 指定プレイヤーのサイドフィールド効果（リフレクター・ステルスロック等）を直接発動する |
+| `gain_item(target, name)` | 持ち物を持たないポケモンに新規で持たせる（既に持ち物を持っている場合は失敗） |
+| `set_item(target, name, source=None)` | 現在の持ち物に関わらず任意の持ち物に直接差し替える（`name=""` で取り外し） |
+| `remove_item(target, source=None, track_loss=True)` | 持ち物を取り外す |
+| `take_item(target, ignore_sticky_hold=False)` | `target`（持ち物を奪われる側）の持ち物を、相手（foe）が持ち物を持っていない場合のみ奪う |
+| `swap_items(source=None, ignore_sticky_hold=False)` | 場に出ている2体の持ち物を入れ替える。`take_item` と異なり双方が持ち物を持っていても実行できる。`source` に交換の発生源となるポケモンを渡すと、`source` 自身が持つねんちゃくは発動しない（自分から道具を交換するときは防がれない） |
+| `consume_item(target, track_loss=True)` | 持ち物を消費する（きのみの場合は食べたフラグを立ててから `remove_item` を呼ぶ） |
 
 ```python
 battle.modify_hp(defender, r=-0.6, reason="シナリオ構築用")   # 最大HPの60%分ダメージ
@@ -191,6 +198,10 @@ battle.set_volatile(defender, "やどりぎのタネ")
 battle.activate_global_field("トリックルーム", 5)
 battle.activate_side_field(player1, "ステルスロック", 1)
 battle.faint(defender)
+
+battle.gain_item(defender, "たべのこし")     # 持ち物なし → 新規で持たせる
+battle.set_item(defender, "きあいのタスキ")  # 現在の持ち物に関わらず直接差し替える
+battle.remove_item(defender)                 # 取り外す
 ```
 
 #### `set_*` と `activate_*` の使い分け
@@ -246,6 +257,7 @@ critical_hits = [
 | API | 概要 |
 |---|---|
 | `copy(reseed=False, copy_logs=True)` | `Battle` インスタンスを複製する。`reseed=True` にすると複製側の `random`/`decision_random` を派生シードで再初期化し、木探索で兄弟ノード間の乱数系列が相関するのを避けられる（複製元の乱数系列は消費されない）。`copy_logs=False` にすると `event_logger`/`command_log`（対戦開始からの全履歴）をdeepcopyせず、複製先に空の新規ログを持たせる（複製元のログには影響しない）。木探索の内部シミュレーションのようにログを参照しない用途では、ターン数に比例して増える全履歴コピーのコストを避けられる |
+| `build_observation(observer, copy_logs=True)` | 指定した `observer` 視点で情報を隠蔽した `Battle` の複製を作る（`choose_command()`/`choose_selection()` に渡される盤面）。`command_manager.py`/`turn_controller.py` から毎ターンの行動選択フェーズで呼ばれるホットパス。`copy_logs` の意味は `copy()` と同じで、既定は `True`（ログを引き継ぐ）。方策実装がログを参照する可能性がある汎用の呼び出し経路では既定のまま使うこと。ログを参照しないと分かっている用途（木探索の内部シミュレーション等）でのみ明示的に `copy_logs=False` を指定してコピー負荷を減らせる |
 
 ```python
 sim = battle.copy(reseed=True, copy_logs=False)

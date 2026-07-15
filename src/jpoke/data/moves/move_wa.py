@@ -16,21 +16,13 @@ from ..models import MoveData
 
 MOVES_WA: dict[MoveName, MoveData] = {
     "ワイドガード": MoveData(
-        type="いわ",
-        category="status",
         pp=12,  # champions基準（docs/champions/move_list.txt 970行目）。Gen9本家は10
-        priority=3,
         target="own_side",  # 味方の場が対象。foe/foe_side ではないためマジックコート等の対象外になる
         handlers={},  # 本プロジェクトはシングルバトル専用で、本技が防ぐ「複数対象の技」を区別する
         # ターゲット種別（相手全体・自分以外全体）を技データ上でモデル化していないため、
         # 現状は防御対象となる技が存在せず実質効果なし。詳細はdocs/spec/moves/ワイドガード.md参照
     ),
     "ワイドフォース": MoveData(
-        type="エスパー",
-        category="special",
-        pp=12,
-        power=80,
-        accuracy=100,
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
                 ha.ワイドフォース_calc_power,
@@ -42,11 +34,6 @@ MOVES_WA: dict[MoveName, MoveData] = {
         },
     ),
     "ワイドブレイカー": MoveData(
-        type="ドラゴン",
-        category="physical",
-        pp=16,
-        power=60,
-        accuracy=100,
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
@@ -58,11 +45,6 @@ MOVES_WA: dict[MoveName, MoveData] = {
         }
     ),
     "ワイルドボルト": MoveData(
-        type="でんき",
-        category="physical",
-        pp=16,
-        power=90,
-        accuracy=100,
         flags={"contact", "recoil"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
@@ -71,10 +53,6 @@ MOVES_WA: dict[MoveName, MoveData] = {
         }
     ),
     "わたほうし": MoveData(
-        type="くさ",
-        category="status",
-        pp=20,
-        accuracy=100,
         flags={"powder"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -83,10 +61,6 @@ MOVES_WA: dict[MoveName, MoveData] = {
         }
     ),
     "わるだくみ": MoveData(
-        type="あく",
-        category="status",
-        pp=20,
-        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.わるだくみ_boost_attacker_spa,
@@ -107,10 +81,6 @@ MOVES_WA: dict[MoveName, MoveData] = {
         }
     ),
     "ワンダールーム": MoveData(
-        type="エスパー",
-        category="status",
-        pp=12,
-        target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ワンダールーム_activate_global_field,

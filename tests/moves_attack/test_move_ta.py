@@ -539,6 +539,25 @@ def test_ダイビング_2ターン目に攻撃して揮発状態が解除され
     assert defender.hp < hp_before
 
 
+def test_ダイビング_PPは1ターン目のみ消費され2ターン目は消費しない():
+    """ダイビング: 1ターン目にPPを1消費し、強制続行される2ターン目はPPを消費しない
+    （2ターン合計でPP消費は1のみ）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カメックス", move_names=["ダイビング"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    move = attacker.moves[0]
+    pp_before = move.pp
+    # 1ターン目: 水中に潜る（PPを1消費）
+    t.run_move(battle, 0)
+    assert move.pp == pp_before - 1
+    # 2ターン目: 強制続行で攻撃（PPは消費しない）
+    t.run_move(battle, 0)
+    assert move.pp == pp_before - 1
+
+
 def test_ダイビング_タイプ威力命中PPが仕様通り():
     """ダイビング: みずタイプの物理直接攻撃技で、威力80・命中100・PP12を持つ（PPはチャンピオンズ仕様）。"""
     move_data = MOVES["ダイビング"]
@@ -2287,6 +2306,26 @@ def test_とびはねる_2ターン目にわるあがきやそらをとぶへす
     assert move.name == "とびはねる"
 
 
+def test_とびはねる_PPは1ターン目のみ消費され2ターン目は消費しない():
+    """とびはねる: 揮発状態名（そらをとぶ）は技名（とびはねる）と異なるが、
+    suppress_pp_on_charge_continuationはvolatile名で判定するため正しく機能し、
+    1ターン目のみPPを1消費し2ターン目は消費しない（2ターン合計でPP消費は1のみ）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["とびはねる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    move = attacker.moves[0]
+    pp_before = move.pp
+    # 1ターン目: 揮発状態付与（PPを1消費）
+    t.run_move(battle, 0)
+    assert move.pp == pp_before - 1
+    # 2ターン目: 強制続行で攻撃（PPは消費しない）
+    t.run_move(battle, 0)
+    assert move.pp == pp_before - 1
+
+
 def test_とびはねる_まひが発動する():
     """とびはねる: 2ターン目の命中時、30%でまひを付与する。"""
     battle = t.start_battle(
@@ -2969,7 +3008,7 @@ def test_ドゲザン_タイプ威力PPが仕様通り():
     assert move_data.power == 85
     assert move_data.accuracy is None
     assert move_data.pp == 12
-    assert move_data.critical_rank == 1
+    assert move_data.crit_ratio == 0
     assert "contact" in move_data.flags
     assert "slash" in move_data.flags
 
