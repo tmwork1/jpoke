@@ -12,7 +12,7 @@
 | impl_lethal | 単一ブランチ | `.loop/impl_lethal_state.json` | `.claude/loop/impl_lethal.md`（バックログ消化用・移行期。新規は impl が担当） |
 | fuzz | 単一ブランチ | `.loop/fuzz_state.json` | `.claude/loop/fuzz.md`（random / tree_search を `active_mode` で切替） |
 | replay_fuzz | 単一ブランチ | `.loop/replay_fuzz_state.json` | `.claude/loop/replay_fuzz.md`（リプレイ再現の一致検証） |
-| fuzz_log | 単一ブランチ | `.loop/fuzz_log_state.json` | `.claude/loop/fuzz_log.md`（イベントログの整合性をsub agentにレビューさせる） |
+| fuzz_log | 単一ブランチ | `.loop/fuzz_log_state.json` | `.claude/loop/fuzz_log.md`（イベントログの整合性をsub agentにレビューさせる。道中クラッシュも即座に自動修正） |
 | flaky | 単一ブランチ | `.loop/flaky_state.json` | `.claude/loop/flaky.md`（全テストの反復実行によるflaky test検出・修正） |
 | api | 単一ブランチ | `.loop/api_state.json` | `.claude/loop/api.md`（開発者/初心者/AI開発者の3エージェントによるAPI・examplesレビューと改善の自律ループ） |
 
