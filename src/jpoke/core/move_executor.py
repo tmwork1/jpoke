@@ -374,6 +374,29 @@ class MoveExecutor:
             return False
         return True
 
+    def _check_target_fainted(self, ctx: AttackContext) -> bool:
+        """対象がすでに瀕死かどうかをチェックする (ON_TRY_MOVE_1, priority=90相当のコアルール)。
+
+        シングルバトル専用のため、相手単体を対象とする技（ctx.move.target == "foe"）
+        でのみ判定する。自分自身・味方・場全体を対象とする技には適用しない。
+
+        瀕死交代はターン終了時（turn_controller._run_end_phase 内の
+        switch_manager.run_faint_switch()）にしか行われないため、同一ターン内で
+        自分より先に行動した側の攻撃や、相手自身のHPコスト（いのちのたまの反動等）に
+        よって相手が既に瀕死になっている場合、瀕死交代前の場に残ったままの瀕死ポケモンが
+        対象になり得る。この場合、技は不発として扱う（おきみやげ・かかとおとし等の仕様書
+        「対象がすでに全員ひんしで技自体が不発になった場合」を参照）。
+        """
+        assert ctx.defender is not None
+        if ctx.move.target == "foe" and ctx.defender.fainted:
+            self.battle.add_event_log(
+                ctx.attacker,
+                LogCode.MOVE_FAILED,
+                payload=FailureLogPayload(move=ctx.move.name, display_reason="相手がいない")
+            )
+            return False
+        return True
+
     def _execute_move(self, ctx: AttackContext) -> None:
         """技実行の内部フローを処理する。
 
@@ -394,6 +417,12 @@ class MoveExecutor:
             # ON_MOVE_CHARGEより前に無条件で呼ばれる）。実機ではPP消費後の
             # 不発でもこだわり系アイテム等のロックはかかるため、ON_MOVE_ENDを
             # 発火してこだわり_lock_move等の後処理を確実に実行させる。
+            self._events.emit(Event.ON_MOVE_END, ctx)
+            return
+
+        # 対象がすでに瀕死: 技失敗 (ON_TRY_MOVE_1, priority=90相当のコアルール)
+        if not self._check_target_fainted(ctx):
+            self.move_success = False
             self._events.emit(Event.ON_MOVE_END, ctx)
             return
 
