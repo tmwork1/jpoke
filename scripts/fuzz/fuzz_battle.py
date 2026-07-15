@@ -93,7 +93,12 @@ class TreeSearchFuzzPlayer(TreeSearchPlayer):
         self.rng = rng
 
     def fallback(self, battle: Battle) -> Command:
-        return self.rng.choice(battle.get_available_commands(self))
+        # _available_commands_with_recovery(): switch フェーズで観測マスクの
+        # 副作用により合法手が空になる場合の復元付き列挙（TreeSearchPlayer
+        # 基底クラス参照）。ここでも同じ復元を使わないと、素の
+        # battle.get_available_commands(self) が空リストを返して
+        # self.rng.choice() が IndexError になる（fuzz seed=4698 で発見）。
+        return self.rng.choice(self._available_commands_with_recovery(battle, self))
 
     def choose_selection(self, battle: Battle) -> list[int]:
         n = min(battle.n_selected, len(self.team))
