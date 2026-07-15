@@ -100,6 +100,15 @@ class AilmentManager:
         # タイプによる無効化をチェック
         type_immunity_source = source if allow_type_immunity_bypass else None
         if not self._can_apply_by_type(name, target, type_immunity_source):
+            self.battle.add_event_log(
+                target,
+                LogCode.AILMENT_PREVENTED,
+                payload=AilmentPayload(
+                    ailment=name,
+                    source=source.name if source else None,
+                    display_reason="タイプ無効",
+                )
+            )
             return False
 
         # ON_BEFORE_APPLY_AILMENT イベントを発火して特性などによる無効化をチェック

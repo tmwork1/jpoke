@@ -4672,8 +4672,16 @@ def りんぷん_block_secondary_chance(battle: Battle, ctx: AttackContext, valu
     == "attacker"）は、自分を使用したときも相手から受けたときも発動するため防げない
     （一次情報: 「チャージビームなど、追加効果で使用者の能力が変化する技の効果は、
     自分を使用したときも、相手から受けたときも発動する」）。
+
+    でんじは・どくどく等の変化技（ctx.move.category == "status"）は、状態異常等の
+    付与そのものが技の唯一の効果であり「追加効果」には当たらないため対象外とする
+    （一次情報: 「相手の“攻撃技”による追加効果を受けない」。docs/spec/abilities/りんぷん.md）。
+    どくしゅ・どくのくさり等、攻撃技への接触・命中を契機に発動する特性由来の効果は
+    攻撃技（ctx.move.category != "status"）を経由するため、この分岐では従来どおり防げる。
     """
     if ctx.secondary_effect_target != "defender":
+        return HandlerReturn(value=value)
+    if ctx.move.category == "status":
         return HandlerReturn(value=value)
     return HandlerReturn(value=0, stop_event=True)
 

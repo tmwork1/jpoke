@@ -818,18 +818,6 @@ def test_おんみつマント_どくしゅのどく状態を防ぐ():
     assert battle.actives[1].ailment.name != "どく"
 
 
-def test_おんみつマント_追加効果を無効化():
-    """おんみつマント: 相手の技の追加効果を無効化する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
-        team1=[Pokemon("カビゴン", item_name="おんみつマント")],
-        accuracy=100,
-    )
-    t.fix_random(battle, 0.0)
-    t.run_move(battle, 0)
-    assert battle.actives[1].ailment.name != "まひ"
-
-
 def test_おんみつマント_使用者自身への追加効果は防げない():
     """おんみつマント: コメットパンチのように使用者自身の能力が変化する追加効果は、
     所持者が使用したときも所持者に対して使われたときも発動する（一次情報:
@@ -844,6 +832,33 @@ def test_おんみつマント_使用者自身への追加効果は防げない(
     attacker = battle.actives[0]
     t.run_move(battle, 0)
     assert attacker.boosts["atk"] == 1
+
+
+def test_おんみつマント_変化技の状態異常は防げない():
+    """おんみつマント: りんぷんと同様、防げるのは「相手の攻撃技による追加効果」のみで、
+    でんじは・どくどく等の変化技（category=="status"）は状態異常付与そのものが技の
+    唯一の効果であり「追加効果」には該当しないため防げない
+    （一次情報: 「相手の“攻撃技”による追加効果を受けなくなる」。
+    docs/spec/items/おんみつマント.md）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんじは"])],
+        team1=[Pokemon("カビゴン", item_name="おんみつマント")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name == "まひ"
+
+
+def test_おんみつマント_追加効果を無効化():
+    """おんみつマント: 相手の技の追加効果を無効化する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
+        team1=[Pokemon("カビゴン", item_name="おんみつマント")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name != "まひ"
 
 
 if __name__ == "__main__":

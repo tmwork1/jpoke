@@ -718,6 +718,24 @@ def test_りんぷん_使用者自身への追加効果は防げない():
     assert attacker.boosts["atk"] == 1
 
 
+def test_りんぷん_変化技の状態異常は防げない():
+    """seed=242 (LogInconsistency@ability.py:りんぷん_block_secondary_chance:4668) の回帰テスト。
+
+    りんぷんが防ぐのは「相手の攻撃技による追加効果」のみで、でんじは・どくどく等の
+    変化技（category=="status"）は状態異常付与そのものが技の唯一の効果であり
+    「追加効果」には該当しない。修正前は apply_ailment_to_defender が
+    resolve_secondary_chance 経由で全状態異常付与技を通るため、変化技であっても
+    りんぷんによって確率が誤って0にされ無効化されていた。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんじは"])],
+        team1=[Pokemon("ニャース", ability_name="りんぷん")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name == "まひ"
+
+
 def test_りんぷん_追加効果を受けない():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["ほっぺすりすり"])],
