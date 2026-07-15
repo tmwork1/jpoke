@@ -1967,9 +1967,13 @@ def test_こんじょう_行動可能な状態異常で攻撃1_5倍(ailment_name
 
 
 def test_ごりむちゅう_かがくへんかガスで無効化中は攻撃補正がかからず自由に技を選べる():
+    # 1ターン目のじしんで相手を瀕死にしないよう、あらかじめHP・ぼうぎょのEVを振っておく
+    # （相手が瀕死のまま2発目を撃つと対象不在で技自体が不発になってしまうため）
+    defender = Pokemon("ピカチュウ")
+    defender.set_evs({"hp": 252, "def": 252})
     battle = t.start_battle(
         team0=[Pokemon("ヒヒダルマ(ガラル)", ability_name="ごりむちゅう", move_names=["じしん", "ようかいえき"])],
-        team1=[Pokemon("ピカチュウ")],
+        team1=[defender],
     )
     mon = battle.actives[0]
     t.run_move(battle, 0, move_idx=0)

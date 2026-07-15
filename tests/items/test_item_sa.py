@@ -160,9 +160,13 @@ def test_しらたま_対象外タイプの技には効果がない():
 
 def test_しろいハーブ_2回目の能力低下はキャンセルされない():
     """しろいハーブ: 1回消費後は能力低下をキャンセルしない"""
+    # 1回目のリーフストームで相手を瀕死にしないよう、あらかじめHP・ぼうぎょ・とくぼうの
+    # EVを振っておく（相手が瀕死のまま2発目を撃つと対象不在で技自体が不発になってしまうため）
+    defender = Pokemon("ピカチュウ")
+    defender.set_evs({"hp": 252, "def": 252, "spd": 252})
     battle = t.start_battle(
         team0=[Pokemon("フシギバナ", item_name="しろいハーブ", move_names=["リーフストーム"])],
-        team1=[Pokemon("ピカチュウ")],
+        team1=[defender],
         accuracy=100,
     )
     mon = battle.actives[0]

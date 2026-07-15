@@ -130,6 +130,47 @@ def test_いかく_交代フェーズの割り込み連鎖でValueErrorや残留
     assert battle.turn == 3  # 例外なく3ターン目が完了したことを確認
 
 
+def test_おだてる_自分自身のHPコストで同一ターン内にすでに瀕死になった相手には技が不発になる():
+    """seed=572 (LogInconsistency@move_executor.py) の回帰テスト。
+
+    瀕死交代は turn_controller._run_end_phase の最後にしか行われないため、
+    同一ターン内で相手が自分自身のHPコスト（いのちのたまの反動等）によって
+    すでに瀕死になっている場合、瀕死交代前の場に残ったままの瀕死ポケモンが
+    別の技の対象になり得る。修正前はこの場合でもおだてるが瀕死のポケモンに
+    とくこうランク上昇・こんらん付与を適用してしまっていた。
+
+    修正後は core/move_executor.py の _check_target_fainted
+    （Event.ON_TRY_MOVE_1, priority=90「対象が全員ひんし」相当のコアルール）
+    により、相手単体対象技（ctx.move.target == "foe"）は対象がすでに瀕死なら
+    不発になる（display_reason="相手がいない"）ことを確認する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おだてる"])],
+        team1=[Pokemon("フシギダネ", item_name="いのちのたま", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+
+    # いのちのたまの反動（最大HPの1/10、切り上げ、最低1）で確実に瀕死になるようHPを削っておく
+    battle.modify_hp(defender, v=-(defender.max_hp - 1))
+    assert defender.hp == 1
+
+    t.run_move(battle, 1)  # 攻撃自体は成立するが、いのちのたまの反動で自分自身が瀕死になる
+    assert defender.fainted
+
+    logs_before = len(battle.event_logger.logs)
+    t.run_move(battle, 0)  # おだてるが瀕死交代前の瀕死ポケモンを対象にする
+
+    assert defender.boosts["spa"] == 0  # とくこうランク上昇が適用されていない
+    assert not defender.has_volatile("こんらん")  # こんらんも付与されていない
+
+    logs = battle.event_logger.logs[logs_before:]
+    assert any(
+        log.log == LogCode.MOVE_FAILED and log.payload.display_reason == "相手がいない"
+        for log in logs
+    )
+
+
 def test_ききかいひ_とんぼがえりのPIVOT割り込みと同時発生してもだっしゅつパック交代処理が無限ループしない():
     """examples/05_benchmark/01_step_time_benchmark.py の完全ランダム編成ベンチマークで、
     PYTHONHASHSEED（プロセスごとに変わる文字列ハッシュのランダム化シード）に依存して
