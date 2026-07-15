@@ -479,8 +479,13 @@ def エレクトロビーム_boost_spa(battle: Battle, ctx: AttackContext, value
     - ちからずくの追加効果ではないため、battle.modify_stats を直接呼ぶ。
     - パワフルハーブ使用時・あめでスキップ時もこのハンドラ（priority=50）が
       先に実行されるため、とくこう上昇は必ず発動する。
+    - ON_MOVE_CHARGE は2ターン目（攻撃実行ターン）にも発火する
+      （エレクトロビーム_charge が揮発状態ありのまま通過させるため）。
+      揮発状態「エレクトロビーム」がすでに付与されている場合はそのターンであり、
+      とくこう上昇は1ターン目にのみ行うべきなのでスキップする。
     """
-    battle.modify_stats(ctx.attacker, {"spa": 1}, source=ctx.attacker)
+    if not ctx.attacker.has_volatile("エレクトロビーム"):
+        battle.modify_stats(ctx.attacker, {"spa": 1}, source=ctx.attacker)
     return HandlerReturn(value=value)
 
 
