@@ -521,6 +521,26 @@ class Pokemon:
         return type_ in self.types
 
     @property
+    def learnset(self) -> frozenset[MoveName]:
+        """覚えられる技名の集合を取得する。
+
+        Returns:
+            覚えられる技名の集合（ps-champ-ja由来のスナップショット）
+        """
+        return self.data.learnset
+
+    def can_learn(self, move_name: MoveName) -> bool:
+        """指定された技を覚えられるか判定する。
+
+        Args:
+            move_name: 技名
+
+        Returns:
+            覚えられる場合True
+        """
+        return move_name in self.learnset
+
+    @property
     def alive(self) -> bool:
         """ポケモンが生存しているかどうかを取得する。
 
