@@ -77,6 +77,7 @@ battle.start()
 
 | API | 概要 |
 |---|---|
+| `players` (attribute) | 参加プレイヤーのタプル（コンストラクタに渡した順）。`start_battle()` のように `Player` を直接受け取れないヘルパーからでも `battle.players` で取得できる |
 | `start()` | 選出と初期繰り出しを完了し、以降の `step()` を可能にする |
 | `step(commands=None)` | ターンを1つ進める。`commands` を省略すると各 `Player.choose_command()` に従う |
 | `play_out(max_turns=100)` | 決着がつくかターン上限に達するまで `step()` を自動的に繰り返す。勝者（`Player`）を返し、ターン上限で決着しなければ `None` |
