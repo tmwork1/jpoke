@@ -108,7 +108,8 @@ class EventManager:
              event: Event | DomainEvent,
              ctx: BaseContext | None = None,
              value: Any = None,
-             stop_if_winner_determined: bool = False) -> Any:
+             stop_if_winner_determined: bool = False,
+             skip_if_subject_fainted: bool = False) -> Any:
         """イベントを発火し、登録されたハンドラを実行する。
 
         優先度とポケモンの素早さに基づいてハンドラを順次実行します。
@@ -125,6 +126,20 @@ class EventManager:
                 継続ダメージ）を素早さ順にまとめて処理するイベントで、
                 先に処理された個体の瀕死により決着した後、決着に無関係な
                 他個体のハンドラが実行され続けるのを防ぐために使う
+            skip_if_subject_fainted: Trueの場合、ハンドラの
+                subject_spec が指すポケモン（例: "source:self" なら
+                context.source）が既に瀕死の場合、そのハンドラの実行を
+                スキップする。Event.ON_SWITCH_IN のように、入場した
+                ポケモン自身が先に処理された設置技ダメージ等
+                （まきびし・ステルスロック等）で瀕死になった場合、
+                同じポケモン自身のその後の入場効果（天候特性・
+                エレキメイカー等の入場特性）を発動させないために使う
+                （一次情報: docs/spec/abilities/エレキメイカー.md
+                「場に出た直後に設置技のダメージでひんしになった場合、
+                エレキメイカーは発動しない」）。ON_DAMAGE_HIT のほろびの
+                ボディ等、瀕死になった当のポケモン自身の効果が発動する
+                べきイベントもあるため、既定は False とし呼び出し側で
+                イベントごとに明示的に指定する
 
         Returns:
             Any: 全ハンドラ実行後の最終値
@@ -143,6 +158,12 @@ class EventManager:
             # ハンドラが現在のコンテキストで有効かどうかをチェックする
             if not self._check_handler_validity(rh, context):
                 continue
+
+            # subject_spec が指すポケモンが既に瀕死ならスキップする
+            if skip_if_subject_fainted:
+                role_mon = context.resolve_role(self.battle, rh.handler.subject_spec)
+                if role_mon is not None and role_mon.fainted:
+                    continue
 
             result = rh.handler.func(self.battle, context, value)
 

@@ -122,7 +122,8 @@ class SwitchManager:
         """
         self._events.emit(
             Event.ON_SWITCH_IN,
-            EventContext(source=mon)
+            EventContext(source=mon),
+            skip_if_subject_fainted=True,
         )
 
         self._resolve_ejectpack_after_switch()
@@ -163,7 +164,7 @@ class SwitchManager:
             self._switch_in(state, new)
 
         # ポケモンが場に出たときの処理は、両者の交代が完了した後に行う
-        self._events.emit(Event.ON_SWITCH_IN)
+        self._events.emit(Event.ON_SWITCH_IN, skip_if_subject_fainted=True)
 
         # だっしゅつパックによる割り込みフラグをフェーズに合わせて設定
         self.override_ejectpack_interrupt(Interrupt.EJECTPACK_ON_START)
@@ -219,7 +220,11 @@ class SwitchManager:
         for mon in self.battle.resolve_speed_order():
             player = self.battle.get_player(mon)
             if player in switched_players:
-                self._events.emit(Event.ON_SWITCH_IN, EventContext(source=mon))
+                self._events.emit(
+                    Event.ON_SWITCH_IN,
+                    EventContext(source=mon),
+                    skip_if_subject_fainted=True,
+                )
 
         # 上記の着地処理（例: ねばねばネットによるすばやさ低下）でだっしゅつパックの
         # 発動条件が新たに満たされた場合、ここで解決しないと `Interrupt.EJECTPACK_REQUESTED`
