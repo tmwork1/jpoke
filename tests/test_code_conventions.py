@@ -178,6 +178,28 @@ def test_examplesがjudge_winnerのis_None比較を使っていない():
     )
 
 
+def test_examplesがplayer_states経由で内部属性に直接アクセスしていない():
+    """`battle.player_states[player].active` は `Battle` 内部の実装詳細であり、公開APIとしては
+    `battle.get_active(player)` を使うべきという規約になっている。かつて
+    `examples/02_ai/05_opponent_estimation.py` の `opponent_estimator()` 実装が
+    `battle.player_states[opponent].active` という未文書化の内部属性に直接アクセスする書き方に
+    逆戻りしており、`get_active()` への置き換え漏れが発生していた（id: r10-3）。再発防止のため
+    examples/ 配下に `player_states[` の使用が無いことを確認する。
+    """
+    violations = []
+    for path in EXAMPLES_ROOT.rglob("*.py"):
+        text = path.read_text(encoding="utf-8")
+        for lineno, line in enumerate(text.splitlines(), start=1):
+            if "player_states[" in line:
+                rel_path = path.relative_to(EXAMPLES_ROOT).as_posix()
+                violations.append(f"{rel_path}:{lineno}: {line.strip()}")
+
+    assert not violations, (
+        "examples/ 配下で battle.player_states[...] への直接アクセスを検出"
+        "（battle.get_active(player) 等の公開APIに置き換えること）:\n" + "\n".join(violations)
+    )
+
+
 def test_examplesがteam_append_Pokemon経由でチームを構築していない():
     """`Player.add_pokemon()` が jpoke の正規のチーム追加ルートであり、
     `team.append(Pokemon(...))`（`Pokemon` を直接構築して `team` に追加する書き方）は

@@ -31,3 +31,17 @@
   2件追加し、`source`に対象自身を渡した場合は自分のねんちゃくが無視されて交換が成立すること、
   `source`に対象以外（交換元となった相手側）を渡した場合はねんちゃくによる交換阻止が
   通常どおり機能することを確認した。`python -m pytest tests/ -v`で全件パスを確認した。
+- [x] `examples/02_ai/05_opponent_estimation.py`が`battle.player_states[opponent].active`
+  という未文書化の内部属性に直接アクセスする書き方に逆戻りしていた（id: r10-3）
+  → 対応内容 (2026-07-15): `examples/02_ai/05_opponent_estimation.py:24`を
+  `battle.get_active(opponent)`に置き換えた（挙動は同一、公開API変更なし）。`get_active()`は
+  既に`docs/api/README.md`「シナリオ構築系」表に掲載済みのため、ドキュメント側の追記は不要と
+  判断した。再発防止のため`tests/test_code_conventions.py`に
+  `test_examplesがplayer_states経由で内部属性に直接アクセスしていない`を追加し、
+  `examples/`配下に`player_states[`の使用が無いことを機械的に検査するようにした。
+  `PYTHONUTF8=1 python examples/02_ai/05_opponent_estimation.py`を実行し修正前と同じ出力
+  （1ターン目のノード数8、以降のログ）になることを確認したうえで、
+  `python -m pytest tests/ -v`で全件パスを確認した。なお`battle.get_active()`は型注釈上
+  `Pokemon | None`だが実装は`active_index`が`None`の場合に`None`を返さず`ValueError`を
+  送出する既存の不一致があり、これは今回の修正対象外として次ラウンド以降のfinding候補に
+  留める。

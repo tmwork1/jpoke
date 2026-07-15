@@ -21,7 +21,7 @@ class OpponentGuessingPlayer(TreeSearchPlayer):
         # 実戦では対戦データベースや使用率統計等から推定するが、ここでは固定の
         # 推測技で最小例を示す。opponent.active.moves が空（未公開）のときだけ
         # 書き込む
-        opponent_active = battle.player_states[opponent].active
+        opponent_active = battle.get_active(opponent)
         if not opponent_active.moves:
             opponent_active.set_moves(["みずでっぽう"])
 
