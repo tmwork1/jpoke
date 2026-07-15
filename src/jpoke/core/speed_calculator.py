@@ -27,6 +27,12 @@ class SpeedCalculator:
 
     def __init__(self, battle: Battle):
         self.battle = battle
+        # calc_effective_speed() の再入防止用。現在計算中のポケモンの集合。
+        # すいすい等の天候依存の素早さ補正ハンドラが battle.weather_for() を
+        # 呼び、それが ON_CHECK_WEATHER_IMMUNE を発火し、そのハンドラの
+        # 素早さソート（_sort_handlers）が同じポケモンの実効素早さを再度
+        # 要求する循環を断ち切るために使う（RecursionError対策）。
+        self._computing_speed: set[Pokemon] = set()
 
     def __deepcopy__(self, memo):
         cls = self.__class__
@@ -64,11 +70,26 @@ class SpeedCalculator:
         Returns:
             補正後の実効素早さ
         """
-        return self.battle.events.emit(
-            DomainEvent.ON_CALC_SPEED,
-            EventContext(source=mon),
-            mon.stats["spe"]
-        )
+        # 再入ガード: 同じポケモンの実効素早さ計算が既に進行中の場合は、
+        # 素早さ実数値をそのまま返して再帰を打ち切る。
+        # （例: すいすい の ON_CALC_SPEED ハンドラが battle.weather_for()
+        #  経由で ON_CHECK_WEATHER_IMMUNE を発火し、そのハンドラリストの
+        #  素早さソートが同じポケモンの calc_effective_speed() を再度
+        #  要求するケース。ON_CHECK_WEATHER_IMMUNE は subject_spec で
+        #  対象ポケモンに一致するハンドラのみが実行されるため、ソート順が
+        #  結果に影響しない＝フォールバック値を使っても安全）
+        if mon in self._computing_speed:
+            return mon.stats["spe"]
+
+        self._computing_speed.add(mon)
+        try:
+            return self.battle.events.emit(
+                DomainEvent.ON_CALC_SPEED,
+                EventContext(source=mon),
+                mon.stats["spe"]
+            )
+        finally:
+            self._computing_speed.discard(mon)
 
     def calc_speed_order_key(self, mon: Pokemon) -> int:
         """ポケモンの行動速度を計算する。
