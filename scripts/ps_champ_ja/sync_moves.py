@@ -2,6 +2,7 @@
 src/jpoke/data/ps_champ_moves.json にそのまま配置し、ps-champ-jaでカバーされる技について
 src/jpoke/data/moves/move_*.py 内の静的パラメータ（type/category/pp/accuracy/priority、
 および可変威力・必ず急所センチネル以外のpower/crit_ratio）のリテラル指定を削除する。
+また、targetについても縮約後の値（TARGET_MAP参照）と一致する明示指定であれば削除する。
 
 削除後は起動時に data/move.py の common_setup() が data/ps_champ_moves.json から
 これらの値を読み込むため、move_*.py側との二重保持が無くなる。
@@ -11,7 +12,9 @@ src/jpoke/data/moves/move_*.py 内の静的パラメータ（type/category/pp/ac
     - ps-champ-jaに存在しない技（716件中216件、既存のリテラル値を維持）
     - power=1（可変威力センチネル）・crit_ratio=3（必ず急所センチネル）を持つ技は
       当該フィールドのみ削除せず残す
-    - target（常にソース側の指定を優先するため削除しない）
+    - target=が明示指定されていて、かつ縮約後の値（TARGET_MAP参照）と食い違う技
+      （common_setup()はtarget未設定（空文字センチネル）の場合のみjson由来の値で
+      埋めるため、食い違う明示指定は意図的な上書きとして残す必要がある）
 """
 import glob
 import json
@@ -29,6 +32,27 @@ STRIPPABLE = re.compile(r'^\s*(type|category|pp|accuracy|priority)=.*,\s*$')
 POWER_LINE = re.compile(r'^\s*power=(.*),\s*$')
 CRIT_LINE = re.compile(r'^\s*crit_ratio=(.*),\s*$')
 CRITICAL_RANK_LINE = re.compile(r'^(\s*)critical_rank=(.*,\s*)$')
+TARGET_LINE = re.compile(r'^\s*target="([^"]+)",\s*$')
+
+# jpoke/data/move.py の _TARGET_MAP と同一内容（ps-champ-jaの13分類→jpokeの5分類）。
+# 二重管理を避けたいが、move.py 側は jpoke パッケージの実行環境に依存するため、
+# スクリプト単体で完結させるためここでも同じ定義を持つ。
+TARGET_MAP = {
+    "normal": "foe",
+    "any": "foe",
+    "allAdjacentFoes": "foe",
+    "randomNormal": "foe",
+    "allAdjacent": "foe",
+    "scripted": "foe",
+    "self": "self",
+    "adjacentAllyOrSelf": "self",
+    "foeSide": "foe_side",
+    "allySide": "own_side",
+    "allyTeam": "own_side",
+    "allies": "own_side",
+    "adjacentAlly": "own_side",
+    "all": "field",
+}
 
 
 def sync_snapshot() -> dict:
@@ -90,6 +114,12 @@ def strip_file(path: Path, ps_champ: dict) -> tuple[list[str], int]:
                     continue
                 cm = CRIT_LINE.match(line)
                 if cm is not None and cm.group(1).strip() != "3":
+                    removed += 1
+                    depth += line.count("(") - line.count(")")
+                    i += 1
+                    continue
+                tm = TARGET_LINE.match(line)
+                if tm is not None and TARGET_MAP.get(ps_champ[current_name]["target"]) == tm.group(1):
                     removed += 1
                     depth += line.count("(") - line.count(")")
                     i += 1

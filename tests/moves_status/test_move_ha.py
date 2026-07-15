@@ -2367,6 +2367,30 @@ def test_ほろびのうた_PPは8():
     assert MOVES["ほろびのうた"].pp == 8
 
 
+def test_ほろびのうた_マジックコートで跳ね返されない():
+    """ほろびのうた: unreflectableフラグを持つため、相手のマジックコートで跳ね返されない
+
+    ほろびのうたはtarget="foe"（相手単体を対象とする技と同じ命中判定・特性相互作用を
+    持つため）だが、実際の対戦ではマジックコート・マジックミラーで跳ね返らない
+    （docs/spec/moves/ほろびのうた.md 技の仕様節）。target="foe"のままだと
+    is_reflectableがcategory=statusとの組み合わせでTrueになってしまうため、
+    unreflectableフラグで個別に無効化している。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ほろびのうた"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    # 跳ね返らず、使用者・相手ともに通常通りvolatileが付与される
+    assert attacker.has_volatile("ほろびのうた")
+    assert defender.has_volatile("ほろびのうた")
+
+
 def test_ほろびのうた_まもる状態の相手にも効果が発動する():
     """ほろびのうた: unprotectableフラグを持つため、まもる状態の相手にも効果が発動する"""
     battle = t.start_battle(

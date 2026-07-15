@@ -126,7 +126,6 @@ MOVES_A: dict[MoveName, MoveData] = {
         }
     ),
     "アクアリング": MoveData(
-        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.アクアリング_apply,
@@ -198,7 +197,6 @@ MOVES_A: dict[MoveName, MoveData] = {
         },
     ),
     "あさのひざし": MoveData(
-        target="self",
         flags={"heal"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -294,7 +292,6 @@ MOVES_A: dict[MoveName, MoveData] = {
         }
     ),
     "あまごい": MoveData(
-        target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.あまごい_activate_weather,
@@ -333,7 +330,6 @@ MOVES_A: dict[MoveName, MoveData] = {
         },
     ),
     "アロマミスト": MoveData(
-        target="self",
         handlers={},  # 追加効果なし
     ),
     "あわ": MoveData(
@@ -403,7 +399,6 @@ MOVES_A: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "いかりのこな": MoveData(
-        target="self",
         flags={"non_copycat"},
         handlers={},  # 追加効果なし
     ),
@@ -526,7 +521,6 @@ MOVES_A: dict[MoveName, MoveData] = {
         }
     ),
     "いのちのしずく": MoveData(
-        target="self",
         flags={"heal"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -558,7 +552,6 @@ MOVES_A: dict[MoveName, MoveData] = {
         }
     ),
     "いやしのすず": MoveData(
-        target="own_side",
         flags={"sound"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -567,7 +560,6 @@ MOVES_A: dict[MoveName, MoveData] = {
         }
     ),
     "いやしのねがい": MoveData(
-        target="self",
         flags={"heal"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -819,7 +811,6 @@ MOVES_A: dict[MoveName, MoveData] = {
         }
     ),
     "エレキフィールド": MoveData(
-        target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.エレキフィールド_activate_terrain,
@@ -871,7 +862,6 @@ MOVES_A: dict[MoveName, MoveData] = {
         }
     ),
     "おいかぜ": MoveData(
-        target="own_side",
         flags={"wind"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -888,7 +878,6 @@ MOVES_A: dict[MoveName, MoveData] = {
         handlers={},  # 効果のないわざ（戦闘上の効果なし）
     ),
     "おかたづけ": MoveData(
-        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(hs.おかたづけ_cleanup),
         }
@@ -901,7 +890,6 @@ MOVES_A: dict[MoveName, MoveData] = {
         }
     ),
     "おさきにどうぞ": MoveData(
-        target="own_side",
         handlers={},  # ダブル専用（本プロジェクトはシングルバトル専用のため対象外）
     ),
     "おしゃべり": MoveData(
@@ -936,7 +924,6 @@ MOVES_A: dict[MoveName, MoveData] = {
         }
     ),
     "おちゃかい": MoveData(
-        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.おちゃかい_force_consume_berries,
@@ -1032,7 +1019,6 @@ MOVES_A: dict[MoveName, MoveData] = {
         }
     ),
     "オーロラベール": MoveData(
-        target="own_side",
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
                 hs.オーロラベール_check_weather,

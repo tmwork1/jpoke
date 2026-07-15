@@ -82,7 +82,6 @@ MOVES_SA: dict[MoveName, MoveData] = {
         },
     ),
     "サイコフィールド": MoveData(
-        target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.サイコフィールド_activate_terrain,
@@ -128,7 +127,6 @@ MOVES_SA: dict[MoveName, MoveData] = {
         }
     ),
     "サイドチェンジ": MoveData(
-        target="self",
         handlers={},  # ダブル専用（本プロジェクトはシングルバトル専用のため対象外）
     ),
     "さいはい": MoveData(
@@ -164,7 +162,6 @@ MOVES_SA: dict[MoveName, MoveData] = {
         },
     ),
     "さむいギャグ": MoveData(
-        target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.さむいギャグ_activate_weather_and_pivot,
@@ -297,7 +294,6 @@ MOVES_SA: dict[MoveName, MoveData] = {
         }
     ),
     "しっぽきり": MoveData(
-        target="self",
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.しっぽきり_check,
@@ -464,7 +460,6 @@ MOVES_SA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "しんぴのまもり": MoveData(
-        target="own_side",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.しんぴのまもり_set_side_field,
@@ -507,7 +502,6 @@ MOVES_SA: dict[MoveName, MoveData] = {
         }
     ),
     "じこさいせい": MoveData(
-        target="self",
         flags={"heal"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -585,7 +579,6 @@ MOVES_SA: dict[MoveName, MoveData] = {
         }
     ),
     "じばそうさ": MoveData(
-        target="self",
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.じばそうさ_can_apply,
@@ -636,7 +629,6 @@ MOVES_SA: dict[MoveName, MoveData] = {
         },
     ),
     "じゅうでん": MoveData(
-        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.じゅうでん_apply,
@@ -644,7 +636,6 @@ MOVES_SA: dict[MoveName, MoveData] = {
         }
     ),
     "じゅうりょく": MoveData(
-        target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.じゅうりょく_activate_global_field,
@@ -808,7 +799,6 @@ MOVES_SA: dict[MoveName, MoveData] = {
         }
     ),
     "ステルスロック": MoveData(
-        target="foe_side",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ステルスロック_set_field,
@@ -831,7 +821,6 @@ MOVES_SA: dict[MoveName, MoveData] = {
         }
     ),
     "すなあらし": MoveData(
-        target="field",
         flags={"wind"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -955,7 +944,6 @@ MOVES_SA: dict[MoveName, MoveData] = {
         }
     ),
     "せいちょう": MoveData(
-        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.せいちょう_boost_attacker_atk_spa,
@@ -1029,7 +1017,6 @@ MOVES_SA: dict[MoveName, MoveData] = {
         }
     ),
     "ソウルビート": MoveData(
-        target="self",
         flags={"dance", "sound"},
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(

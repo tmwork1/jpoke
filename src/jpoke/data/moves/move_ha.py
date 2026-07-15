@@ -18,7 +18,6 @@ from ..models import MoveData
 
 MOVES_HA: dict[MoveName, MoveData] = {
     "はいすいのじん": MoveData(
-        target="self",
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
                 hs.はいすいのじん_can_apply,
@@ -207,7 +206,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         },
     ),
     "はねやすめ": MoveData(
-        target="self",
         flags={"heal"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -274,7 +272,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "はらだいこ": MoveData(
-        target="self",
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.はらだいこ_can_apply,
@@ -367,7 +364,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "バトンタッチ": MoveData(
-        target="self",
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.バトンタッチ_check,
@@ -478,7 +474,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "パワートリック": MoveData(
-        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.パワートリック_swap_stats,
@@ -486,7 +481,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ひかりのかべ": MoveData(
-        target="own_side",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ひかりのかべ_set_side_field,
@@ -581,7 +575,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ビルドアップ": MoveData(
-        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ビルドアップ_boost_attacker_atk_def,
@@ -590,7 +583,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
     ),
     "ファストガード": MoveData(
         pp=16,  # champions基準（docs/champions/move_list.txt）。Gen9本家は15
-        target="self",
         flags={"protect"},
         handlers={
             Event.ON_TRY_MOVE_2: h.MoveHandler(
@@ -611,7 +603,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ふういん": MoveData(
-        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ふういん_apply,
@@ -619,7 +610,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "フェアリーロック": MoveData(
-        target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.フェアリーロック_activate_global_field,
@@ -1115,7 +1105,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ほおばる": MoveData(
-        target="self",
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
                 hs.ほおばる_check_has_berry,
@@ -1216,7 +1205,15 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ほろびのうた": MoveData(
-        flags={"sound", "unprotectable"},
+        # target: ps-champ-jaは"all"（jpoke縮約でfield）だが、実際は「全体の場が対象の技」
+        # ではなく「使用者自身や隣り合っていないポケモンも含め、姿を隠しているポケモンには
+        # 当たらない・ロックオン/ノーガードが効く」という、相手単体を対象とする技と同じ
+        # 命中判定・特性相互作用（ちょすい等のみずタイプ変化技吸収、サイコフィールドの
+        # 先制技ブロック等）を持つ（docs/spec/moves/ほろびのうた.md 技の仕様節）。
+        # そのためtarget="foe"のまま維持し、まもる無効はunprotectableフラグ、
+        # マジックコート/マジックミラー無効はunreflectableフラグで個別に表現する。
+        target="foe",
+        flags={"sound", "unprotectable", "unreflectable"},
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.ほろびのうた_can_apply,

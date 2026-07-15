@@ -50,7 +50,6 @@ MOVES_TA: dict[MoveName, MoveData] = {
         }
     ),
     "たくわえる": MoveData(
-        target="self",
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
                 hs.たくわえる_check_can_use,
@@ -94,7 +93,6 @@ MOVES_TA: dict[MoveName, MoveData] = {
         }
     ),
     "たてこもる": MoveData(
-        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.たてこもる_boost_attacker_def,
@@ -116,7 +114,6 @@ MOVES_TA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "タマゴうみ": MoveData(
-        target="self",
         flags={"heal"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -293,7 +290,6 @@ MOVES_TA: dict[MoveName, MoveData] = {
         }
     ),
     "ちいさくなる": MoveData(
-        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ちいさくなる_apply,
@@ -357,7 +353,6 @@ MOVES_TA: dict[MoveName, MoveData] = {
         }
     ),
     "ちょうのまい": MoveData(
-        target="self",
         flags={"dance"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -396,7 +391,6 @@ MOVES_TA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "つきのひかり": MoveData(
-        target="self",
         flags={"heal"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -492,7 +486,6 @@ MOVES_TA: dict[MoveName, MoveData] = {
         }
     ),
     "つぼをつく": MoveData(
-        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.つぼをつく_modify_attacker_stats,
@@ -528,7 +521,6 @@ MOVES_TA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "つるぎのまい": MoveData(
-        target="self",
         flags={"dance"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -574,7 +566,6 @@ MOVES_TA: dict[MoveName, MoveData] = {
         }
     ),
     "てだすけ": MoveData(
-        target="own_side",
         handlers={},  # ダブル専用（本プロジェクトはシングルバトル専用のため対象外）
     ),
     "てっていこうせん": MoveData(
@@ -586,7 +577,6 @@ MOVES_TA: dict[MoveName, MoveData] = {
         }
     ),
     "てっぺき": MoveData(
-        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.てっぺき_boost_attacker_def,
@@ -757,7 +747,6 @@ MOVES_TA: dict[MoveName, MoveData] = {
         }
     ),
     "でんじふゆう": MoveData(
-        target="self",
         flags={"gravity_restricted"},
         handlers={
             Event.ON_TRY_MOVE_1: [
@@ -795,7 +784,6 @@ MOVES_TA: dict[MoveName, MoveData] = {
         }
     ),
     "とおぼえ": MoveData(
-        target="self",
         flags={"sound"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -816,7 +804,6 @@ MOVES_TA: dict[MoveName, MoveData] = {
         }
     ),
     "とぐろをまく": MoveData(
-        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.とぐろをまく_modify_attacker_stats,
@@ -824,7 +811,6 @@ MOVES_TA: dict[MoveName, MoveData] = {
         }
     ),
     "とける": MoveData(
-        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.とける_boost_attacker_def,
@@ -977,7 +963,6 @@ MOVES_TA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "トリックルーム": MoveData(
-        target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.トリックルーム_activate_global_field,
@@ -1042,7 +1027,6 @@ MOVES_TA: dict[MoveName, MoveData] = {
     ),
     "トーチカ": MoveData(
         pp=8,  # champions基準（docs/champions/move_list.txt）。Gen9本家は10
-        target="self",
         flags={"protect"},
         handlers={
             Event.ON_TRY_MOVE_2: h.MoveHandler(
@@ -1134,7 +1118,6 @@ MOVES_TA: dict[MoveName, MoveData] = {
         }
     ),
     "どくびし": MoveData(
-        target="foe_side",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.どくびし_set_field,
@@ -1178,7 +1161,6 @@ MOVES_TA: dict[MoveName, MoveData] = {
         }
     ),
     "ドラゴンエール": MoveData(
-        target="self",
         flags={"sound"},
         handlers={},  # ダブル専用（本プロジェクトはシングルバトル専用のため対象外）
     ),
@@ -1283,7 +1265,6 @@ MOVES_TA: dict[MoveName, MoveData] = {
         }
     ),
     "ドわすれ": MoveData(
-        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ドわすれ_boost_attacker_spd,

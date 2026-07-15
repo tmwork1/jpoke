@@ -112,7 +112,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         },
     ),
     "なまける": MoveData(
-        target="self",
         flags={"heal"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -201,7 +200,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "にほんばれ": MoveData(
-        target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.にほんばれ_activate_weather,
@@ -220,7 +218,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "ニードルガード": MoveData(
-        target="self",
         flags={"protect"},
         handlers={
             Event.ON_TRY_MOVE_2: h.MoveHandler(
@@ -232,7 +229,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "ねがいごと": MoveData(
-        target="self",
         flags={"heal"},
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
@@ -265,7 +261,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "ねごと": MoveData(
-        target="self",
         flags={"non_encore", "non_negoto"},
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
@@ -349,7 +344,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "ねばねばネット": MoveData(
-        target="foe_side",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ねばねばネット_set_side_field,
@@ -366,7 +360,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "ねむる": MoveData(
-        target="self",
         flags={"heal"},
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
@@ -392,7 +385,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "ねをはる": MoveData(
-        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ねをはる_apply,
@@ -421,7 +413,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "のみこむ": MoveData(
-        target="self",
         flags={"heal"},
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(

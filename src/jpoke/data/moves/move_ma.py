@@ -27,7 +27,6 @@ MOVES_MA: dict[MoveName, MoveData] = {
         }
     ),
     "まきびし": MoveData(
-        target="foe_side",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.まきびし_set_field,
@@ -84,7 +83,6 @@ MOVES_MA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "マジックルーム": MoveData(
-        target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.マジックルーム_activate_global_field,
@@ -113,7 +111,6 @@ MOVES_MA: dict[MoveName, MoveData] = {
         }
     ),
     "まねっこ": MoveData(
-        target="self",
         flags={"non_negoto", "non_copycat"},  # まねっこ自身はまねっこでコピー不可
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(hs.まねっこ_can_use),
@@ -132,7 +129,6 @@ MOVES_MA: dict[MoveName, MoveData] = {
         }
     ),
     "まもる": MoveData(
-        target="self",
         flags={"protect", "non_copycat"},  # まねっこでコピー不可
         handlers={
             Event.ON_TRY_MOVE_2: h.MoveHandler(
@@ -176,7 +172,6 @@ MOVES_MA: dict[MoveName, MoveData] = {
         },
     ),
     "みがわり": MoveData(
-        target="self",
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.みがわり_check,
@@ -188,7 +183,6 @@ MOVES_MA: dict[MoveName, MoveData] = {
         }
     ),
     "みきり": MoveData(
-        target="self",
         flags={"protect"},
         handlers={
             Event.ON_TRY_MOVE_2: h.MoveHandler(
@@ -225,7 +219,6 @@ MOVES_MA: dict[MoveName, MoveData] = {
         }
     ),
     "ミストフィールド": MoveData(
-        target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ミストフィールド_activate_terrain,
@@ -328,7 +321,6 @@ MOVES_MA: dict[MoveName, MoveData] = {
     ),
     "みちづれ": MoveData(
         pp=8,  # champions基準（docs/champions/move_list.txt）。旧値5はSV本家基準の移行漏れ。
-        target="self",
         flags={"non_copycat"},
         handlers={
             # 第七世代以降: みちづれを成功させた直後にもう一度使うと必ず失敗する
@@ -490,7 +482,6 @@ MOVES_MA: dict[MoveName, MoveData] = {
         }
     ),
     "めいそう": MoveData(
-        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.めいそう_boost_attacker_spa_spd,

@@ -32,6 +32,26 @@ def resource_path(*path_parts: str) -> str:
 
 _CATEGORY_MAP = {"Physical": "physical", "Special": "special", "Status": "status"}
 
+# ps-champ-jaのtarget（ダブルバトルの隣接関係を区別する13分類）を、
+# jpoke側のMoveTarget（チャンピオンズシングル専用のため5分類で足りる）へ縮約する。
+# シングルバトルでは隣接関係の区別が不要なため、以下の粒度で十分。
+_TARGET_MAP = {
+    "normal": "foe",
+    "any": "foe",
+    "allAdjacentFoes": "foe",
+    "randomNormal": "foe",
+    "allAdjacent": "foe",
+    "scripted": "foe",
+    "self": "self",
+    "adjacentAllyOrSelf": "self",
+    "foeSide": "foe_side",
+    "allySide": "own_side",
+    "allyTeam": "own_side",
+    "allies": "own_side",
+    "adjacentAlly": "own_side",
+    "all": "field",
+}
+
 
 def _load_ps_champ_moves() -> dict[str, dict]:
     with open(resource_path("data", "ps_champ_moves.json"), encoding="utf-8") as f:
@@ -47,10 +67,20 @@ def common_setup() -> None:
 
     Note:
         ps-champ-jaでカバーされる技（`MOVES_SYMBOL`の擬似技を除く）は、
-        `type`/`category`/`pp`/`accuracy`/`priority`/`crit_ratio`を
+        `type`/`category`/`pp`/`accuracy`/`priority`/`crit_ratio`/`target`を
         `data/ps_champ_moves.json`（ps-champ-jaのスナップショット）から読み込み、
         move_*.py側のリテラル値を上書きする。カバーされない技はmove_*.py側で
         明示されたリテラル値をそのまま使う（未設定ならエラーにする）。
+
+        `target`はps-champ-jaの13分類（ダブルバトルの隣接関係区別を含む）を
+        `_TARGET_MAP`でjpoke側の5分類（チャンピオンズシングル専用のため隣接関係の
+        区別が不要）に縮約する。カバーされる技はほぼ全件この縮約値をそのまま使い、
+        move_*.py側で個別に`target=`を明示指定する必要はない。
+        例外的に「ほろびのうた」はps-champ-ja上「all」（縮約するとfield）だが、
+        実際の命中判定・特性相互作用（ちょすい等のみずタイプ変化技吸収、
+        サイコフィールドの先制技ブロック等）は「foe」の技と同じ挙動を示すため、
+        move_*.py側で明示的に`target="foe"`を指定して縮約結果を上書きしている
+        （詳細はmove_ha.py内のコメント、docs/spec/moves/ほろびのうた.md参照）。
     """
     ps_champ = _load_ps_champ_moves()
     symbol_names = set(MOVES_SYMBOL.keys())
@@ -82,7 +112,7 @@ def common_setup() -> None:
         if data.crit_ratio != 3:
             data.crit_ratio = 1 if p["critRatio"] >= 2 else 0
         if data.target == "":
-            data.target = "foe"
+            data.target = _TARGET_MAP[p["target"]]
 
 
 MOVES: dict[MoveName, MoveData] = {

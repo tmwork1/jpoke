@@ -61,7 +61,6 @@ MOVES_WA: dict[MoveName, MoveData] = {
         }
     ),
     "わるだくみ": MoveData(
-        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.わるだくみ_boost_attacker_spa,
@@ -82,7 +81,6 @@ MOVES_WA: dict[MoveName, MoveData] = {
         }
     ),
     "ワンダールーム": MoveData(
-        target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ワンダールーム_activate_global_field,

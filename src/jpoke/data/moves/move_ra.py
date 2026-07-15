@@ -73,7 +73,6 @@ MOVES_RA: dict[MoveName, MoveData] = {
         }
     ),
     "リサイクル": MoveData(
-        target="self",
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.リサイクル_can_apply,
@@ -85,7 +84,6 @@ MOVES_RA: dict[MoveName, MoveData] = {
         }
     ),
     "リフレクター": MoveData(
-        target="own_side",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.リフレクター_set_side_field,
@@ -120,7 +118,6 @@ MOVES_RA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "りゅうのまい": MoveData(
-        target="self",
         flags={"dance"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -242,7 +239,6 @@ MOVES_RA: dict[MoveName, MoveData] = {
         }
     ),
     "ロックカット": MoveData(
-        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ロックカット_boost_attacker_spe,

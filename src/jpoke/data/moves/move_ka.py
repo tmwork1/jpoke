@@ -161,7 +161,6 @@ MOVES_KA: dict[MoveName, MoveData] = {
         },
     ),
     "かげぶんしん": MoveData(
-        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.かげぶんしん_boost_attacker_evasion,
@@ -332,7 +331,6 @@ MOVES_KA: dict[MoveName, MoveData] = {
         }
     ),
     "からをやぶる": MoveData(
-        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.からをやぶる_modify_attacker_stats,
@@ -431,7 +429,6 @@ MOVES_KA: dict[MoveName, MoveData] = {
         }
     ),
     "きあいだめ": MoveData(
-        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.きあいだめ_apply,
@@ -553,7 +550,6 @@ MOVES_KA: dict[MoveName, MoveData] = {
         }
     ),
     "キングシールド": MoveData(
-        target="self",
         flags={"protect"},
         handlers={
             Event.ON_TRY_MOVE_2: h.MoveHandler(
@@ -691,7 +687,6 @@ MOVES_KA: dict[MoveName, MoveData] = {
         }
     ),
     "くろいきり": MoveData(
-        target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.くろいきり_reset_all_ranks,
@@ -775,7 +770,6 @@ MOVES_KA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし。優先度補正はグラスフィールド側で処理する（グラスフィールド_boost_move_priority）
     ),
     "グラスフィールド": MoveData(
-        target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.グラスフィールド_activate_terrain,
@@ -840,7 +834,6 @@ MOVES_KA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "こうごうせい": MoveData(
-        target="self",
         flags={"heal"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -849,7 +842,6 @@ MOVES_KA: dict[MoveName, MoveData] = {
         }
     ),
     "こうそくいどう": MoveData(
-        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.こうそくいどう_boost_attacker_spe,
@@ -929,7 +921,6 @@ MOVES_KA: dict[MoveName, MoveData] = {
         }
     ),
     "コスモパワー": MoveData(
-        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.コスモパワー_boost_attacker_def_spd,
@@ -937,7 +928,6 @@ MOVES_KA: dict[MoveName, MoveData] = {
         }
     ),
     "コットンガード": MoveData(
-        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.コットンガード_boost_attacker_def,
@@ -969,7 +959,6 @@ MOVES_KA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "このゆびとまれ": MoveData(
-        target="self",
         flags={"non_copycat"},
         handlers={},  # 追加効果なし
     ),
@@ -982,7 +971,6 @@ MOVES_KA: dict[MoveName, MoveData] = {
         }
     ),
     "こらえる": MoveData(
-        target="self",
         flags={"protect"},
         handlers={
             Event.ON_TRY_MOVE_2: h.MoveHandler(
@@ -1027,7 +1015,6 @@ MOVES_KA: dict[MoveName, MoveData] = {
         },
     ),
     "コーチング": MoveData(
-        target="own_side",
         handlers={},  # 追加効果なし
     ),
     "コートチェンジ": MoveData(

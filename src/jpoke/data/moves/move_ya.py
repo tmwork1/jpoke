@@ -62,7 +62,6 @@ MOVES_YA: dict[MoveName, MoveData] = {
         handlers={},  # 常に急所に当たる（crit_ratio=3）
     ),
     "ゆきげしき": MoveData(
-        target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ゆきげしき_activate_weather,
