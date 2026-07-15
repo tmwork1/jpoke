@@ -2239,6 +2239,26 @@ def test_エレクトロビーム_2ターンで攻撃する():
     assert not attacker.has_volatile("エレクトロビーム")
 
 
+def test_エレクトロビーム_2ターン目の攻撃実行ターンにとくこうが重複上昇しない():
+    """エレクトロビーム: とくこう上昇は1ターン目（充電ターン）のみで、2ターン目（攻撃実行ターン）
+    には ON_MOVE_CHARGE が再度発火してもとくこうは重複して上昇しない
+    （fuzz_log seed=231 で検出された不具合の回帰）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["エレクトロビーム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+
+    # 1ターン目（充電ターン）: とくこう+1
+    t.run_move(battle, 0)
+    assert attacker.boosts["spa"] == 1
+
+    # 2ターン目（攻撃実行ターン）: とくこうは上昇済みのまま変化しない
+    t.run_move(battle, 0)
+    assert attacker.boosts["spa"] == 1
+
+
 def test_エレクトロビーム_2ターン目をコマンド経由で強制続行しても正しく発動する():
     """エレクトロビーム: 2ターン目の強制続行をコマンド解決経由
     （battle.get_available_commands→battle.step）で行った場合でも、
