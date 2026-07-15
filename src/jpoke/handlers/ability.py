@@ -627,6 +627,8 @@ def いかりのつぼ_max_atk_on_crit(battle: Battle, ctx: AttackContext, value
     if not battle.move_executor.critical:
         return HandlerReturn(value=value)
     mon = ctx.defender
+    if mon.fainted:
+        return HandlerReturn(value=value)
     diff = 6 - mon.boosts["atk"]
     if diff > 0 and battle.modify_stats(mon, {"atk": diff}, source=ctx.attacker):
         _announce_ability_triggered(battle, mon)
@@ -1485,6 +1487,8 @@ def くだけるよろい_drop_B_boost_S(battle: Battle, ctx: AttackContext, val
     if ctx.move.category != "physical":
         return HandlerReturn(value=value)
     mon = ctx.defender
+    if mon.fainted:
+        return HandlerReturn(value=value)
     battle.modify_stats(mon, {"def": -1}, source=mon)
     if battle.modify_stats(mon, {"spe": +2}, source=mon):
         _announce_ability_triggered(battle, mon)
@@ -1853,6 +1857,8 @@ def じきゅうりょく_boost_B_on_hit(battle: Battle, ctx: AttackContext, val
     if ctx.substitute_damage:
         return HandlerReturn(value=value)
     mon = ctx.defender
+    if mon.fainted:
+        return HandlerReturn(value=value)
     if battle.modify_stats(mon, {"def": +1}, source=ctx.attacker):
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
@@ -1875,6 +1881,8 @@ def じょうききかん_max_boost_speed(battle: Battle, ctx: AttackContext, va
     if ctx.move.type not in ("みず", "ほのお"):
         return HandlerReturn(value=value)
     mon = ctx.defender
+    if mon.fainted:
+        return HandlerReturn(value=value)
     if battle.modify_stats(mon, {"spe": +6}, source=ctx.attacker):
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
@@ -2205,6 +2213,8 @@ def せいぎのこころ_boost_atk_on_dark(battle: Battle, ctx: AttackContext, 
     if ctx.move.type != "あく":
         return HandlerReturn(value=value)
     mon = ctx.defender
+    if mon.fainted:
+        return HandlerReturn(value=value)
     if battle.modify_stats(mon, {"atk": +1}, source=ctx.attacker):
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
@@ -3420,6 +3430,8 @@ def びびり_boost_spd_on_fear_move(battle: Battle, ctx: AttackContext, value: 
     if ctx.move.type not in ("あく", "ゴースト", "むし"):
         return HandlerReturn(value=value)
     mon = ctx.defender
+    if mon.fainted:
+        return HandlerReturn(value=value)
     if battle.modify_stats(mon, {"spe": +1}, source=ctx.attacker):
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
@@ -4167,6 +4179,8 @@ def みずがため_boost_B_on_water(battle: Battle, ctx: AttackContext, value: 
     if ctx.move.type != "みず":
         return HandlerReturn(value=value)
     mon = ctx.defender
+    if mon.fainted:
+        return HandlerReturn(value=value)
     if battle.modify_stats(mon, {"def": +2}, source=ctx.attacker):
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)

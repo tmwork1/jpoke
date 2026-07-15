@@ -1025,6 +1025,25 @@ def test_わたげ_クリアボディではブロックされる():
     assert battle.actives[1].boosts["spe"] == 0
 
 
+def test_わたげ_じばくで自滅した攻撃者にも発動する():
+    """わたげは自分自身ではなく攻撃者のすばやさを下げる特性のため、へんしょく・
+    ぎゃくじょう等（自分自身のランク変化を瀕死時に止める特性）とは異なるパターンであり、
+    瀕死ガードの対象外となる。じばくは使用前に自分のHPを全消費して瀕死になるため、
+    攻撃者がすでに瀕死の状態でもわたげが正常に発動することを確認する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="わたげ")],
+        team1=[Pokemon("カビゴン", move_names=["じばく"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[1]
+    defender = battle.actives[0]
+    t.fix_damage(battle, 5)
+    t.run_move(battle, 1)
+    assert attacker.fainted
+    assert not defender.fainted
+    assert attacker.boosts["spe"] == -1
+
+
 def test_わたげ_タイプ相性で無効化されたときは発動しない():
     """わたげ: タイプ相性で無効化された攻撃（ゴーストへのノーマル技）では発動しない。"""
     battle = t.start_battle(

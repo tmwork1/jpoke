@@ -416,6 +416,43 @@ def test_じゅうりょく_ノーガード相手への攻撃でNoneのままTyp
     assert battle.move_executor.accuracy is None  # 倍率は適用されない
 
 
+def test_ターン終了処理_ON_TURN_ENDの継続ダメージで決着した場合発動アナウンスログが勝敗確定ログより先に記録される():
+    """seed=509 (LogInconsistency) の回帰テスト。
+
+    TurnController._run_end_phase は Event.ON_TURN_END を発火する際、
+    stop_if_winner_determined=True で決着後の残りハンドラの実行を打ち切る一方、
+    決着させた当のハンドラ自身が続けて記録するログ（くろいヘドロ・どく・やけど等の
+    発動アナウンス）は打ち切りの対象にならない。修正前は、そのハンドラの中で
+    battle.modify_hp() が瀕死を検知した時点で battle.judge_winner() の呼び出しから
+    即座に GAME_WON/GAME_LOST ログが記録されてしまい、「HP変化→勝敗確定→
+    発動アナウンス」という不整合な順序になっていた。
+
+    修正後は Event.ON_TURN_END の発火全体を begin_deferred_winner_log() /
+    end_deferred_winner_log() の抑制区間で囲むため、「HP変化→発動アナウンス→
+    勝敗確定」の正しい順序で記録されることを確認する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="くろいヘドロ", move_names=["はねる"])],
+        team1=[Pokemon("カビゴン", move_names=["はねる"])],
+        accuracy=100,
+    )
+    player0, player1 = battle.players
+    mon = battle.actives[0]
+    mon.hp = 1
+
+    battle.step(commands={player0: Command.MOVE_0, player1: Command.MOVE_0})
+
+    assert mon.fainted
+    assert battle.winner is player1
+
+    logs = [log for log in battle.event_logger.logs if log.turn == battle.turn]
+    hp_idx = next(i for i, log in enumerate(logs) if log.log == LogCode.HP_CHANGED)
+    item_idx = next(i for i, log in enumerate(logs) if log.log == LogCode.ITEM_TRIGGERED)
+    won_idx = next(i for i, log in enumerate(logs) if log.log == LogCode.GAME_WON)
+    # 修正前は won_idx < item_idx になっていた
+    assert hp_idx < item_idx < won_idx
+
+
 def test_ターン終了処理_ON_TURN_END発火中に決着した場合別個体の継続ダメージ処理が打ち切られる():
     """seed=42 (LogInconsistency@event_manager.py:emit:154) の回帰テスト。
 

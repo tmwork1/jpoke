@@ -752,6 +752,23 @@ def test_いかりのつぼ_急所被弾でこうげき最大():
     assert defender.boosts["atk"] == 6
 
 
+def test_いかりのつぼ_被弾して瀕死になった場合はこうげきが上がらない():
+    """いかりのつぼ: 急所被弾で瀕死になった場合、自分自身のランク変化は発動しない
+    （へんしょく・ぎゃくじょう等の既存特性と同じ規約）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="いかりのつぼ")],
+        team1=[Pokemon("ピカチュウ", move_names=["トリックフラワー"])],
+        accuracy=100,
+    )
+    defender = battle.actives[0]
+    t.fix_damage(battle, defender.max_hp)
+    t.run_move(battle, 1)
+
+    assert battle.move_executor.critical is True
+    assert defender.fainted is True
+    assert defender.boosts["atk"] == 0
+
+
 def test_いしあたま_はかいこうせんのリチャージは防げない():
     """いしあたま: はかいこうせんは反動ダメージを伴わない技のため、
     HPは減らないがリチャージによる行動不能は通常通り発生する。"""
