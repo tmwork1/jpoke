@@ -91,6 +91,8 @@ def run_benchmark(
         battle_seed = master.randrange(2**31)
         player1 = RandomPlayer("Player1")
         player2 = RandomPlayer("Player2")
+        # build_random_pokemon()は種族・技構成をその場でランダム生成するため、
+        # 名前を渡して構築するadd_pokemon()では表現できず、teamへ直接代入する
         player1.team = build_random_team(team_rngs[0])
         player2.team = build_random_team(team_rngs[1])
 

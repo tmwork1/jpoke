@@ -129,3 +129,18 @@
   今回の指摘（README.md）の対象外のため変更していない。ドキュメントのみの変更で
   `src/jpoke`・`examples/`のコード変更は無く挙動変更も無いため、回帰テストの追加は不要と
   判断した。`python -m pytest tests/ -v`で全件パス（5953 passed, 1 skipped）を確認した。
+- [x] `examples/05_benchmark/01_step_time_benchmark.py`が`player.team`への直接代入で
+  `add_pokemon()`規約から外れている（id: r10-9）
+  → 対応内容 (2026-07-15): `run_benchmark()`内の`player1.team = build_random_team(...)`/
+  `player2.team = build_random_team(...)`は、`build_random_pokemon()`が種族・性別・性格・
+  レベル・特性・持ち物・技などすべてをその場で乱数生成して`Pokemon`インスタンスを組み立てる
+  ため、「種族名を渡して`Player`側に構築させる」`add_pokemon(name, ...)`の名前渡し
+  インターフェースでは表現できないという理由によるものだった。理由が自明でなく初心者が
+  規約違反と誤解しかねないため、直前に「`build_random_pokemon()`は種族・技構成をその場で
+  ランダム生成するため、名前を渡して構築する`add_pokemon()`では表現できず、`team`へ直接
+  代入する」旨の1行コメントを追加した。挙動変更は無い（コメント追加のみ）。
+  `PYTHONIOENCODING=utf-8 python examples/05_benchmark/01_step_time_benchmark.py --n-battles 5
+  --max-turns 20 --seed 42`を修正前後で実行し、`perf_counter`計測値そのもの以外
+  （バトル数・stepサンプル数・seed）が完全一致することを確認した。コメントのみの変更で
+  挙動変更が無いため回帰テストの追加は不要と判断した。`python -m pytest tests/ -v`で全件
+  パス（5953 passed, 1 skipped）を確認した。これで第10ラウンドの9件すべてが対応済みになった。
