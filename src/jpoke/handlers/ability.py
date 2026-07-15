@@ -599,13 +599,15 @@ def いかりのこうら_boost_on_half_hp(battle: Battle, ctx: AttackContext, v
 
     ひんしになった場合は発動しない（ON_DAMAGE_HIT はKO後にも発火するため明示的に除外する）。
     連続攻撃技はすべてのヒットが終わった後（攻撃側がひんしになって中断した場合はその時点）に、
-    1発目を受ける前のHPを基準にまとめて判定する（かいがらのすずの合計ダメージ集計と同じ idiom）。
+    このハンドラが最初に呼ばれた時点（通常は1発目、さまようたましい等でヒットの途中に
+    この特性を獲得した場合はその獲得後最初のヒット）を受ける前のHPを基準にまとめて判定する
+    （かいがらのすずの合計ダメージ集計と同じ idiom）。
     """
     mon = ctx.defender
     if not mon.alive:
         return HandlerReturn(value=value)
 
-    if ctx.hit_index == 1:
+    if not hasattr(ctx, "_angershell_hp_before"):
         ctx._angershell_hp_before = mon.hp + value
 
     is_last_hit = ctx.hit_index == ctx.hit_count or ctx.attacker.fainted
@@ -1391,13 +1393,15 @@ def ぎゃくじょう_boost_spa_on_half_hp(battle: Battle, ctx: AttackContext, 
     """ぎゃくじょう特性: HPが最大HPの1/2超から1/2以下になったとき、とくこうが1段階上がる。
 
     連続攻撃技はすべてのヒットが終わった後（攻撃側がひんしになって中断した場合はその時点）に、
-    1発目を受ける前のHPを基準にまとめて判定する（いかりのこうらと同じ idiom）。
+    このハンドラが最初に呼ばれた時点（通常は1発目、さまようたましい等でヒットの途中に
+    この特性を獲得した場合はその獲得後最初のヒット）を受ける前のHPを基準にまとめて判定する
+    （いかりのこうらと同じ idiom）。
     """
     mon = ctx.defender
     if not mon.alive:
         return HandlerReturn(value=value)
 
-    if ctx.hit_index == 1:
+    if not hasattr(ctx, "_berserk_hp_before"):
         ctx._berserk_hp_before = mon.hp + value
 
     is_last_hit = ctx.hit_index == ctx.hit_count or ctx.attacker.fainted
