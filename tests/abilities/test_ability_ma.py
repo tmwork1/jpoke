@@ -1124,6 +1124,26 @@ def test_メロメロボディ_接触攻撃30パーセントでメロメロ():
     assert battle.actives[1].has_volatile("メロメロ")
 
 
+def test_メロメロボディ_攻撃者が既にメロメロ状態のときは発動ログが出ない():
+    """メロメロボディ: 攻撃者が既にメロメロ状態のときは揮発性状態の再付与に失敗し、
+    発動ログ（ABILITY_TRIGGERED）自体が出ない（fuzzログ回帰）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="メロメロボディ", gender="female")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"], gender="male")],
+    )
+    attacker, defender = battle.actives[1], battle.actives[0]
+    battle.volatile_manager.apply(attacker, "メロメロ", source=defender)
+    battle.random.random = lambda: 0.0
+    t.run_move(battle, 1)
+    triggered = [
+        log for log in battle.event_logger.logs
+        if log.log == LogCode.ABILITY_TRIGGERED
+        and log.payload is not None
+        and getattr(log.payload, "ability", None) == "メロメロボディ"
+    ]
+    assert triggered == []
+
+
 def test_ものひろい_ターン終了時の毒ダメージで消費されたアイテムも同ターンに拾う():
     """ものひろい: docs/spec/turn.md の ON_TURN_END priority表どおり、どく等のダメージ
     （priority=90）より後（priority=150）に発動するため、同じターン終了処理内で

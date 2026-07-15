@@ -165,10 +165,10 @@ def _apply_contact_counter_ailment(battle: Battle,
         battle.query.is_contact_reaction(ctx)
         and battle.random.random() < chance
     ):
-        battle.ailment_manager.apply(
+        if battle.ailment_manager.apply(
             ctx.attacker, ailment, source=ctx.defender,
-        )
-        _announce_ability_triggered(battle, ctx.defender)
+        ):
+            _announce_ability_triggered(battle, ctx.defender)
     return HandlerReturn(value=value)
 
 def _apply_contact_counter_chip(battle: Battle,
@@ -1812,8 +1812,8 @@ def シンクロ_return_ailment(battle: Battle, ctx: EventContext, value: Any) -
     foe = ctx.source
     if foe is None:
         return HandlerReturn(value=value)
-    _announce_ability_triggered(battle, ctx.target)
-    battle.ailment_manager.apply(foe, ailment_name, source=ctx.target)
+    if battle.ailment_manager.apply(foe, ailment_name, source=ctx.target):
+        _announce_ability_triggered(battle, ctx.target)
     return HandlerReturn(value=value)
 
 
@@ -2996,11 +2996,11 @@ def のろわれボディ_maybe_disable_move(battle: Battle, ctx: AttackContext,
     volatile_manager.apply（ON_BEFORE_APPLY_VOLATILE）側で処理される。
     """
     if battle.random.random() < 0.3:
-        battle.volatile_manager.apply(
+        if battle.volatile_manager.apply(
             ctx.attacker, "かなしばり",
             source=ctx.defender, move_name=ctx.move.name,
-        )
-        _announce_ability_triggered(battle, ctx.defender)
+        ):
+            _announce_ability_triggered(battle, ctx.defender)
     return HandlerReturn(value=value)
 
 
@@ -4354,10 +4354,10 @@ def メロメロボディ_maybe_infatuate_attacker(battle: Battle, ctx: AttackCo
         and battle.query.is_contact_reaction(ctx)
         and battle.random.random() < 0.3
     ):
-        battle.volatile_manager.apply(
+        if battle.volatile_manager.apply(
             attacker, "メロメロ", source=defender,
-        )
-        _announce_ability_triggered(battle, defender)
+        ):
+            _announce_ability_triggered(battle, defender)
     return HandlerReturn(value=value)
 
 
