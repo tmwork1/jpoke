@@ -540,7 +540,15 @@ def ミストフィールド_power_modifier(battle: Battle, ctx: AttackContext, 
 
 
 def ミストフィールド_prevent_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ミストフィールドで状態異常無効"""
+    """ミストフィールドで状態異常無効
+
+    無効化対象はどく・やけど・こおり・ねむり・まひ・もうどくの6種類のみ
+    （docs/spec/fields/ミストフィールド.md）。ゆめうつつ（特性ぜったいねむり）は
+    通常の状態異常付与ではなく無効化不可能な効果のため対象外
+    （docs/spec/abilities/ぜったいねむり.md: 「この特性は無効化することができない」）。
+    """
+    if value == "ゆめうつつ":
+        return HandlerReturn(value=value)
     if not battle.query.is_floating(ctx.target):
         return HandlerReturn(value="", stop_event=True)
     return HandlerReturn(value=value)

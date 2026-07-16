@@ -1995,6 +1995,27 @@ def test_ぜったいねむり_ねごとが成功する():
     assert defender.hp < hp_before
 
 
+def test_ぜったいねむり_ミストフィールド下でも登場時にゆめうつつ状態になる():
+    """ぜったいねむり: ミストフィールド展開中でもゆめうつつは無効化されずに付与される。
+
+    ミストフィールドは通常の状態異常（どく・やけど・こおり・ねむり・まひ・もうどく）の
+    付与を無効化するが、ゆめうつつは無効化不能な特殊な状態異常のため対象外
+    （docs/spec/fields/ミストフィールド.md, docs/spec/abilities/ぜったいねむり.md）。
+    ゆめうつつの付与自体がミストフィールドにブロックされて失敗すると、状態異常スロットが
+    空のまま残り、後から別の状態異常が誤って重複付与されてしまう（fuzz_log seed=1504で確認）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ネッコアラ", ability_name="ぜったいねむり")],
+        team1=[Pokemon("ピカチュウ")],
+        terrain=("ミストフィールド", 99),
+    )
+    mon = battle.actives[0]
+    assert mon.ailment.name == "ゆめうつつ"
+    # ゆめうつつでスロットが埋まっているため、他の状態異常は重複付与されない
+    assert not battle.ailment_manager.apply(mon, "やけど")
+    assert mon.ailment.name == "ゆめうつつ"
+
+
 def test_ぜったいねむり_ゆめうつつは解除されない():
     """ぜったいねむり: ゆめうつつは回復不能（uncurable）のため、状態異常回復手段でも解除できない。"""
     battle = t.start_battle(
