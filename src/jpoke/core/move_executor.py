@@ -336,7 +336,12 @@ class MoveExecutor:
             self._events.emit(Event.ON_END_MOVE, ctx)
 
             # 技のハンドラを解除
-            ctx.move.unregister_handlers(self._events, ctx.attacker)
+            # マジックコート・マジックミラー等でctx.attackerが入れ替わる場合があるため、
+            # register_handlers時と同じ主体（引数のattacker）を指定して解除する
+            # （324行目付近の同種コメント参照）。ctx.attackerのまま解除すると
+            # 登録時と異なる主体でoff()を呼ぶことになり、登録済みハンドラが
+            # 削除されずに残り続けて後続ターンで誤発動する不具合が生じる。
+            ctx.move.unregister_handlers(self._events, attacker)
 
     def _check_hit_by_type(self, ctx: AttackContext) -> bool:
         """タイプ相性によって技が有効かを判定する。"""
