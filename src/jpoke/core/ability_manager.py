@@ -161,9 +161,16 @@ class AbilityManager:
         is_enabled = mon.ability.enabled
 
         if not was_enabled and is_enabled:
+            # 対象が既に瀕死の場合、天候形成特性（ゆきふらし等）のような
+            # 「特性有効化時」に発動する効果が瀕死済みの個体に対して発動して
+            # しまわないよう、subject_spec が指すポケモンが瀕死ならハンドラの
+            # 実行をスキップする（ON_SWITCH_IN と同様の考え方。
+            # fuzzログ seed=980 の回帰: とくせいなし解除で瀕死のベロリンガの
+            # ゆきふらしが発動していた）
             self._events.emit(
                 Event.ON_ABILITY_ENABLED,
-                EventContext(source=mon)
+                EventContext(source=mon),
+                skip_if_subject_fainted=True,
             )
             return True
         return False

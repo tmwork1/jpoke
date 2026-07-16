@@ -57,12 +57,12 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="defender:self",
                 priority=50,
             ),
-            Event.ON_HIT: h.VolatileHandler(
-                h.あなをほる_remove_volatile,
-                subject_spec="attacker:self",
-            ),
-            # 2ターン目の攻撃が外れた場合もため状態を解除する（ON_HITは命中時のみ発火するため）
-            Event.ON_MISS: h.VolatileHandler(
+            # 2ターン目の技実行完了時にため状態を解除する。命中・命中失敗に加えて
+            # タイプ相性による無効化等（move_executor._check_hit_by_type等の早期return
+            # 経路）でも確実に解除するため、経路を問わず必ず発火するON_MOVE_ENDへ登録する
+            # （ON_HIT/ON_MISS個別登録では対応できない経路があり、解除されないまま
+            # 永久に行動不能になる不具合があったため統一した）。
+            Event.ON_MOVE_END: h.VolatileHandler(
                 h.あなをほる_remove_volatile,
                 subject_spec="attacker:self",
             ),
@@ -75,7 +75,14 @@ VOLATILES: dict[str, VolatileData] = {
                 h.force_command,
                 subject_spec="source:self",
             ),
-            Event.ON_DAMAGE_HIT: h.VolatileHandler(
+            # ON_DAMAGE_HIT ではなく ON_HIT に登録する。ON_DAMAGE_HIT は
+            # みがわり等で実ダメージが0になった場合に発火しないが、みがわりに
+            # 被弾した場合も技自体は正常に命中・実行されたものとして扱われ、
+            # あばれる状態のターンカウントは通常どおり進行するべきである
+            # （docs/spec/volatiles/あばれる.md の消滅条件3には該当しない）。
+            # ON_HIT は「ダメージ発生後の処理（みがわりに被弾しても発動）」
+            # (docs/spec/turn.md) ため、この用途に適する。
+            Event.ON_HIT: h.VolatileHandler(
                 h.あばれる_tick,
                 subject_spec="attacker:self",
                 priority=180
@@ -143,6 +150,10 @@ VOLATILES: dict[str, VolatileData] = {
             Event.ON_MODIFY_HEAL: h.VolatileHandler(
                 h.かいふくふうじ_block_heal,
                 subject_spec="target:self",
+            ),
+            Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
+                h.かいふくふうじ_modify_command_options,
+                subject_spec="source:self",
             ),
             Event.ON_TRY_ACTION: h.VolatileHandler(
                 h.かいふくふうじ_try_action,
@@ -284,12 +295,12 @@ VOLATILES: dict[str, VolatileData] = {
                 h.force_command,
                 subject_spec="source:self",
             ),
-            Event.ON_HIT: h.VolatileHandler(
-                h.コールドフレア_remove_volatile,
-                subject_spec="attacker:self",
-            ),
-            # 2ターン目の攻撃が外れた場合もため状態を解除する（ON_HITは命中時のみ発火するため）
-            Event.ON_MISS: h.VolatileHandler(
+            # 2ターン目の技実行完了時にため状態を解除する。命中・命中失敗に加えて
+            # タイプ相性による無効化等（move_executor._check_hit_by_type等の早期return
+            # 経路）でも確実に解除するため、経路を問わず必ず発火するON_MOVE_ENDへ登録する
+            # （ON_HIT/ON_MISS個別登録では対応できない経路があり、解除されないまま
+            # 永久に行動不能になる不具合があったため統一した）。
+            Event.ON_MOVE_END: h.VolatileHandler(
                 h.コールドフレア_remove_volatile,
                 subject_spec="attacker:self",
             ),
@@ -345,12 +356,12 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="defender:self",
                 priority=50,
             ),
-            Event.ON_HIT: h.VolatileHandler(
-                h.シャドーダイブ_remove_volatile,
-                subject_spec="attacker:self",
-            ),
-            # 2ターン目の攻撃が外れた場合もため状態を解除する（ON_HITは命中時のみ発火するため）
-            Event.ON_MISS: h.VolatileHandler(
+            # 2ターン目の技実行完了時にため状態を解除する。命中・命中失敗に加えて
+            # タイプ相性による無効化等（move_executor._check_hit_by_type等の早期return
+            # 経路）でも確実に解除するため、経路を問わず必ず発火するON_MOVE_ENDへ登録する
+            # （ON_HIT/ON_MISS個別登録では対応できない経路があり、解除されないまま
+            # 永久に行動不能になる不具合があったため統一した）。
+            Event.ON_MOVE_END: h.VolatileHandler(
                 h.シャドーダイブ_remove_volatile,
                 subject_spec="attacker:self",
             ),
@@ -429,12 +440,12 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="defender:self",
                 priority=50,
             ),
-            Event.ON_HIT: h.VolatileHandler(
-                h.そらをとぶ_remove_volatile,
-                subject_spec="attacker:self",
-            ),
-            # 2ターン目の攻撃が外れた場合もため状態を解除する（ON_HITは命中時のみ発火するため）
-            Event.ON_MISS: h.VolatileHandler(
+            # 2ターン目の技実行完了時にため状態を解除する。命中・命中失敗に加えて
+            # タイプ相性による無効化等（move_executor._check_hit_by_type等の早期return
+            # 経路）でも確実に解除するため、経路を問わず必ず発火するON_MOVE_ENDへ登録する
+            # （ON_HIT/ON_MISS個別登録では対応できない経路があり、解除されないまま
+            # 永久に行動不能になる不具合があったため統一した）。
+            Event.ON_MOVE_END: h.VolatileHandler(
                 h.そらをとぶ_remove_volatile,
                 subject_spec="attacker:self",
             ),
@@ -447,12 +458,12 @@ VOLATILES: dict[str, VolatileData] = {
                 h.force_command,
                 subject_spec="source:self",
             ),
-            Event.ON_HIT: h.VolatileHandler(
-                h.ソーラービーム_remove_volatile,
-                subject_spec="attacker:self",
-            ),
-            # 2ターン目の攻撃が外れた場合もため状態を解除する（ON_HITは命中時のみ発火するため）
-            Event.ON_MISS: h.VolatileHandler(
+            # 2ターン目の技実行完了時にため状態を解除する。命中・命中失敗に加えて
+            # タイプ相性による無効化等（move_executor._check_hit_by_type等の早期return
+            # 経路）でも確実に解除するため、経路を問わず必ず発火するON_MOVE_ENDへ登録する
+            # （ON_HIT/ON_MISS個別登録では対応できない経路があり、解除されないまま
+            # 永久に行動不能になる不具合があったため統一した）。
+            Event.ON_MOVE_END: h.VolatileHandler(
                 h.ソーラービーム_remove_volatile,
                 subject_spec="attacker:self",
             ),
@@ -465,12 +476,12 @@ VOLATILES: dict[str, VolatileData] = {
                 h.force_command,
                 subject_spec="source:self",
             ),
-            Event.ON_HIT: h.VolatileHandler(
-                h.ソーラーブレード_remove_volatile,
-                subject_spec="attacker:self",
-            ),
-            # 2ターン目の攻撃が外れた場合もため状態を解除する（ON_HITは命中時のみ発火するため）
-            Event.ON_MISS: h.VolatileHandler(
+            # 2ターン目の技実行完了時にため状態を解除する。命中・命中失敗に加えて
+            # タイプ相性による無効化等（move_executor._check_hit_by_type等の早期return
+            # 経路）でも確実に解除するため、経路を問わず必ず発火するON_MOVE_ENDへ登録する
+            # （ON_HIT/ON_MISS個別登録では対応できない経路があり、解除されないまま
+            # 永久に行動不能になる不具合があったため統一した）。
+            Event.ON_MOVE_END: h.VolatileHandler(
                 h.ソーラーブレード_remove_volatile,
                 subject_spec="attacker:self",
             ),
@@ -483,12 +494,12 @@ VOLATILES: dict[str, VolatileData] = {
                 h.force_command,
                 subject_spec="source:self",
             ),
-            Event.ON_HIT: h.VolatileHandler(
-                h.ゴッドバード_remove_volatile,
-                subject_spec="attacker:self",
-            ),
-            # 2ターン目の攻撃が外れた場合もため状態を解除する（ON_HITは命中時のみ発火するため）
-            Event.ON_MISS: h.VolatileHandler(
+            # 2ターン目の技実行完了時にため状態を解除する。命中・命中失敗に加えて
+            # タイプ相性による無効化等（move_executor._check_hit_by_type等の早期return
+            # 経路）でも確実に解除するため、経路を問わず必ず発火するON_MOVE_ENDへ登録する
+            # （ON_HIT/ON_MISS個別登録では対応できない経路があり、解除されないまま
+            # 永久に行動不能になる不具合があったため統一した）。
+            Event.ON_MOVE_END: h.VolatileHandler(
                 h.ゴッドバード_remove_volatile,
                 subject_spec="attacker:self",
             ),
@@ -501,12 +512,12 @@ VOLATILES: dict[str, VolatileData] = {
                 h.force_command,
                 subject_spec="source:self",
             ),
-            Event.ON_HIT: h.VolatileHandler(
-                h.メテオビーム_remove_volatile,
-                subject_spec="attacker:self",
-            ),
-            # 2ターン目の攻撃が外れた場合もため状態を解除する（ON_HITは命中時のみ発火するため）
-            Event.ON_MISS: h.VolatileHandler(
+            # 2ターン目の技実行完了時にため状態を解除する。命中・命中失敗に加えて
+            # タイプ相性による無効化等（move_executor._check_hit_by_type等の早期return
+            # 経路）でも確実に解除するため、経路を問わず必ず発火するON_MOVE_ENDへ登録する
+            # （ON_HIT/ON_MISS個別登録では対応できない経路があり、解除されないまま
+            # 永久に行動不能になる不具合があったため統一した）。
+            Event.ON_MOVE_END: h.VolatileHandler(
                 h.メテオビーム_remove_volatile,
                 subject_spec="attacker:self",
             ),
@@ -519,12 +530,12 @@ VOLATILES: dict[str, VolatileData] = {
                 h.force_command,
                 subject_spec="source:self",
             ),
-            Event.ON_HIT: h.VolatileHandler(
-                h.エレクトロビーム_remove_volatile,
-                subject_spec="attacker:self",
-            ),
-            # 2ターン目の攻撃が外れた場合もため状態を解除する（ON_HITは命中時のみ発火するため）
-            Event.ON_MISS: h.VolatileHandler(
+            # 2ターン目の技実行完了時にため状態を解除する。命中・命中失敗に加えて
+            # タイプ相性による無効化等（move_executor._check_hit_by_type等の早期return
+            # 経路）でも確実に解除するため、経路を問わず必ず発火するON_MOVE_ENDへ登録する
+            # （ON_HIT/ON_MISS個別登録では対応できない経路があり、解除されないまま
+            # 永久に行動不能になる不具合があったため統一した）。
+            Event.ON_MOVE_END: h.VolatileHandler(
                 h.エレクトロビーム_remove_volatile,
                 subject_spec="attacker:self",
             ),
@@ -562,12 +573,12 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="defender:self",
                 priority=50,
             ),
-            Event.ON_HIT: h.VolatileHandler(
-                h.ダイビング_remove_volatile,
-                subject_spec="attacker:self",
-            ),
-            # 2ターン目の攻撃が外れた場合もため状態を解除する（ON_HITは命中時のみ発火するため）
-            Event.ON_MISS: h.VolatileHandler(
+            # 2ターン目の技実行完了時にため状態を解除する。命中・命中失敗に加えて
+            # タイプ相性による無効化等（move_executor._check_hit_by_type等の早期return
+            # 経路）でも確実に解除するため、経路を問わず必ず発火するON_MOVE_ENDへ登録する
+            # （ON_HIT/ON_MISS個別登録では対応できない経路があり、解除されないまま
+            # 永久に行動不能になる不具合があったため統一した）。
+            Event.ON_MOVE_END: h.VolatileHandler(
                 h.ダイビング_remove_volatile,
                 subject_spec="attacker:self",
             ),
@@ -750,12 +761,12 @@ VOLATILES: dict[str, VolatileData] = {
                 h.force_command,
                 subject_spec="source:self",
             ),
-            Event.ON_HIT: h.VolatileHandler(
-                h.フリーズボルト_remove_volatile,
-                subject_spec="attacker:self",
-            ),
-            # 2ターン目の攻撃が外れた場合もため状態を解除する（ON_HITは命中時のみ発火するため）
-            Event.ON_MISS: h.VolatileHandler(
+            # 2ターン目の技実行完了時にため状態を解除する。命中・命中失敗に加えて
+            # タイプ相性による無効化等（move_executor._check_hit_by_type等の早期return
+            # 経路）でも確実に解除するため、経路を問わず必ず発火するON_MOVE_ENDへ登録する
+            # （ON_HIT/ON_MISS個別登録では対応できない経路があり、解除されないまま
+            # 永久に行動不能になる不具合があったため統一した）。
+            Event.ON_MOVE_END: h.VolatileHandler(
                 h.フリーズボルト_remove_volatile,
                 subject_spec="attacker:self",
             ),

@@ -705,6 +705,39 @@ def test_あなをほる_1ターン目は地中に潜りHPが変わらない():
     assert defender.hp == defender_hp_before
 
 
+def test_あなをほる_2ターン目がタイプ相性で無効化されると溜め状態が解除され3ターン目は改めて溜める():
+    """あなをほる: 2ターン目の攻撃がタイプ相性で無効化された場合でも揮発状態が解除され、
+    3ターン目は改めて溜めから始まる（ダメージを与えない）。
+    move_executor._execute_moveのタイプ相性判定（_check_hit_by_type）による早期return経路
+    （ON_HITにもON_MISSにも到達しない）でも解除ハンドラが発火することの回帰確認。
+    ON_HIT/ON_MISSの個別登録ではこの経路に対応できず、揮発状態が永久に残留して
+    行動不能になる不具合があったため、Event.ON_MOVE_ENDへ解除ハンドラを一本化した。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ディグダ", move_names=["あなをほる"])],
+        # ひこうタイプはじめん技（あなをほる）を無効化する
+        team1=[Pokemon("ピジョット")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+
+    # 1ターン目: チャージ
+    t.run_move(battle, 0)
+    assert attacker.has_volatile("あなをほる")
+
+    # 2ターン目: タイプ相性で無効化される
+    t.run_move(battle, 0)
+    assert not attacker.has_volatile("あなをほる")
+    assert defender.hp == hp_before
+
+    # 3ターン目: 改めて溜める（直接攻撃しない）
+    t.run_move(battle, 0)
+    assert attacker.has_volatile("あなをほる")
+    assert defender.hp == hp_before
+
+
 def test_あなをほる_2ターン目にわるあがきへすり替わらない():
     """あなをほる: 1ターン目で付与される揮発状態のmove_nameが「わるあがき」に
     すり替わらず、あなをほる自身が設定されること（charge_into_volatileが

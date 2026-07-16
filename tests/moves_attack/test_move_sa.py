@@ -1301,6 +1301,39 @@ def test_シャドーダイブ_2ターンで攻撃する():
     assert not battle.actives[0].has_volatile("シャドーダイブ")
 
 
+def test_シャドーダイブ_2ターン目がタイプ相性で無効化されると溜め状態が解除され3ターン目は改めて溜める():
+    """シャドーダイブ: 2ターン目の攻撃がタイプ相性で無効化された場合でも揮発状態が解除され、
+    3ターン目は改めて溜めから始まる（ダメージを与えない）。
+    move_executor._execute_moveのタイプ相性判定（_check_hit_by_type）による早期return経路
+    （ON_HITにもON_MISSにも到達しない）でも解除ハンドラが発火することの回帰確認。
+    ON_HIT/ON_MISSの個別登録ではこの経路に対応できず、揮発状態が永久に残留して
+    行動不能になる不具合があったため、Event.ON_MOVE_ENDへ解除ハンドラを一本化した。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["シャドーダイブ"])],
+        # ノーマルタイプはゴースト技（シャドーダイブ）を無効化する
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+
+    # 1ターン目: 揮発状態付与のみ
+    t.run_move(battle, 0)
+    assert attacker.has_volatile("シャドーダイブ")
+
+    # 2ターン目: タイプ相性で無効化される
+    t.run_move(battle, 0)
+    assert not attacker.has_volatile("シャドーダイブ")
+    assert defender.hp == hp_before
+
+    # 3ターン目: 改めて溜める（直接攻撃しない）
+    t.run_move(battle, 0)
+    assert attacker.has_volatile("シャドーダイブ")
+    assert defender.hp == hp_before
+
+
 def test_シャドーパンチ_タイプ分類威力が正しく反映される():
     """シャドーパンチ: ゴースト・物理・威力60が正しく反映される。"""
     battle = t.start_battle(
@@ -1809,6 +1842,32 @@ def test_じばく_しめりけ持ちには技が失敗する():
     t.run_move(battle, 0)
     assert battle.move_executor.move_success is False
     assert attacker.hp == hp_before
+
+
+def test_じばく_タイプ無効で不発でも攻撃者がひんしになる():
+    """じばく: seed=781 (LogInconsistency@move_executor.py:_execute_move:472) の回帰テスト。
+
+    修正前は Event.ON_PAY_HP（HP全消費）の発火が、タイプ相性判定（_check_hit_by_type）
+    より後に置かれていたため、ノーマル無効のゴーストタイプ相手にじばくを使うと
+    タイプ相性0倍で技が不発になり、ON_PAY_HP自体が一度も発火せず使用者のHPが
+    消費されなかった（docs/spec/moves/じばく.md「命中判定・タイプ相性・まもるなどにより
+    攻撃が不発になった場合であっても、使用者は必ずひんしになる」に違反）。
+
+    修正後は ON_PAY_HP がタイプ相性判定より前に発火するため、技自体は不発になっても
+    使用者は必ずひんしになる。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["じばく"])],
+        team1=[Pokemon("ゲンガー")],  # ゴーストタイプはノーマル技を無効化する
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success is False  # 技自体は不発
+    assert defender.hp == hp_before  # 相手にダメージは通らない
+    assert attacker.hp == 0
+    assert not attacker.alive  # それでも使用者は必ずひんしになる
 
 
 def test_じばく_使用後に攻撃者がひんしになる():

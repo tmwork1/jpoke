@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 from jpoke.types import RoleSpec, Stat, Type, MoveCategory, \
     AilmentName, WeatherName, TerrainName, SideFieldName
 from jpoke.utils.math import apply_fixed_modifier, round_half_down
-from jpoke.enums import Interrupt, LogCode, Command
+from jpoke.enums import Event, Interrupt, LogCode, Command
 from jpoke.core.handler import HandlerReturn, Handler
 from jpoke.core.log_payload import ItemPayload, StatChangePayload
 from jpoke.data.type_chart import TYPE_MODIFIER
@@ -1596,9 +1596,19 @@ def ばんのうがさ_weather_immune(battle: Battle, ctx: EventContext, value: 
 def パワフルハーブ_skip_charge(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """パワフルハーブ: 溜め技の溜めターンをスキップする。
 
+    Event.ON_MOVE_CHARGE は全ての技実行のたびに発火する汎用イベントのため、
+    ctx.move が実際に2ターン技（溜め技）かどうかをまず判定する。溜め技は
+    自身の MoveData.handlers に Event.ON_MOVE_CHARGE のハンドラ
+    （charge_into_volatile 等）を登録しているため、これが存在しない場合
+    （くらいつく等の通常技や、ブラッドムーン/デカハンマーのような反動で
+    動けなくなる系の技）は何もせず後続のハンドラへ処理を委ねる。
+
     溜めをスキップした結果、おおひでり下のダイビングのように技自体が
     天候によって無効化される場合（ON_TRY_MOVE_1 で判定）は、アイテムを消費しない。
     """
+    if Event.ON_MOVE_CHARGE not in ctx.move.data.handlers:
+        return HandlerReturn(value=value)
+
     mon = ctx.attacker
     weather_blocks_move = (
         (battle.weather.name == "おおひでり" and ctx.move.type == "みず")

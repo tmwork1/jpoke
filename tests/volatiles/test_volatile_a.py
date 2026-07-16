@@ -109,6 +109,36 @@ def test_あばれる_カウント進行():
     assert attacker.has_volatile("こんらん")
 
 
+def test_あばれる_みがわり被弾時もターンカウントが進む():
+    """あばれる: みがわりに被弾して実ダメージが0でも、ターンカウントは通常どおり進行する。
+
+    あばれる_tick は Event.ON_HIT（みがわりに被弾しても発動）に登録されているため、
+    みがわりに被弾し続けてもターンカウントが正常に進行しあばれるが解除される。
+    かつて Event.ON_DAMAGE_HIT（実ダメージが0の場合は発火しない）に登録されていた
+    ことによる、みがわり被弾中はあばれるが無制限に継続してしまうバグの回帰確認。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["あばれる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    battle.random.randint = lambda a, b: 2
+
+    t.run_move(battle, 0)
+    assert defender.has_volatile("みがわり"), "みがわりが壊れてはいけない"
+    assert attacker.has_volatile("あばれる")
+    assert not attacker.has_volatile("こんらん")
+
+    t.run_move(battle, 0)
+    assert defender.has_volatile("みがわり")
+    assert not attacker.has_volatile("あばれる"), \
+        "みがわり被弾中もターンカウントが進み、2ターンであばれるが解除されるはず"
+    assert attacker.has_volatile("こんらん")
+
+
 def test_あばれる_技使用で揮発性状態付与():
     """あばれる: 技使用（ON_HIT経由）で揮発性状態が付与される"""
     battle = t.start_battle(

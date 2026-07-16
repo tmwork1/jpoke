@@ -177,6 +177,15 @@ def あなをほる_remove_volatile(battle: Battle, ctx: EventContext, value: An
 def あばれる_tick(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """あばれる状態のターン経過処理
 
+    Event.ON_HIT（「ダメージ発生後の処理。みがわりに被弾しても発動」）に
+    登録する。みがわりに被弾した場合も技自体は正常に命中・実行された
+    ものとして扱われるため、Event.ON_DAMAGE_HIT（みがわり等で実ダメージが
+    0の場合は発火しない）ではなくこちらに登録する必要がある。
+
+    2ターン目以降の forced continuation ターンで、この揮発性状態自身が
+    登録するハンドラとして呼ばれる。初回付与ターン分のカウント消費は
+    move_attack.あばれる_apply がこの関数を直接呼び出して処理する。
+
     Args:
         battle: バトルインスタンス
         ctx: コンテキスト
@@ -334,6 +343,31 @@ def かいふくふうじ_block_heal(battle: Battle, ctx: EventContext, value: A
         payload=FailureLogPayload(display_reason="かいふくふうじ")
     )
     return HandlerReturn(value=0)
+
+
+def かいふくふうじ_modify_command_options(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """かいふくふうじによるコマンドオプション変更
+
+    第六世代以降、かいふくふうじ状態のポケモンは「heal」フラグを持つ技
+    （じこさいせい等の回復技、ドレインキッスやギガドレイン等のHP吸収技、すなあつめ等）を
+    コマンド選択レベルで除外する。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト
+        value: コマンドオプションのリスト
+
+    Returns:
+        HandlerReturn: 新しいコマンドオプションのリスト
+    """
+    new_options = []
+    for cmd in value:
+        if (
+            not cmd.is_type("move")
+            or not ctx.source.moves[cmd.index].has_flag("heal")
+        ):
+            new_options.append(cmd)
+    return HandlerReturn(value=new_options)
 
 
 def かいふくふうじ_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:

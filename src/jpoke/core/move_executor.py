@@ -300,6 +300,16 @@ class MoveExecutor:
                 # PP消費
                 self._consume_pp(ctx)
 
+                # 選択した技の確定: トップレベル実行（深度1）のときのみ更新する。
+                # ねごと・さいはい等によるサブ技実行（深度2以上）では選択技は変化しない
+                # （いちゃもん等「選択した技」を参照すべき効果のため）。PP消費と同時点
+                # （タイプ相性判定・ON_TRY_MOVE_2・くさタイプ粉技無効判定等より前）で
+                # 確定させることで、それらの判定により技自体が不発になった場合でも
+                # 「選択した技」として正しく記録される（PPは既に消費済みのため。
+                # docs/spec/volatiles/いちゃもん.md 参照）。
+                if self._run_move_depth == 1:
+                    ctx.attacker.selected_move = ctx.move
+
                 # かたやぶりを適用する
                 self._events.emit(Event.ON_BEGIN_MOVE, ctx)
 
@@ -336,7 +346,12 @@ class MoveExecutor:
             self._events.emit(Event.ON_END_MOVE, ctx)
 
             # 技のハンドラを解除
-            ctx.move.unregister_handlers(self._events, ctx.attacker)
+            # マジックコート・マジックミラー等でctx.attackerが入れ替わる場合があるため、
+            # register_handlers時と同じ主体（引数のattacker）を指定して解除する
+            # （324行目付近の同種コメント参照）。ctx.attackerのまま解除すると
+            # 登録時と異なる主体でoff()を呼ぶことになり、登録済みハンドラが
+            # 削除されずに残り続けて後続ターンで誤発動する不具合が生じる。
+            ctx.move.unregister_handlers(self._events, attacker)
 
     def _check_hit_by_type(self, ctx: AttackContext) -> bool:
         """タイプ相性によって技が有効かを判定する。"""
@@ -420,49 +435,21 @@ class MoveExecutor:
             self._events.emit(Event.ON_MOVE_END, ctx)
             return
 
-        # 対象がすでに瀕死: 技失敗 (ON_TRY_MOVE_1, priority=90相当のコアルール)
-        if not self._check_target_fainted(ctx):
-            self.move_success = False
-            self._events.emit(Event.ON_MOVE_END, ctx)
-            return
-
-        # 攻撃技のタイプ相性判定
-        if ctx.move.is_attack and not self._check_hit_by_type(ctx):
-            # タイプ相性による無効化も「技が失敗した」ことになる（やけっぱち・じだんだ用）
-            self.move_success = False
-            self._events.emit(Event.ON_MOVE_END, ctx)
-            return
-
-        # 発動成功判定(2): priority=110 のハンドラ群（ぼうじんゴーグル等）
-        self.move_success = self._events.emit(Event.ON_TRY_MOVE_2, ctx, True)
-        if not self.move_success:
-            self._events.emit(Event.ON_MOVE_END, ctx)
-            return
-
-        # くさタイプ: 粉技無効 (priority=120 相当のコアルール)
-        if not self._check_grass_type_powder_immunity(ctx):
-            self.move_success = False
-            self._events.emit(Event.ON_MOVE_END, ctx)
-            return
-
-        # 発動した技の確定
-        ctx.attacker.last_move = ctx.move
-        # 選択した技の確定: トップレベル実行（深度1）のときのみ更新する。
-        # ねごと・さいはい等によるサブ技実行（深度2以上）では選択技は変化しない
-        # （アンコール・いちゃもん等「選択した技」を参照すべき効果のため）。
-        if self._run_move_depth == 1:
-            ctx.attacker.selected_move = ctx.move
-        # non_negotoでない技のみバトル全体の最後使用技として記録する
-        if not ctx.move.has_flag("non_negoto"):
-            self.battle.last_used_move_name = cast(MoveName, ctx.move.name)
-
-        # HPコストの支払い
+        # HPコストの支払い (Event.ON_PAY_HP)
+        # じばく・だいばくはつ・てっていこうせん・ミストバースト等はここでHPを消費する。
+        # docs/spec/moves/じばく.md「命中判定・タイプ相性・まもるなどにより攻撃が不発になった
+        # 場合であっても、使用者は必ずひんしになる」「しめりけによる失敗判定はON_PAY_HPより前に
+        # 行われるため、失敗時は現在HPの消費も発生しない」を満たすため、ON_TRY_MOVE_1
+        # （しめりけ等の失敗経路）の直後・対象瀕死チェック/タイプ相性判定/ON_TRY_MOVE_2/
+        # くさ粉技無効判定より前に発火する。これらのチェックによる不発は「攻撃が不発になった
+        # 場合」に含まれるため、HPコスト支払い後も通常どおり判定を続行する。
+        #
         # てっていこうせん等、HPコストの支払いにより使用者が瀕死になった場合でも
-        # 以降のヒット処理（命中判定・ダメージ適用・ON_MOVE_KO等の撃破時効果）は
+        # 以降の判定・ヒット処理（命中判定・ダメージ適用・ON_MOVE_KO等の撃破時効果）は
         # 通常どおり進行する（docs/spec/moves/てっていこうせん.md「HP消費の順序」
         # 「HP0でのひんし・全滅判定」を参照）。
         # そのため、HPコスト支払いの時点で使用者が瀕死になり勝敗が確定しても、
-        # 以降のヒット処理が完了するまではGAME_WON/GAME_LOSTログの記録を遅延させる。
+        # 以降の処理が完了するまではGAME_WON/GAME_LOSTログの記録を遅延させる。
         # そうしないと、相手へのダメージ適用や撃破時特性の発動より前に
         # 勝敗確定ログが記録されてしまい、ログ上「勝敗が決した後に戦闘が続いた」
         # ような不整合が生じる（勝者判定自体はmodify_hp内で即座に行われ、
@@ -470,6 +457,38 @@ class MoveExecutor:
         self.battle.begin_deferred_winner_log()
         try:
             self._events.emit(Event.ON_PAY_HP, ctx)
+
+            # 対象がすでに瀕死: 技失敗 (ON_TRY_MOVE_1, priority=90相当のコアルール)
+            if not self._check_target_fainted(ctx):
+                self.move_success = False
+                self._events.emit(Event.ON_MOVE_END, ctx)
+                return
+
+            # 攻撃技のタイプ相性判定
+            if ctx.move.is_attack and not self._check_hit_by_type(ctx):
+                # タイプ相性による無効化も「技が失敗した」ことになる（やけっぱち・じだんだ用）
+                self.move_success = False
+                self._events.emit(Event.ON_MOVE_END, ctx)
+                return
+
+            # 発動成功判定(2): priority=110 のハンドラ群（ぼうじんゴーグル等）
+            self.move_success = self._events.emit(Event.ON_TRY_MOVE_2, ctx, True)
+            if not self.move_success:
+                self._events.emit(Event.ON_MOVE_END, ctx)
+                return
+
+            # くさタイプ: 粉技無効 (priority=120 相当のコアルール)
+            if not self._check_grass_type_powder_immunity(ctx):
+                self.move_success = False
+                self._events.emit(Event.ON_MOVE_END, ctx)
+                return
+
+            # 発動した技の確定
+            ctx.attacker.last_move = ctx.move
+            # selected_move はPP消費時点（本メソッド前段）で確定済みのためここでは更新しない。
+            # non_negotoでない技のみバトル全体の最後使用技として記録する
+            if not ctx.move.has_flag("non_negoto"):
+                self.battle.last_used_move_name = cast(MoveName, ctx.move.name)
 
             # 反射判定
             if self._events.emit(Event.ON_CHECK_REFLECT, ctx, False):
