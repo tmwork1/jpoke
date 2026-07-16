@@ -833,6 +833,116 @@ def test_ターン終了処理_決着ターンでは継続ダメージのON_TURN
     assert len(hp_changed_logs) == 1  # たいあたりの反撃分のみ（毒ダメージ分の追加ログが無い）
 
 
+def test_だっしゅつパック_メガシンカに伴ういかくで相手が発動条件を満たしてもメガシンカした側の技は実行される():
+    """seed=147267 と同一根本原因の関連ケース。
+
+    TurnController._run_megaevolve_phaseでメガシンカに伴いいかくが発動して
+    相手（だっしゅつパック持ち）のInterrupt.EJECTPACK_REQUESTEDが立つと、
+    修正前はこれが_run_move_phaseの各行動枠末尾でしか解決されなかった。
+    battle.is_new_turn()はプレイヤーを問わない全体判定のため、メガシンカした
+    自分自身（だっしゅつパックとは無関係）が相手より先に処理される行動枠でも
+    「技を実行」ブロックが丸ごとスキップされ、メガシンカした側の技が
+    そのターン一度も実行されないまま失われていた（技コマンドも
+    pop_command()されずに残留し、次ターンのコマンド列がズレる）。
+
+    修正後はTurnController._run_megaevolve_phase自体がフェーズ内で新たに
+    発生しただっしゅつパックの発動条件をその場で解決するため、後続の
+    _run_move_phaseが開始する時点でis_new_turn()は正しく真になり、
+    メガシンカした側の技が無関係な相手の交代に巻き込まれず実行されることを
+    確認する。
+
+    自分自身より高速なライボルトがライボルトナイトでメガシンカし、メガ
+    フォルムのいかく（ON_ABILITY_ENABLEDで再発動）で低速な相手（カビゴン、
+    素早さ種族値30）のだっしゅつパックが発動する。
+    """
+    battle = t.start_battle(
+        team0=[
+            Pokemon("ライボルト", item_name="ライボルトナイト", move_names=["でんきショック"]),
+        ],
+        team1=[
+            Pokemon("カビゴン", item_name="だっしゅつパック", move_names=["まるくなる", "たいあたり"]),
+            Pokemon("コラッタ", move_names=["たいあたり"]),
+        ],
+        accuracy=100,
+    )
+    player0, player1 = battle.players
+
+    # Turn1: 高速なライボルト側がメガシンカし、メガライボルトのいかくで
+    # 低速なカビゴンのこうげきが下がりだっしゅつパックが発動する。
+    # 修正前はライボルト自身のでんきショックが一度も実行されなかった。
+    battle.step(commands={player0: Command.MEGAEVOL_0, player1: Command.MOVE_1})
+
+    assert battle.actives[0].name == "メガライボルト"
+    assert battle.actives[1].name == "コラッタ"  # だっしゅつパックで自動的に交代済み
+
+    # 修正前はメガライボルトのでんきショックが丸ごとスキップされ、
+    # pp_consumed_moveがNoneのままだった。
+    assert battle.actives[0].pp_consumed_move.name == "でんきショック"
+    assert battle.player_states[player0].reserved_commands == []
+    assert battle.player_states[player1].reserved_commands == []
+
+    # Turn2: 残留コマンドが無く、例外なく次ターンへ進行することを確認する。
+    battle.step()
+
+    assert battle.turn == 2
+
+
+def test_だっしゅつパック_メガシンカに伴ういかくで自分自身が発動条件を満たしても残留コマンドが次ターンに持ち越されない():
+    """seed=147267 player=random (IndexError@command_manager.py:resolve_move_from_command:156) の回帰テスト。
+
+    TurnController._run_megaevolve_phase（_run_move_phaseより前のフェーズ）で
+    メガシンカに伴う特性発動（Event.ON_ABILITY_ENABLED）からいかくが発動し、
+    だっしゅつパック持ち自身の発動条件が満たされると、Interrupt.EJECTPACK_REQUESTED
+    が立つ（この時点では交代は未実行）。_run_move_phaseのループが素早さで先に
+    処理される自分自身の行動枠に到達すると、battle.is_new_turn()（=全体で
+    割り込みが無いこと）がこのEJECTPACK_REQUESTEDのせいで偽と判定され、
+    「技を実行」ブロックが丸ごとスキップされたまま、直後のだっしゅつパック
+    解決処理で自分自身がちょうどそのタイミングで交代してしまう。この場合、
+    今ターンの予約コマンド（例: MOVE_x）は一度もpop_command()されないまま
+    残留し、次ターンのコマンド解決でIndexErrorになっていた。
+
+    修正後はTurnController._run_move_phase末尾で「交代済みかつコマンドが
+    未使用のまま残っている」場合に破棄するため、残留が起きないことを確認する。
+    さらに今回はTurnController._run_megaevolve_phase自体でも、フェーズ内で
+    新たに発生しただっしゅつパックの発動条件をその場で解決し、交代済みの
+    残留コマンドを破棄するよう修正しているため、後続のフェーズが
+    is_new_turn()を誤判定して無関係なプレイヤーの行動まで巻き込むことも無い。
+
+    自分自身より低速な相手（ライボルト、素早さ種族値105）がライボルトナイトで
+    メガシンカし、メガフォルムのいかく（ON_ABILITY_ENABLEDで再発動）を受けて、
+    自分自身より高速なだっしゅつパック持ち（サンダース、素早さ種族値130）の
+    こうげきランクが下がりだっしゅつパックが発動する。
+    """
+    battle = t.start_battle(
+        team0=[
+            Pokemon("サンダース", item_name="だっしゅつパック", move_names=["たいあたり"]),
+            Pokemon("コラッタ", move_names=["たいあたり"]),
+        ],
+        team1=[
+            Pokemon("ライボルト", item_name="ライボルトナイト", move_names=["でんきショック"]),
+        ],
+        accuracy=100,
+    )
+    player0, player1 = battle.players
+
+    # Turn1: 低速なライボルト側がメガシンカし、メガライボルトのいかく
+    # （とくせいの再発動）で高速なサンダースのこうげきが下がり、だっしゅつパックが
+    # 発動する。修正前はサンダースが予約していたMOVE_0が一度も使われずに残る。
+    battle.step(commands={player0: Command.MOVE_0, player1: Command.MEGAEVOL_0})
+
+    assert battle.actives[0].name == "コラッタ"  # だっしゅつパックで自動的に交代済み
+    assert battle.actives[1].name == "メガライボルト"
+    assert battle.player_states[player0].interrupt == Interrupt.NONE
+    assert battle.player_states[player0].reserved_commands == []
+    assert battle.player_states[player1].reserved_commands == []
+
+    # Turn2: 修正前は残留したMOVE_0が次ターンのコマンド列に紛れ込み、
+    # command_manager.resolve_move_from_commandでIndexErrorが発生し得た。
+    battle.step()
+
+    assert battle.turn == 2  # 例外なく2ターン目が完了したことを確認
+
+
 def test_だっしゅつパック_瀕死交代の遅延ON_SWITCH_IN中に発生した割り込みが同一ターン内で解決される():
     """seed=23090 player=random (InvalidCommandError@battle.py:step:887) の回帰テスト。
 
