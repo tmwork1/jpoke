@@ -444,6 +444,29 @@ def test_ミストバースト_使用後に攻撃者がひんしになる():
     assert not attacker.alive
 
 
+def test_ミストバースト_対象がすでに瀕死で不発でも攻撃者がひんしになる():
+    """ミストバースト: seed=781 (LogInconsistency@move_executor.py:_execute_move:472) の
+    回帰テスト（じばくと同じ ON_PAY_HP 移動修正の対象）。
+
+    ミストバーストはフェアリータイプのため対象の型相性0倍（タイプ無効）は起こり得ないが、
+    「対象がすでに瀕死で技自体が不発になる」経路（_check_target_fainted, ON_TRY_MOVE_1
+    priority=90相当のコアルール）も ON_PAY_HP より後に判定されるようになったため、
+    このケースでも同様に使用者は必ずひんしになることを確認する（同一ターン内で相手が
+    先に瀕死になり、瀕死交代（ターン終了時）より前に自分の行動が実行されるケースを想定）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ミストバースト"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    battle.modify_hp(defender, v=-defender.max_hp)  # 瀕死交代前に相手をあらかじめ瀕死にする
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success is False  # 技自体は不発
+    assert attacker.hp == 0
+    assert not attacker.alive  # それでも使用者は必ずひんしになる
+
+
 def test_ミストバースト_自分が浮遊している場合は威力補正が乗らない():
     """ミストバースト: ミストフィールド中でも自分が浮いている場合、地面にいないため威力補正は乗らない。"""
     battle = t.start_battle(
