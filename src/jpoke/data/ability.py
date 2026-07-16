@@ -280,6 +280,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_SWITCH_OUT: h.AbilityHandler(
                 h.うのミサイル_revert_form,
                 subject_spec="source:self",
+                allow_fainted_subject=True,  # 瀕死交代(ON_SWITCH_OUT)でも発動する
             ),
         }
     ),
@@ -397,10 +398,12 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_SWITCH_OUT: h.AbilityHandler(
                 h.おわりのだいち_deactivate_strong_weather,
                 "source:self",
+                allow_fainted_subject=True,  # 瀕死交代(ON_SWITCH_OUT)でも強制天候を解除する
             ),
             Event.ON_ABILITY_DISABLED: h.AbilityHandler(
                 h.おわりのだいち_deactivate_strong_weather,
                 "source:self",
+                allow_fainted_subject=True,  # 瀕死交代(ON_SWITCH_OUT)でも強制天候を解除する
             ),
         },
     ),
@@ -455,6 +458,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_SWITCH_OUT: h.AbilityHandler(
                 h.かがくへんかガス_gas_deactivate,
                 subject_spec="source:self",
+                allow_fainted_subject=True,  # 瀕死交代(ON_SWITCH_OUT)でも発動する
             ),
             Event.ON_ABILITY_DISABLED: h.AbilityHandler(
                 h.かがくへんかガス_gas_deactivate,
@@ -1707,6 +1711,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_SWITCH_OUT: h.AbilityHandler(
                 h.ダルマモード_revert_form,
                 subject_spec="source:self",
+                allow_fainted_subject=True,  # 瀕死交代(ON_SWITCH_OUT)でも発動する
             ),
         }
     ),
@@ -1947,10 +1952,12 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_SWITCH_OUT: h.AbilityHandler(
                 h.デルタストリーム_deactivate_strong_weather,
                 "source:self",
+                allow_fainted_subject=True,  # 瀕死交代(ON_SWITCH_OUT)でも強制天候を解除する
             ),
             Event.ON_ABILITY_DISABLED: h.AbilityHandler(
                 h.デルタストリーム_deactivate_strong_weather,
                 "source:self",
+                allow_fainted_subject=True,  # 瀕死交代(ON_SWITCH_OUT)でも強制天候を解除する
             ),
         },
     ),
@@ -2322,10 +2329,12 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_SWITCH_OUT: h.AbilityHandler(
                 h.はじまりのうみ_deactivate_strong_weather,
                 "source:self",
+                allow_fainted_subject=True,  # 瀕死交代(ON_SWITCH_OUT)でも強制天候を解除する
             ),
             Event.ON_ABILITY_DISABLED: h.AbilityHandler(
                 h.はじまりのうみ_deactivate_strong_weather,
                 "source:self",
+                allow_fainted_subject=True,  # 瀕死交代(ON_SWITCH_OUT)でも強制天候を解除する
             ),
         },
     ),
@@ -2511,6 +2520,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_SWITCH_OUT: h.AbilityHandler(
                 h.バトルスイッチ_revert_form,
                 subject_spec="source:self",
+                allow_fainted_subject=True,  # 瀕死交代(ON_SWITCH_OUT)でも発動する
             ),
         },
     ),
@@ -3560,6 +3570,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_SWITCH_OUT: h.AbilityHandler(
                 h.リミットシールド_revert_form,
                 subject_spec="source:self",
+                allow_fainted_subject=True,  # 瀕死交代(ON_SWITCH_OUT)でも発動する
             ),
         }
     ),

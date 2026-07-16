@@ -677,6 +677,21 @@ def test_リミットシールド_交代するとコアの姿に戻る():
     assert mon.name == "メテノ(コア)"
 
 
+def test_リミットシールド_瀕死交代でもコアの姿に戻る():
+    """瀕死になったリミットシールド持ちが交代する際も、通常の交代と同様にコアの
+    姿へ戻す（Handler.allow_fainted_subjectの回帰テスト。fuzz_log seed=1183参照）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("メテノ(コア)", ability_name="リミットシールド"), Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    assert mon.name == "メテノ(りゅうせい)"
+    battle.modify_hp(mon, -mon.hp)
+    assert mon.fainted
+    t.run_switch(battle, 0, 1)
+    assert mon.name == "メテノ(コア)"
+
+
 def test_リミットシールド_設置技のダメージでHP1_2以下になった場合はコアの姿のまま():
     """設置技のダメージ判定(priority=100)はリミットシールドの発動判定(priority=120)より先に
     行われるため、登場前は半分より多いHPでもステルスロックで半分以下になった場合は
