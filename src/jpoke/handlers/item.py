@@ -960,15 +960,24 @@ def こころのしずく_modify_power(battle: Battle, ctx: AttackContext, value
 def こだわり_lock_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """こだわりアイテム: 使用した技でロックする。
 
-    トリック・すりかえ自身の使用によってこだわり系アイテムを新たに入手した場合は、
-    このハンドラでロックされた直後に `すりかえ_release_choice_lock`
+    Event.ON_PP_CONSUMED（PP消費確定直後、run_move._consume_pp内で技実行の
+    成否・ON_MOVE_CHARGEの結果に関わらず必ず発火する）と Event.ON_MOVE_END の
+    両方に登録している。ON_PP_CONSUMEDが本来のロック発生点（実機は「技を選択して
+    PPを消費した瞬間」にロックする）で、`has_volatile`チェックにより同一ターン内で
+    二重に発火しても副作用がないため、そらをとぶ・ソーラービーム等の
+    charge_into_volatile系2ターン技のためターン（Event.ON_MOVE_CHARGEがFalseを
+    返しON_MOVE_ENDが発火しない）でも確実にロックできる。ON_MOVE_ENDへの登録は
+    引き続き残しており、トリック・すりかえ自身の使用によってこだわり系アイテムを
+    新たに入手した場合（アイテム交換はON_STATUS_HIT内で行われ、ON_PP_CONSUMED
+    発火時点ではまだ新アイテムを保持していないため、そちらでは発火しない）に、
+    ON_MOVE_ENDでロックされた直後 `すりかえ_release_choice_lock`
     （`data/moves/move_sa.py` `data/moves/move_ta.py` に登録）がより遅い優先度で
-    ロックを解除する。
+    ロックを解除する既存の仕組みを維持するため。
 
     ねごとのサブ実行中（sleep_talk_active）はロック対象としない。
     第五世代以降、こだわり系アイテムはねごとで選ばれた技ではなく「ねごと」自体で
-    ロックされるため、サブ実行中に発火する ON_MOVE_END では何もせず、
-    ねごと自身の ON_MOVE_END でロックする。
+    ロックされるため、サブ実行中に発火するこのハンドラでは何もせず、
+    ねごと自身のON_PP_CONSUMED/ON_MOVE_ENDでロックする。
     """
     mon = ctx.attacker
     if mon.sleep_talk_active:

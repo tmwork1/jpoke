@@ -1559,6 +1559,14 @@ def こんじょう_modify_atk(battle: Battle, ctx: AttackContext, value: int) -
 def ごりむちゅう_lock_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ごりむちゅう特性: 最初に使用した技でロックする。
 
+    こだわり系アイテムの `こだわり_lock_move` と同様、Event.ON_PP_CONSUMED
+    （本来のロック発生点）と Event.ON_MOVE_END の両方に登録している。
+    `has_volatile`チェックにより同一ターン内で二重に発火しても副作用がないため、
+    そらをとぶ・ソーラービーム等のcharge_into_volatile系2ターン技のためターン
+    （Event.ON_MOVE_CHARGEがFalseを返しON_MOVE_ENDが発火しない）でも
+    ON_PP_CONSUMED側で確実にロックできる。詳細は `こだわり_lock_move`
+    （`handlers/item.py`）のdocstringを参照。
+
     ねごとのサブ実行中（sleep_talk_active）はロック対象としない
     （こだわり系アイテムと同様、ねごとで選ばれた技ではなく「ねごと」自体でロックする）。
     かがくへんかガス等で特性が無効化されている間は本ハンドラ自体が発火しないため、
