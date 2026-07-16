@@ -2767,6 +2767,31 @@ def test_そらをとぶ_かみなりは命中する():
     assert defender.hp < defender.max_hp
 
 
+def test_そらをとぶ_ごりむちゅう持ちが使用すると1ターン目でロックされる():
+    """そらをとぶ: charge_into_volatile系2ターン技のためターン（1ターン目）で、
+    ごりむちゅう特性のロックが同ターン中に付与されることを確認する
+    （fuzz_log seed=1408の回帰。こだわり系アイテムと同根の不具合）。
+
+    ためターンはEvent.ON_MOVE_CHARGEがFalseを返してmove_executor._execute_moveが
+    早期returnするため、Event.ON_MOVE_ENDが発火しない。以前はごりむちゅうロックが
+    ON_MOVE_ENDにのみ登録されていたため、1ターン目ではロックされず、2ターン目
+    （実際に攻撃が発動した後）まで遅延していた。Event.ON_PP_CONSUMED
+    （PP消費確定直後、ON_MOVE_CHARGEより前に必ず発火する）でもロックするよう
+    修正し、1ターン目の時点で確実にロックされることを確認する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ごりむちゅう", move_names=["そらをとぶ", "でんこうせっか"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    # 1ターン目: 揮発状態付与。この時点でごりむちゅうロックが付与されるべき
+    t.run_move(battle, 0)
+    assert "そらをとぶ" in attacker.volatiles
+    assert attacker.has_volatile("ごりむちゅう")
+    assert attacker.volatiles["ごりむちゅう"].move_name == "そらをとぶ"
+
+
 def test_そらをとぶ_空中は通常技を回避する():
     """そらをとぶ: 1ターン目のそらをとぶ中は通常技を受けない。"""
     battle = t.start_battle(

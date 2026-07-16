@@ -1013,6 +1013,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.ごりむちゅう_modify_atk,
                 subject_spec="attacker:self",
             ),
+            Event.ON_PP_CONSUMED: h.AbilityHandler(
+                h.ごりむちゅう_lock_move,
+                subject_spec="attacker:self",
+            ),
             Event.ON_MOVE_END: h.AbilityHandler(
                 h.ごりむちゅう_lock_move,
                 subject_spec="attacker:self",

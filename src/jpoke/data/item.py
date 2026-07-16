@@ -765,6 +765,10 @@ ITEMS: dict[ItemName, ItemData] = {
                 h.こだわりスカーフ_boost_speed,
                 subject_spec="source:self",
             ),
+            Event.ON_PP_CONSUMED: h.ItemHandler(
+                h.こだわり_lock_move,
+                subject_spec="attacker:self",
+            ),
             Event.ON_MOVE_END: h.ItemHandler(
                 h.こだわり_lock_move,
                 subject_spec="attacker:self",
@@ -778,6 +782,10 @@ ITEMS: dict[ItemName, ItemData] = {
                 h.こだわりハチマキ_boost_physical,
                 subject_spec="attacker:self",
             ),
+            Event.ON_PP_CONSUMED: h.ItemHandler(
+                h.こだわり_lock_move,
+                subject_spec="attacker:self",
+            ),
             Event.ON_MOVE_END: h.ItemHandler(
                 h.こだわり_lock_move,
                 subject_spec="attacker:self",
@@ -789,6 +797,10 @@ ITEMS: dict[ItemName, ItemData] = {
         handlers={
             Event.ON_CALC_ATK_MODIFIER: h.ItemHandler(
                 h.こだわりメガネ_boost_special,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_PP_CONSUMED: h.ItemHandler(
+                h.こだわり_lock_move,
                 subject_spec="attacker:self",
             ),
             Event.ON_MOVE_END: h.ItemHandler(
