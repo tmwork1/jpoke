@@ -404,6 +404,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.おわりのだいち_deactivate_strong_weather,
                 "source:self",
                 allow_fainted_subject=True,  # 瀕死交代(ON_SWITCH_OUT)でも強制天候を解除する
+                ignored_disable_reasons=frozenset({"とくせいなし"}),  # 自身がとくせいなしで無効化された結果として発火するため、その理由は無視する
             ),
         },
     ),
@@ -1958,6 +1959,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.デルタストリーム_deactivate_strong_weather,
                 "source:self",
                 allow_fainted_subject=True,  # 瀕死交代(ON_SWITCH_OUT)でも強制天候を解除する
+                ignored_disable_reasons=frozenset({"とくせいなし"}),  # 自身がとくせいなしで無効化された結果として発火するため、その理由は無視する
             ),
         },
     ),
@@ -2335,6 +2337,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.はじまりのうみ_deactivate_strong_weather,
                 "source:self",
                 allow_fainted_subject=True,  # 瀕死交代(ON_SWITCH_OUT)でも強制天候を解除する
+                ignored_disable_reasons=frozenset({"とくせいなし"}),  # 自身がとくせいなしで無効化された結果として発火するため、その理由は無視する
             ),
         },
     ),
@@ -2941,6 +2944,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_ABILITY_DISABLED: h.AbilityHandler(
                 h.ぶきよう_enable_item,
                 subject_spec="source:self",
+                ignored_disable_reasons=frozenset({"とくせいなし"}),  # 自身がとくせいなしで無効化された結果として発火するため、その理由は無視する
             ),
         }
     ),
