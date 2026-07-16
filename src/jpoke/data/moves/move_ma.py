@@ -60,6 +60,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         }
     ),
     "マジカルシャイン": MoveData(
+        flags={"spread"},
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
                 ha.reduce_damage_in_double_battle,
@@ -203,7 +204,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "ミストバースト": MoveData(
-        flags={"explosion"},
+        flags={"explosion", "spread"},
         handlers={
             Event.ON_PAY_HP: h.MoveHandler(
                 ha.ミストバースト_pay_hp,
@@ -458,7 +459,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         }
     ),
     "むしのていこう": MoveData(
-        flags={"secondary_effect"},
+        flags={"secondary_effect", "spread"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.むしのていこう_lower_defender_spa,
@@ -610,7 +611,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         pp=10,
         power=90,
         accuracy=100,
-        flags={"secondary_effect"},
+        flags={"secondary_effect", "spread"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.もえあがるいかり_apply_flinch,

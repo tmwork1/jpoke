@@ -3183,6 +3183,16 @@ def ロックカット_boost_attacker_spe(battle: Battle, ctx: AttackContext, va
     return modify_attacker_stats(battle, ctx, value, stats={"spe": 2})
 
 
+def ワイドガード_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ワイドガードの効果: 自分を「ワイドガード」状態にする（まもる_applyと同じ骨格）。
+
+    実際の保護判定（"spread"フラグを持つ技のブロック）は、まもる系と同様に
+    ワイドガード状態自体が持つON_TRY_MOVE_1ハンドラ（handlers/volatile.pyの
+    ワイドガード_protect）で行う。
+    """
+    return apply_volatile_to_attacker(battle, ctx, value, volatile="ワイドガード")
+
+
 def わたほうし_lower_defender_spe(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """わたほうしの効果: 相手のすばやさを2段階下げる。粉技のためくさタイプ・ぼうじん無効。"""
     return modify_defender_stats(battle, ctx, value, stats={"spe": -2})

@@ -29,6 +29,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         category="status",
         pp=15,
         accuracy=100,
+        flags={"spread"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.かいふくふうじ_apply,
@@ -81,7 +82,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         pp=5,
         power=100,
         accuracy=100,
-        flags={"bullet", "secondary_effect"},
+        flags={"bullet", "secondary_effect", "spread"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.かえんだん_apply_burn_to_defender,
@@ -263,7 +264,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         pp=10,
         power=100,
         accuracy=80,
-        flags={"wind", "secondary_effect"},
+        flags={"wind", "secondary_effect", "spread"},
         handlers={
             Event.ON_MODIFY_ACCURACY: h.MoveHandler(
                 ha.かみなりあらし_accuracy,
@@ -512,7 +513,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "キラースピン": MoveData(
-        flags={"contact", "secondary_effect"},
+        flags={"contact", "secondary_effect", "spread"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 ha.キラースピン_clear_field,
@@ -879,7 +880,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         pp=10,
         power=100,
         accuracy=80,
-        flags={"wind", "secondary_effect"},
+        flags={"wind", "secondary_effect", "spread"},
         handlers={
             Event.ON_MODIFY_ACCURACY: h.MoveHandler(
                 ha.こがらしあらし_accuracy,
@@ -894,7 +895,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         }
     ),
     "こごえるかぜ": MoveData(
-        flags={"wind", "secondary_effect"},
+        flags={"wind", "secondary_effect", "spread"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.こごえるかぜ_lower_defender_spe,
@@ -910,7 +911,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         pp=10,
         power=65,
         accuracy=95,
-        flags={"secondary_effect"},
+        flags={"secondary_effect", "spread"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.こごえるせかい_lower_defender_spe,
@@ -940,7 +941,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         pp=25,
         power=40,
         accuracy=100,
-        flags={"secondary_effect"},
+        flags={"secondary_effect", "spread"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.こなゆき_apply_freeze_to_defender,
@@ -1007,7 +1008,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         pp=10,
         power=110,
         accuracy=85,
-        flags={"pulse"},
+        flags={"pulse", "spread"},
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
                 ha.reduce_damage_in_double_battle,
@@ -1077,6 +1078,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         }
     ),
     "ゴールドラッシュ": MoveData(
+        flags={"spread"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 ha.ゴールドラッシュ_sharply_lower_attacker_spa,
