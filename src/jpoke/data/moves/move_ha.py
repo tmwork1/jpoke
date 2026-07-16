@@ -170,7 +170,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         power=55,
         accuracy=95,
         crit_ratio=1,
-        flags={"slash"},
+        flags={"slash", "spread"},
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
                 ha.reduce_damage_in_double_battle,
@@ -287,7 +287,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         pp=5,
         power=100,
         accuracy=80,
-        flags={"wind", "secondary_effect"},
+        flags={"wind", "secondary_effect", "spread"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.はるのあらし_lower_defender_atk,
@@ -914,6 +914,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         pp=8,
         power=120,
         accuracy=100,
+        flags={"spread"},
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
                 ha.reduce_damage_in_double_battle,

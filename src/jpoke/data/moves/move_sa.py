@@ -312,6 +312,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         category="status",
         pp=30,
         accuracy=100,
+        flags={"spread"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.しっぽをふる_lower_defender_def,
@@ -870,6 +871,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         pp=20,
         power=60,
         accuracy=None,
+        flags={"spread"},
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
                 ha.reduce_damage_in_double_battle,

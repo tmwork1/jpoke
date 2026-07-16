@@ -21,6 +21,7 @@ MOVES_YA: dict[MoveName, MoveData] = {
         pp=15,
         power=60,
         accuracy=100,
+        flags={"spread"},
         handlers={
             # docs/spec/turn.md では Event.ON_DAMAGE 優先度30に記載されているが、
             # HP回復ピンチきのみ（オボンのみ等）はダメージ反映時のON_HP_CHANGEDで
@@ -106,7 +107,7 @@ MOVES_YA: dict[MoveName, MoveData] = {
         pp=30,
         power=40,
         accuracy=100,
-        flags={"secondary_effect"},
+        flags={"secondary_effect", "spread"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ようかいえき_lower_defender_spd,

@@ -82,7 +82,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         pp=20,
         power=40,
         accuracy=100,
-        flags={"wind", "secondary_effect"},
+        flags={"wind", "secondary_effect", "spread"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.たつまき_apply_flinch,
@@ -204,7 +204,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         pp=5,
         power=100,
         accuracy=95,
-        flags={"secondary_effect"},
+        flags={"secondary_effect", "spread"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 ha.ダイヤストーム_sharply_boost_attacker_def,
@@ -268,6 +268,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         pp=10,
         power=120,
         accuracy=85,
+        flags={"spread"},
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
                 ha.reduce_damage_in_double_battle,
@@ -279,6 +280,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         category="status",
         pp=10,
         accuracy=50,
+        flags={"spread"},
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
                 hs.ダークホール_check_species,
@@ -333,7 +335,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         category="special",
         pp=16,
         power=40,
-        flags={"sound"},
+        flags={"sound", "spread"},
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
                 ha.reduce_damage_in_double_battle,
@@ -1044,6 +1046,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         category="status",
         pp=20,  # championsのPP圧縮則により導出（move_list.txtに単独項目なし）。Gen9本家は40
         accuracy=90,
+        flags={"spread"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.どくガス_apply_ailment_to_defender,
@@ -1153,6 +1156,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         pp=8,
         power=150,
         accuracy=100,
+        flags={"spread"},
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
                 ha.ドラゴンエナジー_calc_power,

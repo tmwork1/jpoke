@@ -611,7 +611,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         pp=10,
         power=90,
         accuracy=100,
-        flags={"secondary_effect"},
+        flags={"secondary_effect", "spread"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.もえあがるいかり_apply_flinch,

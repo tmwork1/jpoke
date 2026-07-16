@@ -230,6 +230,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         pp=8,
         power=120,
         accuracy=100,
+        flags={"spread"},
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
                 ha.reduce_damage_in_double_battle,
@@ -341,7 +342,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         pp=30,
         power=40,
         accuracy=100,
-        flags={"secondary_effect"},
+        flags={"secondary_effect", "spread"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.あわ_lower_defender_spe,
@@ -505,7 +506,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         pp=10,
         power=75,
         accuracy=100,
-        flags={"sound", "secondary_effect"},
+        flags={"sound", "secondary_effect", "spread"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.いにしえのうた_apply_sleep_to_defender,
@@ -968,7 +969,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         pp=12,
         power=80,
         accuracy=100,
-        flags={"sound"},
+        flags={"sound", "spread"},
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
                 ha.reduce_damage_in_double_battle,
