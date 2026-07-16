@@ -574,6 +574,21 @@ def test_はじまりのうみ_らんきりゅう以外上書きする(weather_n
     assert battle.weather.name == "おおあめ"
 
 
+def test_はじまりのうみ_瀕死交代でも強制天候を解除する():
+    """瀕死になったはじまりのうみ持ちが交代する際も、通常の交代と同様におおあめを
+    解除する（Handler.allow_fainted_subjectの回帰テスト。fuzz_log seed=1183参照）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="はじまりのうみ"), Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    assert battle.weather.name == "おおあめ"
+    battle.modify_hp(mon, -mon.hp)
+    assert mon.fainted
+    t.run_switch(battle, 0, 1)
+    assert battle.weather.name == ""
+
+
 @pytest.mark.parametrize("ability_name", ["クォークチャージ", "こだいかっせい"])
 def test_パラドックス特性_イカサマを受けるときは対象の攻撃補正は乗らない(ability_name: str):
     """クォークチャージ/こだいかっせい: 対象（相手）自身の攻撃能力上昇は、
@@ -1255,6 +1270,28 @@ def test_天候始動特性_登場時に発動(ability_name: str, weather_name: 
     assert battle.weather.name == weather_name
     assert battle.weather.count == default_count
     assert battle.actives[0].ability.revealed is True
+
+
+@pytest.mark.parametrize(
+    "ability_name, weather_name",
+    [
+        ("おわりのだいち", "おおひでり"),
+        ("デルタストリーム", "らんきりゅう"),
+    ],
+)
+def test_強制天候特性_瀕死交代でも強制天候を解除する(ability_name: str, weather_name: WeatherName):
+    """おわりのだいち・デルタストリームも、はじまりのうみと同様に瀕死交代で
+    強制天候を解除する（Handler.allow_fainted_subjectの回帰テスト。fuzz_log seed=1183参照）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name), Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    assert battle.weather.name == weather_name
+    battle.modify_hp(mon, -mon.hp)
+    assert mon.fainted
+    t.run_switch(battle, 0, 1)
+    assert battle.weather.name == ""
 
 
 @pytest.mark.parametrize(

@@ -974,6 +974,20 @@ def test_バトルスイッチ_溜め技の1ターン目でも発動する():
     assert mon.name == "ギルガルド(ブレード)"
 
 
+def test_バトルスイッチ_瀕死交代でもシールドへ戻る():
+    """瀕死になったバトルスイッチ持ちが交代する際も、通常の交代と同様にシールド
+    フォルムへ戻す（Handler.allow_fainted_subjectの回帰テスト。fuzz_log seed=1183参照）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ギルガルド(ブレード)", ability_name="バトルスイッチ"), Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.modify_hp(mon, -mon.hp)
+    assert mon.fainted
+    t.run_switch(battle, 0, 1)
+    assert mon.name == "ギルガルド(シールド)"
+
+
 def test_バリアフリー_オーロラベールも解除される():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ"), Pokemon("カビゴン", ability_name="バリアフリー")],

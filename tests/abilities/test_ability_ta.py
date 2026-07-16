@@ -330,6 +330,20 @@ def test_ダルマモード_交代するとノーマルのすがたに戻る():
     assert mon.name == "ヒヒダルマ"
 
 
+def test_ダルマモード_瀕死交代でもノーマルのすがたに戻る():
+    """瀕死になったダルマモード持ちが交代する際も、通常の交代と同様にノーマルの
+    すがたへ戻す（Handler.allow_fainted_subjectの回帰テスト。fuzz_log seed=1183参照）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヒヒダルマ(ダルマ)", ability_name="ダルマモード"), Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.modify_hp(mon, -mon.hp)
+    assert mon.fainted
+    t.run_switch(battle, 0, 1)
+    assert mon.name == "ヒヒダルマ"
+
+
 def test_ダークオーラ_あく技以外には効果がない():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ダークオーラ", move_names=["でんきショック"])],
