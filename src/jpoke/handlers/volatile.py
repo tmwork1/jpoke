@@ -336,6 +336,31 @@ def かいふくふうじ_block_heal(battle: Battle, ctx: EventContext, value: A
     return HandlerReturn(value=0)
 
 
+def かいふくふうじ_modify_command_options(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """かいふくふうじによるコマンドオプション変更
+
+    第六世代以降、かいふくふうじ状態のポケモンは「heal」フラグを持つ技
+    （じこさいせい等の回復技、ドレインキッスやギガドレイン等のHP吸収技、すなあつめ等）を
+    コマンド選択レベルで除外する。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト
+        value: コマンドオプションのリスト
+
+    Returns:
+        HandlerReturn: 新しいコマンドオプションのリスト
+    """
+    new_options = []
+    for cmd in value:
+        if (
+            not cmd.is_type("move")
+            or not ctx.source.moves[cmd.index].has_flag("heal")
+        ):
+            new_options.append(cmd)
+    return HandlerReturn(value=new_options)
+
+
 def かいふくふうじ_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return tick_volatile(battle, ctx, value, volatile="かいふくふうじ")
 

@@ -63,6 +63,41 @@ def test_かいふくふうじ_カウント進行():
     assert not mon.has_volatile("かいふくふうじ")
 
 
+def test_かいふくふうじ_コマンド制限():
+    """かいふくふうじ: heal フラグを持つ技（すなあつめ）はコマンド選択の時点で除外される。
+
+    fuzz_log/seed744で発見: ON_MODIFY_COMMAND_OPTIONSが未登録だったため、コマンド候補には
+    残ったままON_TRY_ACTIONで毎ターン弾かれ、技名・PP消費ログを伴わない「動けない」ログに
+    なっていた。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["すなあつめ", "たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    player = battle.players[0]
+    mon = battle.actives[0]
+    battle.volatile_manager.apply(mon, "かいふくふうじ", count=3)
+    with battle.phase_context("action"):
+        commands = battle.get_available_commands(player)
+    move_commands = [cmd for cmd in commands if cmd.is_type("move")]
+    assert all(cmd.index != 0 for cmd in move_commands)
+
+
+def test_かいふくふうじ_コマンド制限で他の技は選択可能():
+    """かいふくふうじ: heal フラグを持たない技は引き続き選択可能"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["すなあつめ", "たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    player = battle.players[0]
+    mon = battle.actives[0]
+    battle.volatile_manager.apply(mon, "かいふくふうじ", count=3)
+    with battle.phase_context("action"):
+        commands = battle.get_available_commands(player)
+    move_commands = [cmd for cmd in commands if cmd.is_type("move")]
+    assert any(cmd.index == 1 for cmd in move_commands)
+
+
 def test_かいふくふうじ_交代で解除():
     """かいふくふうじ状態で交代すると状態が解除される"""
     battle = t.start_battle(
