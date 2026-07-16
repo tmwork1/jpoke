@@ -502,11 +502,19 @@ class TurnController:
             # だっしゅつパックによる割り込みフラグをフェーズに合わせて設定
             self._switch.override_ejectpack_interrupt(Interrupt.EJECTPACK_ON_TURN_END)
 
-        # ききかいひによる交代
-        self._switch.run_interrupt_switch(Interrupt.EMERGENCY)
+        # ここから先（ききかいひ・だっしゅつパック・瀕死による交代）は、今しがた
+        # 発火した（あるいは勝敗確定によりスキップされた）このターンのON_TURN_END
+        # より後に発生する。ここで新規に設置される天候・地形・グローバルフィールド・
+        # サイドフィールドは、このターンのカウントダウン機会を逃してしまうため、
+        # `late_field_activation_context()` を張って `FieldManager` 側に通知し、
+        # 活性化直後に1回分のカウントダウンを補填させる（通常の交代・技発動で
+        # 設置された場合との継続ターン数の非対称性を解消する。fuzz seed=1609, 1607）。
+        with self.battle.late_field_activation_context():
+            # ききかいひによる交代
+            self._switch.run_interrupt_switch(Interrupt.EMERGENCY)
 
-        # だっしゅつパックによる交代
-        self._switch.run_interrupt_switch(Interrupt.EJECTPACK_ON_TURN_END)
+            # だっしゅつパックによる交代
+            self._switch.run_interrupt_switch(Interrupt.EJECTPACK_ON_TURN_END)
 
-        # 瀕死による交代
-        self._switch.run_faint_switch()
+            # 瀕死による交代
+            self._switch.run_faint_switch()
