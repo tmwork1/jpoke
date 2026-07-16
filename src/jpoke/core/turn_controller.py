@@ -196,6 +196,13 @@ class TurnController:
         # ターン終了時の処理
         self._run_end_phase()
 
+        # 安全網: 各フェーズは終了時に `_discard_stale_commands` を通す約束だが、
+        # 将来追加されるフェーズがこれを見落としても残留コマンドが次ターンへ
+        # 持ち越されないよう、ターンの最後にもう一度まとめて呼んでおく
+        # （同種の見落としが繰り返し発見されたパターンのため、フェーズ側の
+        # 実装漏れに関わらず安全側に倒す）。
+        self._discard_stale_commands()
+
     def _begin_turn(self):
         """ターン開始処理を実行する。"""
         self.battle.turn += 1
@@ -203,6 +210,34 @@ class TurnController:
             self.action_order = []
             for state in self.battle.player_states.values():
                 state.reset_turn_state()
+
+    def _discard_stale_commands(self):
+        """交代済みで使われなかった予約コマンドを破棄する（フェーズ横断の共通後処理）。
+
+        いかく・だっしゅつパック・ききかいひ・交代技などの割り込みにより、
+        プレイヤーの本来の予約コマンド（MOVE_x/TERASTAL_x/MEGAEVOL_x等、種類は
+        問わない）が一度も pop_command() されないまま今ターンの予約リストに
+        残ることがある（割り込み交代は別経路で解決され、元のコマンドは二度と
+        使われないため）。残したままにすると次ターンに新しく予約されるコマンドの
+        手前に古いコマンドが残留し、交代後のポケモンに対して不正なインデックスの
+        コマンドが誤って使われてしまう（IndexError、あるいは無関係なポケモンへの
+        誤発動の原因。fuzz seed=1755, 18407, 23090, 117420, 147267 等、
+        個別のフェーズで同種の見落としが繰り返し発見されたパターン）。
+
+        各フェーズが個別にこの後始末を手書きすると同種の見落としが再発するため、
+        `_run_switch_phase` / `_run_megaevolve_phase` / `_run_move_phase` の各
+        フェーズ終了時、および `step()` 末尾の安全網として、必ずこのヘルパーを
+        通す。
+
+        割り込みが完全に解決している（`is_new_turn()`）場合のみ判定する。
+        解決途中に判定すると、まだ発生していない後続の割り込み交代を
+        考慮できないまま予約コマンドを破棄してしまう可能性があるため。
+        """
+        if not self.battle.is_new_turn():
+            return
+        for state in self.battle.player_states.values():
+            if state.has_switched and state.command_reserved():
+                state.pop_command()
 
     def _run_switch_phase(self):
         """交代フェーズを実行する。
@@ -255,20 +290,12 @@ class TurnController:
 
         # いかく・だっしゅつパックなどの割り込みにより、あるプレイヤーの
         # 交代がループの途中（自分の番より後に処理される別プレイヤーの交代
-        # に付随して）発生することがある。この場合、今ターン用に予約されて
-        # いたコマンド（例: MOVE_x や SWITCH_x）が一度も使われないまま予約
-        # リストに残ってしまう（割り込み交代は別経路で解決されるため）。
-        # ループの途中で対象プレイヤーの番を判定して破棄しようとすると、
-        # 自分の番より後に発生した割り込み交代を取りこぼす（ループが既に
-        # そのプレイヤーの番を通過済みのため）。残しておくと次ターンの
-        # 新しいコマンドの手前に古いコマンドが残留し、交代後のポケモンに
-        # 対して不正なインデックスのコマンドが誤って使われてしまう
-        # （IndexError の原因）。そのためループ全体が終わった時点で、
-        # 交代済みかつコマンドが残っている全プレイヤーをまとめて破棄する。
-        if self.battle.is_new_turn():
-            for state in self.battle.player_states.values():
-                if state.has_switched and state.command_reserved():
-                    state.pop_command()
+        # に付随して）発生することがある（fuzz seed=1755）。ループの途中で
+        # 対象プレイヤーの番を判定して破棄しようとすると、自分の番より後に
+        # 発生した割り込み交代を取りこぼす（ループが既にそのプレイヤーの番を
+        # 通過済みのため）ので、ループ全体が終わった時点でまとめて破棄する
+        # （`_discard_stale_commands` 参照）。
+        self._discard_stale_commands()
 
     def _resolve_action_order(self):
         """行動順を解決する。"""
@@ -326,34 +353,21 @@ class TurnController:
                 # メガシンカ後の特性が発動するイベントを追加
                 self._events.emit(Event.ON_ABILITY_ENABLED, EventContext(source=mon))
 
-        # メガシンカに伴う特性発動（いかく等）で相手のだっしゅつパックの発動条件が
-        # 新たに満たされた場合、ここで解決しておく。解決せずに残すと
+        # メガシンカに伴う特性発動（いかく等）で相手のだっしゅつパック・ききかいひの
+        # 発動条件が新たに満たされた場合、ここで解決しておく。解決せずに残すと
         # battle.is_new_turn()（=not has_interrupt()）が偽のままになり、後続の
         # _run_before_move_phase・_run_move_phase の冒頭ガード（is_new_turn()前提）が
-        # 丸ごとスキップされてしまう。_run_move_phase側は各行動枠の末尾でしか
-        # だっしゅつパックを解決しないため、まだ自分の行動枠が回ってきていない
-        # プレイヤー（今回のいかく等と無関係な側を含む）の技コマンドが一度も
-        # pop_command()されないまま予約リストに残留し、次ターンにコマンドの
-        # ズレが生じてIndexErrorになり得る（fuzz seed=147267 の関連ケースで判明）。
-        # 通常の交代（_process_events_after_switch）と同様、発生した時点で
-        # 即座に（複数チェーンする場合は解決し切るまで）解決する。
-        while any(
-            state.interrupt == Interrupt.EJECTPACK_REQUESTED
-            for state in self.battle.player_states.values()
-        ):
-            flag = Interrupt.EJECTPACK_ON_AFTER_MEGAEVOLVE
-            self._switch.override_ejectpack_interrupt(flag)
-            self._switch.run_interrupt_switch(flag)
+        # 丸ごとスキップされてしまう（fuzz seed=147267）。通常の交代
+        # （_process_events_after_switch）と共通の解決処理（SwitchManager側に一元化
+        # 済み）を、メガシンカフェーズでも同様に適用する。
+        self._switch.resolve_pending_interrupts(Interrupt.EJECTPACK_ON_AFTER_MEGAEVOLVE)
 
         # 上記の割り込み交代で場に出たポケモンは、交代前のポケモン用に予約されて
-        # いたコマンド（例: MOVE_x）を持ち越してしまう。_run_switch_phase末尾の
-        # 後処理（交代済みかつコマンドが残っている全プレイヤーの破棄）と同様、
-        # ここで破棄しておかないと、後続の_run_before_move_phase・_run_move_phaseが
-        # 交代後のポケモンに対して交代前の（範囲外になり得る）コマンドをそのまま
-        # 解決しようとしてIndexErrorになる。
-        for state in self.battle.player_states.values():
-            if state.has_switched and state.command_reserved():
-                state.pop_command()
+        # いたコマンド（例: MOVE_x）を持ち越してしまう。破棄しておかないと、
+        # 後続の_run_before_move_phase・_run_move_phaseが交代後のポケモンに対して
+        # 交代前の（範囲外になり得る）コマンドをそのまま解決しようとしてIndexErrorに
+        # なる（`_discard_stale_commands` 参照）。
+        self._discard_stale_commands()
 
     def _run_before_move_phase(self):
         """予備動作フェーズを実行する。
@@ -398,15 +412,10 @@ class TurnController:
 
             if state.has_switched:
                 # ききかいひ・だっしゅつパックなどの割り込み交代によって、この
-                # ターンの本来の行動コマンド（例: MOVE_x）が一度も
-                # pop_command() されないまま予約リストに残っていることがある
+                # ターンの本来の行動コマンド（例: MOVE_x）が既に無効になっている
                 # （交代が優先されて技コマンドの実行がスキップされるため）。
-                # 残しておくと次のターンの新しいコマンドの手前に古いコマンドが
-                # 残留し、交代後のポケモンに対して不正なインデックスの技コマンド
-                # が誤って使われてしまう（IndexError の原因）。そのためここで
-                # 使われなかったコマンドを破棄しておく。
-                if self.battle.is_new_turn() and state.command_reserved():
-                    state.pop_command()
+                # 使われなかったコマンドの破棄はフェーズ終了時の
+                # `_discard_stale_commands` にまとめて任せる。
                 continue
 
             if self.battle.is_new_turn():
@@ -451,14 +460,13 @@ class TurnController:
             # スキップされたまま、直後のだっしゅつパック解決（このブロック）
             # で自分自身がちょうど今交代してしまう。この場合、今ターンの
             # 予約コマンド（例: MOVE_x/TERASTAL_x）は一度も pop_command()
-            # されないまま残ってしまう。残しておくと次ターン以降に予約される
-            # 新しいコマンドの手前に古いコマンドが残留し続け、交代後の
-            # ポケモンに対して不正なインデックスのコマンドが誤って使われて
-            # しまう（IndexError の原因。fuzz seed=147267 で発見）。そのため
-            # この行動枠の処理の最後で、交代済みかつコマンドが未使用のまま
-            # 残っている場合は破棄しておく。
-            if state.has_switched and state.command_reserved():
-                state.pop_command()
+            # されないまま残ってしまう（IndexError の原因。fuzz seed=147267 で
+            # 発見）。使われなかったコマンドの破棄はフェーズ終了時の
+            # `_discard_stale_commands` にまとめて任せる（下記）。
+
+        # 各行動枠の処理中に発生した割り込み交代で行動権を失ったプレイヤーの
+        # 残留コマンドをまとめて破棄する。
+        self._discard_stale_commands()
 
     def _run_end_phase(self):
         """ターン終了時の処理を実行する。"""
