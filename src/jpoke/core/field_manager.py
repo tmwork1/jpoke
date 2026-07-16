@@ -113,6 +113,17 @@ class BaseFieldManager(Generic[T]):
         for player in field.owners:
             field.unregister_handlers(self._events, player)
 
+    def _has_turn_end_tick(self, field: Field) -> bool:
+        """このフィールドがEvent.ON_TURN_ENDで自動的にカウントダウンされる種類かどうかを判定する。
+
+        強天候（おおひでり・おおあめ・らんきりゅう）やまきびし等の設置技のように
+        Event.ON_TURN_END のハンドラを持たない（=ターン経過でカウントダウンされない）
+        フィールドは対象外（`late_field_activation` によるカウントダウン補填の対象を
+        判定するために使う。`ExclusiveFieldManager.apply()` /
+        `StackableFieldManager.activate()` / `SideFieldManager.apply()` 参照）。
+        """
+        return Event.ON_TURN_END in field.data.handlers
+
 
 class ExclusiveFieldManager(BaseFieldManager[T]):
     """排他的なフィールド効果を管理するクラス。
@@ -186,6 +197,12 @@ class ExclusiveFieldManager(BaseFieldManager[T]):
         self._activate_field(name, modified_count)
         self.current_name = name
         self._events.emit(Event.ON_FIELD_CHANGE)
+
+        # 瀕死交代・緊急交代など、このターンのON_TURN_END通過後に新規発動した場合は
+        # そのターンのカウントダウン機会を逃しているため、即座に1回分を補填する
+        # （`late_field_activation_context()` docstring参照）。
+        if self.battle.late_field_activation and self._has_turn_end_tick(self.current):
+            self.tick_down_current()
         return True
 
     def remove(self) -> bool:
@@ -263,6 +280,13 @@ class StackableFieldManager(BaseFieldManager[T]):
         field = self.get(name)
         if not field.is_active:
             self._activate_field(name, count)
+            # 瀕死交代・緊急交代など、このターンのON_TURN_END通過後に新規発動した
+            # 場合はそのターンのカウントダウン機会を逃しているため、即座に1回分を
+            # 補填する（ON_TURN_ENDでカウントダウンされないまきびし等の設置技は
+            # `_has_turn_end_tick` がFalseを返すため対象外。
+            # `late_field_activation_context()` docstring参照）。
+            if self.battle.late_field_activation and self._has_turn_end_tick(field):
+                self.tick_down(name)
             return True
         max_count = field.data.max_count
         if max_count <= 1 or field.count >= max_count:
@@ -382,6 +406,12 @@ class SideFieldManager(StackableFieldManager[SideFieldName]):
             raise ValueError("フィールドの持続ターン数は1以上でなければなりません。")
 
         self._activate_field(name, modified_count)
+
+        # 瀕死交代・緊急交代など、このターンのON_TURN_END通過後に新規発動した場合は
+        # そのターンのカウントダウン機会を逃しているため、即座に1回分を補填する
+        # （`late_field_activation_context()` docstring参照）。
+        if self.battle.late_field_activation and self._has_turn_end_tick(field):
+            self.tick_down(name)
         return True
 
     def swap_fields(self, other: "SideFieldManager", names: Iterable[SideFieldName]) -> bool:

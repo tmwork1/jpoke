@@ -187,6 +187,14 @@ class Battle:
         self._reseed_count: int = 0
         self.observer: Player | None = None
 
+        # 瀕死交代・緊急交代（ききかいひ・だっしゅつパック）など、そのターンの
+        # Event.ON_TURN_END が既に発火した後に発生する交代処理の間だけTrueにする
+        # フラグ（`late_field_activation_context()` 参照）。この区間中に新規発動した
+        # 天候・地形・グローバルフィールド・サイドフィールドは、そのターンの
+        # カウントダウン機会を逃しているため、`FieldManager` 側でこのフラグを見て
+        # 即座に1回分のカウントダウンを補填する。
+        self.late_field_activation: bool = False
+
         self.turn: int = -1
         self.phase: BattlePhase = ""
         self.winner: Player | None = None
@@ -306,6 +314,15 @@ class Battle:
         # 深さを更新
         new.copy_depth += 1
 
+        # `late_field_activation` は `_run_end_phase()` の処理区間中だけTrueになる
+        # 一時フラグ。区間の途中（`run_interrupt_switch` からの方策呼び出しに伴う
+        # `build_observation()`/木探索用の内部シミュレーション等）でコピーが
+        # 作られた場合、コピー先がTrueを引き継いだまま自身の `_run_end_phase()` に
+        # 到達する前の別フェーズでフィールドを発動すると、コピー元の処理区間の
+        # 都合で誤って補填tickされてしまう。コピー先は必ずFalseから開始させ、
+        # 実際に自身の `_run_end_phase()` を通過するときに改めて正しく設定させる。
+        new.late_field_activation = False
+
         return new
 
     def _update_reference(self):
@@ -375,6 +392,26 @@ class Battle:
             yield
         finally:
             self.phase = old_phase
+
+    @contextmanager
+    def late_field_activation_context(self):
+        """`late_field_activation` フラグを区間中Trueにするコンテキストマネージャー。
+
+        `TurnController._run_end_phase()` が、そのターンの `Event.ON_TURN_END`
+        （天候・地形・グローバルフィールド・サイドフィールドのカウントダウンを含む）
+        を発火した後に行う瀕死交代・緊急交代（ききかいひ・だっしゅつパック）の間、
+        この区間を張る。区間中に新規発動したフィールド効果は、そのターンの
+        カウントダウン機会を逃しているため、`FieldManager`（`core/field_manager.py`）
+        側でこのフラグを見て活性化直後に1回分のカウントダウンを補填し、通常の
+        交代・技発動で設置された場合と継続ターン数を揃える（fuzz seed=1609, 1607 で
+        発見。詳細は `docs/spec/abilities/ひでり.md`「交代によりこの特性のポケモンを
+        繰り出したターンも1ターンに数える」を参照）。
+        """
+        self.late_field_activation = True
+        try:
+            yield
+        finally:
+            self.late_field_activation = False
 
     def build_observation(self, observer: Player, copy_logs: bool = True) -> Battle:
         """指定したプレイヤー視点で情報を隠蔽した Battle インスタンスのコピーを作成。
