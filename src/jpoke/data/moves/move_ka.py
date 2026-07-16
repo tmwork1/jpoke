@@ -959,7 +959,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "このゆびとまれ": MoveData(
-        flags={"non_copycat"},
+        flags={"non_copycat", "no_effect_in_singles"},  # シングルは対象が元々1体のみでリダイレクト効果が無意味
         handlers={},  # 追加効果なし
     ),
     "コメットパンチ": MoveData(
@@ -1015,6 +1015,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         },
     ),
     "コーチング": MoveData(
+        flags={"no_effect_in_singles"},  # 味方専用（target=adjacentAlly、自分を除く）。シングルでは対象不在
         handlers={},  # 追加効果なし
     ),
     "コートチェンジ": MoveData(

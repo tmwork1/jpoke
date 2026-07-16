@@ -115,6 +115,8 @@ MoveFlag = Literal[
     "non_encore",  # アンコールで固定できない技。
     "non_negoto",  # ねごとで選ばれない技。
     "non_onnen",  # おんねんのPP消失対象外の技（わるあがき等）。
+    "no_effect_in_singles",  # シングルバトルでは戦闘に一切影響しない技（味方専用で対象不在・
+                              # おいわい等の公式無効果技等）。learnsetのフィルタ用途。
     "unprotectable",  # まもる等の防御効果を無視する技。
     "unreflectable",  # マジックコート・マジックミラーで跳ね返されない変化技。
     "ohko",  # 一撃必殺技。
