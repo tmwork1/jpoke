@@ -300,6 +300,16 @@ class MoveExecutor:
                 # PP消費
                 self._consume_pp(ctx)
 
+                # 選択した技の確定: トップレベル実行（深度1）のときのみ更新する。
+                # ねごと・さいはい等によるサブ技実行（深度2以上）では選択技は変化しない
+                # （いちゃもん等「選択した技」を参照すべき効果のため）。PP消費と同時点
+                # （タイプ相性判定・ON_TRY_MOVE_2・くさタイプ粉技無効判定等より前）で
+                # 確定させることで、それらの判定により技自体が不発になった場合でも
+                # 「選択した技」として正しく記録される（PPは既に消費済みのため。
+                # docs/spec/volatiles/いちゃもん.md 参照）。
+                if self._run_move_depth == 1:
+                    ctx.attacker.selected_move = ctx.move
+
                 # かたやぶりを適用する
                 self._events.emit(Event.ON_BEGIN_MOVE, ctx)
 
@@ -475,11 +485,7 @@ class MoveExecutor:
 
             # 発動した技の確定
             ctx.attacker.last_move = ctx.move
-            # 選択した技の確定: トップレベル実行（深度1）のときのみ更新する。
-            # ねごと・さいはい等によるサブ技実行（深度2以上）では選択技は変化しない
-            # （アンコール・いちゃもん等「選択した技」を参照すべき効果のため）。
-            if self._run_move_depth == 1:
-                ctx.attacker.selected_move = ctx.move
+            # selected_move はPP消費時点（本メソッド前段）で確定済みのためここでは更新しない。
             # non_negotoでない技のみバトル全体の最後使用技として記録する
             if not ctx.move.has_flag("non_negoto"):
                 self.battle.last_used_move_name = cast(MoveName, ctx.move.name)
