@@ -779,6 +779,31 @@ def test_あなをほる_2ターン目に攻撃して揮発状態が解除され
     assert defender.hp < hp_before
 
 
+def test_あなをほる_こだわりメガネ持ちが使用すると1ターン目でロックされる():
+    """あなをほる: charge_into_volatile系2ターン技のためターン（1ターン目）で、
+    こだわり系アイテムのロックが同ターン中に付与されることを確認する
+    （fuzz_log seed=1404の回帰）。
+
+    ためターンはEvent.ON_MOVE_CHARGEがFalseを返してmove_executor._execute_moveが
+    早期returnするため、Event.ON_MOVE_ENDが発火しない。以前はこだわり系ロックが
+    ON_MOVE_ENDにのみ登録されていたため、1ターン目ではロックされず、2ターン目
+    （実際に攻撃が発動した後）まで遅延していた。Event.ON_PP_CONSUMED
+    （PP消費確定直後、ON_MOVE_CHARGEより前に必ず発火する）でもロックするよう
+    修正し、1ターン目の時点で確実にロックされることを確認する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ディグダ", item_name="こだわりメガネ", move_names=["あなをほる", "でんこうせっか"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    # 1ターン目: チャージ。この時点でこだわりロックが付与されるべき
+    t.run_move(battle, 0)
+    assert attacker.has_volatile("あなをほる")
+    assert attacker.has_volatile("こだわり")
+    assert attacker.volatiles["こだわり"].move_name == "あなをほる"
+
+
 def test_あなをほる_じしんは地中の相手に命中し威力が2倍になる():
     """あなをほる状態の相手にじしんを使うと命中し威力補正が2倍（8192）になる。"""
     battle = t.start_battle(
