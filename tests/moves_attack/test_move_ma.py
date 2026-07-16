@@ -777,6 +777,24 @@ def test_みらいよち_2回連続使用で失敗する():
     assert battle.move_executor.move_success is False
 
 
+def test_みらいよち_こだわりメガネ持ちが使用すると同ターンでロックされる():
+    """みらいよち: フィールド設置に成功した使用ターン中に ON_MOVE_END が発火せず
+    こだわり系アイテムのロックがかからない不具合の回帰確認（はめつのねがいと同根）。
+
+    フィールド設置成功分岐は Event.ON_MOVE_CHARGE で stop_event=True を返して
+    move_executor._execute_move を早期returnさせるため、明示的に ON_MOVE_END を
+    発火しないとこだわりロックがかからなかった。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", item_name="こだわりメガネ", move_names=["みらいよち"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.has_volatile("こだわり")
+    assert attacker.volatiles["こだわり"].move_name == "みらいよち"
+
+
 def test_みらいよち_はめつのねがいと独立して動作する():
     """みらいよち と はめつのねがい は別フィールドであり、同時に有効化できる。"""
     battle = t.start_battle(
