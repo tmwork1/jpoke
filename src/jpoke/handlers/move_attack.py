@@ -117,8 +117,6 @@ def アイススピナー_clear_terrain(battle: Battle, ctx: AttackContext, valu
     技の仕様節「自分のいのちのたまの反動で使用者がひんしになったときはフィールドを
     解除できない」）。
     """
-    if ctx.attacker.fainted:
-        return HandlerReturn(value=value)
     battle.terrain_manager.remove()
     return HandlerReturn(value=value)
 

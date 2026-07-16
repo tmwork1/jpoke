@@ -96,6 +96,7 @@ AILMENTS: dict[str, AilmentData] = {
             Event.ON_DAMAGE_HIT: h.AilmentHandler(
                 h.こおり_cure_by_thaw_move,
                 subject_spec="defender:self",
+                allow_fainted_subject=True,  # 解凍対象がほのお技でひんしになった場合でも解凍自体は発生する
             )
         }
     ),

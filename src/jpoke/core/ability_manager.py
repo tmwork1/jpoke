@@ -170,7 +170,6 @@ class AbilityManager:
             self._events.emit(
                 Event.ON_ABILITY_ENABLED,
                 EventContext(source=mon),
-                skip_if_subject_fainted=True,
             )
             return True
         return False

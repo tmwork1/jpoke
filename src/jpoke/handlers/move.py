@@ -23,13 +23,21 @@ class MoveHandler(Handler):
     def __init__(self,
                  func: Callable,
                  subject_spec: RoleSpec = "attacker:self",
-                 priority: int = 100):
+                 priority: int = 100,
+                 allow_fainted_subject: bool = True):
         """MoveHandlerを初期化する。
 
         Args:
             func: イベント発生時に呼ばれる処理関数
             subject_spec: ハンドラの対象を指定するロール
             priority: ハンドラの優先度
+            allow_fainted_subject: 主体（subject_spec解決先）が瀕死でも発動を許すか。
+                技ハンドラは「技が現在進行中である」という前提のみで動く技実行フロー
+                固有のロジック（HPコスト支払いで使用者が先に瀕死になる場合や、
+                対象がすでに瀕死かの判定自体を行うハンドラ等）が多いため、
+                他のHandlerサブクラスと異なり既定でTrueとする。逆に「使用者が
+                瀕死になったら以降の効果を打ち切る」個別の技（アイススピナー等）は
+                登録時に明示的にFalseを指定する。
         """
         super().__init__(
             func=func,
@@ -37,6 +45,7 @@ class MoveHandler(Handler):
             subject_spec=subject_spec,
             priority=priority,
             skip_subject_check=True,  # 技ハンドラはコンテキストの攻守を直接参照するため、主体の照合をスキップする
+            allow_fainted_subject=allow_fainted_subject,
         )
 
 

@@ -1661,6 +1661,7 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_PP_CONSUMED: h.ItemHandler(
                 h.ヒメリのみ_restore_pp,
                 subject_spec="attacker:self",
+                allow_fainted_subject=True,  # ぶきみなじゅもん等でPPが0になった際に自身が瀕死でも発動する
             ),
             Event.ON_SWITCH_IN: h.ItemHandler(
                 h.ヒメリのみ_restore_pp_if_any_move_empty,
