@@ -492,6 +492,29 @@ def test_だいばくはつ_しめりけ持ちには技が失敗する():
     assert attacker.hp == hp_before
 
 
+def test_だいばくはつ_タイプ無効で不発でも攻撃者がひんしになる():
+    """だいばくはつ: seed=781 (LogInconsistency@move_executor.py:_execute_move:472) の
+    回帰テスト（じばくと同じ ON_PAY_HP 移動修正の対象）。
+
+    ノーマル無効のゴーストタイプ相手にだいばくはつを使うとタイプ相性0倍で技自体は
+    不発になるが、ON_PAY_HP はタイプ相性判定より前に発火するため、それでも使用者は
+    必ずひんしになる（docs/spec/moves/じばく.md「威力を除けば`だいばくはつ`と全く同じ
+    効果を持つ」を参照）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["だいばくはつ"])],
+        team1=[Pokemon("ゲンガー")],  # ゴーストタイプはノーマル技を無効化する
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success is False  # 技自体は不発
+    assert defender.hp == hp_before  # 相手にダメージは通らない
+    assert attacker.hp == 0
+    assert not attacker.alive  # それでも使用者は必ずひんしになる
+
+
 def test_だいばくはつ_使用後に攻撃者がひんしになる():
     """だいばくはつ: ON_PAY_HPで現在HPを全消費し、技使用後に使用者がひんし状態になる。"""
     battle = t.start_battle(

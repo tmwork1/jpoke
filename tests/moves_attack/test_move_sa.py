@@ -1844,6 +1844,32 @@ def test_じばく_しめりけ持ちには技が失敗する():
     assert attacker.hp == hp_before
 
 
+def test_じばく_タイプ無効で不発でも攻撃者がひんしになる():
+    """じばく: seed=781 (LogInconsistency@move_executor.py:_execute_move:472) の回帰テスト。
+
+    修正前は Event.ON_PAY_HP（HP全消費）の発火が、タイプ相性判定（_check_hit_by_type）
+    より後に置かれていたため、ノーマル無効のゴーストタイプ相手にじばくを使うと
+    タイプ相性0倍で技が不発になり、ON_PAY_HP自体が一度も発火せず使用者のHPが
+    消費されなかった（docs/spec/moves/じばく.md「命中判定・タイプ相性・まもるなどにより
+    攻撃が不発になった場合であっても、使用者は必ずひんしになる」に違反）。
+
+    修正後は ON_PAY_HP がタイプ相性判定より前に発火するため、技自体は不発になっても
+    使用者は必ずひんしになる。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["じばく"])],
+        team1=[Pokemon("ゲンガー")],  # ゴーストタイプはノーマル技を無効化する
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success is False  # 技自体は不発
+    assert defender.hp == hp_before  # 相手にダメージは通らない
+    assert attacker.hp == 0
+    assert not attacker.alive  # それでも使用者は必ずひんしになる
+
+
 def test_じばく_使用後に攻撃者がひんしになる():
     """じばく: ON_PAY_HPで現在HPを全消費し、技使用後に使用者がひんし状態になる。"""
     battle = t.start_battle(
