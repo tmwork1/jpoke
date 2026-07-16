@@ -2569,6 +2569,19 @@ def test_ぶきよう_くろいてっきゅうの効果を無視する():
     assert mon.hp == mon.max_hp
 
 
+def test_ぶきよう_とくせいなし状態になるとアイテムが有効化される():
+    """いえき等でぶきよう持ち自身が「とくせいなし」状態になった直後も、
+    ON_ABILITY_DISABLEDハンドラが自己言及的な無効化理由（とくせいなし）で
+    フィルタされず発動し、アイテムが正しく再有効化される（fuzz_log seed=1204参照）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ぶきよう", item_name="たべのこし")],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"とくせいなし": 3},
+    )
+    mon = battle.actives[0]
+    assert mon.item.enabled
+
+
 def test_ぶきよう_フォルムチェンジアイテムの効果が発動しない():
     """ぶきよう: だいこんごうだまを持っていてもディアルガはオリジンフォルムにならない"""
     battle = t.start_battle(
