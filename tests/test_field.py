@@ -1,6 +1,7 @@
 """フィールド効果ハンドラの単体テスト（天候・地形・サイドフィールド・グローバルフィールド）"""
 import pytest
 from jpoke import Pokemon
+from jpoke.enums import LogCode
 from jpoke.types import WeatherName, TerrainName, GlobalFieldName, SideFieldName
 from jpoke.core import AttackContext
 from . import test_utils as t
@@ -108,6 +109,16 @@ def test_エレキフィールド_ねむり防止():
     result = battle.ailment_manager.apply(target, "ねむり")
     assert not result, "エレキフィールド下でねむりが付与された"
     assert not target.ailment.is_active, "エレキフィールド下でねむり状態が付与された"
+
+    # ねむり付与阻止がAILMENT_PREVENTEDログとして記録されること
+    # （回帰テスト: event_log_audit。修正前はブロック自体がログに残らなかった）
+    logs = [
+        log for log in battle.event_logger.logs
+        if log.log == LogCode.AILMENT_PREVENTED
+    ]
+    assert len(logs) == 1
+    assert logs[0].payload.ailment == "ねむり"
+    assert logs[0].payload.display_reason == "エレキフィールド"
 
 
 def test_エレキフィールド_ねむる失敗():
@@ -533,6 +544,16 @@ def test_しんぴのまもり_状態異常防止():
     target = battle.actives[0]
     assert not battle.ailment_manager.apply(target, "どく")
     assert not target.ailment.is_active
+
+    # 状態異常付与阻止がAILMENT_PREVENTEDログとして記録されること
+    # （回帰テスト: event_log_audit。修正前はブロック自体がログに残らなかった）
+    logs = [
+        log for log in battle.event_logger.logs
+        if log.log == LogCode.AILMENT_PREVENTED
+    ]
+    assert len(logs) == 1
+    assert logs[0].payload.ailment == "どく"
+    assert logs[0].payload.display_reason == "しんぴのまもり"
 
 
 def test_じゅうりょく_Gのちから強化():
@@ -1409,6 +1430,15 @@ def test_ミストフィールド_状態異常防止():
                             terrain=("ミストフィールド", 99),
                             )
     assert not battle.ailment_manager.apply(battle.actives[0], "どく")
+    # 状態異常付与阻止がAILMENT_PREVENTEDログとして記録されること
+    # （回帰テスト: event_log_audit。修正前はブロック自体がログに残らなかった）
+    logs = [
+        log for log in battle.event_logger.logs
+        if log.log == LogCode.AILMENT_PREVENTED
+    ]
+    assert len(logs) == 1
+    assert logs[0].payload.ailment == "どく"
+    assert logs[0].payload.display_reason == "ミストフィールド"
 
 
 def test_ミストフィールド_非接地は混乱防止されない():

@@ -31,6 +31,9 @@ class EventLog:
     すべてのイベントを記録する。
 
     Attributes:
+        seq: EventLogger内で採番される連番（0始まり）。turn/idxが同じログ同士の
+            記録順序を機械的に判別するためのフィールドで、EventLogger.add() が
+            自動採番する（呼び出し側が指定することはない）
         turn: ログが記録されたターン番号
         idx: プレイヤーのインデックス (0 or 1)
         log: イベントの内容を表すLogCode列挙値
@@ -43,6 +46,7 @@ class EventLog:
     `log`/`pokemon`/`payload`（または `to_dict()`）を使う。
     LogCode ごとの Payload 対応表は log_payload.py のモジュール docstring を参照。
     """
+    seq: int
     turn: int
     idx: int
     log: LogCode
@@ -56,6 +60,7 @@ class EventLog:
             JSON-serializable なログデータを含む辞書
         """
         return {
+            "seq": self.seq,
             "turn": self.turn,
             "idx": self.idx,
             "log": self.log.name,
@@ -256,10 +261,12 @@ class EventLogger:
     def __init__(self):
         """EventLoggerを初期化する。"""
         self.logs: list[EventLog] = []
+        self._next_seq = 0
 
     def clear(self):
         """すべてのログをクリアする。"""
         self.logs.clear()
+        self._next_seq = 0
 
     def add(self, turn: int, idx: int, log: LogCode, payload: Payload | None = None,
              pokemon: str | None = None):
@@ -272,7 +279,8 @@ class EventLogger:
             payload: イベントの詳細情報（必要に応じて）
             pokemon: イベントの主体となったポケモン名（あれば）
         """
-        self.logs.append(EventLog(turn, idx, log, payload, pokemon))
+        self.logs.append(EventLog(self._next_seq, turn, idx, log, payload, pokemon))
+        self._next_seq += 1
 
     def get(self, turn: int, idx: int) -> list[EventLog]:
         """指定したターンとプレイヤーのイベントログを取得。

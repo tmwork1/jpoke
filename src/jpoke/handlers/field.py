@@ -8,7 +8,7 @@ from jpoke.enums import LogCode
 from jpoke.types import RoleSpec, GlobalFieldName, SideFieldName, VolatileName
 from jpoke.utils.math import apply_fixed_modifier
 from jpoke.core.handler import HandlerReturn, Handler
-from jpoke.core.log_payload import FailureLogPayload
+from jpoke.core.log_payload import FailureLogPayload, AilmentPayload
 
 class FieldHandler(Handler):
     def __init__(self,
@@ -105,6 +105,11 @@ def エレキフィールド_prevent_sleep(battle: Battle, ctx: EventContext, va
         value == "ねむり"
         and not battle.query.is_floating(ctx.target)
     ):
+        battle.add_event_log(
+            ctx.target,
+            LogCode.AILMENT_PREVENTED,
+            payload=AilmentPayload(ailment=value, display_reason="エレキフィールド"),
+        )
         return HandlerReturn(value="", stop_event=True)
     return HandlerReturn(value=value)
 
@@ -259,6 +264,11 @@ def しんぴのまもり_prevent_ailment(battle: Battle, ctx: EventContext, val
         ctx.is_foe_target()
         and not ctx.can_bypass_status_guard(battle)
     ):
+        battle.add_event_log(
+            ctx.target,
+            LogCode.AILMENT_PREVENTED,
+            payload=AilmentPayload(ailment=value, display_reason="しんぴのまもり"),
+        )
         value = ""  # 状態異常名を空にして無効化
     return HandlerReturn(value=value)
 
@@ -550,6 +560,11 @@ def ミストフィールド_prevent_ailment(battle: Battle, ctx: EventContext, 
     if value == "ゆめうつつ":
         return HandlerReturn(value=value)
     if not battle.query.is_floating(ctx.target):
+        battle.add_event_log(
+            ctx.target,
+            LogCode.AILMENT_PREVENTED,
+            payload=AilmentPayload(ailment=value, display_reason="ミストフィールド"),
+        )
         return HandlerReturn(value="", stop_event=True)
     return HandlerReturn(value=value)
 

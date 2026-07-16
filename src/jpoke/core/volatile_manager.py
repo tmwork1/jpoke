@@ -82,13 +82,24 @@ class VolatileManager:
         apply_ctx = EventContext(source=source, target=target)
 
         # ハンドラーが空値を返した場合は無効化させる
+        logs = self.battle.event_logger.logs
+        log_count_before = len(logs)
         resolved_name = self._events.emit(Event.ON_BEFORE_APPLY_VOLATILE, apply_ctx, name)
         if not resolved_name:
-            self.battle.add_event_log(
-                target,
-                LogCode.VOLATILE_IMMUNE,
-                payload=VolatilePayload(volatile=name)
+            # どんかん等、登録ハンドラ自身が理由付きのVOLATILE_PREVENTEDログを
+            # 記録して無効化するケースがある。その場合は汎用フォールバックログ
+            # （VOLATILE_IMMUNE）を重ねて出さないよう、このemit呼び出し中に
+            # 新たにVOLATILE_PREVENTEDログが追加されたかどうかで判定する。
+            already_logged = (
+                len(logs) > log_count_before
+                and logs[-1].log == LogCode.VOLATILE_PREVENTED
             )
+            if not already_logged:
+                self.battle.add_event_log(
+                    target,
+                    LogCode.VOLATILE_IMMUNE,
+                    payload=VolatilePayload(volatile=name)
+                )
             return False
 
         self.battle.add_event_log(

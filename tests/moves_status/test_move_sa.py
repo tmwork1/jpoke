@@ -894,6 +894,19 @@ def test_じこあんじ_相手のランク変化を自分にコピーする():
     assert attacker.boosts["accuracy"] == -1
     assert attacker.boosts["evasion"] == 2
 
+    # ランクコピーがSTAT_CHANGEDログとして記録されること
+    # （回帰テスト: event_log_audit。修正前は直接代入によりログが一切残らなかった）
+    logs = [
+        log for log in battle.event_logger.logs
+        if log.log == LogCode.STAT_CHANGED and log.pokemon == attacker.name
+    ]
+    assert len(logs) == 1
+    assert logs[0].payload.stats == {
+        "atk": 2, "def": -1, "spa": 3, "spd": -2, "spe": 1,
+        "accuracy": -1, "evasion": 2,
+    }
+    assert logs[0].payload.display_reason == "じこあんじ"
+
 
 def test_じこあんじ_相手の急所ランクが0なら自分の急所ランクも消える():
     """じこあんじ: 自分が事前にきゅうしょアップ状態でも、相手の急所ランクが0ならクリアされる"""
