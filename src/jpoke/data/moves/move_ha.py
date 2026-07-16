@@ -219,7 +219,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         category="status",
         pp=40,
         target="self",
-        flags={"gravity_restricted"},
+        flags={"gravity_restricted", "no_effect_in_singles"},  # 公式に戦闘上の効果を持たない技
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
                 h.gravity_restricted_fail,

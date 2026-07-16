@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from jpoke.model import Pokemon, Move
 
 from jpoke.types import RoleSpec, Stat, Type, MoveCategory, \
-    AilmentName, WeatherName, TerrainName, SideFieldName
+    AilmentName, WeatherName, TerrainName, SideFieldName, ItemName
 from jpoke.utils.math import apply_fixed_modifier, round_half_down
 from jpoke.enums import Event, Interrupt, LogCode, Command
 from jpoke.core.handler import HandlerReturn, Handler
@@ -160,9 +160,22 @@ def _resolve_field_count(value: list,
     return HandlerReturn(value=value)
 
 def _terrain_seed_boost(battle: Battle, ctx: EventContext, value: Any,
-                        terrain: TerrainName, stat: Stat) -> HandlerReturn:
+                        terrain: TerrainName, stat: Stat, item_name: ItemName) -> HandlerReturn:
+    """フィールドシード系: 対応フィールド展開時にランク+1し、自身を消費する。
+
+    Event.ON_SWITCH_IN / Event.ON_FIELD_CHANGE / Event.ON_ITEM_ENABLED の
+    3つに登録されているため、例えばエレキメイカー・ハドロンエンジン等
+    「登場と同時にフィールドを展開する特性」を自身が持つ場合、登場時の
+    ON_SWITCH_IN処理中にその特性がネストしてON_FIELD_CHANGEを発火させ、
+    本ハンドラが既に一度発動・アイテムを消費した後、同一ON_SWITCH_IN発火の
+    中でハンドラ一覧のスナップショットに残っていた自身のON_SWITCH_IN登録が
+    続けて実行されてしまう（二重発動）。そのため、発動条件の判定前に
+    このアイテムをまだ保持しているか（消費済みでないか）を確認する。
+    """
     mon = ctx.source
     assert mon is not None
+    if not mon.has_item(item_name):
+        return HandlerReturn(value=value)
     if battle.terrain.name == terrain:
         changes = battle.modify_stats(mon, {stat: +1})
         if changes:  # すでにランクが最大の場合は不発・消費しない
@@ -578,7 +591,7 @@ def ウタンのみ_modify_super_effective_damage(battle: Battle, ctx: AttackCon
 
 
 def エレキシード_boost_defense(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _terrain_seed_boost(battle, ctx, value, "エレキフィールド", "def")
+    return _terrain_seed_boost(battle, ctx, value, "エレキフィールド", "def", "エレキシード")
 
 
 # 元々ひるみの追加効果を持つ技名の集合。
@@ -926,7 +939,7 @@ def くろおび_modify_power_by_type(battle: Battle, ctx: AttackContext, value:
 
 
 def グラスシード_boost_defense(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _terrain_seed_boost(battle, ctx, value, "グラスフィールド", "def")
+    return _terrain_seed_boost(battle, ctx, value, "グラスフィールド", "def", "グラスシード")
 
 
 def グランドコート_resolve_field_count(_battle: Battle, _ctx: EventContext, value: Any) -> HandlerReturn:
@@ -1035,7 +1048,7 @@ def ゴツゴツメット_chip_contact_attacker(battle: Battle, ctx: AttackConte
 
 
 def サイコシード_boost_spdef(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _terrain_seed_boost(battle, ctx, value, "サイコフィールド", "spd")
+    return _terrain_seed_boost(battle, ctx, value, "サイコフィールド", "spd", "サイコシード")
 
 
 def さらさらいわ_resolve_field_count(_battle: Battle, _ctx: EventContext, value: Any) -> HandlerReturn:
@@ -1922,7 +1935,7 @@ def ミクルのみ_set_accuracy_flag(battle: Battle, ctx: EventContext, value: 
 
 
 def ミストシード_boost_spdef(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _terrain_seed_boost(battle, ctx, value, "ミストフィールド", "spd")
+    return _terrain_seed_boost(battle, ctx, value, "ミストフィールド", "spd", "ミストシード")
 
 
 def メタルコート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

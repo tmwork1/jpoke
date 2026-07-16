@@ -20,7 +20,7 @@
 
 | モード | Player | 特徴 | 既定 n_pokemon / max_turns / batch |
 |---|---|---|---|
-| `random` | RandomPlayer | 安価。広い状態空間を広く浅く掘る | 6 / 100 / 500 |
+| `random` | RandomPlayer | 安価。広い状態空間を広く浅く掘る | 6 / 100 / 1000 |
 | `tree_search` | TreeSearchFuzzPlayer（1手先ミニマックス） | 高コスト。実戦的な行動でのみ出るバグを狙う | 3 / 20 / 100 |
 
 `batch_size` は `--search` で worker プロセスに分散して並列実行される件数（打ち切りなし）。
@@ -47,7 +47,7 @@
   "modes": {
     "random": {
       "player": "random",
-      "max_turns": 100, "n_pokemon": 6, "batch_size": 500, "workers": 4,
+      "max_turns": 100, "n_pokemon": 6, "batch_size": 1000, "workers": 4,
       "failure_dir": "fuzz_failures",
       "next_seed": 0, "total_battles": 0
     },

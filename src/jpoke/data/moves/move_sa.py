@@ -127,6 +127,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         }
     ),
     "サイドチェンジ": MoveData(
+        flags={"no_effect_in_singles"},  # 味方と位置を交代する技（Ally Switch）。シングルでは味方が不在で不発
         handlers={},  # ダブル専用（本プロジェクトはシングルバトル専用のため対象外）
     ),
     "さいはい": MoveData(
@@ -147,6 +148,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         }
     ),
     "さきおくり": MoveData(
+        flags={"no_effect_in_singles"},  # 行動順操作技。シングルは行動者が2体のみで順序が変わらない
         handlers={},  # ダブル専用（本プロジェクトはシングルバトル専用のため対象外）
     ),
     "さばきのつぶて": MoveData(

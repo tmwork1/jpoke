@@ -1106,6 +1106,20 @@ def test_フィールドシード_発動(item_name, terrain, stat):
     assert not mon.has_item()
 
 
+def test_フィールドシード_自身の特性による地形形成では二重発動しない():
+    """フィールドシード系: 自身が持つ特性（ハドロンエンジン等）が登場と同時にフィールドを
+    展開するケースで、ネストしたON_FIELD_CHANGEで1回発動した後にON_SWITCH_INの
+    ハンドラ一覧スナップショットに残る自身の登録が再度実行されて二重発動しないことを確認する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ハドロンエンジン", item_name="エレキシード")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    assert battle.terrain.name == "エレキフィールド"
+    assert mon.boosts["def"] == 1
+    assert not mon.has_item()
+
+
 def test_ふうせん_じめん技を無効化():
     """ふうせん: 浮遊状態でじめん技が当たらない"""
     battle = t.start_battle(

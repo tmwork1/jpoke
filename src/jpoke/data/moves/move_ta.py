@@ -566,6 +566,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         }
     ),
     "てだすけ": MoveData(
+        flags={"no_effect_in_singles"},  # 味方専用（target=adjacentAlly）。シングルでは対象不在
         handlers={},  # ダブル専用（本プロジェクトはシングルバトル専用のため対象外）
     ),
     "てっていこうせん": MoveData(
@@ -1162,7 +1163,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         }
     ),
     "ドラゴンエール": MoveData(
-        flags={"sound"},
+        flags={"sound", "no_effect_in_singles"},  # 味方専用（target=adjacentAlly）。シングルでは対象不在
         handlers={},  # ダブル専用（本プロジェクトはシングルバトル専用のため対象外）
     ),
     "ドラゴンクロー": MoveData(

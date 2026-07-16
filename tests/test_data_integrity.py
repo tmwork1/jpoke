@@ -7,7 +7,8 @@ from typing import get_args
 
 import pytest
 
-from jpoke.data import ABILITIES, MOVES
+from jpoke.data import ABILITIES, MOVES, POKEDEX
+from jpoke.model.pokemon import Pokemon
 from jpoke.types import AbilityFlag, MoveFlag
 
 
@@ -20,6 +21,21 @@ def test_技データ_flagsが全てMoveFlagに定義されている():
         if unknown:
             errors.append(f"{name}: {sorted(unknown)}")
     assert not errors, "MoveFlag に未定義のフラグ:\n" + "\n".join(errors)
+
+
+def test_技データ_no_effect_in_singlesの技はPokemonのlearnsetから除外される():
+    """no_effect_in_singlesフラグを持つ技（味方専用で対象不在・公式無効果技等）が、
+    Pokemon.learnset（実戦で使う覚えられる技の集合）に一切含まれないことを確認する。
+    """
+    no_effect_moves = {name for name, data in MOVES.items() if "no_effect_in_singles" in data.flags}
+    assert no_effect_moves, "no_effect_in_singlesフラグを持つ技が1件も無い（フラグ定義の確認漏れ）"
+
+    errors = []
+    for name in POKEDEX:
+        leaked = Pokemon(name).learnset & no_effect_moves
+        if leaked:
+            errors.append(f"{name}: {sorted(leaked)}")
+    assert not errors, "learnsetから除外されていない技:\n" + "\n".join(errors)
 
 
 def test_特性データ_flagsが全てAbilityFlagに定義されている():
