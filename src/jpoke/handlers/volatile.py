@@ -177,6 +177,15 @@ def あなをほる_remove_volatile(battle: Battle, ctx: EventContext, value: An
 def あばれる_tick(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """あばれる状態のターン経過処理
 
+    Event.ON_HIT（「ダメージ発生後の処理。みがわりに被弾しても発動」）に
+    登録する。みがわりに被弾した場合も技自体は正常に命中・実行された
+    ものとして扱われるため、Event.ON_DAMAGE_HIT（みがわり等で実ダメージが
+    0の場合は発火しない）ではなくこちらに登録する必要がある。
+
+    2ターン目以降の forced continuation ターンで、この揮発性状態自身が
+    登録するハンドラとして呼ばれる。初回付与ターン分のカウント消費は
+    move_attack.あばれる_apply がこの関数を直接呼び出して処理する。
+
     Args:
         battle: バトルインスタンス
         ctx: コンテキスト

@@ -29,6 +29,7 @@ from .move import (
     modify_attacker_stats,
     modify_defender_stats,
 )
+from .volatile import あばれる_tick
 
 def pivot(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """交代技の効果を発動する。
@@ -200,14 +201,24 @@ def あばれる_apply(battle: Battle, ctx: AttackContext, value: Any) -> Handle
     すでにあばれる状態の場合（強制行動の2ターン目以降）は何もしない。
 
     ターン数は 2〜3 ターンのランダム（最初の使用時に決定）。
+
+    実機では予定ターン数（2〜3ターン）は最初の使用ターンを含めて数える
+    （「使い続ける」ターン数の合計）。あばれる_tick は「あばれる」揮発性
+    状態自身が Event.ON_HIT に登録するハンドラだが、この初回付与は
+    ON_HIT ハンドラの実行中（イベントのハンドラ一覧が既に確定した後）に
+    行われるため、同じ ON_HIT 発火内では登録直後のハンドラは呼ばれない。
+    そのため初回ヒット分のターン経過処理はここで明示的に行う（2ターン目
+    以降は登録済みの あばれる_tick が通常どおり ON_HIT で処理する）。
     """
     attacker = ctx.attacker
     if attacker.has_volatile("あばれる"):
         return HandlerReturn(value=value)
     count = battle.random.randint(2, 3)
-    battle.volatile_manager.apply(
+    applied = battle.volatile_manager.apply(
         attacker, "あばれる", count=count, source=attacker, move_name=ctx.move.name
     )
+    if applied:
+        return あばれる_tick(battle, ctx, value)
     return HandlerReturn(value=value)
 
 

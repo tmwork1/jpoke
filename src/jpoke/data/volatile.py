@@ -75,7 +75,14 @@ VOLATILES: dict[str, VolatileData] = {
                 h.force_command,
                 subject_spec="source:self",
             ),
-            Event.ON_DAMAGE_HIT: h.VolatileHandler(
+            # ON_DAMAGE_HIT ではなく ON_HIT に登録する。ON_DAMAGE_HIT は
+            # みがわり等で実ダメージが0になった場合に発火しないが、みがわりに
+            # 被弾した場合も技自体は正常に命中・実行されたものとして扱われ、
+            # あばれる状態のターンカウントは通常どおり進行するべきである
+            # （docs/spec/volatiles/あばれる.md の消滅条件3には該当しない）。
+            # ON_HIT は「ダメージ発生後の処理（みがわりに被弾しても発動）」
+            # (docs/spec/turn.md) ため、この用途に適する。
+            Event.ON_HIT: h.VolatileHandler(
                 h.あばれる_tick,
                 subject_spec="attacker:self",
                 priority=180
