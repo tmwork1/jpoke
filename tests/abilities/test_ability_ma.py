@@ -933,6 +933,27 @@ def test_ムラっけ_全能力が最小なら上昇のみ発動する():
     assert -4 in mon.boosts.values()
 
 
+def test_ムラっけ_同ターン内で先にひんしになった場合は発動しない():
+    """同ターン中に他の効果で先にひんしになったポケモンには、
+    ターン終了時のランク変化が発動しない
+    （fuzz_log seed=1122で発見: 瀕死ガード漏れの回帰確認）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ムラっけ"), Pokemon("コラッタ")],
+        team1=[Pokemon("カビゴン", move_names=["はかいこうせん"])],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    t.fix_damage(battle, mon.max_hp)
+    t.run_move(battle, 1)
+
+    assert mon.fainted
+    assert battle.winner is None
+
+    t.end_turn(battle)
+
+    assert all(v == 0 for v in mon.boosts.values())
+
+
 def test_メガソーラー_あめ中でもほのお技が1_5倍():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="メガソーラー", move_names=["ひのこ"])],

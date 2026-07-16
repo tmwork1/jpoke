@@ -4258,6 +4258,9 @@ def ミラーアーマー_reflect_stat_drop(battle: Battle, ctx: EventContext, v
 def ムラっけ_boost_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ムラっけ特性: ターン終了時に1能力+2、別の1能力-1する。"""
     mon = ctx.source
+    # ひんし(HP0)になったときは発動しない（同ターンの攻撃等で先にHPが0になった場合を含む）
+    if mon.fainted:
+        return HandlerReturn(value=value)
     stats: tuple[Stat, ...] = ("atk", "def", "spa", "spd", "spe")
     raised_stat: Stat | None = None
     changed = False
