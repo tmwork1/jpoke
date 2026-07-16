@@ -125,63 +125,68 @@ class SwitchManager:
             EventContext(source=mon),
         )
 
-        self._resolve_ejectpack_after_switch()
-        self._resolve_emergency_after_switch()
+        self.resolve_pending_interrupts(Interrupt.EJECTPACK_ON_AFTER_SWITCH)
 
-    def _resolve_emergency_after_switch(self):
-        """ききかいひ・にげごしによる緊急交代がなくなるまで再帰的に交代する。
+    def resolve_pending_interrupts(self, ejectpack_flag: Interrupt) -> None:
+        """だっしゅつパック・ききかいひ／にげごしの割り込みがなくなるまで再帰的に解決する。
 
-        まきびし・ステルスロックなどの入場時ダメージで、交代してきた本人自身の
-        ききかいひ・にげごしが発動することがある（docs/spec/abilities/ききかいひ.md
-        「設置技の効果で発動した場合、即座に交代する」）。この`Interrupt.EMERGENCY`は
-        TurnController._run_switch_phase（通常の交代コマンド実行時）や_run_move_phase
-        （PIVOT・だっしゅつボタン交代後）から`run_switch`経由で呼ばれるこのメソッドの
-        中で立つが、ここで解決せずに放置すると`battle.is_new_turn()`
-        （= `not battle.has_interrupt()`）がFalseのまま呼び出し元へ処理が戻ってしまう。
-        `is_new_turn()`は行動順解決・テラスタル・メガシンカ・もう一方のプレイヤーの
-        技実行フェーズ等、多くのフェーズのガード条件に使われているため、解決し忘れると
-        それらのフェーズが丸ごとスキップされ、まだ実行されていない行動コマンドが
-        pop_command()されないまま予約リストに残留する（次ターンの新しいコマンドの手前に
-        古いコマンドが残り、交代後のポケモンに対して不正なインデックスで解決され
-        IndexErrorになる。fuzz seed=117420 で発見）。そのため、この交代でさらに
-        入場時ダメージを受けて連鎖的にききかいひが発動する可能性も含め、発動しなく
-        なるまで繰り返し解決する。
+        交代・メガシンカなど「ポケモンの状態が変わる処理」の直後には、その着地処理
+        （ON_SWITCH_IN・ON_ABILITY_ENABLED等）でさらに別のポケモンのだっしゅつパック
+        （`Interrupt.EJECTPACK_REQUESTED`）やききかいひ・にげごしの緊急交代
+        （`Interrupt.EMERGENCY`）の発動条件が新たに満たされることがある
+        （まきびし・ステルスロックなどの入場時ダメージ、いかく等の能力低下）。
+
+        これらを解決せずに呼び出し元へ処理を戻すと`battle.is_new_turn()`
+        （= `not battle.has_interrupt()`）がFalseのままになる。`is_new_turn()`は
+        行動順解決・テラスタル・メガシンカ・技実行フェーズ等、TurnControllerの
+        多くのフェーズのガード条件に使われているため、解決し忘れるとそれらの
+        フェーズが丸ごとスキップされ、まだ実行されていない行動コマンドが
+        pop_command()されないまま予約リストに残留してしまう（次ターンの新しい
+        コマンドの手前に古いコマンドが残り、交代後のポケモンに対して不正な
+        インデックスで解決されIndexErrorになる。fuzz seed=23090, 117420 で発見）。
+
+        過去はだっしゅつパック用・ききかいひ用に別々のループを個別実装しており
+        （`_resolve_ejectpack_after_switch` / `_resolve_emergency_after_switch`）、
+        新しい呼び出し元（TurnController._run_megaevolve_phase等）を追加するたびに
+        同種のループを手書きする再発パターンになっていた（fuzz seed=147267）。
+        呼び出し元ごとに書き直さずに済むよう、この1メソッドに一元化してある。
+
+        Args:
+            ejectpack_flag: だっしゅつパックの発動条件を満たしたポケモンに割り当てる
+                割り込みフラグ。呼び出し元のフェーズに応じた値
+                （`Interrupt.EJECTPACK_ON_AFTER_SWITCH` /
+                `Interrupt.EJECTPACK_ON_AFTER_MEGAEVOLVE` 等）を渡す。
 
         Note:
+            ループ条件は `Interrupt.EJECTPACK_REQUESTED` / `Interrupt.EMERGENCY` の
+            有無に限定する必要がある。`battle.has_interrupt()`（全プレイヤーの割り込み
+            状態を問わず判定）を条件に使うと、まだ処理順が回ってきていない別プレイヤーの
+            交代技（PIVOT等）による割り込みフラグが残っている間、このループが解消不能な
+            条件で回り続けて無限ループになる（このメソッドが処理できるのは
+            EJECTPACK_REQUESTED・EMERGENCYのみで、PIVOT等の他の割り込み種別は
+            ここでは解決されないため）。
+
             瀕死交代（`run_faint_switch`）はこのメソッドを経由しない別経路
             （`process_event_on_each_switch=False`によるON_SWITCH_INの遅延・一括発火）
-            で、`run_faint_switch`自身の再帰処理により同種の連鎖を解決している。
+            を使うが、そちらも本メソッドを呼び出した上で、さらに
+            `run_faint_switch`自身の再帰処理により同種の連鎖を解決している。
         """
-        while any(
-            state.interrupt == Interrupt.EMERGENCY
-            for state in self.battle.player_states.values()
-        ):
-            self.run_interrupt_switch(Interrupt.EMERGENCY)
-
-    def _resolve_ejectpack_after_switch(self):
-        """だっしゅつパックのリクエストがなくなるまで再帰的に交代する。
-
-        ON_SWITCH_INイベント発火後（着地処理後）に新たに発生した
-        `Interrupt.EJECTPACK_REQUESTED` を解決する。`_process_events_after_switch`
-        （通常の交代経路）と `run_interrupt_switch` の遅延発火経路
-        （`process_event_on_each_switch=False`、瀕死交代で使用）の両方から
-        呼ばれる共通処理。
-
-        Note:
-            ループ条件は `Interrupt.EJECTPACK_REQUESTED` の有無に限定する必要がある。
-            `battle.has_interrupt()`（全プレイヤーの割り込み状態を問わず判定）を条件に
-            使うと、まだ処理順が回ってきていない別プレイヤーの交代技（PIVOT等）による
-            割り込みフラグが残っている間、このループが解消不能な条件で回り続けて
-            無限ループになる（このループが処理できるのは EJECTPACK_REQUESTED のみで、
-            PIVOT 等の他の割り込み種別はここでは解決されないため）。
-        """
-        while any(
-            state.interrupt == Interrupt.EJECTPACK_REQUESTED
-            for state in self.battle.player_states.values()
-        ):
-            flag = Interrupt.EJECTPACK_ON_AFTER_SWITCH
-            self.override_ejectpack_interrupt(flag)
-            self.run_interrupt_switch(flag)
+        settled = False
+        while not settled:
+            settled = True
+            if any(
+                state.interrupt == Interrupt.EJECTPACK_REQUESTED
+                for state in self.battle.player_states.values()
+            ):
+                self.override_ejectpack_interrupt(ejectpack_flag)
+                self.run_interrupt_switch(ejectpack_flag)
+                settled = False
+            if any(
+                state.interrupt == Interrupt.EMERGENCY
+                for state in self.battle.player_states.values()
+            ):
+                self.run_interrupt_switch(Interrupt.EMERGENCY)
+                settled = False
 
     def run_initial_switch(self):
         """バトル開始時の初期交代。
@@ -255,12 +260,13 @@ class SwitchManager:
                     EventContext(source=mon),
                 )
 
-        # 上記の着地処理（例: ねばねばネットによるすばやさ低下）でだっしゅつパックの
-        # 発動条件が新たに満たされた場合、ここで解決しないと `Interrupt.EJECTPACK_REQUESTED`
-        # が誰にも処理されないまま残留し、次ターンの `is_new_turn()` 判定を壊してしまう
-        # （fuzz seed=23090 で発見）。通常の交代経路（`_process_events_after_switch`）と
-        # 同じ処理を、この遅延発火経路（瀕死交代で使用）でも行う。
-        self._resolve_ejectpack_after_switch()
+        # 上記の着地処理（例: ねばねばネットによるすばやさ低下）でだっしゅつパック・
+        # ききかいひの発動条件が新たに満たされた場合、ここで解決しないと割り込み
+        # フラグが誰にも処理されないまま残留し、次ターンの `is_new_turn()` 判定を
+        # 壊してしまう（fuzz seed=23090 で発見）。通常の交代経路
+        # （`_process_events_after_switch`）と共通の解決処理を、この遅延発火経路
+        # （瀕死交代で使用）でも行う。
+        self.resolve_pending_interrupts(Interrupt.EJECTPACK_ON_AFTER_SWITCH)
 
     def run_faint_switch(self, _depth: int = 0):
         """瀕死による交代を実行。
