@@ -13,7 +13,7 @@ from jpoke.types import RoleSpec, Stat, AilmentName, VolatileName, MoveName
 from jpoke.enums import Event, Command, LogCode
 from jpoke.core.handler import Handler, HandlerReturn
 from jpoke.core.log_payload import (
-    VolatilePayload, FailureLogPayload, MoveActionPayload,
+    VolatilePayload, FailureLogPayload, MoveActionPayload, AilmentPayload,
 )
 from jpoke.utils.math import apply_fixed_modifier
 
@@ -628,6 +628,11 @@ def さわぐ_prevent_sleep(battle: Battle, ctx: EventContext, value: Any) -> Ha
         HandlerReturn: ねむりを防ぐ場合は空文字列
     """
     if value == "ねむり":
+        battle.add_event_log(
+            ctx.target,
+            LogCode.AILMENT_PREVENTED,
+            payload=AilmentPayload(ailment=value, display_reason="さわぐ"),
+        )
         return HandlerReturn(value="", stop_event=True)
     return HandlerReturn(value=value)
 

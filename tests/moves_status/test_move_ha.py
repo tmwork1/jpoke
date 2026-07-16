@@ -595,6 +595,23 @@ def test_ハートスワップ_すべての能力ランクが入れ替わる():
     assert defender.boosts["atk"] == 2
     assert defender.boosts["def"] == 0
 
+    # ランク入れ替えが両者それぞれSTAT_CHANGEDログとして記録されること
+    # （回帰テスト: event_log_audit。修正前は直接代入によりログが一切残らなかった）
+    attacker_logs = [
+        log for log in battle.event_logger.logs
+        if log.log == LogCode.STAT_CHANGED and log.pokemon == attacker.name
+    ]
+    defender_logs = [
+        log for log in battle.event_logger.logs
+        if log.log == LogCode.STAT_CHANGED and log.pokemon == defender.name
+    ]
+    assert len(attacker_logs) == 1
+    assert attacker_logs[0].payload.stats == {"atk": -2, "def": -1}
+    assert attacker_logs[0].payload.display_reason == "ハートスワップ"
+    assert len(defender_logs) == 1
+    assert defender_logs[0].payload.stats == {"atk": 2, "def": 1}
+    assert defender_logs[0].payload.display_reason == "ハートスワップ"
+
 
 def test_ハートスワップ_全ランクゼロのとき変化なし():
     """ハートスワップ: 両者のランクがすべて0のとき入れ替えても変化なし"""
@@ -610,6 +627,12 @@ def test_ハートスワップ_全ランクゼロのとき変化なし():
     for stat in ("atk", "def", "spa", "spd", "spe", "accuracy", "evasion"):
         assert attacker.boosts[stat] == 0
         assert defender.boosts[stat] == 0
+
+    # 変化がない場合はSTAT_CHANGEDログを出さないこと
+    assert not [
+        log for log in battle.event_logger.logs
+        if log.log == LogCode.STAT_CHANGED
+    ]
 
 
 def test_ハートスワップ_必中フラグが正しい():
@@ -770,6 +793,16 @@ def test_バトンタッチ_ランクが交代先に引き継がれる():
     new_mon = battle.actives[0]
     assert new_mon.boosts["atk"] == 3
     assert new_mon.boosts["spe"] == 2
+
+    # ランク引き継ぎがSTAT_CHANGEDログとして記録されること
+    # （回帰テスト: event_log_audit。修正前は直接代入によりログが一切残らなかった）
+    logs = [
+        log for log in battle.event_logger.logs
+        if log.log == LogCode.STAT_CHANGED and log.pokemon == new_mon.name
+    ]
+    assert len(logs) == 1
+    assert logs[0].payload.stats == {"atk": 3, "spe": 2}
+    assert logs[0].payload.display_reason == "バトンタッチ"
 
 
 @pytest.mark.parametrize("volatile_name", [
@@ -1533,6 +1566,16 @@ def test_ひっくりかえす_複数ランクが全て反転する():
     assert defender.boosts["atk"] == -3
     assert defender.boosts["def"] == 2
     assert defender.boosts["spe"] == -1
+
+    # ランク反転がSTAT_CHANGEDログとして記録されること
+    # （回帰テスト: event_log_audit。修正前は直接代入によりログが一切残らなかった）
+    logs = [
+        log for log in battle.event_logger.logs
+        if log.log == LogCode.STAT_CHANGED
+    ]
+    assert len(logs) == 1
+    assert logs[0].payload.stats == {"atk": -6, "def": 4, "spe": -2}
+    assert logs[0].payload.display_reason == "ひっくりかえす"
 
 
 def test_びりびりちくちく_ひるみが発動する():

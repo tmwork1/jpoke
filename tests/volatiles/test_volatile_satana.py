@@ -73,6 +73,16 @@ def test_さわぐさわがしい_ねむりを防ぐ(volatile_name):
     )
     assert not battle.ailment_manager.apply(battle.actives[0], "ねむり")
 
+    # ねむり付与阻止がAILMENT_PREVENTEDログとして記録されること
+    # （回帰テスト: event_log_audit。修正前はブロック自体がログに残らなかった）
+    logs = [
+        log for log in battle.event_logger.logs
+        if log.log == LogCode.AILMENT_PREVENTED
+    ]
+    assert len(logs) == 1
+    assert logs[0].payload.ailment == "ねむり"
+    assert logs[0].payload.display_reason == "さわぐ"
+
 
 def test_さわぐ交代時_さわがしいを解除する():
     battle = t.start_battle(

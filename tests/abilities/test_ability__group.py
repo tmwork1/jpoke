@@ -1483,6 +1483,21 @@ def test_揮発状態耐性(ability: str, volatile: VolatileName, result: bool):
     )
     assert battle.volatile_manager.apply(battle.actives[0], volatile) == result
 
+    if not result:
+        # 特性が理由付きでVOLATILE_PREVENTEDを記録した場合、apply()側の汎用
+        # フォールバックログ（VOLATILE_IMMUNE）が重ねて記録されないこと
+        # （回帰テスト: event_log_audit）
+        prevented_logs = [
+            log for log in battle.event_logger.logs
+            if log.log == LogCode.VOLATILE_PREVENTED
+        ]
+        immune_logs = [
+            log for log in battle.event_logger.logs
+            if log.log == LogCode.VOLATILE_IMMUNE
+        ]
+        assert len(prevented_logs) == 1
+        assert immune_logs == []
+
 
 @pytest.mark.parametrize(
     "ability, ailment",

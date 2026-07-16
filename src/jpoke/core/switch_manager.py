@@ -14,6 +14,7 @@ from jpoke.exceptions import InvalidCommandError
 
 from .event_manager import Event
 from .context import EventContext
+from .log_payload import StatChangePayload
 from jpoke.utils import fast_copy
 
 
@@ -88,8 +89,19 @@ class SwitchManager:
         # バトンタッチのランク・volatile を交代先に適用する
         if baton_data:
             # ランク引き継ぎ（クリアボディ等を経由しない直接代入）
+            inherited_ranks = {
+                stat: v for stat, v in baton_data["boosts"].items()
+                if v != new.boosts[stat]
+            }
             for stat, v in baton_data["boosts"].items():
                 new.boosts[stat] = v
+            if inherited_ranks:
+                self.battle.add_event_log(
+                    new, LogCode.STAT_CHANGED,
+                    payload=StatChangePayload(
+                        stats=inherited_ranks, display_reason="バトンタッチ",
+                    ),
+                )
             # volatile 引き継ぎ
             for volatile_name, v_data in baton_data["volatiles"].items():
                 # とくせいなしは、バトン先の特性が protected フラグを持つ場合や

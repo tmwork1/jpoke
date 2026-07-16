@@ -1194,8 +1194,18 @@ def じこあんじ_copy_ranks(battle: Battle, ctx: AttackContext, value: Any) -
     attacker = ctx.attacker
     defender = ctx.defender
     rank_stats: list[Stat] = ["atk", "def", "spa", "spd", "spe", "accuracy", "evasion"]
+    changed = {
+        stat: defender.boosts[stat] - attacker.boosts[stat]
+        for stat in rank_stats
+        if defender.boosts[stat] != attacker.boosts[stat]
+    }
     for stat in rank_stats:
         attacker.boosts[stat] = defender.boosts[stat]
+    if changed:
+        battle.add_event_log(
+            attacker, LogCode.STAT_CHANGED,
+            payload=StatChangePayload(stats=changed, display_reason="じこあんじ"),
+        )
 
     # 急所ランクに関する効果（きゅうしょアップ状態）も第六世代以降コピー対象。
     # Pokemon.critical_rank のセッターはテスト・デバッグ用の直接代入であり、
@@ -2434,7 +2444,28 @@ def ハートスワップ_swap_ranks(battle: Battle, ctx: AttackContext, value: 
     こうげき・ぼうぎょ・とくこう・とくぼう・すばやさ・めいちゅう・かいひの
     ランク変化を互いに交換する。実数値は変化しない。
     """
-    ctx.attacker.boosts, ctx.defender.boosts = ctx.defender.boosts, ctx.attacker.boosts
+    attacker, defender = ctx.attacker, ctx.defender
+    attacker_changed = {
+        stat: defender.boosts[stat] - attacker.boosts[stat]
+        for stat in attacker.boosts
+        if defender.boosts[stat] != attacker.boosts[stat]
+    }
+    defender_changed = {
+        stat: attacker.boosts[stat] - defender.boosts[stat]
+        for stat in defender.boosts
+        if attacker.boosts[stat] != defender.boosts[stat]
+    }
+    attacker.boosts, defender.boosts = defender.boosts, attacker.boosts
+    if attacker_changed:
+        battle.add_event_log(
+            attacker, LogCode.STAT_CHANGED,
+            payload=StatChangePayload(stats=attacker_changed, display_reason="ハートスワップ"),
+        )
+    if defender_changed:
+        battle.add_event_log(
+            defender, LogCode.STAT_CHANGED,
+            payload=StatChangePayload(stats=defender_changed, display_reason="ハートスワップ"),
+        )
     return HandlerReturn(value=value)
 
 
@@ -2552,8 +2583,13 @@ def ひっくりかえす_invert_ranks(battle: Battle, ctx: AttackContext, value
             payload=FailureLogPayload(move=ctx.move.name, display_reason="能力ランクに変化がない"),
         )
         return HandlerReturn(value=False, stop_event=True)
+    changed = {stat: -2 * v for stat, v in mon.boosts.items() if v != 0}
     for stat in mon.boosts:
         mon.boosts[stat] = -mon.boosts[stat]
+    battle.add_event_log(
+        mon, LogCode.STAT_CHANGED,
+        payload=StatChangePayload(stats=changed, display_reason="ひっくりかえす"),
+    )
     return HandlerReturn(value=value)
 
 

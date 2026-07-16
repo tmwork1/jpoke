@@ -11,7 +11,7 @@ from jpoke.model.pokemon import Pokemon
 from jpoke.types import Stat, HPChangeReason, StatChangeReason
 from jpoke.enums import Event, LogCode
 from .context import EventContext
-from jpoke.core.log_payload import HPChangePayload, StatChangePayload
+from jpoke.core.log_payload import HPChangePayload, StatChangePayload, FailureLogPayload
 from jpoke.utils import fast_copy
 
 
@@ -184,6 +184,9 @@ class StatusManager:
             )
             self._events.emit(Event.ON_MODIFY_STAT, ctx, actual_changes)
         else:
-            self.battle.add_event_log(target, LogCode.STAT_CHANGE_BLOCKED)
+            self.battle.add_event_log(
+                target, LogCode.STAT_CHANGE_BLOCKED,
+                payload=FailureLogPayload(display_reason=reason),
+            )
 
         return actual_changes
