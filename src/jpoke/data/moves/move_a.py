@@ -331,6 +331,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         },
     ),
     "アロマミスト": MoveData(
+        flags={"no_effect_in_singles"},  # 味方専用（target=adjacentAlly、自分には使えない）。シングルでは対象不在
         handlers={},  # 追加効果なし
     ),
     "あわ": MoveData(
@@ -400,7 +401,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "いかりのこな": MoveData(
-        flags={"non_copycat"},
+        flags={"non_copycat", "no_effect_in_singles"},  # シングルは対象が元々1体のみでリダイレクト効果が無意味
         handlers={},  # 追加効果なし
     ),
     "いかりのまえば": MoveData(
@@ -875,7 +876,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         category="status",
         pp=40,
         target="self",
-        flags={"non_negoto", "non_copycat"},  # まねっこでコピー不可
+        flags={"non_negoto", "non_copycat", "no_effect_in_singles"},  # まねっこでコピー不可
         handlers={},  # 効果のないわざ（戦闘上の効果なし）
     ),
     "おかたづけ": MoveData(
@@ -891,6 +892,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         }
     ),
     "おさきにどうぞ": MoveData(
+        flags={"no_effect_in_singles"},  # 行動順操作技。シングルは行動者が2体のみで順序が変わらない
         handlers={},  # ダブル専用（本プロジェクトはシングルバトル専用のため対象外）
     ),
     "おしゃべり": MoveData(
