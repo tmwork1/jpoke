@@ -21,6 +21,7 @@ GLOBAL_FIELD: dict[str, FieldData] = {
                 h.じゅうりょく_tick,
                 subject_spec="source:self",
                 priority=140,
+                allow_fainted_subject=True,  # フィールドcountdownはsource(occupant)の生死に関わらず毎ターン進行させる
             ),
         },
     ),
@@ -34,6 +35,7 @@ GLOBAL_FIELD: dict[str, FieldData] = {
                 h.トリックルーム_tick,
                 subject_spec="source:self",
                 priority=140,
+                allow_fainted_subject=True,  # フィールドcountdownはsource(occupant)の生死に関わらず毎ターン進行させる
             ),
         },
     ),
@@ -47,6 +49,7 @@ GLOBAL_FIELD: dict[str, FieldData] = {
                 h.フェアリーロック_tick,
                 subject_spec="source:self",
                 priority=140,
+                allow_fainted_subject=True,  # フィールドcountdownはsource(occupant)の生死に関わらず毎ターン進行させる
             ),
         },
     ),
@@ -68,6 +71,7 @@ GLOBAL_FIELD: dict[str, FieldData] = {
                 h.マジックルーム_tick,
                 subject_spec="source:self",
                 priority=140,
+                allow_fainted_subject=True,  # フィールドcountdownはsource(occupant)の生死に関わらず毎ターン進行させる
             ),
         },
     ),
@@ -81,6 +85,7 @@ GLOBAL_FIELD: dict[str, FieldData] = {
                 h.ワンダールーム_tick,
                 subject_spec="source:self",
                 priority=140,
+                allow_fainted_subject=True,  # フィールドcountdownはsource(occupant)の生死に関わらず毎ターン進行させる
             ),
         },
     ),

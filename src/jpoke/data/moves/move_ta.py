@@ -850,6 +850,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
             Event.ON_MOVE_KO: h.MoveHandler(
                 ha.とどめばり_boost_attacker_atk,
                 priority=50,
+                allow_fainted_subject=True,  # HPコスト技等で自身が瀕死になっても、撃破時(ON_MOVE_KO)の効果は発動する
             )
         }
     ),

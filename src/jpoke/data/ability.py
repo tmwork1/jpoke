@@ -249,10 +249,12 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_CHECK_FLOATING: h.AbilityHandler(
                 h.ふゆう_float,
                 subject_spec="source:self",
+                allow_fainted_subject=True,  # 技のダメージ計算中に使用者が瀕死になっても浮遊判定は維持する
             ),
             Event.ON_MOVE_KO: h.AbilityHandler(
                 h.ビーストブースト_boost_best_stat_on_ko,
                 subject_spec="attacker:self",
+                allow_fainted_subject=True,  # HPコスト技等で自身が瀕死になっても、撃破時(ON_MOVE_KO)の効果は発動する
             ),
         }
     ),
@@ -895,6 +897,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_MOVE_KO: h.AbilityHandler(
                 h.くろのいななき_boost,
                 subject_spec="attacker:self",
+                allow_fainted_subject=True,  # HPコスト技等で自身が瀕死になっても、撃破時(ON_MOVE_KO)の効果は発動する
             )
         }
     ),
@@ -1041,6 +1044,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.さまようたましい_swap_ability_on_contact,
                 subject_spec="defender:self",
                 priority=20,
+                allow_fainted_subject=True,  # 自身が直接攻撃でひんしになった場合でも発動する
             ),
         }
     ),
@@ -1049,6 +1053,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.さめはだ_chip_contact_attacker,
                 subject_spec="defender:self",
+                allow_fainted_subject=True,  # 自身が直接攻撃でひんしになった場合でも発動する
             )
         }
     ),
@@ -1153,6 +1158,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_MOVE_KO: h.AbilityHandler(
                 h.しろのいななき_boost,
                 subject_spec="attacker:self",
+                allow_fainted_subject=True,  # HPコスト技等で自身が瀕死になっても、撃破時(ON_MOVE_KO)の効果は発動する
             )
         }
     ),
@@ -1222,6 +1228,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_MOVE_KO: h.AbilityHandler(
                 h.しろのいななき_boost,
                 subject_spec="attacker:self",
+                allow_fainted_subject=True,  # HPコスト技等で自身が瀕死になっても、撃破時(ON_MOVE_KO)の効果は発動する
             )
         }
     ),
@@ -1294,6 +1301,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_MOVE_KO: h.AbilityHandler(
                 h.じんばいったい_boost,
                 subject_spec="attacker:self",
+                allow_fainted_subject=True,  # HPコスト技等で自身が瀕死になっても、撃破時(ON_MOVE_KO)の効果は発動する
             ),
         }
     ),
@@ -1521,6 +1529,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_HP_CHANGED: h.AbilityHandler(
                 h.スワームチェンジ_revert_form_on_faint,
                 subject_spec="target:self",
+                allow_fainted_subject=True,  # 瀕死になったこと自体がパーフェクトフォルム解除の発動条件
             ),
         }
     ),
@@ -1611,6 +1620,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_MOVE_KO: h.AbilityHandler(
                 h.ソウルハート_boost_spa_on_ko,
                 subject_spec="attacker:self",
+                allow_fainted_subject=True,  # HPコスト技等で自身が瀕死になっても、撃破時(ON_MOVE_KO)の効果は発動する
             ),
             Event.ON_HP_CHANGED: h.AbilityHandler(
                 h.ソウルハート_boost_spa_on_faint,
@@ -1984,6 +1994,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_MOVE_KO: h.AbilityHandler(
                 h.とびだすなかみ_retaliate_on_ko,
                 subject_spec="defender:self",
+                allow_fainted_subject=True,  # 自身が瀕死になった(ON_MOVE_KO)ことがこの効果の発動条件
             ),
         }
     ),
@@ -2009,6 +2020,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.とれないにおい_overwrite_attacker_ability,
                 subject_spec="defender:self",
                 priority=20,
+                allow_fainted_subject=True,  # 自身が直接攻撃でひんしになった場合でも発動する（ミイラ等と同種の効果）
             ),
         }
     ),
@@ -2196,6 +2208,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.ぬめぬめ_lower_spd_on_contact,
                 subject_spec="defender:self",
+                allow_fainted_subject=True,  # 自身が直接攻撃でひんしになった場合でも発動する
             )
         }
     ),
@@ -2391,6 +2404,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_SWITCH_OUT: h.AbilityHandler(
                 h.はらぺこスイッチ_on_switch_out,
                 subject_spec="source:self",
+                allow_fainted_subject=True,  # 瀕死交代でON_SWITCH_OUTが発火した場合もフォルム状態更新が必要
             ),
             Event.ON_TURN_END: h.AbilityHandler(
                 h.はらぺこスイッチ_on_turn_end,
@@ -2650,6 +2664,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_MOVE_KO: h.AbilityHandler(
                 h.ビーストブースト_boost_best_stat_on_ko,
                 subject_spec="attacker:self",
+                allow_fainted_subject=True,  # HPコスト技等で自身が瀕死になっても、撃破時(ON_MOVE_KO)の効果は発動する
             )
         }
     ),
@@ -2847,6 +2862,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_CHECK_FLOATING: h.AbilityHandler(
                 h.ふゆう_float,
                 subject_spec="source:self",
+                allow_fainted_subject=True,  # 技のダメージ計算中に使用者が瀕死になっても浮遊判定は維持する
             )
         }
     ),
@@ -3023,6 +3039,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.ほろびのボディ_apply_perish_song_on_contact,
                 subject_spec="defender:self",
                 priority=20,
+                allow_fainted_subject=True,  # 自身が接触技でひんしになった場合でも発動する
             )
         }
     ),
@@ -3196,6 +3213,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.ミイラ_overwrite_attacker_ability,
                 subject_spec="defender:self",
                 priority=20,
+                allow_fainted_subject=True,  # 自身が直接攻撃でひんしになった場合でも発動する
             ),
         }
     ),
@@ -3422,6 +3440,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_MOVE_KO: h.AbilityHandler(
                 h.ゆうばく_damage_attacker_on_ko,
                 subject_spec="defender:self",
+                allow_fainted_subject=True,  # 自身が瀕死になった(ON_MOVE_KO)ことがこの効果の発動条件
             )
         }
     ),
@@ -3616,6 +3635,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.わたげ_lower_spd_on_hit,
                 subject_spec="defender:self",
+                allow_fainted_subject=True,  # 自身が直接攻撃でひんしになった場合でも発動する
             )
         }
     ),

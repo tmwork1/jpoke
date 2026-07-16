@@ -141,7 +141,8 @@ VOLATILES: dict[str, VolatileData] = {
             Event.ON_MOVE_KO: h.VolatileHandler(
                 h.おんねん_deplete_attacking_move_pp,
                 subject_spec="defender:self",
-                priority=10
+                priority=10,
+                allow_fainted_subject=True,  # 自身が瀕死になった(ON_MOVE_KO)ことがこの効果の発動条件
             ),
         }
     ),
@@ -215,6 +216,7 @@ VOLATILES: dict[str, VolatileData] = {
             Event.ON_DAMAGE_HIT: h.VolatileHandler(
                 h.くちばしキャノン_burn_on_contact,
                 subject_spec="defender:self",
+                allow_fainted_subject=True,  # 使用者が接触技でひんしになった場合でも攻撃者をやけどにする
             ),
             Event.ON_TRY_ACTION: h.VolatileHandler(
                 h.くちばしキャノン_end_heating,
@@ -837,7 +839,8 @@ VOLATILES: dict[str, VolatileData] = {
             Event.ON_MOVE_KO: h.VolatileHandler(
                 h.みちづれ_faint,
                 subject_spec="defender:self",
-                priority=30
+                priority=30,
+                allow_fainted_subject=True,  # 自身が瀕死になった(ON_MOVE_KO)ことがこの効果の発動条件
             ),
             Event.ON_TRY_ACTION: h.VolatileHandler(
                 h.みちづれ_remove,

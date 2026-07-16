@@ -35,7 +35,8 @@ class ItemHandler(Handler):
                  subject_spec: RoleSpec,
                  priority: int = 100,
                  once: bool = False,
-                 ignored_disable_reasons: frozenset[str] = frozenset()) -> None:
+                 ignored_disable_reasons: frozenset[str] = frozenset(),
+                 allow_fainted_subject: bool = False) -> None:
         super().__init__(
             func=func,
             source="item",
@@ -43,6 +44,7 @@ class ItemHandler(Handler):
             priority=priority,
             once=once,
             ignored_disable_reasons=ignored_disable_reasons,
+            allow_fainted_subject=allow_fainted_subject,
         )
 
 def announce_item_triggered(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -226,9 +228,6 @@ def _heal_berry(battle: Battle,
                 confuse_natures: tuple[str, ...] | None = None) -> HandlerReturn:
     mon = ctx.target
     assert mon is not None
-    # ひんし(HP0)になったときは発動しない（設置技等で先にHPが0になった場合を含む）
-    if mon.fainted:
-        return HandlerReturn(value=value)
     denominator = _gluttony_denominator(mon, denominator)
     # value >= mon.max_hp はほおばる等による強制発動（HP閾値チェックを無視する）
     forced = value >= mon.max_hp
@@ -303,9 +302,6 @@ def _boost_on_quarter_hp(battle: Battle,
     """
     mon = ctx.target
     assert mon is not None
-    # ひんし(HP0)になったときは発動しない
-    if mon.fainted:
-        return HandlerReturn(value=value)
     forced = value >= mon.max_hp
     denominator = _gluttony_denominator(mon, 4)
     if not forced:
@@ -427,9 +423,6 @@ def _boost_stat_on_type_hit(battle: Battle,
                             stats: dict[Stat, int]) -> HandlerReturn:
     mon = ctx.defender
     assert mon is not None
-    # ひんし(HP0)になったときは発動しない
-    if mon.fainted:
-        return HandlerReturn(value=value)
     if ctx.move.type == type_:
         changes = battle.modify_stats(mon, stats)
         if changes:  # ランク上限などで不発の場合は消費しない
@@ -558,9 +551,6 @@ def イバンのみ_set_priority_flag(battle: Battle, ctx: EventContext, value: 
     """
     mon = ctx.target
     assert mon is not None
-    # ひんし(HP0)になったときは発動しない
-    if mon.fainted:
-        return HandlerReturn(value=value)
     if ctx.hp_change_reason == "self_attack":
         return HandlerReturn(value=value)
     denominator = _gluttony_denominator(mon, 4)
@@ -921,9 +911,6 @@ def くろいてっきゅう_negate_floating(_battle: Battle, _ctx: EventContext
 def くろいヘドロ_heal_or_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     mon = ctx.source
     assert mon is not None
-    # ひんし(HP0)になったときは発動しない（同ターンの攻撃等で先にHPが0になった場合を含む）
-    if mon.fainted:
-        return HandlerReturn(value=value)
     r = 1/16 if mon.has_type("どく") else -1/8
     if battle.modify_hp(mon, r=r):
         _announce_item_triggered(battle, mon)
@@ -1054,9 +1041,6 @@ def サンのみ_apply_focus_energy(battle: Battle, ctx: EventContext, value: An
     """
     mon = ctx.target
     assert mon is not None
-    # ひんし(HP0)になったときは発動しない
-    if mon.fainted:
-        return HandlerReturn(value=value)
     denominator = _gluttony_denominator(mon, 4)
     if mon.hp * denominator <= mon.max_hp or value >= mon.max_hp:
         if battle.volatile_manager.apply(mon, "きゅうしょアップ", count=2):
@@ -1146,9 +1130,6 @@ def じゃくてんほけん_boost_on_super_effective(battle: Battle, ctx: Attac
     """
     mon = ctx.defender
     assert mon is not None
-    # ひんし(HP0)になったときは発動しない
-    if mon.fainted:
-        return HandlerReturn(value=value)
     if ctx.move.has_flag("fixed_damage"):
         return HandlerReturn(value=value)
     if battle.query.is_super_effective(ctx):
@@ -1177,9 +1158,6 @@ def スターのみ_random_boost(battle: Battle, ctx: EventContext, value: Any) 
     """
     mon = ctx.target
     assert mon is not None
-    # ひんし(HP0)になったときは発動しない
-    if mon.fainted:
-        return HandlerReturn(value=value)
     forced = value >= mon.max_hp
     denominator = _gluttony_denominator(mon, 4)
     if not forced:
@@ -1243,9 +1221,6 @@ def たつじんのおび_boost_super_effective(battle: Battle, ctx: AttackConte
 def たべのこし_heal(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """たべのこし: ターン終了時HP回復"""
     mon = ctx.source
-    # ひんし(HP0)になったときは発動しない（同ターンの攻撃等で先にHPが0になった場合を含む）
-    if mon.fainted:
-        return HandlerReturn(value=value)
     if battle.modify_hp(mon, r=1/16):
         _announce_item_triggered(battle, mon)
     return HandlerReturn(value=value)
@@ -1463,9 +1438,6 @@ def ナゾのみ_heal_on_super_effective(battle: Battle, ctx: AttackContext, val
     """
     mon = ctx.defender
     assert mon is not None
-    # ひんし(HP0)になったときは発動しない
-    if mon.fainted:
-        return HandlerReturn(value=value)
     if ctx.move.has_flag("fixed_damage"):
         return HandlerReturn(value=value)
     # 相手のきんちょうかん・じんばいったいの影響下では発動しない
@@ -1929,9 +1901,6 @@ def ミクルのみ_set_accuracy_flag(battle: Battle, ctx: EventContext, value: 
     """
     mon = ctx.target
     assert mon is not None
-    # ひんし(HP0)になったときは発動しない
-    if mon.fainted:
-        return HandlerReturn(value=value)
     if ctx.hp_change_reason == "self_attack":
         return HandlerReturn(value=value)
     denominator = _gluttony_denominator(mon, 4)

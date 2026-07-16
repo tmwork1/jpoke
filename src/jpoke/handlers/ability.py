@@ -93,7 +93,8 @@ class AbilityHandler(Handler):
                  subject_spec: RoleSpec,
                  priority: int = 100,
                  once: bool = False,
-                 ignored_disable_reasons: frozenset[str] = frozenset()) -> None:
+                 ignored_disable_reasons: frozenset[str] = frozenset(),
+                 allow_fainted_subject: bool = False) -> None:
         super().__init__(
             func=func,
             source="ability",
@@ -101,6 +102,7 @@ class AbilityHandler(Handler):
             priority=priority,
             once=once,
             ignored_disable_reasons=ignored_disable_reasons,
+            allow_fainted_subject=allow_fainted_subject,
         )
 
 def announce_ability_triggered(battle: Battle,
@@ -450,9 +452,6 @@ def アイスフェイス_restore_on_switch_in(battle: Battle, ctx: EventContext
 def アイスボディ_heal(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """アイスボディ特性: ゆき中にターン終了時に最大HPの1/16を回復する。"""
     mon = ctx.source
-    # ひんし(HP0)になったときは発動しない（同ターンの攻撃等で先にHPが0になった場合を含む）
-    if mon.fainted:
-        return HandlerReturn(value=value)
     if (
         battle.weather.name == "ゆき"
         and battle.modify_hp(mon, r=1/16)
@@ -539,9 +538,6 @@ def あめうけざら_heal(battle: Battle, ctx: EventContext, value: Any) -> Ha
     ばんのうがさを持つ場合は雨の恩恵を受けない。
     """
     mon = ctx.source
-    # ひんし(HP0)になったときは発動しない（同ターンの攻撃等で先にHPが0になった場合を含む）
-    if mon.fainted:
-        return HandlerReturn(value=value)
     if not battle.weather_for(mon).rainy:
         return HandlerReturn(value=value)
 
@@ -629,8 +625,6 @@ def いかりのつぼ_max_atk_on_crit(battle: Battle, ctx: AttackContext, value
     if not battle.move_executor.critical:
         return HandlerReturn(value=value)
     mon = ctx.defender
-    if mon.fainted:
-        return HandlerReturn(value=value)
     diff = 6 - mon.boosts["atk"]
     if diff > 0 and battle.modify_stats(mon, {"atk": diff}, source=ctx.attacker):
         _announce_ability_triggered(battle, mon)
@@ -1112,9 +1106,6 @@ def かんそうはだ_change_hp_by_weather(battle: Battle, ctx: EventContext, v
     ばんのうがさを持つ場合は晴れダメージ・雨回復を受けない。
     """
     mon = ctx.source
-    # ひんし(HP0)になったときは発動しない（同ターンの攻撃等で先にHPが0になった場合を含む）
-    if mon.fainted:
-        return HandlerReturn(value=value)
     weather = battle.weather_for(mon)
 
     # あめ中は最大HPの1/8回復
@@ -1356,14 +1347,7 @@ def きんしのちから_restore_foe_ability(battle: Battle, ctx: AttackContext
 
 
 def きんちょうかん_check_nervous(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
-    """きんちょうかん特性: 相手のきのみ使用を禁止する。
-
-    自身がひんしになった瞬間に効果が失われるため、場に留まっている（生存している）
-    ことを確認する。
-    """
-    assert ctx.source is not None
-    if battle.foe(ctx.source).fainted:
-        return HandlerReturn(value=value)
+    """きんちょうかん特性: 相手のきのみ使用を禁止する。"""
     return HandlerReturn(value=True)
 
 
@@ -1497,8 +1481,6 @@ def くだけるよろい_drop_B_boost_S(battle: Battle, ctx: AttackContext, val
     if ctx.move.category != "physical":
         return HandlerReturn(value=value)
     mon = ctx.defender
-    if mon.fainted:
-        return HandlerReturn(value=value)
     battle.modify_stats(mon, {"def": -1}, source=mon)
     if battle.modify_stats(mon, {"spe": +2}, source=mon):
         _announce_ability_triggered(battle, mon)
@@ -1626,9 +1608,6 @@ def サイコメイカー_activate_terrain(battle: Battle, ctx: EventContext, va
 def さいせいりょく_heal_on_withdraw(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """さいせいりょく特性: 交代で引っ込んだとき最大HPの1/3を回復する（かいふくふうじ無効）。"""
     mon = ctx.source
-    # ひんし(HP0)になったときは発動しない（瀕死交代でON_SWITCH_OUTが発火した場合を含む）
-    if mon.fainted:
-        return HandlerReturn(value=value)
     if battle.modify_hp(mon, r=1/3, reason="bench_heal"):
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
@@ -1867,8 +1846,6 @@ def じきゅうりょく_boost_B_on_hit(battle: Battle, ctx: AttackContext, val
     if ctx.substitute_damage:
         return HandlerReturn(value=value)
     mon = ctx.defender
-    if mon.fainted:
-        return HandlerReturn(value=value)
     if battle.modify_stats(mon, {"def": +1}, source=ctx.attacker):
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
@@ -1891,8 +1868,6 @@ def じょうききかん_max_boost_speed(battle: Battle, ctx: AttackContext, va
     if ctx.move.type not in ("みず", "ほのお"):
         return HandlerReturn(value=value)
     mon = ctx.defender
-    if mon.fainted:
-        return HandlerReturn(value=value)
     if battle.modify_stats(mon, {"spe": +6}, source=ctx.attacker):
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
@@ -2223,8 +2198,6 @@ def せいぎのこころ_boost_atk_on_dark(battle: Battle, ctx: AttackContext, 
     if ctx.move.type != "あく":
         return HandlerReturn(value=value)
     mon = ctx.defender
-    if mon.fainted:
-        return HandlerReturn(value=value)
     if battle.modify_stats(mon, {"atk": +1}, source=ctx.attacker):
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
@@ -2954,8 +2927,6 @@ def ねつこうかん_boost_atk_on_fire(battle: Battle, ctx: AttackContext, val
     """
     if ctx.move.type != "ほのお":
         return HandlerReturn(value=value)
-    if ctx.defender.fainted:
-        return HandlerReturn(value=value)
 
     changed = battle.modify_stats(ctx.defender, {"atk": +1}, source=ctx.attacker)
     if not changed:
@@ -3450,8 +3421,6 @@ def びびり_boost_spd_on_fear_move(battle: Battle, ctx: AttackContext, value: 
     if ctx.move.type not in ("あく", "ゴースト", "むし"):
         return HandlerReturn(value=value)
     mon = ctx.defender
-    if mon.fainted:
-        return HandlerReturn(value=value)
     if battle.modify_stats(mon, {"spe": +1}, source=ctx.attacker):
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
@@ -4199,8 +4168,6 @@ def みずがため_boost_B_on_water(battle: Battle, ctx: AttackContext, value: 
     if ctx.move.type != "みず":
         return HandlerReturn(value=value)
     mon = ctx.defender
-    if mon.fainted:
-        return HandlerReturn(value=value)
     if battle.modify_stats(mon, {"def": +2}, source=ctx.attacker):
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
@@ -4258,9 +4225,6 @@ def ミラーアーマー_reflect_stat_drop(battle: Battle, ctx: EventContext, v
 def ムラっけ_boost_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ムラっけ特性: ターン終了時に1能力+2、別の1能力-1する。"""
     mon = ctx.source
-    # ひんし(HP0)になったときは発動しない（同ターンの攻撃等で先にHPが0になった場合を含む）
-    if mon.fainted:
-        return HandlerReturn(value=value)
     stats: tuple[Stat, ...] = ("atk", "def", "spa", "spd", "spe")
     raised_stat: Stat | None = None
     changed = False

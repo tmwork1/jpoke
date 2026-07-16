@@ -23,6 +23,7 @@ TERRAIN: dict[str, FieldData] = {
                 h.tick_terrain,
                 subject_spec="source:self",
                 priority=140,
+                allow_fainted_subject=True,  # フィールドcountdownはsource(occupant)の生死に関わらず毎ターン進行させる
             ),
         },
     ),
@@ -46,6 +47,7 @@ TERRAIN: dict[str, FieldData] = {
                     h.tick_terrain,
                     subject_spec="source:self",
                     priority=140,
+                    allow_fainted_subject=True,  # フィールドcountdownはsource(occupant)の生死に関わらず毎ターン進行させる
                 ),
             ]
         },
@@ -68,6 +70,7 @@ TERRAIN: dict[str, FieldData] = {
                 h.tick_terrain,
                 subject_spec="source:self",
                 priority=140,
+                allow_fainted_subject=True,  # フィールドcountdownはsource(occupant)の生死に関わらず毎ターン進行させる
             ),
         },
     ),
@@ -89,6 +92,7 @@ TERRAIN: dict[str, FieldData] = {
                 h.tick_terrain,
                 subject_spec="source:self",
                 priority=140,
+                allow_fainted_subject=True,  # フィールドcountdownはsource(occupant)の生死に関わらず毎ターン進行させる
             ),
         },
     ),

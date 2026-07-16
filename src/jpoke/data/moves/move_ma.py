@@ -113,8 +113,8 @@ MOVES_MA: dict[MoveName, MoveData] = {
     "まねっこ": MoveData(
         flags={"non_negoto", "non_copycat"},  # まねっこ自身はまねっこでコピー不可
         handlers={
-            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(hs.まねっこ_can_use),
-            Event.ON_STATUS_HIT: h.MoveHandler(hs.まねっこ_execute),
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(hs.まねっこ_can_use, allow_fainted_subject=True),
+            Event.ON_STATUS_HIT: h.MoveHandler(hs.まねっこ_execute, allow_fainted_subject=True),
         },
     ),
     "まほうのこな": MoveData(
@@ -215,6 +215,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
                 ha.ミストバースト_calc_power,
                 subject_spec="attacker:self",
+                allow_fainted_subject=True,  # ON_PAY_HPのHP全消費で使用者が先に瀕死になっても威力計算は行う
             ),
         }
     ),

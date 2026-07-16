@@ -13,6 +13,7 @@ SIDE_FIELD: dict[str, FieldData] = {
                 h.リフレクター_tick,
                 subject_spec="source:self",
                 priority=130,
+                allow_fainted_subject=True,  # フィールドcountdownはsource(occupant)の生死に関わらず毎ターン進行させる
             ),
         },
     ),
@@ -26,6 +27,7 @@ SIDE_FIELD: dict[str, FieldData] = {
                 h.ひかりのかべ_tick,
                 subject_spec="source:self",
                 priority=130,
+                allow_fainted_subject=True,  # フィールドcountdownはsource(occupant)の生死に関わらず毎ターン進行させる
             ),
         },
     ),
@@ -39,6 +41,7 @@ SIDE_FIELD: dict[str, FieldData] = {
                 h.オーロラベール_tick,
                 subject_spec="source:self",
                 priority=130,
+                allow_fainted_subject=True,  # フィールドcountdownはsource(occupant)の生死に関わらず毎ターン進行させる
             ),
         },
     ),
@@ -56,6 +59,7 @@ SIDE_FIELD: dict[str, FieldData] = {
                 h.しんぴのまもり_tick,
                 subject_spec="source:self",
                 priority=130,
+                allow_fainted_subject=True,  # フィールドcountdownはsource(occupant)の生死に関わらず毎ターン進行させる
             ),
         },
     ),
@@ -70,6 +74,7 @@ SIDE_FIELD: dict[str, FieldData] = {
                 h.しろいきり_tick,
                 subject_spec="source:self",
                 priority=130,
+                allow_fainted_subject=True,  # フィールドcountdownはsource(occupant)の生死に関わらず毎ターン進行させる
             ),
         },
     ),
@@ -101,6 +106,7 @@ SIDE_FIELD: dict[str, FieldData] = {
                 h.おいかぜ_tick,
                 subject_spec="source:self",
                 priority=130,
+                allow_fainted_subject=True,  # フィールドcountdownはsource(occupant)の生死に関わらず毎ターン進行させる
             ),
         },
     ),
@@ -110,6 +116,7 @@ SIDE_FIELD: dict[str, FieldData] = {
                 h.ねがいごと_tick,
                 subject_spec="source:self",
                 priority=50,
+                allow_fainted_subject=True,  # フィールドcountdownはsource(occupant)の生死に関わらず毎ターン進行させる
             ),
             Event.ON_FIELD_DEACTIVATE: h.FieldHandler(
                 h.ねがいごと_heal,
@@ -123,6 +130,7 @@ SIDE_FIELD: dict[str, FieldData] = {
                 h.みらいよち_tick,
                 subject_spec="source:self",
                 priority=40,
+                allow_fainted_subject=True,  # フィールドcountdownはsource(occupant)の生死に関わらず毎ターン進行させる
             ),
             Event.ON_FIELD_DEACTIVATE: h.FieldHandler(
                 h.みらいよち_damage,
@@ -136,6 +144,7 @@ SIDE_FIELD: dict[str, FieldData] = {
                 h.はめつのねがい_tick,
                 subject_spec="source:self",
                 priority=40,
+                allow_fainted_subject=True,  # フィールドcountdownはsource(occupant)の生死に関わらず毎ターン進行させる
             ),
             Event.ON_FIELD_DEACTIVATE: h.FieldHandler(
                 h.はめつのねがい_damage,

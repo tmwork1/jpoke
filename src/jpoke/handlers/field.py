@@ -14,12 +14,14 @@ class FieldHandler(Handler):
     def __init__(self,
                  func: Callable,
                  subject_spec: RoleSpec,
-                 priority: int = 100):
+                 priority: int = 100,
+                 allow_fainted_subject: bool = False):
         super().__init__(
             func=func,
             source="field",
             subject_spec=subject_spec,
             priority=priority,
+            allow_fainted_subject=allow_fainted_subject,
         )
 
 def tick_weather(battle: Battle, ctx: EventContext, value: Any):
@@ -182,9 +184,6 @@ def グラスフィールド_boost_move_priority(battle: Battle, ctx: AttackCont
 
 def グラスフィールド_heal(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """グラスフィールドのターン終了時回復"""
-    # ひんし(HP0)になったときは発動しない（同ターンの攻撃等で先にHPが0になった場合を含む）
-    if ctx.source.fainted:
-        return HandlerReturn(value=value)
     if not battle.query.is_floating(ctx.source):
         battle.modify_hp(ctx.source, r=1/16)
     return HandlerReturn(value=value)
@@ -396,9 +395,6 @@ def どくびし_apply_poison(battle: Battle, ctx: EventContext, value: Any) -> 
 
 def ねがいごと_heal(battle: Battle, ctx: EventContext, value: Field) -> HandlerReturn:
     """ねがいごとのターン終了時HP回復"""
-    # ひんし(HP0)になったときは発動しない（同ターンの攻撃等で先にHPが0になった場合を含む）
-    if ctx.source.fainted:
-        return HandlerReturn(value=value)
     battle.modify_hp(ctx.source, v=value.heal)
     return HandlerReturn(value=value)
 

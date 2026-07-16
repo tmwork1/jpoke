@@ -68,6 +68,7 @@ MOVES_A: dict[MoveName, MoveData] = {
                 ha.アイススピナー_clear_terrain,
                 subject_spec="attacker:self",
                 priority=180,
+                allow_fainted_subject=False,  # いのちのたまの反動等で自身がひんしになった場合はフィールドを解除しない
             ),
         }
     ),

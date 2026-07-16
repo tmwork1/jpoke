@@ -31,6 +31,7 @@ WEATHER: dict[str, FieldData] = {
                 h.tick_weather,
                 subject_spec="source:self",
                 priority=10,
+                allow_fainted_subject=True,  # フィールドcountdownはsource(occupant)の生死に関わらず毎ターン進行させる
             ),
         },
     ),
@@ -44,6 +45,7 @@ WEATHER: dict[str, FieldData] = {
                 h.tick_weather,
                 subject_spec="source:self",
                 priority=10,
+                allow_fainted_subject=True,  # フィールドcountdownはsource(occupant)の生死に関わらず毎ターン進行させる
             ),
         },
     ),
@@ -58,6 +60,7 @@ WEATHER: dict[str, FieldData] = {
                     h.tick_weather,
                     subject_spec="source:self",
                     priority=10,
+                    allow_fainted_subject=True,  # フィールドcountdownはsource(occupant)の生死に関わらず毎ターン進行させる
                 ),
                 h.FieldHandler(
                     h.すなあらし_turn_end,
@@ -80,6 +83,7 @@ WEATHER: dict[str, FieldData] = {
                 h.tick_weather,
                 subject_spec="source:self",
                 priority=10,
+                allow_fainted_subject=True,  # フィールドcountdownはsource(occupant)の生死に関わらず毎ターン進行させる
             ),
         },
     ),

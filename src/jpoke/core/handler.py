@@ -48,6 +48,7 @@ class Handler:
     once: bool = False
     skip_subject_check: bool = False  # ハンドラの主体の照合をスキップするか
     ignored_disable_reasons: frozenset[str] = field(default_factory=frozenset)  # 無効化理由のうち無視するもの（例: とくせいガードはぶきように影響されない）
+    allow_fainted_subject: bool = False  # 主体（subject_spec解決先）が瀕死でも発動を許すか（例: ON_MOVE_KOで瀕死になった当人自身が発動する効果）
     role: ContextRole = field(init=False)
     side: Side = field(init=False)
 
