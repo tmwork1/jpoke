@@ -19,6 +19,7 @@ class Interrupt(Enum):
     EJECTPACK_ON_START = auto()
     EJECTPACK_ON_SWITCH_0 = auto()
     EJECTPACK_ON_SWITCH_1 = auto()
+    EJECTPACK_ON_AFTER_MEGAEVOLVE = auto()
     EJECTPACK_ON_AFTER_MOVE_0 = auto()
     EJECTPACK_ON_AFTER_MOVE_1 = auto()
     EJECTPACK_ON_TURN_END = auto()
@@ -31,6 +32,7 @@ class Interrupt(Enum):
             Interrupt.EJECTPACK_ON_START,
             Interrupt.EJECTPACK_ON_SWITCH_0,
             Interrupt.EJECTPACK_ON_SWITCH_1,
+            Interrupt.EJECTPACK_ON_AFTER_MEGAEVOLVE,
             Interrupt.EJECTPACK_ON_AFTER_MOVE_0,
             Interrupt.EJECTPACK_ON_AFTER_MOVE_1,
             Interrupt.EJECTPACK_ON_TURN_END,
