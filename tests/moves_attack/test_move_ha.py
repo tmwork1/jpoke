@@ -849,6 +849,38 @@ def test_はめつのねがい_2回連続使用で失敗する():
     assert battle.move_executor.move_success is False
 
 
+def test_はめつのねがい_こだわりメガネ持ちが使用すると同ターンでロックされる():
+    """はめつのねがい: フィールド設置に成功した使用ターン中に ON_MOVE_END が発火せず
+    こだわり系アイテムのロックがかからない不具合の回帰確認。
+
+    フィールド設置成功分岐は Event.ON_MOVE_CHARGE で stop_event=True を返して
+    move_executor._execute_move を早期returnさせるため、明示的に ON_MOVE_END を
+    発火しないとこだわりロックがかからなかった。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ジバコイル", item_name="こだわりメガネ", move_names=["はめつのねがい"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.has_volatile("こだわり")
+    assert attacker.volatiles["こだわり"].move_name == "はめつのねがい"
+
+
+def test_はめつのねがい_ごりむちゅう持ちが使用すると同ターンでロックされる():
+    """はめつのねがい: こだわり系アイテムと同様、Event.ON_MOVE_ENDでロックする
+    ごりむちゅう特性についても使用ターン中にロックがかかることを確認する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="ごりむちゅう", move_names=["はめつのねがい"])],
+        team1=[Pokemon("フーディン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.has_volatile("ごりむちゅう")
+    assert attacker.volatiles["ごりむちゅう"].move_name == "はめつのねがい"
+
+
 def test_はめつのねがい_使用ターンには攻撃が発動しない():
     """はめつのねがい: 使用ターンには即時攻撃が発動せず、相手にダメージを与えない。"""
     battle = t.start_battle(

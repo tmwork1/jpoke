@@ -2700,6 +2700,15 @@ def はめつのねがい_charge(battle: Battle, ctx: AttackContext, value: Any)
     カウントは3を指定する: ON_TURN_END でのカウントダウンは設置したそのターンの
     終了時にも1回発生するため（使用ターンを含めず2ターン後に着弾させるには、
     使用ターン分の1回＋2ターン分の2回で計3回のカウントダウンが必要）。
+
+    そらをとぶ・ソーラービーム等の「ためターンに入る」二段技（ON_MOVE_CHARGEが
+    Falseを返すとON_MOVE_ENDが発火せず、2ターン目に改めてON_MOVE_ENDが発火して
+    ため状態を解除する設計）とは異なり、はめつのねがいはこの1ターンで行動が
+    完結する（2ターン目に改めて同じ技として実行されることはない）。
+    move_executor._execute_move はON_MOVE_CHARGEがFalseを返した場合ON_MOVE_ENDを
+    発火せずに処理を打ち切るため、ここで明示的にON_MOVE_ENDを発火しないと
+    こだわり系アイテム・ごりむちゅう等のロック付与が行われない
+    （LogInconsistency@move_attack.py:はめつのねがい_charge:2693）。
     """
     foe_side = battle.get_side(ctx.defender)
     field = foe_side.get("はめつのねがい")
@@ -2707,6 +2716,7 @@ def はめつのねがい_charge(battle: Battle, ctx: AttackContext, value: Any)
         damage = battle.roll_damage(ctx.attacker, ctx.defender, ctx.move)
         foe_side.activate("はめつのねがい", 3)
         field.damage = damage
+        battle.events.emit(Event.ON_MOVE_END, ctx)
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -3408,6 +3418,15 @@ def みらいよち_charge(battle: Battle, ctx: AttackContext, value: Any) -> Ha
     カウントは3を指定する: ON_TURN_END でのカウントダウンは設置したそのターンの
     終了時にも1回発生するため（使用ターンを含めず2ターン後に着弾させるには、
     使用ターン分の1回＋2ターン分の2回で計3回のカウントダウンが必要）。
+
+    そらをとぶ・ソーラービーム等の「ためターンに入る」二段技（ON_MOVE_CHARGEが
+    Falseを返すとON_MOVE_ENDが発火せず、2ターン目に改めてON_MOVE_ENDが発火して
+    ため状態を解除する設計）とは異なり、みらいよちはこの1ターンで行動が
+    完結する（2ターン目に改めて同じ技として実行されることはない）。
+    move_executor._execute_move はON_MOVE_CHARGEがFalseを返した場合ON_MOVE_ENDを
+    発火せずに処理を打ち切るため、ここで明示的にON_MOVE_ENDを発火しないと
+    こだわり系アイテム・ごりむちゅう等のロック付与が行われない
+    （LogInconsistency@move_attack.py:はめつのねがい_charge:2693 と同根の不具合）。
     """
     foe_side = battle.get_side(ctx.defender)
     field = foe_side.get("みらいよち")
@@ -3415,6 +3434,7 @@ def みらいよち_charge(battle: Battle, ctx: AttackContext, value: Any) -> Ha
         damage = battle.roll_damage(ctx.attacker, ctx.defender, ctx.move)
         foe_side.activate("みらいよち", 3)
         field.damage = damage
+        battle.events.emit(Event.ON_MOVE_END, ctx)
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
