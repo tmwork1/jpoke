@@ -512,7 +512,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "キラースピン": MoveData(
-        flags={"contact", "secondary_effect"},
+        flags={"contact", "secondary_effect", "spread"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 ha.キラースピン_clear_field,
@@ -894,7 +894,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         }
     ),
     "こごえるかぜ": MoveData(
-        flags={"wind", "secondary_effect"},
+        flags={"wind", "secondary_effect", "spread"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.こごえるかぜ_lower_defender_spe,
@@ -1076,6 +1076,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         }
     ),
     "ゴールドラッシュ": MoveData(
+        flags={"spread"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 ha.ゴールドラッシュ_sharply_lower_attacker_spa,

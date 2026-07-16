@@ -1190,17 +1190,20 @@ def ひるみ_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> 
     return remove_volatile(battle, ctx, value, volatile="ひるみ")
 
 
-def _is_protect_candidate(ctx: EventContext, protect_non_attack: bool) -> bool:
+def _is_protect_candidate(ctx: EventContext, protect_non_attack: bool, is_blocked: bool) -> bool:
     """技がそもそもまもる系の保護判定の対象になり得るかを判定する。
 
     自分自身・味方・場を対象とする技（例: ねむる・つるぎのまい）は、実際の対戦でも
     まもる側の保護判定自体が発生せず、関連するログも一切表示されない。ここで False を
     返した場合、`_run_protect` はログを出さずに技をそのまま継続させる
     （「まもるは失敗した」等の紛らわしいログを防ぐ）。
+
+    is_blocked: 対象となる技かどうかの判定結果（まもるは`ctx.move.is_blocked_by_protect`、
+    ワイドガードは`ctx.move.is_blocked_by_wide_guard`を呼び出し側が渡す）。
     """
     return (
         (protect_non_attack or ctx.move.is_attack)
-        and ctx.move.is_blocked_by_protect
+        and is_blocked
     )
 
 def _run_protect(battle: Battle,
@@ -1209,7 +1212,8 @@ def _run_protect(battle: Battle,
                  stats_change_on_contact: dict[Stat, int] | None = None,
                  ailment_on_contact: AilmentName | None = None,
                  chip_on_contact: float | None = None,
-                 protect_non_attack: bool = True) -> HandlerReturn:
+                 protect_non_attack: bool = True,
+                 is_blocked: bool | None = None) -> HandlerReturn:
     """protect系の共通骨格。
 
     Args:
@@ -1220,8 +1224,14 @@ def _run_protect(battle: Battle,
         ailment_on_contact: 接触時に攻撃者に付与する状態異常名
         chip_on_contact: 接触時に攻撃者の最大HPから削る割合（例: 1/8）
         protect_non_attack: False の場合、変化技を保護しない
+        is_blocked: 対象技かどうかの判定結果。省略時は`ctx.move.is_blocked_by_protect`
+            （target=="foe"の技）を使う。ワイドガードは`ctx.move.is_blocked_by_wide_guard`
+            （"spread"フラグを持つ技）を明示的に渡す。
     """
-    if not _is_protect_candidate(ctx, protect_non_attack):
+    if is_blocked is None:
+        is_blocked = ctx.move.is_blocked_by_protect
+
+    if not _is_protect_candidate(ctx, protect_non_attack, is_blocked):
         # 保護判定の対象外の技（自分・味方・場対象の技等）はログを出さずスルーする
         return HandlerReturn(value=value)
 
@@ -1616,3 +1626,19 @@ def ロックオン_remove_volatile(battle: Battle, ctx: EventContext, value: An
 
 def ロックオン_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return tick_volatile(battle, ctx, value, volatile="ロックオン")
+
+
+def ワイドガード_protect(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ワイドガードの保護判定。
+
+    まもるは`target=="foe"`の技（is_blocked_by_protect）を防ぐが、ワイドガードは
+    技データ上「複数のポケモンが対象になる技」であることを示す`"spread"`フラグ
+    （is_blocked_by_wide_guard）を持つ技を防ぐ。判定基準が異なる点以外は
+    まもる_protectと同じ`_run_protect`骨格を使う（ON_CHECK_PROTECTでの
+    ふかしのこぶし等の貫通判定も共通）。
+    """
+    return _run_protect(battle, ctx, value, is_blocked=ctx.move.is_blocked_by_wide_guard)
+
+
+def ワイドガード_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return remove_volatile(battle, ctx, value, volatile="ワイドガード")

@@ -236,6 +236,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         }
     ),
     "しおふき": MoveData(
+        flags={"spread"},
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
                 ha.しおふき_calc_power,
@@ -275,7 +276,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         }
     ),
     "しっとのほのお": MoveData(
-        flags={"secondary_effect"},
+        flags={"secondary_effect", "spread"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.しっとのほのお_apply_burn_to_defender,
@@ -341,7 +342,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         }
     ),
     "シャカシャカほう": MoveData(
-        flags={"heal", "secondary_effect", "thaw", "self_thaw"},
+        flags={"heal", "secondary_effect", "thaw", "self_thaw", "spread"},
         handlers={
             Event.ON_TRY_ACTION: h.MoveHandler(
                 ha.シャカシャカほう_thaw_attacker,
@@ -531,6 +532,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         }
     ),
     "じしん": MoveData(
+        flags={"spread"},
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
                 ha.reduce_damage_in_double_battle,
@@ -556,7 +558,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         },
     ),
     "じならし": MoveData(
-        flags={"secondary_effect"},
+        flags={"secondary_effect", "spread"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.じならし_lower_defender_spe,
@@ -567,7 +569,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         }
     ),
     "じばく": MoveData(
-        flags={"explosion"},
+        flags={"explosion", "spread"},
         handlers={
             Event.ON_PAY_HP: h.MoveHandler(
                 ha.じばく_pay_hp,
@@ -743,7 +745,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         }
     ),
     "スケイルノイズ": MoveData(
-        flags={"sound"},
+        flags={"sound", "spread"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 ha.スケイルノイズ_lower_attacker_def,

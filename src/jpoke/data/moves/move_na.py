@@ -129,6 +129,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "なみのり": MoveData(
+        flags={"spread"},
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
                 ha.reduce_damage_in_double_battle,
@@ -333,7 +334,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "ねっぷう": MoveData(
-        flags={"wind", "secondary_effect"},
+        flags={"wind", "secondary_effect", "spread"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ねっぷう_apply_burn_to_defender,

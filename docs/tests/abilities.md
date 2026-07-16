@@ -1,6 +1,6 @@
 # abilities
 
-テスト数: 1538
+テスト数: 1539
 
 - [x] あめふらし_強天候は上書き不可
 - [x] あめふらし_通常天候を上書きする(initial_weather=はれ)
@@ -96,6 +96,7 @@
 - [x] ふかしのこぶし_接触技でまもるを貫通(ability_name=ふかしのこぶし, volatile_name=かえんのまもり, move_name=たいあたり)
 - [x] ふかしのこぶし_接触技でまもるを貫通(ability_name=ふかしのこぶし, volatile_name=ニードルガード, move_name=たいあたり)
 - [x] ふかしのこぶし_接触技でまもるを貫通(ability_name=ふかしのこぶし, volatile_name=ファストガード, move_name=マッハパンチ)
+- [x] ふかしのこぶし_接触技でまもるを貫通(ability_name=ふかしのこぶし, volatile_name=ワイドガード, move_name=ワイドブレイカー)
 - [x] ふかしのこぶし_接触技でまもるを貫通(ability_name=かんつうドリル, volatile_name=まもる, move_name=たいあたり)
 - [x] ふかしのこぶし_非接触技はまもるを貫通しない(ability_name=ふかしのこぶし)
 - [x] ふかしのこぶし_非接触技はまもるを貫通しない(ability_name=かんつうドリル)

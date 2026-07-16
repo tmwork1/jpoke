@@ -1006,6 +1006,21 @@ VOLATILES: dict[str, VolatileData] = {
             ),
         }
     ),
+    "ワイドガード": VolatileData(
+        # まもる・ファストガード等と同じprotect系の骨格。判定基準のみ異なる
+        # （is_blocked_by_wide_guard: "spread"フラグを持つ技を防ぐ）。
+        handlers={
+            Event.ON_TRY_MOVE_1: h.VolatileHandler(
+                h.ワイドガード_protect,
+                subject_spec="defender:self",
+                priority=100,
+            ),
+            Event.ON_TURN_END: h.VolatileHandler(
+                h.ワイドガード_remove_volatile,
+                subject_spec="source:self",
+            ),
+        }
+    ),
     "ハロウィン": VolatileData(
         handlers={
             Event.ON_VOLATILE_START: h.VolatileHandler(

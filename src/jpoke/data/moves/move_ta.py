@@ -152,7 +152,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         },
     ),
     "だいばくはつ": MoveData(
-        flags={"explosion"},
+        flags={"explosion", "spread"},
         handlers={
             Event.ON_PAY_HP: h.MoveHandler(
                 ha.だいばくはつ_pay_hp,
@@ -215,7 +215,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         }
     ),
     "だくりゅう": MoveData(
-        flags={"secondary_effect"},
+        flags={"secondary_effect", "spread"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.だくりゅう_lower_defender_accuracy,

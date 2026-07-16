@@ -279,6 +279,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         }
     ),
     "あまいかおり": MoveData(
+        flags={"spread"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.あまいかおり_lower_defender_evasion,
@@ -477,6 +478,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         }
     ),
     "いとをはく": MoveData(
+        flags={"spread"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.いとをはく_lower_defender_spe,
@@ -606,7 +608,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         }
     ),
     "いわなだれ": MoveData(
-        flags={"secondary_effect"},
+        flags={"secondary_effect", "spread"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.いわなだれ_apply_flinch,
@@ -667,7 +669,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         }
     ),
     "うたかたのアリア": MoveData(
-        flags={"sound", "secondary_effect"},
+        flags={"sound", "secondary_effect", "spread"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.うたかたのアリア_cure_defender_burn,
@@ -744,7 +746,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         }
     ),
     "エアカッター": MoveData(
-        flags={"slash", "wind"},
+        flags={"slash", "wind", "spread"},
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
                 ha.reduce_damage_in_double_battle,
@@ -801,7 +803,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         }
     ),
     "エレキネット": MoveData(
-        flags={"secondary_effect"},
+        flags={"secondary_effect", "spread"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.エレキネット_lower_defender_spe,
