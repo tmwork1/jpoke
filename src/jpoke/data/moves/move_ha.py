@@ -65,7 +65,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "ハイパーボイス": MoveData(
-        flags={"sound"},
+        flags={"sound", "spread"},
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
                 ha.reduce_damage_in_double_battle,
@@ -170,7 +170,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         power=55,
         accuracy=95,
         crit_ratio=1,
-        flags={"slash"},
+        flags={"slash", "spread"},
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
                 ha.reduce_damage_in_double_battle,
@@ -198,7 +198,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "はなふぶき": MoveData(
-        flags={"wind"},
+        flags={"wind", "spread"},
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
                 ha.reduce_damage_in_double_battle,
@@ -287,7 +287,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         pp=5,
         power=100,
         accuracy=80,
-        flags={"wind", "secondary_effect"},
+        flags={"wind", "secondary_effect", "spread"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.はるのあらし_lower_defender_atk,
@@ -348,7 +348,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ばくおんぱ": MoveData(
-        flags={"sound"},
+        flags={"sound", "spread"},
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
                 ha.reduce_damage_in_double_battle,
@@ -400,7 +400,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "バークアウト": MoveData(
-        flags={"secondary_effect", "sound"},
+        flags={"secondary_effect", "sound", "spread"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.バークアウト_lower_defender_spa,
@@ -429,7 +429,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "パラボラチャージ": MoveData(
-        flags={"heal"},
+        flags={"heal", "spread"},
         handlers={
             Event.ON_HIT: h.MoveHandler(ha.パラボラチャージ_drain, priority=20),
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
@@ -690,6 +690,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         },
     ),
     "ふしょくガス": MoveData(
+        flags={"spread"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ふしょくガス_remove_item,
@@ -700,7 +701,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ふぶき": MoveData(
-        flags={"wind", "secondary_effect"},
+        flags={"wind", "secondary_effect", "spread"},
         handlers={
             Event.ON_MODIFY_ACCURACY: h.MoveHandler(
                 ha.ふぶき_accuracy,
@@ -741,7 +742,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "フラフラダンス": MoveData(
-        flags={"dance", "unreflectable"},
+        flags={"dance", "unreflectable", "spread"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.フラフラダンス_apply,
@@ -838,7 +839,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ふんえん": MoveData(
-        flags={"secondary_effect"},
+        flags={"secondary_effect", "spread"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ふんえん_apply_burn_to_defender,
@@ -849,6 +850,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ふんか": MoveData(
+        flags={"spread"},
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
                 ha.ふんか_calc_power,
@@ -912,6 +914,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         pp=8,
         power=120,
         accuracy=100,
+        flags={"spread"},
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
                 ha.reduce_damage_in_double_battle,
@@ -954,7 +957,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ぶんまわす": MoveData(
-        flags={"contact"},
+        flags={"contact", "spread"},
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
                 ha.reduce_damage_in_double_battle,
@@ -986,7 +989,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         },
     ),
     "ヘドロウェーブ": MoveData(
-        flags={"secondary_effect"},
+        flags={"secondary_effect", "spread"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ヘドロウェーブ_apply_poison_to_defender,
@@ -1064,7 +1067,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ほうでん": MoveData(
-        flags={"secondary_effect"},
+        flags={"secondary_effect", "spread"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ほうでん_apply_paralysis_to_defender,

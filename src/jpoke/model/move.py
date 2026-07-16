@@ -135,6 +135,25 @@ class Move(GameEffect):
         )
 
     @property
+    def is_blocked_by_wide_guard(self) -> bool:
+        """技がワイドガードで防がれるかどうかを判定する。
+
+        本プロジェクトはシングルバトル専用で `target` にダブル・トリプルバトルの
+        「相手全体」「自分以外全体」区分（スプレッド技かどうか）を持たないため、
+        `"spread"` フラグ（技データ上、実機でダブル時に複数対象になる技へ個別付与）で判定する。
+        `unprotectable` フラグを持つ技はスプレッド技であってもワイドガードで防げない
+        （まもる等と同じ除外ルール。ドラゴンアローはそもそも `"spread"` フラグを
+        持たないため、この判定に依らず自然に対象外になる）。
+
+        Returns:
+            技がワイドガードで防がれる場合True
+        """
+        return (
+            self.has_flag("spread")
+            and not self.has_flag("unprotectable")
+        )
+
+    @property
     def is_reflectable(self) -> bool:
         """技がマジックコート・マジックミラーで跳ね返されるかどうかを判定する。
 

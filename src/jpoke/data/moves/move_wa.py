@@ -18,9 +18,15 @@ MOVES_WA: dict[MoveName, MoveData] = {
     "ワイドガード": MoveData(
         pp=12,  # champions基準（docs/champions/move_list.txt 970行目）。Gen9本家は10
         target="own_side",  # 味方の場が対象。foe/foe_side ではないためマジックコート等の対象外になる
-        handlers={},  # 本プロジェクトはシングルバトル専用で、本技が防ぐ「複数対象の技」を区別する
-        # ターゲット種別（相手全体・自分以外全体）を技データ上でモデル化していないため、
-        # 現状は防御対象となる技が存在せず実質効果なし。詳細はdocs/spec/moves/ワイドガード.md参照
+        flags={"protect"},  # まもる系共通の連続使用失敗チェック対象（docs/spec/moves/ワイドガード.md参照）
+        handlers={
+            Event.ON_TRY_MOVE_2: h.MoveHandler(
+                hs.まもる系_連続使用失敗チェック,
+            ),
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.ワイドガード_apply,
+            ),
+        },
     ),
     "ワイドフォース": MoveData(
         handlers={
@@ -34,7 +40,7 @@ MOVES_WA: dict[MoveName, MoveData] = {
         },
     ),
     "ワイドブレイカー": MoveData(
-        flags={"contact", "secondary_effect"},
+        flags={"contact", "secondary_effect", "spread"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ワイドブレイカー_lower_defender_atk,
@@ -53,7 +59,7 @@ MOVES_WA: dict[MoveName, MoveData] = {
         }
     ),
     "わたほうし": MoveData(
-        flags={"powder"},
+        flags={"powder", "spread"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.わたほうし_lower_defender_spe,

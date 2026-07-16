@@ -72,7 +72,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
         category="status",
         pp=40,
         accuracy=100,
-        flags={"sound"},
+        flags={"sound", "spread"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.なきごえ_lower_defender_atk,
@@ -129,6 +129,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "なみのり": MoveData(
+        flags={"spread"},
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
                 ha.reduce_damage_in_double_battle,
@@ -211,6 +212,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
         category="status",
         pp=30,
         accuracy=100,
+        flags={"spread"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.にらみつける_lower_defender_def,
@@ -294,7 +296,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
         pp=10,
         power=100,
         accuracy=80,
-        flags={"wind", "secondary_effect"},
+        flags={"wind", "secondary_effect", "spread"},
         handlers={
             Event.ON_MODIFY_ACCURACY: h.MoveHandler(
                 ha.ねっさのあらし_accuracy,
@@ -333,7 +335,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "ねっぷう": MoveData(
-        flags={"wind", "secondary_effect"},
+        flags={"wind", "secondary_effect", "spread"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ねっぷう_apply_burn_to_defender,
