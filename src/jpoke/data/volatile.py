@@ -144,6 +144,10 @@ VOLATILES: dict[str, VolatileData] = {
                 h.かいふくふうじ_block_heal,
                 subject_spec="target:self",
             ),
+            Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
+                h.かいふくふうじ_modify_command_options,
+                subject_spec="source:self",
+            ),
             Event.ON_TRY_ACTION: h.VolatileHandler(
                 h.かいふくふうじ_try_action,
                 subject_spec="attacker:self",
