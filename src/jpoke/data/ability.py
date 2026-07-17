@@ -997,6 +997,9 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_HIT: h.AbilityHandler(
                 h.こぼれダネ_set_grassy_terrain,
                 subject_spec="defender:self",
+                # 攻撃技でHPが0になったときも特性を発動させてからひんしになる仕様
+                # （docs/spec/abilities/こぼれダネ.md）のため、瀕死主体でも発動を許可する。
+                allow_fainted_subject=True,
             )
         }
     ),
@@ -1481,6 +1484,9 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_HIT: h.AbilityHandler(
                 h.すなはき_set_sandstorm,
                 subject_spec="defender:self",
+                # 攻撃技でHPが0になったときも特性を発動させてからひんしになる仕様
+                # （docs/spec/abilities/すなはき.md）のため、瀕死主体でも発動を許可する。
+                allow_fainted_subject=True,
             )
         }
     ),
@@ -2101,6 +2107,9 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_HIT: h.AbilityHandler(
                 h.どくげしょう_set_toxic_spikes,
                 subject_spec="defender:self",
+                # 物理技でHPが0になったときも特性を発動させてからひんしになる仕様
+                # （docs/spec/abilities/どくげしょう.md）のため、瀕死主体でも発動を許可する。
+                allow_fainted_subject=True,
             )
         }
     ),
@@ -2140,6 +2149,9 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_HIT: h.AbilityHandler(
                 h.どくのトゲ_maybe_poison_attacker,
                 subject_spec="defender:self",
+                # 攻撃技でひんしになったときも発動する仕様
+                # （docs/spec/abilities/どくのトゲ.md）のため、瀕死主体でも発動を許可する。
+                allow_fainted_subject=True,
             )
         }
     ),
@@ -2744,6 +2756,9 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_HIT: h.AbilityHandler(
                 h.ふうりょくでんき_on_damage,
                 subject_spec="defender:self",
+                # 風の技でHPが0になったときも特性が発動してからひんしになる仕様
+                # （docs/spec/abilities/ふうりょくでんき.md）のため、瀕死主体でも発動を許可する。
+                allow_fainted_subject=True,
             ),
             Event.ON_FIELD_ACTIVATE: h.AbilityHandler(
                 h.ふうりょくでんき_on_field_activate,
@@ -3057,6 +3072,9 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_HIT: h.AbilityHandler(
                 h.ほのおのからだ_maybe_burn_attacker,
                 subject_spec="defender:self",
+                # 攻撃技でひんしになったときも発動する仕様
+                # （docs/spec/abilities/ほのおのからだ.md）のため、瀕死主体でも発動を許可する。
+                allow_fainted_subject=True,
             )
         }
     ),

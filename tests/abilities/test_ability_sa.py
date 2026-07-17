@@ -1570,6 +1570,24 @@ def test_すなはき_変化技を受けても発動しない():
     assert battle.weather.name == ""
 
 
+def test_すなはき_致命打でも発動する():
+    """すなはき: 攻撃技でHPが0になったときも、特性を発動させてからひんしになる
+    （seed=2225 fuzz_log 回帰テスト。docs/spec/abilities/すなはき.md）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="すなはき")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+    )
+    defender = battle.actives[0]
+    defender.hp = 1
+    t.fix_damage(battle, 9999)
+
+    t.run_move(battle, 1)
+
+    assert defender.fainted
+    assert battle.weather.name == "すなあらし"
+    assert battle.weather.count == 5
+
+
 def test_すなはき_被弾ですなあらし発動():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="すなはき")],

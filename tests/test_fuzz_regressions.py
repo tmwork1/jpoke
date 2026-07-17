@@ -851,6 +851,39 @@ def test_すいすい_両者ばんのうがさ所持時に素早さ計算がRecu
     assert order == [pikachu, luna]
 
 
+def test_すなはき_攻撃技で致命打を受けたポケモンのON_HIT特性も瀕死ガードをすり抜けて発動する():
+    """seed=2225 (LogInconsistency@event_manager.py:_check_handler_validity:214) の回帰テスト。
+
+    core/move_executor.py は battle.modify_hp(ctx.defender, ...) をEvent.ON_HIT発火より前に
+    実行する。そのため致命打（防御側のHPを0にする一撃）の場合、ON_HIT発火時点で
+    ctx.defender.fainted が既にTrueになっている。core/event_manager.py の
+    _check_handler_validity はHandler.allow_fainted_subject=Trueが明示されていない限り、
+    subject_specが指すポケモンが瀕死ならハンドラをスキップする一元ガードを持つため、
+    「攻撃技でHPが0になったときも特性を発動させてからひんしになる」仕様
+    （docs/spec/abilities/すなはき.md 等）を持つ Event.ON_HIT + subject_spec="defender:self"
+    の特性が軒並み発動しなくなっていた。
+
+    すなはき・こぼれダネ・どくげしょう・どくのトゲ・ふうりょくでんき・ほのおのからだの
+    6特性にHandler.allow_fainted_subject=Trueを追加して修正した。個別の回帰テストは
+    各特性のテストファイル（例: tests/abilities/test_ability_sa.py の
+    test_すなはき_致命打でも発動する）に追加済みのため、ここでは代表としてすなはきのみを
+    確認する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="すなはき")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+    )
+    defender = battle.actives[0]
+    defender.hp = 1
+    t.fix_damage(battle, 9999)
+
+    t.run_move(battle, 1)
+
+    assert defender.fainted
+    assert battle.weather.name == "すなあらし"
+    assert battle.weather.count == 5
+
+
 def test_ターン終了処理_ON_TURN_ENDの継続ダメージで決着した場合発動アナウンスログが勝敗確定ログより先に記録される():
     """seed=509 (LogInconsistency) の回帰テスト。
 

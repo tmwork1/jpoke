@@ -1915,6 +1915,24 @@ def test_こぼれダネ_みがわりに阻まれたときは発動しない():
     assert battle.terrain.name == ""
 
 
+def test_こぼれダネ_致命打でも発動する():
+    """こぼれダネ: 攻撃技でHPが0になったときも、特性を発動させてからひんしになる
+    （seed=2225 fuzz_log 回帰テスト。docs/spec/abilities/こぼれダネ.md）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="こぼれダネ")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+    )
+    defender = battle.actives[0]
+    defender.hp = 1
+    t.fix_damage(battle, 9999)
+
+    t.run_move(battle, 1)
+
+    assert defender.fainted
+    assert battle.terrain.name == "グラスフィールド"
+    assert battle.terrain.count == 5
+
+
 def test_こぼれダネ_被弾時にグラスフィールドが展開される():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="こぼれダネ")],
