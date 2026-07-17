@@ -1322,6 +1322,25 @@ def test_いにしえのうた_ねむりが発動する():
     assert battle.actives[1].ailment.name == "ねむり"
 
 
+def test_いのちがけ_みがわり状態では実HPにダメージが貫通しない():
+    """いのちがけ: 固定ダメージの計算はみがわりのダメージブロックより先に確定するため、
+    みがわり状態の相手に対しては実HPではなくみがわりがダメージを吸収する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いのちがけ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    attacker.hp = 40
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.has_volatile("みがわり")
+    assert defender.volatiles["みがわり"].hp == 999 - 40
+    assert defender.hp == hp_before
+    assert attacker.hp == 0
+
+
 def test_いのちがけ_与ダメージは現在HPで使用者はひんし():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["いのちがけ"])],

@@ -522,6 +522,7 @@ MOVES_A: dict[MoveName, MoveData] = {
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 ha.いのちがけ_modify_damage,
                 subject_spec="attacker:self",
+                priority=15,
             ),
         }
     ),
