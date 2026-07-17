@@ -4,7 +4,7 @@
 プレイヤー、ポケモン、技、場の状態などを一元管理し、バトルの進行を制御します。
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, cast
 if TYPE_CHECKING:
     from .lethal import LethalResult
     from .context import AttackContext
@@ -1139,7 +1139,7 @@ class Battle:
         if is_active:
             self.events.emit(Event.ON_ABILITY_DISABLED, EventContext(source=source))
             source.ability.unregister_handlers(self.events, source)
-        source.ability = Ability(target.ability.name)
+        source.ability = Ability(cast(AbilityName, target.ability.name))
         if is_active:
             source.ability.register_handlers(self.events, source)
             self.events.emit(Event.ON_ABILITY_ENABLED, EventContext(source=source))
