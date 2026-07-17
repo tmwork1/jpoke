@@ -340,7 +340,14 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             )
         }
     ),
-    "おどりこ": AbilityData(),
+    "おどりこ": AbilityData(
+        handlers={
+            Event.ON_AFTER_ACTION_RESOLVED: h.AbilityHandler(
+                h.おどりこ_copy_dance_move,
+                subject_spec="source:foe",
+            ),
+        },
+    ),
     "おみとおし": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
@@ -579,7 +586,17 @@ ABILITIES: dict[AbilityName, AbilityData] = {
     "かわりもの": AbilityData(
         flags={
             "uncopyable"
-        }
+        },
+        handlers={
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                h.かわりもの_transform_to_opponent,
+                subject_spec="source:self",
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.かわりもの_transform_to_opponent,
+                subject_spec="source:self",
+            ),
+        },
     ),
     "かんそうはだ": AbilityData(
         flags={

@@ -2673,6 +2673,43 @@ def へびにらみ_apply_ailment_to_defender(battle: Battle, ctx: AttackContext
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ")
 
 
+def へんしん_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """へんしんの効果: 相手の見た目・タイプ・特性・技・実数値ステータス・能力ランク補正・
+    性別・体重をコピーする（実体は共有APIのbattle.transform、かわりものと共通）。"""
+    battle.transform(ctx.attacker, ctx.defender)
+    return HandlerReturn(value=value)
+
+
+def へんしん_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """へんしんの失敗条件を判定する。
+
+    - 自身が既にへんしん状態の場合は失敗する。
+    - 対象がみがわり状態の場合は失敗する。
+    - 対象がへんしん状態の場合は失敗する。
+    - 自身または対象がテラスタルしているとき、オーガポン/テラパゴスに対しては失敗する
+      （お互いテラスタルしていなければオーガポンに対しても成功する）。
+    - 自身がステラタイプにテラスタルしているときは失敗する。
+
+    特性イリュージョン（本プロジェクトでは非実装特性）・スターモービル（本プロジェクトの
+    ポケモンデータに未収録の専用フォルム）による失敗条件は、いずれも発生し得ないため対象外。
+    """
+    attacker, defender = ctx.attacker, ctx.defender
+    is_special_form = defender.name.startswith(("オーガポン", "テラパゴス"))
+    if (
+        attacker.has_volatile("へんしん")
+        or defender.has_volatile("みがわり")
+        or defender.has_volatile("へんしん")
+        or ((attacker.is_terastallized or defender.is_terastallized) and is_special_form)
+        or attacker.active_tera_type == "ステラ"
+    ):
+        battle.add_event_log(
+            attacker, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="へんしん")
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def ほおばる_check_defense_max(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ほおばるの失敗条件: ぼうぎょランクがすでに上限の場合に失敗させる。
 
@@ -3156,6 +3193,84 @@ def やどりぎのタネ_can_apply(battle: Battle, ctx: AttackContext, value: A
 
 def ゆきげしき_activate_weather(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return HandlerReturn(value=battle.weather_manager.apply("ゆき", 5, source=ctx.attacker))
+
+
+# ゆびをふるで選ばれない技の名前セット（docs/spec/moves/ゆびをふる.md「選ばれる技の範囲」参照）。
+# 実機Wikiの代表的な分類のみを反映した非網羅的な一覧であり、第五世代以降の伝説・幻ポケモンの
+# 専用技の一部・第八世代以降の一般ポケモン専用技の一部（原作仕様が「一部、全てではない」と
+# 明記する区分）は対象外とする（詳細はdocs/plan/moves/ゆびをふる.md）。
+# まもる系統の技は個別に列挙せず、protectフラグ（MoveData.flags）で動的に判定する。
+_METRONOME_EXCLUDED_MOVES: frozenset[str] = frozenset({
+    # ゆびをふる自身
+    "ゆびをふる",
+    # 他の技が出る技
+    "オウムがえし", "さきどり", "しぜんのちから", "ねごと", "ねこのて", "まねっこ",
+    "へんしん", "ものまね", "スケッチ",
+    # 行動順・反撃に関する技
+    "きあいパンチ", "カウンター", "ミラーコート", "みちづれ", "このゆびとまれ",
+    "でんこうそうげき", "フェイント",
+    # だいばくはつ・こらえる等、わるあがき
+    "だいばくはつ", "じばく", "こらえる", "わるあがき",
+})
+
+
+def ゆびをふる_select_and_execute(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ゆびをふるで選んだ技を実行する。
+
+    「一部を除いたほぼ全ての技」の中からランダムに1つを選び、その場で実行する
+    （docs/spec/moves/ゆびをふる.md「選ばれる技の範囲」。除外の scope は
+    _METRONOME_EXCLUDED_MOVES のコメント参照）。選ばれた技のPPは消費しない
+    （ゆびをふる自体のみ消費）。
+
+    選ばれた技の優先度に関係なくゆびをふる自体の優先度で繰り出される点・じゅうりょく状態や
+    かいふくふうじ等による選ばれた技自体の失敗は、battle.run_moveの通常の技実行フローに
+    そのまま乗せることで自然に処理される（ゆびをふるは既にターン制御の行動順解決で自身の
+    優先度に基づき実行されており、本関数はその場で選んだ技を同期的に実行するだけのため）。
+
+    ゆびをふる自身のON_STATUS_HIT（本ハンドラ）は、この呼び出しが完了するまで
+    イベントマネージャーに登録されたままになる。選ばれた技がstatus技の場合、その
+    ON_STATUS_HITで本ハンドラが再度呼ばれ無限ループになるのを避けるため、
+    ねごと_select_and_executeと同じパターンで実行中だけ一時的に解除する
+    （ON_MODIFY_PP_CONSUMEDは選ばれた技のPP消費を抑制するために実行中も
+    登録したままにする必要があるため対象外）。
+    """
+    from jpoke.model import Move
+    from jpoke.data.move import MOVES
+
+    attacker = ctx.attacker
+    candidates = [
+        name for name, data in MOVES.items()
+        if name not in _METRONOME_EXCLUDED_MOVES and "protect" not in data.flags
+    ]
+    chosen = Move(battle.random.choice(candidates))
+
+    attacker.metronome_active = True
+    suppressed_events = (Event.ON_STATUS_HIT,)
+    handlers_data = ctx.move.data.handlers
+    for event in suppressed_events:
+        handler = handlers_data.get(event)
+        if handler is None:
+            continue
+        for hd in (handler if isinstance(handler, list) else [handler]):
+            battle.events.off(event, hd, attacker)
+    try:
+        battle.run_move(attacker, chosen)
+    finally:
+        for event in suppressed_events:
+            handler = handlers_data.get(event)
+            if handler is None:
+                continue
+            for hd in (handler if isinstance(handler, list) else [handler]):
+                battle.events.on(event, hd, attacker)
+        attacker.metronome_active = False
+    return HandlerReturn(value=value)
+
+
+def ゆびをふる_suppress_pp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ゆびをふるのサブ実行中は選ばれた技のPP消費を0にする。"""
+    if ctx.attacker.metronome_active:
+        return HandlerReturn(value=0, stop_event=True)
+    return HandlerReturn(value=value)
 
 
 def ゆめくい_check_sleep(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

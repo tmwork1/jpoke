@@ -2136,6 +2136,92 @@ def test_へびにらみ_まひ付与():
     assert battle.actives[1].ailment.name == "まひ"
 
 
+def test_へんしん_交代すると変身前の状態に戻る():
+    """へんしん: 交代すると特性・技・実数値ステータス・タイプ・へんしん状態が元に戻る
+    （能力ランク・実数値ステータスは既存のreset_on_switch_outが兼ねる）。"""
+    battle = t.start_battle(
+        team0=[
+            Pokemon("メタモン", ability_name="かそく", move_names=["へんしん", "はねる"]),
+            Pokemon("フシギダネ", move_names=["はねる"]),
+        ],
+        team1=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["でんこうせっか"])],
+    )
+    mon = battle.actives[0]
+    original_types = list(mon.types)
+    original_spe = mon.get_raw_stat(5)
+    t.run_move(battle, 0)
+    assert mon.ability.name == "せいでんき"
+
+    t.run_switch(battle, 0, 1)
+    t.run_switch(battle, 0, 0)
+
+    assert mon.ability.name == "かそく"
+    assert mon.types == original_types
+    assert [m.name for m in mon.moves] == ["へんしん", "はねる"]
+    assert mon.get_raw_stat(5) == original_spe
+    assert not mon.has_volatile("へんしん")
+
+
+def test_へんしん_相手がへんしん状態なら失敗する():
+    """へんしん: 対象が既にへんしん状態の場合は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("メタモン", ability_name="かそく", move_names=["へんしん"])],
+        team1=[Pokemon("ピカチュウ", ability_name="せいでんき")],
+        volatile1={"へんしん": 1},
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 0)
+    assert mon.ability.name == "かそく"
+
+
+def test_へんしん_相手がみがわり状態なら失敗する():
+    """へんしん: 対象がみがわり状態の場合は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("メタモン", ability_name="かそく", move_names=["へんしん"])],
+        team1=[Pokemon("ピカチュウ", ability_name="せいでんき")],
+        volatile1={"みがわり": 1},
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 0)
+    assert mon.ability.name == "かそく"
+
+
+def test_へんしん_相手の姿タイプ特性技実数値ランク性別体重をコピーする():
+    """へんしん: 相手のタイプ・特性・技(PP一律5)・実数値ステータス・能力ランク補正・
+    性別・体重をコピーする。種族自体（self.data）・HP・状態異常は変更しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("メタモン", ability_name="かそく", move_names=["へんしん"])],
+        team1=[Pokemon("ピカチュウ", ability_name="せいでんき",
+                       move_names=["でんこうせっか", "10まんボルト"])],
+    )
+    mon, target = battle.actives
+    battle.modify_stats(target, {"spe": 1})
+    t.run_move(battle, 0)
+
+    assert mon.types == target.types
+    assert mon.ability.name == "せいでんき"
+    assert [m.name for m in mon.moves] == [m.name for m in target.moves]
+    assert all(m.pp == 5 for m in mon.moves)
+    assert mon.get_raw_stat(5) == target.get_raw_stat(5)
+    assert mon.boosts == target.boosts
+    assert mon.gender == target.gender
+    assert mon.weight == target.weight
+    assert mon.has_volatile("へんしん")
+    assert mon.name == "メタモン"  # 種族自体は変わらない
+
+
+def test_へんしん_自身が既にへんしん状態なら失敗する():
+    """へんしん: 自身が既にへんしん状態の場合は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("メタモン", ability_name="かそく", move_names=["へんしん"])],
+        team1=[Pokemon("ピカチュウ", ability_name="せいでんき")],
+        volatile0={"へんしん": 1},
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 0)
+    assert mon.ability.name == "かそく"  # コピーされていない=失敗
+
+
 def test_ほえる_きゅうばんで無効化される():
     """ほえる: 相手が特性きゅうばんの場合、強制交代が無効化される"""
     battle = t.start_battle(

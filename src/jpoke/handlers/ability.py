@@ -817,6 +817,51 @@ def おうごんのからだ_block_status_move(battle: Battle, ctx: AttackContex
     return HandlerReturn(value=value)
 
 
+_ODORIKO_HIDDEN_VOLATILES = ("あなをほる", "そらをとぶ", "ダイビング", "シャドーダイブ")
+
+
+def おどりこ_copy_dance_move(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """おどりこ特性: 自分以外のポケモンが踊り技を成功させた直後、同じ技を自分も使う。
+
+    以下のいずれかに該当する場合は発動しない。
+    - 自身がそらをとぶ等で姿を隠している。
+    - 直前の行動が踊り技（dance フラグ）でない。
+    - 直前の行動が総合的に成功しなかった（命中しなかった・タイプ相性や特性で無効化・
+      まもるで防がれた・技の仕様上不発だった・よこどりで奪われた・マジックコートで
+      反射された等、いずれも `player_states[...].last_move_succeeded` に集約されている）。
+
+    再入防止: 本ハンドラが呼び出す battle.run_move() による追加行動は、
+    Event.ON_AFTER_ACTION_RESOLVED の発火点（TurnController._run_move_phase() の
+    行動枠ループ）を経由しない同期的な呼び出しであるため、ここで実行した踊り技の
+    コピーがさらに別のおどりこ持ちにコピーされることはない
+    （docs/plan/abilities/おどりこ.md「再入防止」）。
+
+    対象は常に「元の使用者」になる。本プロジェクトはシングルバトル専用のため、
+    battle.run_move() が内部で battle.foe(自分) を解決することで自然に定まり、
+    味方関連の対象選択ロジックは不要（docs/spec/abilities/おどりこ.md参照）。
+
+    Note (スコープ外): こだわり系アイテムのロック・メトロノーム（アイテム）の連続
+    使用カウントの継続・ミクルのみ・Z技の付加効果非発動など、一部の道具・特殊仕様との
+    相互作用は対象外とする（詳細は docs/plan/abilities/おどりこ.md）。
+    """
+    dancer = ctx.source
+    mon = battle.foe(dancer)
+    if any(mon.has_volatile(v) for v in _ODORIKO_HIDDEN_VOLATILES):
+        return HandlerReturn(value=value)
+
+    move = dancer.last_move
+    if move is None or not move.has_flag("dance"):
+        return HandlerReturn(value=value)
+
+    if not battle.player_states[battle.get_player(dancer)].last_move_succeeded:
+        return HandlerReturn(value=value)
+
+    from jpoke.model import Move
+    _announce_ability_triggered(battle, mon)
+    battle.run_move(mon, Move(move.name))
+    return HandlerReturn(value=value)
+
+
 def おみとおし_reveal_foe_item(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """おみとおし特性: 場に出たとき相手のアイテムを公開する。"""
     mon = ctx.source
@@ -1093,6 +1138,40 @@ def かるわざ_modify_speed(battle: Battle, ctx: EventContext, value: int) -> 
         return HandlerReturn(value=value)
 
     value *= 2
+    return HandlerReturn(value=value)
+
+
+def かわりもの_transform_to_opponent(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """かわりもの特性: 場に出た瞬間、正面の相手に変身する（実体は共有APIのbattle.transform、
+    技へんしんと共通）。
+
+    以下のいずれかに該当する場合は発動しない。
+    - 正面の相手が瀕死で不在（自分の交代技で倒した相手がまだ交代してきていない等）。
+    - 相手がみがわり状態、または既にへんしん状態。
+    - 自身か相手がテラスタルしているとき、対象がオーガポン/テラパゴスである。
+    - 自身がステラタイプにテラスタルしている。
+
+    特性イリュージョン（本プロジェクトでは非実装特性）・スターモービル（本プロジェクトの
+    ポケモンデータに未収録の専用フォルム）・かがくへんかガスによる特性無効化は、
+    それぞれ発生し得ない、または本ハンドラの登録自体が抑止される（Ability.enabled が
+    Falseの間はGameEffect.register_handlersがハンドラを登録しない）ため個別の判定は不要。
+    """
+    mon = ctx.source
+    if not battle.is_active(mon):
+        return HandlerReturn(value=value)
+    target = battle.foe(mon)
+    if target.fainted:
+        return HandlerReturn(value=value)
+    is_special_form = target.name.startswith(("オーガポン", "テラパゴス"))
+    if (
+        target.has_volatile("みがわり")
+        or target.has_volatile("へんしん")
+        or ((mon.is_terastallized or target.is_terastallized) and is_special_form)
+        or mon.active_tera_type == "ステラ"
+    ):
+        return HandlerReturn(value=value)
+    _announce_ability_triggered(battle, mon)
+    battle.transform(mon, target)
     return HandlerReturn(value=value)
 
 

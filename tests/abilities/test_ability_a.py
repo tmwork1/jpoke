@@ -1431,6 +1431,51 @@ def test_おうごんのからだ_自分対象の変化技は無効化しない(
     assert battle.move_executor.move_applied
 
 
+def test_おどりこ_まもるで防がれた場合は発動しない():
+    """おどりこ: 相手の踊り技がまもるで防がれた場合は発動しない"""
+    dancer = Pokemon("コラッタ", move_names=["アクアステップ"], nature="ようき")
+    dancer.set_evs({"spe": 32})
+    battle = t.start_battle(
+        team0=[dancer],
+        team1=[Pokemon("オドリドリ(めらめら)", ability_name="おどりこ", move_names=["まもる"])],
+    )
+    player0, player1 = battle.players
+    odoriko = battle.actives[1]
+    hp_before = odoriko.hp
+    battle.step({player0: Command.get_move_command(0), player1: Command.get_move_command(0)})
+    assert odoriko.hp == hp_before
+
+
+def test_おどりこ_命中しなかった場合は発動しない():
+    """おどりこ: 相手の踊り技が命中しなかった場合は発動しない"""
+    dancer = Pokemon("コラッタ", move_names=["アクアステップ"], nature="ようき")
+    dancer.set_evs({"spe": 32})
+    battle = t.start_battle(
+        team0=[dancer],
+        team1=[Pokemon("オドリドリ(めらめら)", ability_name="おどりこ", move_names=["はねる"])],
+        accuracy=0,
+    )
+    player0, player1 = battle.players
+    odoriko = battle.actives[1]
+    hp_before = odoriko.hp
+    battle.step({player0: Command.get_move_command(0), player1: Command.get_move_command(0)})
+    assert odoriko.hp == hp_before
+
+
+def test_おどりこ_踊り技成功時に同じ技をコピーする():
+    """おどりこ: 自分以外が踊り技(dance フラグ)を成功させた直後、同じ技を自分も使う"""
+    dancer = Pokemon("コラッタ", move_names=["つるぎのまい"], nature="ようき")
+    dancer.set_evs({"spe": 32})
+    battle = t.start_battle(
+        team0=[dancer],
+        team1=[Pokemon("オドリドリ(めらめら)", ability_name="おどりこ", move_names=["はねる"])],
+    )
+    player0, player1 = battle.players
+    odoriko = battle.actives[1]
+    battle.step({player0: Command.get_move_command(0), player1: Command.get_move_command(0)})
+    assert odoriko.boosts["atk"] == 2
+
+
 def test_おみとおし_アイテムありの相手のアイテムが公開される():
     """おみとおし: 場に出たとき相手のアイテムが公開される。"""
     battle = t.start_battle(
@@ -1704,6 +1749,35 @@ def test_オーラブレイク_自分の攻撃を0_75倍(ability_name: str, move
     )
     t.run_move(battle, 1)
     assert 3072 == battle.damage_calculator.power_modifier
+
+
+def test_かわりもの_場に出た瞬間に正面の相手に変身する():
+    """かわりもの: 場に出た瞬間、正面の相手のタイプ・特性・技・実数値・ランク・性別・体重に変身する"""
+    battle = t.start_battle(
+        team0=[Pokemon("メタモン", ability_name="かわりもの", move_names=["はねる"])],
+        team1=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["でんこうせっか"])],
+    )
+    mon, target = battle.actives
+    assert mon.types == target.types
+    assert mon.ability.name == "せいでんき"
+    assert [m.name for m in mon.moves] == [m.name for m in target.moves]
+    assert mon.has_volatile("へんしん")
+
+
+def test_かわりもの_相手がみがわり状態なら発動しない():
+    """かわりもの: 対象がみがわり状態の場合は発動しない"""
+    battle = t.start_battle(
+        team0=[
+            Pokemon("メタモン", ability_name="かわりもの", move_names=["はねる"]),
+            Pokemon("フシギダネ", move_names=["はねる"]),
+        ],
+        team1=[Pokemon("ピカチュウ", move_names=["みがわり"])],
+    )
+    # メタモンを一旦退避させ、相手にみがわりを張らせてから出し直す
+    t.run_switch(battle, 0, 1)
+    t.run_move(battle, 1, 0)  # みがわり
+    mon = t.run_switch(battle, 0, 0)
+    assert mon.ability.name == "かわりもの"
 
 
 if __name__ == "__main__":
