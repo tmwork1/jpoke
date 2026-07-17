@@ -21,6 +21,7 @@
 
 - [Battle](#battle)
 - [Player](#player)
+- [TreeSearchPlayer](#treesearchplayer)
 - [Pokemon](#pokemon)
 - [Command](#command)
 - [Move](#move)
@@ -57,7 +58,9 @@ Battle(
 - `critical_mode`: 急所判定モード（デフォルト `"normal"`）
 - `damage_roll`: ダメージ乱数モード（デフォルト `"normal"`）
 - `accuracy_fix_threshold`: この値以上の命中率を100%固定にする（`None` なら無効）
-- `effect_chance_threshold`: この値未満の追加効果確率を0%にする（`None` なら無効）
+- `effect_chance_threshold`: この値未満の追加効果確率を0%にする（`None` なら無効）。
+  `accuracy_fix_threshold` と併用すると、命中判定・追加効果発動の両方を排除した
+  完全に決定論的なシナリオを作れる（シナリオ検証・回帰テスト向け）
 - `double_battle`: ダブルバトル向けのダメージ計算補正を有効にするか（デフォルト `False`。
   **対戦進行自体はシングルバトル専用**であることに変わりはない）
 
@@ -106,9 +109,9 @@ winner = battle.winner
 |---|---|
 | `get_active(player)` | 指定プレイヤーの現在場に出ているポケモンを取得（交代中などは `None`） |
 | `get_team(player)` | 指定プレイヤーの対戦中のチーム（選出漏れの控えも含む）を取得。`player.team` は開始前のスナップショットで対戦中は更新されないため、HP・瀕死・状態異常などバトル中の実際の状態を見るにはこちらを使う |
-| `get_available_commands(player)` | 現在使用可能な `Command` のリストを取得 |
+| `get_available_commands(player)` | 現在使用可能な `Command` のリストを取得。`battle.phase` が `"action"`/`"switch"` のときしか呼べず、それ以外の局面（例: 対戦開始前）で呼ぶと `InvalidPhaseError` を送出する。通常は `choose_command()`/`choose_selection()` の中（`battle.step()` 実行中）から呼ぶ形になり、明示的に `phase` を確認する必要はない |
 | `command_to_move(player, command)` | コマンドから `Move` オブジェクトを取得。`choose_command()` の実装で使う |
-| `create_order(player, order, *, terastal=False, megaevol=False)` | poke-env の `create_order()` 互換。`Move`/`Pokemon` オブジェクトから対応する `Command` を組み立てる（`command_to_move()` の逆方向）。`Move` なら技コマンド（`terastal`/`megaevol` 指定でテラスタル/メガシンカを伴う技コマンド）、`Pokemon` なら交代コマンドを返す |
+| `create_order(player, order, *, terastal=False, megaevol=False)` | poke-env の `create_order()` 互換。`Move`/`Pokemon` オブジェクトから対応する `Command` を組み立てる（`command_to_move()` の逆方向）。`Move` なら技コマンド（`terastal`/`megaevol` 指定でテラスタル/メガシンカを伴う技コマンド）、`Pokemon` なら交代コマンドを返す。poke-envでは `Player.choose_move()` が `create_order(move)` で作った `BattleOrder` を返す仕様だが、jpokeの `Command` は技・交代等の選択肢を表す単純な `Enum` 値なので、`battle.create_order(self, move)` の戻り値をそのまま `choose_command()` の戻り値として使える |
 | `is_struggle_only(player)` | わるあがきしか選べない状態かどうかを判定する。`get_available_commands(player)[0]` で代用すると、交代コマンドが同時に存在する場合に誤ってそちらを返すことがあるため、判定にはこちらを使う。実際にわるあがきを選ぶ際は `Command.STRUGGLE` をそのまま使えばよい（`SWITCH_i`/`MOVE_i` と異なりインデックス解決が不要なため、取得専用メソッドは無い） |
 
 ```python
@@ -158,7 +161,7 @@ speed_order = battle.resolve_speed_order()
 
 | API | 概要 |
 |---|---|
-| `calc_lethal(attacker, moves, critical=False, secondary=False, max_attack=10)` | 指定した技（列）を最大 `max_attack` 回撃ち込んだ場合の致死率を計算する。`moves` には技名の文字列・`Move`・`(技, ヒット数)` のタプル、およびそれらのリストを渡せる。`list[LethalResult]` を返す（各要素が1ヒットに対応し、最終的な致死率は `results[-1].lethal_probability`） |
+| `calc_lethal(attacker, moves, critical=False, secondary=False, max_attack=10)` | 指定した技（列）を最大 `max_attack` 回撃ち込んだ場合の致死率を計算する（確定数が出た時点で打ち切る）。`moves` には技名の文字列・`Move`・`(技, ヒット数)` のタプル、およびそれらのリストを渡せる。リストで複数の技を渡した場合はその順番通りに1ラウンドとして使用し（例: `["でんこうせっか", "かみなり"]` は1発目にでんこうせっか、2発目にかみなり）、`max_attack>1` にするとこのラウンド自体を繰り返す。防御側の状態異常・天候ダメージ（どく・やけど・すなあらし等）はダメージに自動的に合算される。`critical` は急所として計算するかどうか、`secondary` は追加効果ハンドラ（やけど付与等、致死率計算に組み込まれている技に限る）を適用するかどうかで、りゅうせいぐんの自傷効果のように攻撃側自身に必ず発生する効果は `secondary` の指定に関わらず常に加味される。`list[LethalResult]` を返す（各要素が1ヒットに対応し、最終的な致死率は `results[-1].lethal_probability`） |
 | `calc_damages(attacker, defender, move, critical=False)` | 乱数によるダメージ幅を考慮した、可能な全ダメージ値のリスト（通常16通り）を返す |
 | `roll_damage(attacker, defender, move, critical=False)` | `calc_damages()` の結果から `option.damage_roll` に従って1つ選んで返す |
 
@@ -174,7 +177,9 @@ one_damage = battle.roll_damage(attacker, defender, "ドラゴンテール")
 ### シナリオ構築系
 
 `Pokemon.hp` への直接代入や `boosts` の直接書き換えは禁止されている。状態を作るときは
-必ず以下の `Battle` 経由のメソッドを使う。
+必ず以下の `Battle` 経由のメソッドを使う（`Pokemon.hp` への直接代入自体は技術的にエラーには
+ならないが、対戦シミュレーション中に使うと `ON_HP_CHANGE` 等のハンドラ発火・ひんし判定が
+スキップされ内部状態が不整合になる。対戦を進行させる文脈では必ずこれらのメソッドを通す）。
 
 | API | 概要 |
 |---|---|
@@ -270,6 +275,12 @@ sim.step({player1: command1, player2: command2})
 # （複製元 battle の履歴は sim には含まれない）
 ```
 
+`copy()` は盤面・ポケモンの状態を複製するが、`Player` インスタンス自体（`battle.players`
+が参照するオブジェクト）は複製せず元のオブジェクトと共有する。そのため複製後の盤面（`sim`）
+に対しても、元の `Battle` で使っていた `player1`/`player2` をそのまま `sim.step({player1: ...})`
+のキーに使える（`TreeSearchPlayer` の探索、`04_janken_nash_cfr.py` のロールアウト評価などが
+この性質を利用している）。
+
 ### poke-env互換プロパティ
 
 `observer`（プレイヤー視点）が設定されている前提のプロパティ群。方策実装（`choose_command()`）に
@@ -279,7 +290,7 @@ sim.step({player1: command1, player2: command2})
 |---|---|
 | `active_pokemon` | observer視点の場のポケモン |
 | `opponent_active_pokemon` | observerから見た相手側の場のポケモン |
-| `available_moves` | observerが選択可能な技（`Move`）のリスト |
+| `available_moves` | observerが選択可能な技（`Move`）のリスト。わるあがきしか選べない場合はわるあがきを表す要素を1件返す（`battle.is_struggle_only(self)` で判定できる） |
 | `available_switches` | observerが交代可能なポケモンのリスト |
 | `side_conditions` | observer側のサイドフィールド状態の辞書 |
 | `team` | observer側のチーム（`list[Pokemon]`。poke-envは`Dict[str, Pokemon]`だが差異あり） |
@@ -301,6 +312,13 @@ class MyPlayer(Player):
 | API | 概要 |
 |---|---|
 | `build_replay_data()` | 対戦を再現するためのリプレイデータ（`BattleReplayData`）を組み立てる。対戦の途中でも呼べる |
+
+`replay_battle(data)`（`jpoke.core.replay` のモジュール関数）は `BattleReplayData`
+（チーム＋シード＋選出＋コマンド列）から新しい `Battle` インスタンスを構築し、記録された
+選出・コマンドを `ReplayPlayer`（方策判断は一切行わず記録済みの選出・コマンドを発生順に
+払い出すだけのプレイヤー）で順に払い出しながら決着まで自動的に進める（手動で `step()` を
+呼ぶ必要はない）。内部的には元のリプレイデータと同じ乱数シードを使うため、決着後の対戦は
+元の対戦とまったく同じ展開になる。
 
 ```python
 from jpoke.core.replay import replay_battle
@@ -389,10 +407,17 @@ class StrongestMovePlayer(Player):
 選出番号を決める `choose_selection(battle)`（デフォルトは先頭から順に選出）も同様の要領で
 オーバーライドできる。
 
+`choose_command()`/`choose_selection()` の中で確率的な判断をしたい場合は `battle.decision_random`
+（`RandomPlayer` 等の既存プレイヤーが行動選択に使っているのと同じ乱数源）を使う。ダメージ・
+命中判定など対戦進行そのものに使われる `battle.random` とは独立な系列なので、`Battle(seed=...)`
+で固定した対戦全体の再現性を壊さずに方策側の乱数だけを扱える。
+
 ### `battle_against()`
 
 poke-env互換: 各対戦相手と `n_battles` 回ずつ対戦し、双方の戦績（`n_finished_battles` /
-`n_won_battles` など）を更新する。ネットワークI/Oがないため同期メソッド。
+`n_won_battles` など）を更新する。ネットワークI/Oがないため同期メソッド。`seed` を
+指定すると、対戦ごとに `seed` + 対戦通番から自動的に派生させたシードを使うため、
+`n_battles` 回すべてが同一の展開になることはない。
 
 ```python
 player1.battle_against(player2, n_battles=100, seed=1)
@@ -444,6 +469,67 @@ print(f"勝率: {player1.win_rate:.1%}")
 `Battle` を（リストとして蓄積するのではなく）`on_battle_end` コールバックで都度受け取る設計に
 している。対戦数に比例して各対戦の `event_logger` の履歴等を保持するリストを返す設計は、
 対戦数が多いほどメモリ使用量が線形に増えるため採用していない。
+
+## TreeSearchPlayer
+
+`src/jpoke/players/tree_search_player.py`。合法手を総当たりで評価する木探索プレイヤーの
+基底クラス（`Player` のサブクラス）。自分の各合法手について、相手が最善（自分にとって
+最悪）の手を選ぶと仮定したミニマックスで評価する。利用者は本クラスを継承し、下記のフック
+メソッドを必要な分だけオーバーライドする（いずれも既定実装があり、オーバーライド不要なら
+そのまま使える）。
+
+### コンストラクタ
+
+```python
+TreeSearchPlayer(
+    username: str,
+    max_plies: int = 1,
+    max_nodes: int | None = None,
+)
+```
+
+- `max_plies`: 探索する手数（1以上）。2にすると相手の応手まで読むが、1手ごとに
+  自分の合法手数×相手の合法手数倍に分岐が増えるため、2以上を指定する場合は
+  評価関数の呼び出し回数に注意する
+- `max_nodes`: 展開してよいノード数（`sim.step()` の呼び出し回数）の上限。`None`
+  なら無制限。到達すると以降の展開を打ち切り、その時点で見つかっている最善手を返す
+- `nodes_expanded` (attribute): 直近の探索で展開したノード数（診断用）
+
+### オーバーライド可能なフック
+
+| API | 概要 |
+|---|---|
+| `evaluate(battle)` | 葉ノードの盤面評価。値が大きいほど自分に有利。既定は自分と相手の残りHP割合の差（決着がついている場合は勝敗を最優先し ±inf を返す） |
+| `fallback(battle)` | (1) 相手の合法手が未公開で `estimate_opponent` でも推定できない局面（実対戦の初手など）、(2) 探索中に発生した割り込み交代（瀕死交代等）による `choose_command()` の再入時、の2箇所で使われる代替方策。既定は `battle.decision_random.choice()` による完全ランダム選択（`Battle(seed=...)` で固定した対戦全体の再現性を壊さないよう、行動選択専用の乱数系列を使う） |
+| `estimate_opponent(battle, opponent)` | 相手の合法手が未公開で空のときに呼ばれる推定フック。既定は何もしない（推定を行わず `fallback` に委譲される）。オーバーライドし、相手ポケモンのモデル（`battle.get_active(opponent)` の moves/item 等）に推定値を書き込むと、そこから実際に選べるコマンドの列挙は `CommandManager` に任せられる。利用者は `Move`/`Item` など見慣れたドメインオブジェクトを推定するだけでよく、`Command` 自体を組み立てる必要はない |
+| `configure_sim(sim)` | `battle.copy()` 直後・`sim.step()` 実行前に呼ばれるフック。既定は何もしない。オーバーライドして、探索中だけ有効にしたい `BattleOption`（命中率固定・ダメージ平均値化など）を `sim` に設定する。実際の `battle` 本体には影響しない |
+
+```python
+from jpoke.players.tree_search_player import TreeSearchPlayer
+
+class KOFocusedPlayer(TreeSearchPlayer):
+    """相手を瀕死にできる手を優先する簡易AI（evaluate()の拡張例）。"""
+
+    def evaluate(self, battle: Battle) -> float:
+        base = super().evaluate(battle)
+        opponent_team = battle.get_team(battle.opponent(self))
+        n_fainted = sum(1 for mon in opponent_team if mon.fainted)
+        return base + n_fainted
+
+ai_player = KOFocusedPlayer("TreeSearchAI", max_plies=1, max_nodes=50)
+```
+
+### デバッグ用メソッド
+
+| API | 概要 |
+|---|---|
+| `evaluate_commands(battle)` | 現在の盤面での自分の各合法手の評価値一覧（`dict[Command, float]`）を返す（デバッグ・読み筋確認用）。`choose_command()` の状態を変更しない副作用なしのメソッド。相手の合法手が未公開で空（`estimate_opponent` で推定してもなお空）の場合は空の辞書を返す。呼び出し中は `max_nodes` によるノード数上限を一時的に無効化し、自分の全合法手×相手の全合法手を `max_plies` の深さまで打ち切りなく評価するため、`choose_command()` の探索とは異なりノード数では打ち切られない点に注意（毎ターンの `choose_command()` 呼び出しごとにこのメソッドも呼ぶデバッグ表示に組み込む場合、探索コストが `max_nodes` で抑えられない） |
+
+```python
+table = ai_player.evaluate_commands(battle)
+if table:
+    print("評価値:", {str(cmd): round(v, 2) for cmd, v in table.items()})
+```
 
 ## Pokemon
 
@@ -542,6 +628,23 @@ print(mon.types, mon.stats)
 同じく対戦を進行させずに状態を直接組み立てるためのメソッドだが、`set_form` は `Pokemon`
 自身のメソッドである点に注意（`Battle` 側に委譲ラッパーは無く、`mon.set_form(...)` の形で
 直接呼ぶ）。
+
+### POKEDEX（図鑑データ）
+
+`jpoke.data.POKEDEX`。バトルを実行せず、ポケモンごとの静的なデータ（持てる特性・
+覚えられる技）だけを調べたい場合に使う。
+
+| API | 概要 |
+|---|---|
+| `POKEDEX[name].abilities` | そのポケモンが持てる特性のリスト（通常特性1・2・隠れ特性の順）。持てる特性が1つや2つしかないポケモンでは、存在しない枠は含まれず短いリストになる |
+| `POKEDEX[name].learnset` | そのポケモンが覚えられる技の集合（`frozenset[MoveName]`）。技数が多く順序も保証されない |
+
+```python
+from jpoke.data import POKEDEX
+
+print(POKEDEX["ピカチュウ"].abilities)          # 持てる特性（通常特性1・2・隠れ特性の順）
+print(len(POKEDEX["ピカチュウ"].learnset))       # 覚えられる技の総数
+```
 
 ## Command
 

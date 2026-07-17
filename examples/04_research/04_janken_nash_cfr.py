@@ -219,10 +219,9 @@ def rollout_value(battle: Battle,
     """盤面を複製し、今ターンに (cmd0, cmd1) を強制した後、以降は現在の
     戦略テーブル（choose_command）に従って決着まで進め、p0視点のポイントを返す。
 
-    `Battle.copy()` は `TreeSearchPlayer` の探索と同じ仕組みで、Player
-    インスタンス（p0, p1）自体は複製されず元のオブジェクトと共有される
-    （盤面・ポケモンの状態だけが複製される）。そのため複製後の盤面
-    （fork）に対しても `fork.step({p0: cmd0, p1: cmd1})` のように元の
+    `Battle.copy()` がPlayerインスタンスを複製せず共有する性質（`TreeSearchPlayer`の
+    探索と同じ仕組み）は docs/api/README.md の Battle「複製系」節を参照。そのため
+    複製後の盤面（fork）に対しても `fork.step({p0: cmd0, p1: cmd1})` のように元の
     p0/p1 をそのままキーに使える。
     """
     fork = battle.copy(reseed=True)
