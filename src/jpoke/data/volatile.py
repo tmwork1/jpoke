@@ -790,6 +790,11 @@ VOLATILES: dict[str, VolatileData] = {
             ),
         }
     ),
+    # へんしん状態であることを示すマーカー専用状態（ハンドラなし）。
+    # 変身の実体（特性・技・実数値ステータス・タイプ・体重・性別のコピーと交代/瀕死時の復元）は
+    # battle.transform()（core/battle.py）と Pokemon.reset_on_switch_out() が担い、
+    # 本状態は「対象がへんしん状態か」を判定する各種失敗条件チェック専用。
+    "へんしん": VolatileData(),
     "ほろびのうた": VolatileData(
         handlers={
             Event.ON_TURN_END: h.VolatileHandler(

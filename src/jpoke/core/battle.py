@@ -25,6 +25,7 @@ from jpoke.utils.math import round_half_down
 
 from jpoke.model.pokemon import Pokemon
 from jpoke.model.move import Move
+from jpoke.model.ability import Ability
 from jpoke.model.field import Field
 
 from .player_state import PlayerState
@@ -1117,6 +1118,47 @@ class Battle:
             実際に変化した能力とランク量の辞書
         """
         return self.status_manager.modify_stats(target, stats, source=source, reason=reason)
+
+    def transform(self, source: Pokemon, target: Pokemon) -> None:
+        """source を target の姿にコピーする（へんしん・かわりもの共有API）。
+
+        コピーするもの: 見た目・タイプ・特性・技（PPは一律5。元の技の最大PPが1の場合のみ1）・
+        実数値ステータス（HPを除く）・能力ランク補正・性別・体重。
+        種族（source.data）自体・HP・レベル・性格・個体値・アイテム・状態異常は変更しない。
+
+        Note:
+            成功条件・失敗条件（対象がみがわり状態・へんしん状態等）の判定は呼び出し元
+            （へんしん・かわりもののcan_apply系ハンドラ）が行う。本メソッドはコピー処理のみを担う。
+
+            「へんしん」揮発状態を付与し、対象が場を離れる（交代・瀕死）と
+            `Pokemon.reset_on_switch_out()` が変身前の技・性別・タイプ/体重上書きを復元する。
+            特性・実数値ステータス・能力ランクは同メソッドの既存リセット処理
+            （交代時に必ず素の特性・種族値ベースの実数値・ランク0へ戻す処理）がそのまま兼ねる。
+        """
+        is_active = self.is_active(source)
+        if is_active:
+            self.events.emit(Event.ON_ABILITY_DISABLED, EventContext(source=source))
+            source.ability.unregister_handlers(self.events, source)
+        source.ability = Ability(target.ability.name)
+        if is_active:
+            source.ability.register_handlers(self.events, source)
+            self.events.emit(Event.ON_ABILITY_ENABLED, EventContext(source=source))
+
+        source._pre_transform_moves = source.moves
+        source._pre_transform_gender = source.gender
+        source.moves = [Move(mv.name) for mv in target.moves]
+        for mv in source.moves:
+            mv.pp = 1 if mv.data.pp == 1 else 5
+
+        source.transform_types = list(target.types)
+        source.transform_weight = target.weight
+        source.gender = target.gender
+
+        for idx in range(1, 6):
+            source.set_raw_stat(idx, target.get_raw_stat(idx))
+        source.boosts = dict(target.boosts)
+
+        self.volatile_manager.apply(source, "へんしん")
 
     def set_ailment(self,
                     target: Pokemon,

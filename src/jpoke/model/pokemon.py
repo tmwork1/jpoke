@@ -111,6 +111,15 @@ class Pokemon:
         self.volatiles: dict[VolatileName, Volatile] = {}
         self.boosts: dict[Stat, int] = {k: 0 for k in STATS}
         self.last_move: Move | None = None
+        # へんしん/かわりものによる変身のコピー元タイプ・体重（種族データ自体=self.dataは
+        # 変更しない）。変身していない間は常にNone。
+        self.transform_types: list[Type] | None = None
+        self.transform_weight: float | None = None
+        # 変身前の技リスト・性別のスナップショット。変身中のみ非None。
+        # reset_on_switch_out() が交代/瀕死時にこの値へ復元する
+        # （特性・実数値ステータス・能力ランクは同メソッドの既存リセット処理がそのまま兼ねる）。
+        self._pre_transform_moves: list[Move] | None = None
+        self._pre_transform_gender: Gender | None = None
         # トップレベルで選択した技（ねごと・さいはい等のネスト実行では更新されない）。
         # アンコール・いちゃもん等「選択した技」を参照すべき効果はこちらを使う。
         self.selected_move: Move | None = None
@@ -131,7 +140,7 @@ class Pokemon:
         memo[id(self)] = new
         fast_copy(self, new, keys_to_deepcopy=[
             'ability', 'item', 'moves', 'ailment', 'volatiles',
-            'last_move', 'selected_move', 'pp_consumed_move',
+            'last_move', 'selected_move', 'pp_consumed_move', '_pre_transform_moves',
         ])
         return new
 
@@ -145,6 +154,17 @@ class Pokemon:
         # switch スコープは登場時だけでなく退場時にも即座にクリアする
         # （タイプ上書き系など、退場直後に戻す必要があるフラグを収容するため）
         self.memory["switch"] = {}
+
+        # へんしん/かわりものによる変身の復元（技・性別・タイプ/体重上書きの解除）。
+        # 特性・実数値ステータス・能力ランクは以下の既存リセット処理がそのまま兼ねる。
+        if self._pre_transform_moves is not None:
+            self.moves = self._pre_transform_moves
+            self.gender = self._pre_transform_gender
+            self._pre_transform_moves = None
+            self._pre_transform_gender = None
+        self.transform_types = None
+        self.transform_weight = None
+
         self.boosts = {k: 0 for k in STATS}
         # ガードシェア・パワーシェア・パワートリックなどによる実数値の書き換えを
         # 種族値ベースの値に再計算してリセットする（交代でリセットされる仕様）
@@ -192,6 +212,15 @@ class Pokemon:
     @sleep_talk_active.setter
     def sleep_talk_active(self, value: bool):
         self.memory["turn"]["sleep_talk_active"] = value
+
+    @property
+    def metronome_active(self) -> bool:
+        """ゆびをふるによるサブ技実行中フラグ。呼び出し元のtry/finallyで必ずFalseに戻される。"""
+        return self.memory["turn"].get("metronome_active", False)
+
+    @metronome_active.setter
+    def metronome_active(self, value: bool):
+        self.memory["turn"]["metronome_active"] = value
 
     @property
     def hits_taken(self) -> int:
@@ -452,8 +481,9 @@ class Pokemon:
         Note:
             特性（ライトメタル、ヘヴィメタル）や
             アイテム（かるいし）の効果を考慮した体重を返す。
+            へんしん/かわりもので変身中は、コピー元の体重（transform_weight）を基準にする。
         """
-        w = self.data.weight
+        w = self.transform_weight if self.transform_weight is not None else self.data.weight
         match self.ability.name:
             case 'ライトメタル':
                 w = int(w*0.5*10)/10
@@ -483,10 +513,13 @@ class Pokemon:
         Note:
             テラスタル、タイプ追加/削除効果、added_types を考慮した現在のタイプを返す。
             added_types は ハロウィン・もりののろい などによって後付けされたタイプを保持する。
+            へんしん/かわりもので変身中は、種族本来のタイプ（self.data.types）の代わりに
+            コピー元のタイプ（transform_types）を基準にする。
         """
+        base_types_ = self.transform_types if self.transform_types is not None else self.data.types
         if self.active_tera_type:
             if self.active_tera_type == 'ステラ':
-                base = self.data.types
+                base = base_types_
             else:
                 base = [self.active_tera_type]
         elif self.move_override_types is not None:
@@ -496,7 +529,7 @@ class Pokemon:
         elif self.volatile_override_type is not None:
             base = [self.volatile_override_type]
         else:
-            base = self.data.types
+            base = base_types_
 
         if not self.added_types:
             result = base

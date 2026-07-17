@@ -773,6 +773,54 @@ def test_ゆきげしき_天気がゆきになる():
     assert battle.weather.count == 5
 
 
+def test_ゆびをふる_まもる系統の技は選ばれない():
+    """ゆびをふる: protectフラグを持つ技（まもる系統）は選択候補から除外される。"""
+    from jpoke.data.move import MOVES
+    from jpoke.handlers.move_status import _METRONOME_EXCLUDED_MOVES
+
+    candidates = [
+        name for name, data in MOVES.items()
+        if name not in _METRONOME_EXCLUDED_MOVES and "protect" not in data.flags
+    ]
+    for protect_move in ("まもる", "みきり", "トーチカ", "キングシールド", "ワイドガード"):
+        assert protect_move not in candidates
+
+
+def test_ゆびをふる_ランダムに選んだ技を実行しPPは自身のみ消費する():
+    """ゆびをふる: ランダムに選んだ技をその場で実行する。選ばれた技のPPは消費せず、
+    ゆびをふる自体のPPのみ1消費される。"""
+    from jpoke.handlers.move_status import _METRONOME_EXCLUDED_MOVES
+
+    battle = t.start_battle(
+        team0=[Pokemon("コラッタ", move_names=["ゆびをふる", "たいあたり"])],
+        team1=[Pokemon("カビゴン", move_names=["はねる"])],
+    )
+    mon = battle.actives[0]
+    metronome = mon.moves[0]
+    tackle = mon.moves[1]
+    battle.random.seed(1)
+    t.run_move(battle, 0, 0)
+
+    assert metronome.pp == metronome.data.pp - 1
+    assert mon.last_move is not None
+    assert mon.last_move.name != "ゆびをふる"
+    assert mon.last_move.name not in _METRONOME_EXCLUDED_MOVES
+    # 選ばれた技はmon.movesに存在しない一時的なインスタンスのため、
+    # mon自身の技のPPには一切影響しない（たいあたりを選んでいないため未消費のまま）
+    assert tackle.pp == tackle.data.pp
+
+
+def test_ゆびをふる_自身とへんしん系統の技は選ばれない():
+    """ゆびをふる: 自身・他の技を呼ぶ/コピーする技（ねごと・まねっこ・へんしん等）は除外される。"""
+    from jpoke.handlers.move_status import _METRONOME_EXCLUDED_MOVES
+
+    for excluded in (
+        "ゆびをふる", "ねごと", "まねっこ", "へんしん", "ものまね", "スケッチ",
+        "オウムがえし", "きあいパンチ", "だいばくはつ", "わるあがき",
+    ):
+        assert excluded in _METRONOME_EXCLUDED_MOVES
+
+
 def test_リサイクル_アイテムを失ったことがない場合は失敗する():
     """リサイクル: アイテムを一度も失っていない場合は失敗する"""
     battle = t.start_battle(

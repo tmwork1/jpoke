@@ -418,6 +418,7 @@ class TurnController:
                 # `_discard_stale_commands` にまとめて任せる。
                 continue
 
+            acted_this_slot = False
             if self.battle.is_new_turn():
                 # コマンドを取得
                 command = state.pop_command()
@@ -429,6 +430,7 @@ class TurnController:
                 # 技を実行
                 move = self.battle.command_to_move(player, command)
                 self.battle.run_move(attacker, move)
+                acted_this_slot = True
 
                 # 今の技の実行で勝敗が確定した場合、割り込み交代を含め
                 # このターンの残りの処理は行わない。
@@ -452,6 +454,14 @@ class TurnController:
 
             # だっしゅつパックによる交代
             self._switch.run_interrupt_switch(interrupt)
+
+            # 今の行動枠で実際に技を実行した場合のみ、その行動（技実行 +
+            # 上記一連の割り込み交代）が完全に終わった直後のフックを発火する
+            # （おどりこ用。docs/spec/abilities/おどりこ.md「おどりこによる行動は、
+            # 元の技による効果やきのみの発動などが完了してから行われる」
+            # 「交代先のポケモンが出てきてからおどりこが発動する」）。
+            if acted_this_slot and self.battle.winner is None:
+                self._events.emit(Event.ON_AFTER_ACTION_RESOLVED, EventContext(source=attacker))
 
             # 相手のメガシンカに伴う いかく の発動などにより、この行動枠へ
             # 到達する前から自分自身に既に Interrupt.EJECTPACK_REQUESTED が

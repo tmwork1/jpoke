@@ -83,9 +83,14 @@ MOVES_YA: dict[MoveName, MoveData] = {
         category="status",
         pp=10,  # champions_move_list.txtに記載なし。第9世代の値を採用（docs/plan/moves/ゆびをふる.md参照）
         flags={"non_negoto", "non_copycat"},  # まねっこでコピー不可（第二世代以降一貫して×）
-        # 実装保留: ほぼ全ての技の中からランダムに1つを選び、その場で実行する大規模な機構が
-        # 必要なため対応を見送る。詳細は docs/plan/moves/ゆびをふる.md 参照（前例: へんしん・スケッチ）。
-        handlers={},
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.ゆびをふる_select_and_execute,
+            ),
+            Event.ON_MODIFY_PP_CONSUMED: h.MoveHandler(
+                hs.ゆびをふる_suppress_pp,
+            ),
+        },
     ),
     "ゆめくい": MoveData(
         type="エスパー",
