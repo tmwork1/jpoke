@@ -578,12 +578,21 @@ class MoveExecutor:
             self._execute_status_hit(ctx)
             return
 
-        self.critical = self._check_critical(ctx)
-        if self.critical:
-            self.battle.add_event_log(
-                ctx.attacker, LogCode.CRITICAL_HIT,
-                payload=MoveActionPayload(move=ctx.move.name)
-            )
+        # 固定ダメージ技（いのちがけ・ちきゅうなげ等）は攻撃・防御・威力・急所・
+        # 乱数補正を一切使用しない（docs/spec/moves/_fixed_damage.md 7.1・7.3）。
+        # 実際のダメージ値はEvent.ON_MODIFY_MOVE_DAMAGEで後から上書きされるため
+        # ここでの急所判定自体は数値に影響しないが、判定・ログを行うと「急所に
+        # 当たった」という誤ったログが記録され、いかりのつぼ等の急所被弾を
+        # トリガーにする効果にも誤って波及しうる（fuzzログ seed=1914で発見）。
+        if ctx.move.has_flag("fixed_damage"):
+            self.critical = False
+        else:
+            self.critical = self._check_critical(ctx)
+            if self.critical:
+                self.battle.add_event_log(
+                    ctx.attacker, LogCode.CRITICAL_HIT,
+                    payload=MoveActionPayload(move=ctx.move.name)
+                )
         damage = self.battle.roll_damage(
             ctx.attacker, ctx.defender, ctx.move, critical=self.critical
         )
