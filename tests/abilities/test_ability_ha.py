@@ -2662,6 +2662,21 @@ def test_プレッシャー_かたやぶりの影響を受けない():
     assert pp_before - move.pp == 2
 
 
+def test_プレッシャー_ねばねばネットは相手の場が対象だがPP消費が増えない():
+    """プレッシャー: ねばねばネットは相手の場全体が対象の技（target="foe_side"）だが、
+    唯一プレッシャーの影響を受けない例外（docs/spec/abilities/プレッシャー.md参照。
+    fuzzログ seed=2020で発見: 通常はPP-1のところPP-2になっていた）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ねばねばネット"])],
+        team1=[Pokemon("カビゴン", ability_name="プレッシャー")],
+    )
+    attacker, _ = battle.actives
+    move = attacker.moves[0]
+    pp_before = move.pp
+    t.run_move(battle, 0)
+    assert pp_before - move.pp == 1
+
+
 def test_プレッシャー_のろいはゴーストタイプのときのみPP消費が増える():
     """プレッシャー: のろいはゴーストタイプが使う"呪い"のときのみ影響を受け、
     それ以外のタイプが使う"鈍い"は影響を受けない"""
