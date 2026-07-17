@@ -3786,8 +3786,13 @@ def プレッシャー_extra_pp(battle: Battle, ctx: AttackContext, value: int) 
     - ふういん: 自分を対象にする技だが、相手のプレッシャーの影響を受ける。
     - のろい: ゴーストタイプが使う"呪い"のときのみ影響を受け、
       それ以外のタイプが使う"鈍い"は影響を受けない（どちらも target="foe"）。
+    - ねばねばネット: 相手の場が対象の技（target="foe_side"）だが、
+      唯一プレッシャーの効果を受けない例外（docs/spec/abilities/プレッシャー.md参照。
+      fuzzログ seed=2020で発見: 通常はPP-1のところPP-2になっていた）。
     """
     move_name = ctx.move.name
+    if move_name == "ねばねばネット":
+        return HandlerReturn(value=value)
     if move_name == "のろい" and not ctx.attacker.has_type("ゴースト"):
         return HandlerReturn(value=value)
     if ctx.move.target not in ("foe", "foe_side", "field") and move_name != "ふういん":
