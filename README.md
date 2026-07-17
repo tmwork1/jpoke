@@ -51,7 +51,7 @@ player2.add_pokemon("フシギダネ", move_names=["たいあたり"])
 battle = Battle(player1, player2)
 battle.start()
 
-while not battle.finished and battle.turn < 100:
+while battle.can_continue(max_turns=100):
     # commands=None の場合は各 Player.choose_command() が使われる
     # （デフォルト実装は利用可能な最初のコマンドを選ぶだけの単純なプレイヤー）
     battle.step()

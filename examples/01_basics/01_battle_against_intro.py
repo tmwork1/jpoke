@@ -1,8 +1,8 @@
 """Player.battle_against() を使い、最小構成でバトルを実行する。
 
-Battle / Player を手動で管理してターンを1つずつ進める方法（02のquickstart）も
-当然必要になるが、まずは対戦相手を指定して勝敗だけを見たい場合に一番手軽な
-battle_against()（poke-env互換API）から始める。
+Battle / Player を直接扱う方法（02以降）も当然必要になるが、まずは対戦相手を
+指定して勝敗だけを見たい場合に一番手軽なbattle_against()（poke-env互換API）
+から始める。
 """
 from __future__ import annotations
 
@@ -20,10 +20,7 @@ def main() -> None:
     # battle_against()は各対戦のBattleを内部で使い捨てるため戻り値はNone。
     # 対戦後のBattleインスタンス自体（ログ等）にアクセスしたい場合は
     # on_battle_end コールバックを渡す（docs/api/README.md の battle_against() 節、
-    # 05_benchmark/01_step_time_benchmark.py の進捗表示例を参照）。ここでは
-    # 最小例として対戦ログを1行で表示するだけにとどめる。
-    # lambda battle: ... は「battleを受け取ってbattle.print_logs("all")を実行するだけの
-    # 名前のない小さな関数」を、defで別途定義せずその場に書ける記法
+    # 05_benchmark/01_step_time_benchmark.py の進捗表示例を参照）
     player1.battle_against(
         player2, seed=1, on_battle_end=lambda battle: battle.print_logs("all")
     )

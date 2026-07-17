@@ -26,14 +26,14 @@ class TreeSearchPlayer(Player):
 
     - `evaluate(battle)`: 葉ノードの盤面評価。既定は残りHP割合差。
     - `fallback(battle)`: 探索できない・再入時の代替方策。既定はランダム。
-    - `opponent_estimator(battle, opponent)`: 相手の合法手が未公開で空の
+    - `estimate_opponent(battle, opponent)`: 相手の合法手が未公開で空の
       ときに呼ばれる推定フック。既定は何もしない（fallback に委譲される）。
     - `configure_sim(sim)`: 各分岐の `sim.step()` 実行前に呼ばれるフック。
       既定は何もしない。
 
     相手の情報が未公開の局面（実対戦の初手など）では、相手の合法手が
     空リストになり探索できない。既定ではこの場合探索を行わず即座に
-    `fallback` に委譲する。`opponent_estimator` をオーバーライドすると、
+    `fallback` に委譲する。`estimate_opponent` をオーバーライドすると、
     相手の推定される技・アイテムなどを盤面（相手ポケモンのモデル）に
     書き込め、そこから実際に選べるコマンドの列挙は `CommandManager` に
     任せられる。利用者は `Move`/`Item` など見慣れたドメインオブジェクトを
@@ -89,7 +89,7 @@ class TreeSearchPlayer(Player):
         """
         return battle.decision_random.choice(self._available_commands_with_recovery(battle, self))
 
-    def opponent_estimator(self, battle: Battle, opponent: Player) -> None:
+    def estimate_opponent(self, battle: Battle, opponent: Player) -> None:
         """相手の合法手が未公開で空のときに呼ばれる推定フック。
 
         既定では何もしない（推定を行わず fallback に委譲される）。
@@ -130,7 +130,7 @@ class TreeSearchPlayer(Player):
 
         `_searching` やノードカウンタなど、探索本体（choose_command）の状態を
         変更しない副作用なしのメソッド。相手の合法手が未公開で空
-        （かつ opponent_estimator も推定できず、推定後もコマンドが空）の
+        （かつ estimate_opponent も推定できず、推定後もコマンドが空）の
         場合は空の辞書を返す。
 
         注意: 呼び出し中は `max_nodes` によるノード数上限を一時的に無効化し、
@@ -167,15 +167,15 @@ class TreeSearchPlayer(Player):
         battle はエンジンが用意した観測用コピーで、相手の合法手は情報隠蔽済みの
         スナップショット（last_available_commands）を尊重する。相手の技・控えが
         1つも公開されていない盤面（実対戦の初手など）では相手の合法手が空になる。
-        その場合 opponent_estimator に相手ポケモンのモデル（moves/item 等）へ
+        その場合 estimate_opponent に相手ポケモンのモデル（moves/item 等）へ
         推定値を書き込ませた上で、実際のコマンド列挙を CommandManager に
         やり直させて補う。それでも空なら空リストのまま返し、
         呼び出し元でフォールバック判定に使わせる。
         """
         my_commands = self._available_commands_with_recovery(battle, self)
         opponent_commands = battle.get_available_commands(opponent)
-        if not opponent_commands and self._has_opponent_estimator():
-            self.opponent_estimator(battle, opponent)
+        if not opponent_commands and self._has_estimate_opponent():
+            self.estimate_opponent(battle, opponent)
             opponent_commands = self._resolve_estimated_commands(battle, opponent)
         return my_commands, opponent_commands
 
@@ -217,8 +217,8 @@ class TreeSearchPlayer(Player):
             if mon is not active and mon.alive
         ]
 
-    def _has_opponent_estimator(self) -> bool:
-        """opponent_estimator がサブクラスでオーバーライドされているか判定する。
+    def _has_estimate_opponent(self) -> bool:
+        """estimate_opponent がサブクラスでオーバーライドされているか判定する。
 
         既定実装（何もしない）のまま `_resolve_estimated_commands` を呼ぶと、
         `CommandManager.get_available_action_commands()` は技候補が0件でも
@@ -226,10 +226,10 @@ class TreeSearchPlayer(Player):
         opponent_commands が非空になり fallback への委譲が起きなくなる
         （オーバーライドの有無で呼び出し自体を分岐する必要がある）。
         """
-        return type(self).opponent_estimator is not TreeSearchPlayer.opponent_estimator
+        return type(self).estimate_opponent is not TreeSearchPlayer.estimate_opponent
 
     def _resolve_estimated_commands(self, battle: Battle, opponent: Player) -> list[Command]:
-        """opponent_estimator が相手ポケモンのモデルに書き込んだ推定情報から、
+        """estimate_opponent が相手ポケモンのモデルに書き込んだ推定情報から、
         実際に選べるコマンドを CommandManager に列挙させる。
 
         利用者は Command の組み立て（インデックス対応・テラスタル/メガシンカ

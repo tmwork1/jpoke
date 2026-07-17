@@ -20,12 +20,9 @@ def main() -> None:
     player2.add_pokemon("フシギダネ", move_names=["たいあたり"])
 
     battle = Battle(player1, player2, seed=1)
-    battle.start()
-    # 手動でstep()するループの定型は01で学んだので、ここではplay_out()で一括して進める
-    # play_out()は勝者のみを返す（呼び出し側は既にbattleインスタンスを保持しているため）。
-    # 対戦実行系メソッドの戻り値の設計方針は docs/api/README.md の
-    # 「対戦実行系メソッドの戻り値一覧」を参照
-    winner = battle.play_out(max_turns=100)
+    # 手動でstep()するループの定型は01で学んだので、ここではplay_out()で開始から一括して進める
+    battle.play_out(max_turns=100)
+    winner = battle.winner
     print(f"元の対戦の勝者: {winner.username if winner else '引き分け（ターン上限）'}（{battle.turn}ターン）")
 
     # build_replay_data() は対戦の途中でも呼べるが、ここでは決着後に呼ぶ

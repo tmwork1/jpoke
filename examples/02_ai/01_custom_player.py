@@ -39,38 +39,6 @@ class StrongestMovePlayer(Player):
         # コマンドを選ぶ（move_power() 自体は変更しない）
         return max(commands, key=move_power)
 
-    def choose_command_poke_env_style(self, battle: Battle) -> Command:
-        """poke-env経験者向け: choose_command() と同じ判断の代替実装（未使用）。
-
-        choose_command() に渡される battle は観測用コピーで、battle.observer が
-        呼び出し元プレイヤー自身に設定されているため、poke-env互換プロパティ
-        （battle.active_pokemon / battle.opponent_active_pokemon / battle.available_moves /
-        battle.available_switches / battle.side_conditions / battle.team）がそのまま
-        自分視点の情報として使える。get_available_commands() + command_to_move() の
-        組み合わせをこちらに置き換えても同じ結果になる
-
-        補足: poke-envではPlayer.choose_move()がcreate_order(move)で作った
-        BattleOrderを返す仕様だが、jpokeのCommandは技・交代等の選択肢を表す
-        単純なEnum値であり、コマンド生成専用のクラスは存在しない。本メソッドは
-        あくまで比較用の未使用コードのため、戻り値の型を合わせる対応はしていない
-        """
-        moves = battle.available_moves  # get_available_commands()を技だけ取り出しMoveに変換したもの
-        if not moves:
-            # わるあがきのみの場合。available_moves はこのときわるあがきを1件返す。
-            # battle.is_struggle_only(self) で判定できる（get_available_commands(self)[0] は
-            # 交代コマンドが同時に存在すると先頭に来てしまい誤ってそちらを返すことがある）
-            assert battle.is_struggle_only(self)
-            return Command.STRUGGLE
-        move_commands = [c for c in battle.get_available_commands(self) if c.is_regular_move]
-        # lambda i: ... は def で名前を付けるまでもない使い捨ての関数をその場で書く記法。
-        # ここでは「インデックスiを受け取り、対応する技の威力（変化技なら0）を返す」関数を
-        # key に渡し、moves の中で最も威力が高い技のインデックスを求めている
-        best_index = max(
-            range(len(moves)),
-            key=lambda i: moves[i].base_power if moves[i].is_attack else 0,
-        )
-        return move_commands[best_index]
-
 
 def main() -> None:
     player1 = StrongestMovePlayer("StrongestMovePlayer")
@@ -80,9 +48,8 @@ def main() -> None:
     player2.add_pokemon("フシギダネ", move_names=["たいあたり"])
 
     battle = Battle(player1, player2, seed=1)
-    battle.start()
-
-    winner = battle.play_out(max_turns=100)
+    battle.play_out(max_turns=100)
+    winner = battle.winner
     print(f"勝者: {winner.username if winner else '引き分け（ターン上限）'}")
     battle.print_logs("all")
     print("-" * 50)  # print_logs() の出力とその後のprint()を視覚的に区切る

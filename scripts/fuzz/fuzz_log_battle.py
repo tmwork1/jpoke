@@ -133,7 +133,7 @@ def main():
                       effect_bias=args.effect_bias)
     with Pool(workers) as pool:
         results = pool.map(worker, seeds)
-    for seed, (path, crashed, signature) in zip(seeds, results):
+    for _seed, (path, crashed, signature) in zip(seeds, results):
         suffix = f" signature={signature}" if crashed else ""
         print(f"report: {path} crashed={crashed}{suffix}")
 

@@ -44,10 +44,10 @@ def main() -> None:
     random_player.add_pokemon("ピカチュウ", move_names=["でんきショック", "でんこうせっか"])
 
     battle = Battle(ai_player, random_player, seed=1)
-    battle.start()
 
     max_turns = 20
-    winner = battle.play_out(max_turns=max_turns)
+    battle.play_out(max_turns=max_turns)
+    winner = battle.winner
     if winner is None:
         print(f"結果: 決着つかず（{max_turns}ターン経過）")
     else:

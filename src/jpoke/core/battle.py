@@ -952,23 +952,42 @@ class Battle:
 
         self.turn_controller.step(commands)
 
-    def play_out(self, max_turns: int = 100) -> Player | None:
-        """決着がつくかターン上限に達するまで自動的に進める。
+    def play_out(self, max_turns: int = 100) -> None:
+        """未開始なら `start()` を行い、決着がつくかターン上限に達するまで自動的に進める。
 
-        `battle.start()` の後に呼ぶ。01/03/05等の examples で繰り返されていた
+        01/03/05等の examples で繰り返されていた `battle.start()` に続けて
         `while not battle.finished and battle.turn < N: battle.step()` という
-        定型ループを1メソッドにまとめたもの。手動で `step()` を呼ぶ過程自体を
-        観察したい場合はこのメソッドを使わず、従来通りループを書けばよい。
+        定型パターンを1メソッドにまとめたもの。既に `start()` 済みの `Battle` に対して
+        呼んでもよい（二重に開始しようとはしない）。手動で `start()`/`step()` を呼ぶ
+        過程自体を観察したい場合はこのメソッドを使わず、従来通り個別に呼べばよい。
+
+        `step()` / `battle_against()` と同様に戻り値は持たない。結果は
+        呼び出し後に `battle.winner`（またはターン上限で未決着なら `None`）や
+        `battle.finished` から取得する。
+
+        Args:
+            max_turns: 最大ターン数
+        """
+        if self.turn < 0:
+            self.start()
+        while not self.finished and self.turn < max_turns:
+            self.step()
+
+    def can_continue(self, max_turns: int) -> bool:
+        """決着がついておらず、かつターン上限にも達していないかどうか。
+
+        `not battle.finished and battle.turn < max_turns` を1つにまとめたもの。
+        `step()` を呼ぶ過程自体を観察したい手動ループ（`while battle.can_continue(
+        max_turns=100): battle.step()`）向け。ループ自体を自動化したいだけなら
+        `play_out(max_turns)` を使う。
 
         Args:
             max_turns: 最大ターン数
 
         Returns:
-            勝者のPlayerインスタンス。ターン上限で決着がつかなかった場合はNone
+            bool: ループを継続してよいかどうか
         """
-        while not self.finished and self.turn < max_turns:
-            self.step()
-        return self.winner
+        return not self.finished and self.turn < max_turns
 
     def run_move(self, attacker: Pokemon, move: Move):
         """技を実行（MoveExecutorへの委譲）。
@@ -996,6 +1015,40 @@ class Battle:
             技オブジェクト
         """
         return self.command_manager.resolve_move_from_command(player, command)
+
+    def create_order(self,
+                      player: Player,
+                      order: Move | Pokemon,
+                      *,
+                      terastal: bool = False,
+                      megaevol: bool = False) -> Command:
+        """poke-env の `create_order()` 互換: `Move`/`Pokemon` オブジェクトから
+        コマンドを組み立てる。`command_to_move()` の逆方向。
+
+        `Move` を渡すと対応する技コマンドを返す（`get_active(player).moves` 内での
+        位置から解決する）。`terastal`/`megaevol` を指定すると、その技を使いながら
+        テラスタル/メガシンカするコマンドを返す。`Pokemon` を渡すと、そのポケモンに
+        交代するコマンドを返す（`get_team(player)` 内での位置から解決する）。
+
+        Args:
+            player: コマンドを組み立てる対象のプレイヤー
+            order: 使用する技（`Move`）、または交代先のポケモン（`Pokemon`）
+            terastal: True の場合、技コマンドをテラスタルコマンドにする（`order`が`Move`のときのみ意味を持つ）
+            megaevol: True の場合、技コマンドをメガシンカコマンドにする（`order`が`Move`のときのみ意味を持つ）
+
+        Returns:
+            Command: 組み立てたコマンド
+        """
+        if isinstance(order, Move):
+            active = self.get_active(player)
+            assert active is not None, "create_order()にMoveを渡す場合、対象プレイヤーの場にポケモンが必要"
+            index = active.moves.index(order)
+            if terastal:
+                return Command.get_terastal_command(index)
+            if megaevol:
+                return Command.get_megaevol_command(index)
+            return Command.get_move_command(index)
+        return Command.get_switch_command(self.get_team(player).index(order))
 
     def modify_hp(self,
                   target: Pokemon,

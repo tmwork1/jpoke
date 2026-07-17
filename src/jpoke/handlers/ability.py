@@ -18,7 +18,7 @@ from jpoke.enums import LogCode, Interrupt
 from jpoke.core.handler import HandlerReturn, Handler
 from jpoke.core.log_payload import (
     AbilityPayload, AilmentPayload, VolatilePayload, FailureLogPayload,
-    FieldPayload, ItemRevealPayload, MoveRevealPayload,
+    ItemRevealPayload, MoveRevealPayload,
 )
 
 AEGISLASH_SHIELD = "ギルガルド(シールド)"

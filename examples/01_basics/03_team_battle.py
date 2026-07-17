@@ -1,7 +1,10 @@
-"""3体チームでの複数選出・複数ターンにわたるバトルの進め方を示す。
+"""battle.step() でターンを1つずつ手動に進め、3体チームでの複数選出・複数ターンに
+わたるバトルの進め方を示す。
 
-n_selected=3 で3体を選出し、瀕死になったポケモンが交代コマンドで控えと入れ替わる様子を
-ターンごとに battle.print_logs() で確認しながら決着まで進める。先頭のポケモンが瀕死になると、
+02の play_out() は決着まで自動的に進めるが、ターンごとの中身を観察したい場合は
+こちらのように battle.step() を手動ループで呼ぶ。n_selected=3 で3体を選出し、
+瀕死になったポケモンが交代コマンドで控えと入れ替わる様子をターンごとに
+battle.print_logs() で確認しながら決着まで進める。先頭のポケモンが瀕死になると、
 以降のターンでは自動的に控えへの交代コマンドが要求される。両陣営とも RandomPlayer を使うため、
 交代コマンドの選択肢が複数あるときはランダムに選ばれる。
 """
@@ -13,14 +16,14 @@ from jpoke.players import RandomPlayer
 
 def main() -> None:
     player1 = RandomPlayer("Team A")
-    player1.add_pokemon("ピカチュウ", move_names=["かみなり"])
-    player1.add_pokemon("ヒトカゲ", move_names=["かえんほうしゃ"])
-    player1.add_pokemon("フシギダネ", move_names=["ギガドレイン"])
+    player1.add_pokemon("ピカチュウ", ability_name="せいでんき", item_name="いのちのたま", move_names=["かみなり"])
+    player1.add_pokemon("ヒトカゲ", ability_name="もうか", item_name="オボンのみ", move_names=["かえんほうしゃ"])
+    player1.add_pokemon("フシギダネ", ability_name="しんりょく", item_name="くろいヘドロ", move_names=["ギガドレイン"])
 
     player2 = RandomPlayer("Team B")
-    player2.add_pokemon("ゼニガメ", move_names=["なみのり"])
-    player2.add_pokemon("コラッタ", move_names=["すてみタックル"])
-    player2.add_pokemon("ピッピ", move_names=["ムーンフォース"])
+    player2.add_pokemon("ゼニガメ", ability_name="げきりゅう", item_name="オボンのみ", move_names=["なみのり"])
+    player2.add_pokemon("コラッタ", ability_name="はりきり", item_name="ちからのハチマキ", move_names=["すてみタックル"])
+    player2.add_pokemon("ピッピ", ability_name="マジックガード", item_name="オボンのみ", move_names=["ムーンフォース"])
 
     # n_selected: 省略時は min(3, チームの手持ち数) が自動設定される（ここでは3）
     battle = Battle(player1, player2, seed=1)
@@ -30,7 +33,7 @@ def main() -> None:
     # 決着がつくかターン上限に達するまで手動でstep()する
     # （バトルを最後まで自動的に進めたいだけなら battle.play_out(max_turns=30) も使えるが、
     #   ここではターンごとに battle.print_logs() で経過を観察したいため手動ループにしている）
-    while not battle.finished and battle.turn < max_turns:
+    while battle.can_continue(max_turns=max_turns):
         battle.step()
         battle.print_logs()
         print("-" * 50)

@@ -42,18 +42,19 @@ PYTHONUTF8=1 python examples/01_basics/01_battle_against_intro.py
 | ファイル | 学べる内容 | 対応ユースケース |
 |---|---|---|
 | `01_basics/01_battle_against_intro.py` | `Player.battle_against()` を使った最小構成のバトル実行 | 導入 |
-| `01_basics/02_quickstart.py` | `Battle` / `Player` を手動管理する最小構成の1vs1バトル | 導入 |
-| `01_basics/03_team_battle.py` | 3体チーム・複数選出・複数ターンのバトルループ | 導入 |
-| `01_basics/04_pokedex_ability_lookup.py` | `POKEDEX[name].abilities` によるポケモンが持てる特性の確認 | 導入 |
-| `01_basics/05_hazards_and_explicit_commands.py` | 設置技（ステルスロック）・交代誘発技（とんぼがえり）の効果、`Command.get_switch_command()` / `get_terastal_command()` / `get_megaevol_command()` による交代・テラスタル・メガシンカコマンドの明示的な組み立て、わるあがき（PP切れ）の挙動 | 導入 |
-| `01_basics/06_structured_log_extraction.py` | `battle.get_event_logs()` による構造化ログ（LogCode付きのEventLog）からの特定イベント抽出 | 導入 |
+| `01_basics/02_play_out.py` | `Battle.play_out()` によるBattle/Playerを直接使った最小構成の1vs1バトル自動進行 | 導入 |
+| `01_basics/03_team_battle.py` | `battle.step()` によるターンごとの手動進行、3体チーム・複数選出のバトルループ | 導入 |
+| `01_basics/04_pokedex_ability_lookup.py` | `POKEDEX[name].abilities` / `POKEDEX[name].learnset` によるポケモンが持てる特性・覚えられる技の確認 | 導入 |
+| `01_basics/05_command_type_identification.py` | `battle.get_available_commands()` が返す `Command` の種類の識別（`is_regular_move`/`is_terastal`/`is_switch`） | 導入 |
+| `01_basics/06_logcode_variety.py` | `LogCode` の種類の確認、`battle.get_event_logs()` が返す構造化ログ（LogCode付きのEventLog） | 導入 |
 | `02_ai/01_custom_player.py` | `Player` を継承した最小のカスタム方策（`choose_command()` のオーバーライド） | AI開発 |
 | `02_ai/02_selection_customization.py` | `choose_selection()` のオーバーライドによる選出順のカスタマイズ | AI開発 |
 | `02_ai/03_tree_search_ai.py` | `TreeSearchPlayer` を継承した木探索AIとランダム方策の対戦 | AI開発（発展） |
-| `02_ai/04_priority_and_command_debug.py` | 優先度技・素早さ操作技（トリックルーム）が行動順に与える影響、`TreeSearchPlayer.evaluate_commands()` によるコマンド候補・評価値のデバッグ確認 | AI開発（発展） |
-| `02_ai/05_opponent_estimation.py` | `TreeSearchPlayer.opponent_estimator()` のオーバーライドによる、相手の未公開の技構成の推定と、それを踏まえた木探索 | AI開発（発展） |
+| `02_ai/04_command_evaluation_debug.py` | `TreeSearchPlayer.evaluate_commands()` によるコマンド候補・評価値のデバッグ確認 | AI開発（発展） |
+| `02_ai/05_opponent_estimation.py` | `TreeSearchPlayer.estimate_opponent()` のオーバーライドによる、相手の未公開の技構成の推定と、それを踏まえた木探索 | AI開発（発展） |
 | `02_ai/06_deterministic_search.py` | `TreeSearchPlayer.configure_sim()` のオーバーライドによる、探索中だけ命中率・ダメージ乱数を固定する決定論化 | AI開発（発展） |
 | `02_ai/07_fallback_policy.py` | `TreeSearchPlayer.fallback()` のオーバーライドによる、探索できない局面での代替方策のカスタマイズ | AI開発（発展） |
+| `02_ai/08_poke_env_style_player.py` | poke-env互換プロパティ（`battle.available_moves` 等）を使った `choose_command()` の実装 | AI開発 |
 | `03_damage_calc/01_raw_damage_rolls.py` | `calc_damages()` / `roll_damage()` による生ダメージロールの確認、`damage_roll` / `critical_mode` による固定ロール | ダメージ計算ツール開発 |
 | `03_damage_calc/02_direct_state_manipulation.py` | `set_ailment()` / `modify_hp()` / `modify_stats()` / `faint()` を単体で直接操作するAPIの確認 | ダメージ計算ツール開発 |
 | `03_damage_calc/03_basic_lethal_calculation.py` | `battle.calc_lethal()` による確定数・乱数ダメージの基本計算、努力値、`Pokemon.show()` | ダメージ計算ツール開発 |
