@@ -36,6 +36,9 @@ dev = [
     "pytest-cov>=5.0",
     "ruff>=0.5",
     "mypy>=1.10",
+    "jupytext>=1.16",
+    "papermill>=2.6",
+    "ipykernel>=6.29",
 ]
 
 [build-system]
@@ -70,6 +73,9 @@ ignore = [
 "**/__init__.py" = ["F401"]        # 再エクスポートのための import
 "src/jpoke/types/*.py" = ["E501"]  # scripts/generate_literals による自動生成の長行
 "scripts/**" = ["F841"]            # 実験用スクリプトの未使用変数は許容
+"examples/**/*.ipynb" = ["F404"]   # Colab向け %pip install セルを先頭に置くため
+                                    # from __future__ import annotations がファイル
+                                    # 先頭にならない（notebookの自然な作法を優先する）
 
 [tool.mypy]
 # 段階導入: まず core のみを対象にし、警告を解消しながら対象を広げる

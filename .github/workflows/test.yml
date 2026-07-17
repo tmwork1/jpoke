@@ -24,7 +24,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e .
-          pip install pytest pytest-cov ruff mypy
+          pip install pytest pytest-cov ruff mypy papermill ipykernel
+
+      - name: Register Jupyter kernel for notebook examples
+        run: python -m ipykernel install --user --name python3
 
       - name: Run tests (with coverage on ubuntu / 3.12)
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
