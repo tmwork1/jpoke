@@ -352,7 +352,7 @@ def かんそうはだ_weather_hp(battle: Battle, ctx: LethalContext, hp_dist: S
 def がんじょう_survive_lethal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """がんじょう: 満タン状態から瀕死になった場合、HP1で耐える。(ON_APPLY_DAMAGE / subject="defender")
 
-    何度でも発動する。docs/spec/abilities/がんじょう.md 参照。
+    何度でも発動する。.internal/spec/abilities/がんじょう.md 参照。
     """
     return _survive_at_full_hp(hp_dist, consume="ability")
 
@@ -361,7 +361,7 @@ def きあいのタスキ_survive_ohko(battle: Battle, ctx: LethalContext, hp_di
     """きあいのタスキ: 満タン状態から瀕死になった場合、HP1で耐えて消費する。
     (ON_APPLY_DAMAGE / subject="defender")
 
-    docs/spec/items/きあいのタスキ.md 参照。多段技の2発目以降は item_enabled=False
+    .internal/spec/items/きあいのタスキ.md 参照。多段技の2発目以降は item_enabled=False
     により発動しない。
     """
     return _survive_at_full_hp(hp_dist, consume="item")

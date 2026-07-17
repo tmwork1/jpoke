@@ -79,9 +79,9 @@ VOLATILES: dict[str, VolatileData] = {
             # みがわり等で実ダメージが0になった場合に発火しないが、みがわりに
             # 被弾した場合も技自体は正常に命中・実行されたものとして扱われ、
             # あばれる状態のターンカウントは通常どおり進行するべきである
-            # （docs/spec/volatiles/あばれる.md の消滅条件3には該当しない）。
+            # （.internal/spec/volatiles/あばれる.md の消滅条件3には該当しない）。
             # ON_HIT は「ダメージ発生後の処理（みがわりに被弾しても発動）」
-            # (docs/spec/turn.md) ため、この用途に適する。
+            # (.internal/spec/turn.md) ため、この用途に適する。
             Event.ON_HIT: h.VolatileHandler(
                 h.あばれる_tick,
                 subject_spec="attacker:self",
@@ -257,12 +257,12 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "こらえる": VolatileData(
         handlers={
-            # docs/spec/turn.md の Event.ON_MODIFY_DAMAGE 表では60番と記載されているが、
+            # .internal/spec/turn.md の Event.ON_MODIFY_DAMAGE 表では60番と記載されているが、
             # 一撃必殺技の確定ダメージ算出（ohko_damage, priority=90。turn.md未掲載）より後に
             # 実行しないと、こらえるによる HP1 補正が ohko_damage の確定ダメージで
             # 上書きされてしまう。がんじょう/きあいのタスキ/きあいのハチマキ（100）より前、
             # ohko_damage（90）より後となる95を採用する
-            # （docs/plan/moves/こらえる.md「Priority根拠」参照）。
+            # （.internal/plan/moves/こらえる.md「Priority根拠」参照）。
             Event.ON_MODIFY_MOVE_DAMAGE: h.VolatileHandler(
                 h.こらえる_endure,
                 subject_spec="defender:self",

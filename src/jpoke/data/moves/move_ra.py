@@ -259,7 +259,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
         }
     ),
     "ロックブラスト": MoveData(
-        pp=12,  # チャンピオンズ基準（docs/champions/move_list.txt）。第9世代本家基準は10
+        pp=12,  # チャンピオンズ基準（.internal/champions/move_list.txt）。第9世代本家基準は10
         flags={"bullet"},
         multi_hit={
             "min": 2,

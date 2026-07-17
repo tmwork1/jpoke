@@ -195,7 +195,7 @@ def _apply_contact_item_chip(battle: Battle,
         v = battle.modify_hp(ctx.attacker, r=-ratio)
         if v:
             # ダメおし判定用: ゴツゴツメット等によるダメージも「そのターンに攻撃を
-            # 受けた」扱いにする（一次情報: docs/wiki/moves/ダメおし.html 技の仕様節）。
+            # 受けた」扱いにする（一次情報: .internal/wiki/moves/ダメおし.html 技の仕様節）。
             ctx.attacker.hits_taken += 1
         return bool(v)
     return False
@@ -382,7 +382,7 @@ def _retaliate_on_category(battle: Battle,
         r = -1/4 if is_ripen(mon) else -1/8
         if battle.modify_hp(ctx.attacker, r=r):
             # ダメおし判定用: ジャポのみ/レンブのみによるダメージも「そのターンに
-            # 攻撃を受けた」扱いにする（一次情報: docs/wiki/moves/ダメおし.html 技の仕様節）。
+            # 攻撃を受けた」扱いにする（一次情報: .internal/wiki/moves/ダメおし.html 技の仕様節）。
             ctx.attacker.hits_taken += 1
             _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
@@ -531,7 +531,7 @@ def いのちのたま_recoil(battle: Battle, ctx: AttackContext, value: Any) ->
     ):
         battle.modify_hp(ctx.attacker, r=-1/10, source=ctx.attacker)
         # ダメおし判定用: いのちのたまの反動ダメージも「そのターンに攻撃を受けた」
-        # 扱いにする（一次情報: docs/wiki/moves/ダメおし.html 技の仕様節）。
+        # 扱いにする（一次情報: .internal/wiki/moves/ダメおし.html 技の仕様節）。
         ctx.attacker.hits_taken += 1
         _announce_item_triggered(battle, ctx.attacker)
     return HandlerReturn(value=value)
@@ -653,7 +653,7 @@ def おんみつマント_negate_secondary(_battle: Battle, ctx: AttackContext, 
     でんじは・どくどく等の変化技（ctx.move.category == "status"）は、状態異常等の
     付与そのものが技の唯一の効果であり「追加効果」には当たらないため対象外とする
     （一次情報: 「相手の“攻撃技”による追加効果を受けなくなる」。
-    docs/spec/items/おんみつマント.md）。りんぷんの同種修正（handlers/ability.py の
+    .internal/spec/items/おんみつマント.md）。りんぷんの同種修正（handlers/ability.py の
     りんぷん_block_secondary_chance）と揃える。
     """
     if ctx.secondary_effect_target != "defender":
@@ -1660,7 +1660,7 @@ def himeri_select_move_to_restore(mon: Pokemon) -> Move | None:
 
     最後にPPを消費した技（pp_consumed_move）がPP0であればそれを優先し、
     なければ技リストの先頭にあるPP0の技を対象にする
-    （一次情報 docs/spec/items/ヒメリのみ.md「第五世代以降」の優先順位）。
+    （一次情報 .internal/spec/items/ヒメリのみ.md「第五世代以降」の優先順位）。
     """
     move = mon.pp_consumed_move
     if move is not None and move.pp == 0:

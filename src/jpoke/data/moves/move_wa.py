@@ -16,9 +16,9 @@ from ..models import MoveData
 
 MOVES_WA: dict[MoveName, MoveData] = {
     "ワイドガード": MoveData(
-        pp=12,  # champions基準（docs/champions/move_list.txt 970行目）。Gen9本家は10
+        pp=12,  # champions基準（.internal/champions/move_list.txt 970行目）。Gen9本家は10
         target="own_side",  # 味方の場が対象。foe/foe_side ではないためマジックコート等の対象外になる
-        flags={"protect"},  # まもる系共通の連続使用失敗チェック対象（docs/spec/moves/ワイドガード.md参照）
+        flags={"protect"},  # まもる系共通の連続使用失敗チェック対象（.internal/spec/moves/ワイドガード.md参照）
         handlers={
             Event.ON_TRY_MOVE_2: h.MoveHandler(
                 hs.まもる系_連続使用失敗チェック,

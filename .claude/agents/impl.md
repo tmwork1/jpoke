@@ -18,7 +18,7 @@ tools:
 
 ## 役割
 
-- 計画書（`docs/plan/`）と仕様書（`docs/spec/`）を読んで実装する
+- 計画書（`.internal/plan/`）と仕様書（`.internal/spec/`）を読んで実装する
 - `handlers/` に実装関数を追加し、`data/` にハンドラを登録する
 - テストは書かない（`review-test` エージェントが担当）
 
@@ -35,6 +35,6 @@ tools:
 - [ ] `handlers/` に関数を追加した
 - [ ] `data/` でハンドラを登録した
 - [ ] 新しい `Literal` 型が必要なら `types/` に追加した
-- [ ] `docs/progress/<category>.md` の実装列（実装）を `x` に更新した
+- [ ] `.internal/progress/<category>.md` の実装列（実装）を `x` に更新した
 - [ ] プロンプトの指示通りにコミット・ブランチ操作を行った
 - [ ] `review-test` に渡すべき仕様上の注意点・エッジケースをまとめた

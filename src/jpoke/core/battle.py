@@ -405,7 +405,7 @@ class Battle:
         カウントダウン機会を逃しているため、`FieldManager`（`core/field_manager.py`）
         側でこのフラグを見て活性化直後に1回分のカウントダウンを補填し、通常の
         交代・技発動で設置された場合と継続ターン数を揃える（fuzz seed=1609, 1607 で
-        発見。詳細は `docs/spec/abilities/ひでり.md`「交代によりこの特性のポケモンを
+        発見。詳細は `.internal/spec/abilities/ひでり.md`「交代によりこの特性のポケモンを
         繰り出したターンも1ターンに数える」を参照）。
         """
         self.late_field_activation = True

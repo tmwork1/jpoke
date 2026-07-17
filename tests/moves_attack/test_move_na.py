@@ -1218,7 +1218,7 @@ def test_ネコにこばん_追加効果が発生しない():
 
 
 def test_ネズミざん_PPは12():
-    """ネズミざん: チャンピオンズでのPPは12（docs/champions/move_list.txt準拠。Gen9本家は10）。"""
+    """ネズミざん: チャンピオンズでのPPは12（.internal/champions/move_list.txt準拠。Gen9本家は10）。"""
     assert MOVES["ネズミざん"].pp == 12
 
 

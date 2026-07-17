@@ -378,7 +378,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "がんせきアックス": MoveData(
         # ステルスロック設置自体に確率判定は無いが、ちからずく対象技として
         # 明記されている技のため secondary_effect フラグを設定する
-        # （docs/spec/abilities/ちからずく.md参照）。
+        # （.internal/spec/abilities/ちからずく.md参照）。
         flags={"contact", "slash", "secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
@@ -543,7 +543,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     ),
     "きりばらい": MoveData(
         # みがわりに対して技自体は無効化されない（回避率変化のみ防がれ、
-        # 場の効果解除は独立して発動する。一次情報: docs/wiki/moves/きりばらい.html 技の仕様節）。
+        # 場の効果解除は独立して発動する。一次情報: .internal/wiki/moves/きりばらい.html 技の仕様節）。
         flags={"bypass_substitute"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -678,7 +678,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     ),
     "クリアスモッグ": MoveData(
         handlers={
-            # docs/spec/turn.md の Event.ON_DAMAGE priority=10「クリアスモッグによるランクリセット」に対応
+            # .internal/spec/turn.md の Event.ON_DAMAGE priority=10「クリアスモッグによるランクリセット」に対応
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.クリアスモッグ_reset_defender_rank,
                 priority=10,

@@ -323,11 +323,11 @@ MOVES_MA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "みちづれ": MoveData(
-        pp=8,  # champions基準（docs/champions/move_list.txt）。旧値5はSV本家基準の移行漏れ。
+        pp=8,  # champions基準（.internal/champions/move_list.txt）。旧値5はSV本家基準の移行漏れ。
         flags={"non_copycat"},
         handlers={
             # 第七世代以降: みちづれを成功させた直後にもう一度使うと必ず失敗する
-            # （docs/spec/moves/みちづれ.md「第七世代以降」節）。
+            # （.internal/spec/moves/みちづれ.md「第七世代以降」節）。
             # まもる/みきりの連続使用失敗チェックと同じ ON_TRY_MOVE_2・優先度未指定パターン。
             Event.ON_TRY_MOVE_2: h.MoveHandler(
                 hs.みちづれ_連続使用失敗チェック,
@@ -345,7 +345,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         accuracy=100,
         flags={"contact"},
         handlers={
-            # docs/spec/turn.md Event.ON_MODIFY_DAMAGE: 60番（みねうち・てかげん）。
+            # .internal/spec/turn.md Event.ON_MODIFY_DAMAGE: 60番（みねうち・てかげん）。
             # がんじょう/きあいのタスキ/きあいのハチマキ（いずれもpriority=100）より
             # 先に発動させることで、みねうちのHP1残し効果が優先され、
             # これらの特性・持ち物が誤って発動・消費されないようにする。
@@ -447,7 +447,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
             # HP反映（Event.ON_HP_CHANGED発火）前に奪取するため、被弾側自身のHP閾値
             # きのみ（オボンのみ等）より確実に先行させる必要がある。がんじょう・
             # きあいのタスキ等のHP1残し補正（priority=100）より後の110で実行する
-            # （docs/plan/moves/むしくい.md「Priority根拠」参照）。
+            # （.internal/plan/moves/むしくい.md「Priority根拠」参照）。
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 ha.むしくい_steal_and_use_berry,
                 priority=110,
@@ -654,7 +654,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         flags={"non_encore", "non_negoto", "non_copycat", "unreflectable"},
         # 実装保留: 相手が直前に使用した技を技スロットごと一時的にコピーし、交代/ひんし/
         # バトル終了で元に戻す技コピー機構が必要なため対応を見送る。
-        # 詳細は docs/plan/moves/ものまね.md 参照（前例: へんしん・スケッチ・ゆびをふる）。
+        # 詳細は .internal/plan/moves/ものまね.md 参照（前例: へんしん・スケッチ・ゆびをふる）。
         handlers={},
     ),
     "もりののろい": MoveData(

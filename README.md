@@ -95,10 +95,10 @@ battle.print_logs()                 # このターンのログを表示
 | ディレクトリ | 役割 |
 |---|---|
 | `docs/api/` | 利用者向け公開APIリファレンス（`Battle` / `Player` / `Pokemon`） |
-| `docs/spec/` | 技・アイテム・特性・場の効果の挙動仕様 |
-| `docs/plan/` | 実行計画と優先順位 |
-| `docs/progress/` | カテゴリ別の実装追跡（`ability.md`, `item.md`, `move.md` 等） |
-| `docs/tests/` | テスト一覧（`scripts/generate_test_list.py` で生成） |
+| `.internal/spec/` | 技・アイテム・特性・場の効果の挙動仕様 |
+| `.internal/plan/` | 実行計画と優先順位 |
+| `.internal/progress/` | カテゴリ別の実装追跡（`ability.md`, `item.md`, `move.md` 等） |
+| `.internal/tests/logs/` | `.loop` 系フローが保存するテスト実行ログ |
 
 開発への貢献方法は [CONTRIBUTING.md](https://github.com/tmwork1/jpoke/blob/main/CONTRIBUTING.md)、
 脆弱性の報告方法は [SECURITY.md](https://github.com/tmwork1/jpoke/blob/main/SECURITY.md) を参照。
@@ -109,7 +109,7 @@ battle.print_logs()                 # このターンのログを表示
 
 ## 実装状況
 
-`docs/progress/*.md` に基づく件数（データ定義済みの実数、内部用の空エントリ等を除く）:
+`.internal/progress/*.md` に基づく件数（データ定義済みの実数、内部用の空エントリ等を除く）:
 
 | カテゴリ | 件数 |
 |---|---|
@@ -120,7 +120,7 @@ battle.print_logs()                 # このターンのログを表示
 | 状態異常（ailment） | 7 |
 | 場の効果（field: 天候・地形・グローバル・サイド） | 31 |
 
-最新の詳細は `docs/progress/` 配下の各ファイルを参照。
+最新の詳細は `.internal/progress/` 配下の各ファイルを参照。
 
 ## 計算速度
 
@@ -235,6 +235,6 @@ CI（`.github/workflows/test.yml`）で push/PR ごとに Windows + Linux × Pyt
 本プロジェクトはコードとゲームデータで異なるライセンスを適用する二層構成になっている。
 
 - **コード**（`src/jpoke/` 配下の実装ロジックなど）: MIT License（[LICENSE](LICENSE)）
-- **ゲームデータ**（`src/jpoke/data/`, `docs/wiki/`, `docs/spec/` 配下の技・特性・アイテム等の数値・効果テキスト）:
+- **ゲームデータ**（`src/jpoke/data/`, `.internal/wiki/`, `.internal/spec/` 配下の技・特性・アイテム等の数値・効果テキスト）:
   CC BY-NC-SA 4.0（[LICENSE-DATA](LICENSE-DATA)）。出典は
   [ポケモンWiki](https://wiki.pokemonwiki.com/)（CC BY-NC-SA 3.0）

@@ -572,7 +572,7 @@ def test_つぶらなひとみ_相手のこうげき1段階下がる():
 
 
 def test_つぼをつく_PPは20():
-    """つぼをつく: チャンピオンズでのPPは20（docs/champions/move_list.txt準拠）。"""
+    """つぼをつく: チャンピオンズでのPPは20（.internal/champions/move_list.txt準拠）。"""
     assert MOVES["つぼをつく"].pp == 20
 
 
@@ -1196,7 +1196,7 @@ def test_てんしのキッス_すでにこんらん状態なら失敗():
 
 
 def test_デコレーション_PPは16():
-    """デコレーション: チャンピオンズでのPPは16（docs/champions/move_list.txt準拠）。"""
+    """デコレーション: チャンピオンズでのPPは16（.internal/champions/move_list.txt準拠）。"""
     assert MOVES["デコレーション"].pp == 16
 
 
@@ -1337,7 +1337,7 @@ def test_でんじは_まひ付与():
 
 
 def test_でんじふゆう_PPは12():
-    """でんじふゆう: チャンピオンズでのPPは12（docs/champions/move_list.txt準拠）。"""
+    """でんじふゆう: チャンピオンズでのPPは12（.internal/champions/move_list.txt準拠）。"""
     assert MOVES["でんじふゆう"].pp == 12
 
 
@@ -1435,7 +1435,7 @@ def test_でんじふゆう_まもるで防がれない():
 
 
 def test_とおせんぼう_PPは8():
-    """とおせんぼう: チャンピオンズでのPPは8（docs/champions/move_list.txt準拠）。"""
+    """とおせんぼう: チャンピオンズでのPPは8（.internal/champions/move_list.txt準拠）。"""
     assert MOVES["とおせんぼう"].pp == 8
 
 
@@ -1739,7 +1739,7 @@ def test_トリック_片方のみアイテムを持つとき入れ替わる(a_i
 
 
 def test_トリックルーム_PPは8():
-    """トリックルーム: チャンピオンズでのPPは8（docs/champions/move_list.txt準拠）。"""
+    """トリックルーム: チャンピオンズでのPPは8（.internal/champions/move_list.txt準拠）。"""
     assert MOVES["トリックルーム"].pp == 8
 
 
@@ -1789,7 +1789,7 @@ def test_トリックルーム_発動中に再使用すると解除される():
 
 
 def test_トーチカ_PPは8():
-    """トーチカ: チャンピオンズでのPPは8（docs/champions/move_list.txt準拠）。Gen9本家は10。"""
+    """トーチカ: チャンピオンズでのPPは8（.internal/champions/move_list.txt準拠）。Gen9本家は10。"""
     assert MOVES["トーチカ"].pp == 8
 
 

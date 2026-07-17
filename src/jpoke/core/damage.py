@@ -169,7 +169,7 @@ class DamageCalculator:
         テラスタルの有無を考慮してSTAB補正値を計算し、
         ON_CALC_ATK_TYPE_MODIFIER イベントを発火して返す。
 
-        仕様は docs/spec/damage_calc.md の「タイプ一致補正の詳細」を参照。
+        仕様は .internal/spec/damage_calc.md の「タイプ一致補正の詳細」を参照。
 
         Args:
             ctx: 攻防・技の情報を持つバトルコンテキスト

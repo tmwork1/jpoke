@@ -103,7 +103,7 @@ def can_hit_hidden_target(battle: Battle,
     """潜伏中の回避判定を行う。
 
     攻撃側・防御側いずれかがノーガードを持つ場合は、あなをほる等の技限定の
-    回避判定を経由せず必ず命中する（docs/spec/abilities/ノーガード.md参照）。
+    回避判定を経由せず必ず命中する（.internal/spec/abilities/ノーガード.md参照）。
 
     Args:
         battle: バトルインスタンス
@@ -620,7 +620,7 @@ def さわぐ_apply_to_new_opponent(battle: Battle, ctx: EventContext, value: An
     """さわぐ継続中に新しく場に出た相手にもさわがしいを付与する。
 
     「さわぐ状態のポケモンがいる間は、場のポケモン全員がねむり状態になれない」
-    （docs/spec/volatiles/さわぐ.md）という仕様に対し、さわがしいはさわぐ開始時
+    （.internal/spec/volatiles/さわぐ.md）という仕様に対し、さわがしいはさわぐ開始時
     （ON_VOLATILE_START）にその時点の相手にのみ一度だけ付与される実装のため、
     さわぐ継続中に相手が瀕死交代・通常交代で入れ替わると、新しく出てきた相手に
     さわがしいが付与されないまま漏れ、ねむるが成功してしまっていた（fuzzログ
@@ -1367,7 +1367,7 @@ def ほろびのうた_faint(battle: Battle, ctx: EventContext, value: Any) -> H
 
     ON_VOLATILE_END はカウント0による自然解除だけでなく、交代（remove_all_volatiles）
     による強制解除でも発火する。交代退場処理中はひんしにせず、状態変化を消滅させるのみとする
-    （docs/spec/volatiles/ほろびのうた.md「交代によって解除される」「バトンタッチによって
+    （.internal/spec/volatiles/ほろびのうた.md「交代によって解除される」「バトンタッチによって
     引き継がれる」）。
     """
     if value != "ほろびのうた":

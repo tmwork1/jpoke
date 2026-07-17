@@ -1,6 +1,6 @@
 """EventLogger/EventLog の一般的な挙動のテスト（機械的検証観点の回帰テストを含む）。
 
-回帰テストの由来: docs/review/code/event_log_audit.md
+回帰テストの由来: .internal/review/code/event_log_audit.md
 """
 from jpoke import Pokemon
 from jpoke.enums import LogCode

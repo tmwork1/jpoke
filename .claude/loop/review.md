@@ -28,11 +28,11 @@ review エージェントが並列にレビュー・修正する。`loop/review/
   "config": {
     "flow":        "review",
     "category":    "変化技",
-    "wiki_hint":   "docs/wiki/ の一次情報を参照（moves/, volatiles/, fields/ 等）",
-    "spec_dir":    "docs/spec/",
-    "plan_dir":    "docs/plan/moves",
-    "progress_file": "docs/progress/move.md",
-    "review_dir":  "docs/review/moves/",
+    "wiki_hint":   ".internal/wiki/ の一次情報を参照（moves/, volatiles/, fields/ 等）",
+    "spec_dir":    ".internal/spec/",
+    "plan_dir":    ".internal/plan/moves",
+    "progress_file": ".internal/progress/move.md",
+    "review_dir":  ".internal/review/moves/",
     "test_files":  ["tests/moves_status/"],
     "parallel_max": 3,
     "worktree_base": "{ROOTの親}\\jpoke-loop\\review"
@@ -147,10 +147,10 @@ jpoke {config.category} 再レビュータスク: {entry}
 4. 実装のレビュー・修正
    handlers/ と data/ の実装を仕様書・計画書と照合し、誤り・欠落があれば修正する。
    ※ 五十音ソート（sort_handlers.py / sort_data/*.py）は実行しない（マージ後に一括整形）。
-   ※ 技のレビューの場合、PP値は必ず `docs/champions/moves.md` の値を正とする
-     （`docs/champions/changes_from_sv.md` により全技PPは8/12/16/20の4段階に統一されている）。
+   ※ 技のレビューの場合、PP値は必ず `.internal/champions/moves.md` の値を正とする
+     （`.internal/champions/changes_from_sv.md` により全技PPは8/12/16/20の4段階に統一されている）。
      `data/moves/*.py` の実装がGen9本家基準の値になっている場合はそちらが移行漏れのバグであり、
-     champions側の値に修正すること。`docs/progress/move.md` のPP列とmoves.mdが食い違う
+     champions側の値に修正すること。`.internal/progress/move.md` のPP列とmoves.mdが食い違う
      場合も、moves.md を優先し進捗表の方を修正する（実装値に進捗表を合わせて
      champions値を消してしまわないこと）。
 
@@ -166,7 +166,7 @@ jpoke {config.category} 再レビュータスク: {entry}
    {config.test_files} のテストを実装と照合し、誤り・過不足があれば修正する。
    手順5でリーサル計算ハンドラを新規実装・修正した場合は tests/test_lethal.py にも
    `t.calc_lethal` を使ったテストを追加・修正する。
-   ※ sort_tests.py / generate_test_list.py は実行しない（マージ後に一括実行）。
+   ※ sort_tests.py は実行しない（マージ後に一括実行）。
    python -m pytest tests/ -v でテストを実行し、結果を .loop/test_logs/{entry}.log に保存する。
    全テストが通ることを確認する。今回の修正と無関係な既存テストが flaky（間欠的に失敗）と
    判明した場合は `.claude/loop/_common.md` §共通13 に従いその場で修正する。
@@ -231,9 +231,9 @@ jpoke {config.category} 再レビュータスク: {entry}
 {
   "config": {
     "flow": "review", "category": "変化技",
-    "wiki_hint": "docs/wiki/ の一次情報を参照（moves/, volatiles/ 等）",
-    "spec_dir": "docs/spec/moves/", "plan_dir": "docs/plan/moves",
-    "progress_file": "docs/progress/move.md", "review_dir": "docs/review/moves/",
+    "wiki_hint": ".internal/wiki/ の一次情報を参照（moves/, volatiles/ 等）",
+    "spec_dir": ".internal/spec/moves/", "plan_dir": ".internal/plan/moves",
+    "progress_file": ".internal/progress/move.md", "review_dir": ".internal/review/moves/",
     "test_files": ["tests/moves_status/"], "parallel_max": 3,
     "worktree_base": "{ROOTの親}\\jpoke-loop\\review"
   },

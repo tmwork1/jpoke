@@ -138,11 +138,11 @@ MOVES_HA: dict[MoveName, MoveData] = {
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
                 ha.はたきおとす_power,
             ),
-            # docs/spec/turn.md ON_DAMAGE: 「100 はたきおとす等のアイテム効果」
+            # .internal/spec/turn.md ON_DAMAGE: 「100 はたきおとす等のアイテム効果」
             # くっつきバリの転移判定（priority=30）より後に発動する必要があるため ON_DAMAGE_HIT を使用する。
             # TODO: ON_DAMAGE_HIT は modify_hp（ON_HP_CHANGEDによるオボンのみ等の自動発動）より
             # 後に発火するため、相手がHPしきい値回復きのみを持っている場合、はたきおとすで
-            # 奪う前にきのみが発動してしまう。docs/spec/moves/はたきおとす.md「持ち物との発動順序」
+            # 奪う前にきのみが発動してしまう。.internal/spec/moves/はたきおとす.md「持ち物との発動順序」
             # の「はたきおとすの効果が優先される」規定（きのみは奪われる前に発動しない）に反する。
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.はたきおとす_remove_item,
@@ -585,7 +585,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ファストガード": MoveData(
-        pp=16,  # champions基準（docs/champions/move_list.txt）。Gen9本家は15
+        pp=16,  # champions基準（.internal/champions/move_list.txt）。Gen9本家は15
         flags={"protect"},
         handlers={
             Event.ON_TRY_MOVE_2: h.MoveHandler(
@@ -874,7 +874,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "ぶきみなじゅもん": MoveData(
         # PP減少効果自体に確率判定は無いが、ちからずく対象技として
         # 明記されている技のため secondary_effect フラグを設定する
-        # （docs/spec/abilities/ちからずく.md参照）。
+        # （.internal/spec/abilities/ちからずく.md参照）。
         flags={"sound", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
@@ -1040,7 +1040,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "へんしん": MoveData(
-        pp=12,  # champions基準（docs/champions/move_list.txt）。旧値10はSV本家基準の移行漏れ。
+        pp=12,  # champions基準（.internal/champions/move_list.txt）。旧値10はSV本家基準の移行漏れ。
         # accuracy省略=必中。潜伏中の相手への失敗はHIDDEN_MOVE_ALLOWED_MOVES側で処理される。
         flags={"non_encore", "non_copycat", "unprotectable", "unreflectable"},
         handlers={
@@ -1133,10 +1133,10 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "ほしがる": MoveData(
-        pp=20,  # champions基準（docs/champions/move_list.txt）。旧値25はSV本家基準の移行漏れ。
+        pp=20,  # champions基準（.internal/champions/move_list.txt）。旧値25はSV本家基準の移行漏れ。
         flags={"contact", "non_copycat"},
         handlers={
-            # docs/spec/turn.md ON_DAMAGE: 「100 はたきおとす等のアイテム効果」
+            # .internal/spec/turn.md ON_DAMAGE: 「100 はたきおとす等のアイテム効果」
             # くっつきバリの転移判定（priority=30）より後に発動する必要があるため ON_DAMAGE_HIT を使用する。
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.どろぼう_steal_item,
@@ -1222,7 +1222,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         # ではなく「使用者自身や隣り合っていないポケモンも含め、姿を隠しているポケモンには
         # 当たらない・ロックオン/ノーガードが効く」という、相手単体を対象とする技と同じ
         # 命中判定・特性相互作用（ちょすい等のみずタイプ変化技吸収、サイコフィールドの
-        # 先制技ブロック等）を持つ（docs/spec/moves/ほろびのうた.md 技の仕様節）。
+        # 先制技ブロック等）を持つ（.internal/spec/moves/ほろびのうた.md 技の仕様節）。
         # そのためtarget="foe"のまま維持し、まもる無効はunprotectableフラグ、
         # マジックコート/マジックミラー無効はunreflectableフラグで個別に表現する。
         target="foe",

@@ -1,7 +1,7 @@
 """poke-env との相互変換テーブル・変換関数。
 
 互換の方向は poke-env → jpoke のみ（jpoke → poke-env のエクスポートは対象外）。
-docs/poke-env/compat_plan.md の Phase 4 に対応する。
+.internal/poke-env/compat_plan.md の Phase 4 に対応する。
 
 キーの正規化規則: 各マップのキーは poke-env Enum の `name.lower()` に統一する
 （例: `Weather.SUNNYDAY` → `"sunnyday"`、`Field.ELECTRIC_TERRAIN` → `"electric_terrain"`）。

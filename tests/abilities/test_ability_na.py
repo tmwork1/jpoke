@@ -152,7 +152,7 @@ def test_にげごし_ちからずくの技のダメージでも発動する():
     """相手がちからずくで追加効果技（secondary_effect フラグ持ち）を使用した場合の
     ダメージ(move_damage)でも、Championsではにげごしが通常どおり発動する
     （第七世代からSVまでは不発だったが、Championsではこの制限が撤廃されている。
-    docs/spec/abilities/にげごし.md参照）。"""
+    .internal/spec/abilities/にげごし.md参照）。"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="にげごし"), Pokemon("ライチュウ")],
         team1=[Pokemon("カビゴン", ability_name="ちからずく", move_names=["かえんほうしゃ"])],
@@ -169,7 +169,7 @@ def test_にげごし_ちからずくの技のダメージでも発動する():
 
 def test_にげごし_にげられない付与と同時にHP半分以下になっても交代できる():
     """くらいつくのようにダメージ付与とにげられない付与を同時に行う技を受けた場合でも、
-    docs/spec/abilities/にげごし.md「特性かげふみ/ありじごく/じりょくの影響や、
+    .internal/spec/abilities/にげごし.md「特性かげふみ/ありじごく/じりょくの影響や、
     にげられない/バインド/ねをはる/フェアリーロック状態の効果を無視して発動する」の通り
     緊急交代できる（fuzz seed=3318 で発見された IndexError の回帰確認。実際の再現要因技は
     かげぬいだが、ダメージとにげられない付与を同時に行う点が同じくらいつくで代替する）。"""
@@ -204,7 +204,7 @@ def test_にげごし_はらだいこの自己HP消費では発動しない():
 
 def test_にげごし_バインド状態でも交代できる():
     """既にバインド状態でにげごしの発動条件（HP半分以下）を満たした場合も、
-    docs/spec/abilities/にげごし.md の記載通りとらわれ状態を無視して交代が発動する
+    .internal/spec/abilities/にげごし.md の記載通りとらわれ状態を無視して交代が発動する
     （`_trigger_emergency_switch` が `can_switch` ではなく `has_available_bench` で
     判定するようにした回帰確認）。"""
     battle = t.start_battle(

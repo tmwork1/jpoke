@@ -1,6 +1,6 @@
 """
 イベントのEnum定義
-イベントの処理順の詳細は docs/spec/turn_flow.md を参照
+イベントの処理順の詳細は .internal/spec/turn_flow.md を参照
 """
 
 from enum import Enum, auto

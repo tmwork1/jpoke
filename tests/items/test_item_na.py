@@ -62,7 +62,7 @@ def test_ナゾのみ_効果抜群でHP回復():
 
 def test_ナゾのみ_瀕死になったときは発動しない():
     """ナゾのみ: 効果抜群のダメージでHPが0(ひんし)になったときは回復せず、消費もされない
-    （ref: docs/spec/items/ナゾのみ.md「ひんしになったときは発動しない」）
+    （ref: .internal/spec/items/ナゾのみ.md「ひんしになったときは発動しない」）
     """
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],

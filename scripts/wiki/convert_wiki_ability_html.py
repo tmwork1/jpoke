@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-docs/wiki_html/abilities/*.html を読み込み、
-テンプレート準拠の特性仕様書 docs/spec/abilities/*.md を生成する。
+.internal/wiki_html/abilities/*.html を読み込み、
+テンプレート準拠の特性仕様書 .internal/spec/abilities/*.md を生成する。
 """
 
 from pathlib import Path

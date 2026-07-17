@@ -1274,7 +1274,7 @@ def test_バブルこうせん_相手にダメージを与える():
 
 
 def test_バリアーラッシュ_Champions基準の威力とPPを持つ():
-    """バリアーラッシュ: Champions基準で威力90・PP12（docs/champions/move_list.txt参照）。"""
+    """バリアーラッシュ: Champions基準で威力90・PP12（.internal/champions/move_list.txt参照）。"""
     move_data = MOVES["バリアーラッシュ"]
     assert move_data.power == 90
     assert move_data.pp == 12
@@ -1917,7 +1917,7 @@ def test_フェイタルクロー_発動しない場合は状態異常なし():
 
 
 def test_フェイント_Champions基準のPPを持つ():
-    """フェイント: Champions基準でPP12（docs/champions/move_list.txt参照。本家Gen5以降のPP10とは異なる）。"""
+    """フェイント: Champions基準でPP12（.internal/champions/move_list.txt参照。本家Gen5以降のPP10とは異なる）。"""
     move_data = MOVES["フェイント"]
     assert move_data.power == 30
     assert move_data.pp == 12
@@ -2835,7 +2835,7 @@ def test_ヘドロこうげき_どくが発動する():
 
 
 def test_ヘドロばくだん_Champions基準のPPを持つ():
-    """ヘドロばくだん: Champions基準でPP12（docs/champions/move_list.txt参照。本家Gen9のPP10とは異なる）。"""
+    """ヘドロばくだん: Champions基準でPP12（.internal/champions/move_list.txt参照。本家Gen9のPP10とは異なる）。"""
     move_data = MOVES["ヘドロばくだん"]
     assert move_data.power == 90
     assert move_data.pp == 12
@@ -3366,7 +3366,7 @@ def test_ぼうふう_にほんばれ中は命中率が50になる():
 
 def test_ボディプレス_タイプ分類威力命中率PPが仕様通り():
     """ボディプレス: かくとうタイプ・物理・威力80・命中100・Champions基準PP12
-    （docs/champions/move_list.txt参照。本家基準のPP10とは異なる）。"""
+    （.internal/champions/move_list.txt参照。本家基準のPP10とは異なる）。"""
     move_data = MOVES["ボディプレス"]
     assert move_data.type == "かくとう"
     assert move_data.category == "physical"
@@ -3626,7 +3626,7 @@ def test_ボルトチェンジ_相手を倒した場合でも交代する():
 
 
 def test_ボーンラッシュ_PPと威力はChampions基準():
-    """ボーンラッシュ: チャンピオンズでのPPは12・威力は30（docs/champions/move_list.txt準拠。Gen9本家はPP10・威力25）。"""
+    """ボーンラッシュ: チャンピオンズでのPPは12・威力は30（.internal/champions/move_list.txt準拠。Gen9本家はPP10・威力25）。"""
     assert MOVES["ボーンラッシュ"].pp == 12
     assert MOVES["ボーンラッシュ"].power == 30
 
@@ -3790,7 +3790,7 @@ def test_ミサイルばり_複数ヒットする():
 
 
 def test_メタルバースト_Champions基準のPPを持つ():
-    """メタルバースト: Champions基準でPP12（docs/champions/move_list.txt参照。Gen9本家は10）。"""
+    """メタルバースト: Champions基準でPP12（.internal/champions/move_list.txt参照。Gen9本家は10）。"""
     move_data = MOVES["メタルバースト"]
     assert move_data.pp == 12
 
