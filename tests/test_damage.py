@@ -6,54 +6,6 @@ from jpoke import Pokemon
 from . import test_utils as t
 
 
-# ──────────────────────────────────────────────────────────────────
-# 攻撃側タイプ補正
-# ──────────────────────────────────────────────────────────────────
-
-@pytest.mark.parametrize(
-    ("attacker", "expected"),
-    [
-        (Pokemon("ピカチュウ", move_names=["でんきショック"]), 4096*1.5),
-        (Pokemon("ピカチュウ", move_names=["ひのこ"]), 4096*1.0),
-    ]
-)
-def test_攻撃側タイプ補正計算(attacker: Pokemon, expected: int):
-    battle = t.start_battle(
-        team0=[attacker],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    t.build_context(battle, player_idx=0)
-    t.run_move(battle, 0)
-    assert battle.damage_calculator.atk_type_modifier == expected
-
-
-# ──────────────────────────────────────────────────────────────────
-# 防御側タイプ相性補正
-# ──────────────────────────────────────────────────────────────────
-
-@pytest.mark.parametrize(
-    ("defender_name", "move", "expected"),
-    [
-        ("フシギダネ", "ひのこ", 4096*2),
-        ("コイル", "じしん", 4096*4),
-        ("ゼニガメ", "ひのこ", 4096*0.5),
-        ("ピカチュウ", "でんきショック", 4096*0.5),
-        ("ゴース", "たいあたり", None),
-    ]
-)
-def test_防御側タイプ相性補正計算(defender_name: str, move: str, expected: float | None):
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=[move])],
-        team1=[Pokemon(defender_name)],
-    )
-    t.run_move(battle, 0)
-    assert battle.damage_calculator.def_type_modifier == expected
-
-
-# ──────────────────────────────────────────────────────────────────
-# 急所
-# ──────────────────────────────────────────────────────────────────
-
 def test_急所_ダメージ倍率():
     """急所ダメージが1.5倍になることを確認"""
     battle = t.start_battle(
@@ -101,6 +53,46 @@ def test_急所_防御側の能力ランク上昇を無視する():
 
     assert normal_with_boost[0] < critical_with_boost[0]
     assert critical_with_boost == critical_without_boost
+
+
+@pytest.mark.parametrize(
+    ("attacker", "expected"),
+    [
+        (Pokemon("ピカチュウ", move_names=["でんきショック"]), 4096*1.5),
+        (Pokemon("ピカチュウ", move_names=["ひのこ"]), 4096*1.0),
+    ]
+)
+def test_攻撃側タイプ補正計算(attacker: Pokemon, expected: int):
+    battle = t.start_battle(
+        team0=[attacker],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    t.build_context(battle, player_idx=0)
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.atk_type_modifier == expected
+
+
+@pytest.mark.parametrize(
+    ("defender_name", "move", "expected"),
+    [
+        ("フシギダネ", "ひのこ", 4096*2),
+        ("コイル", "じしん", 4096*4),
+        ("ゼニガメ", "ひのこ", 4096*0.5),
+        ("ピカチュウ", "でんきショック", 4096*0.5),
+        ("ゴース", "たいあたり", None),
+        # fuzz_log seed=2141 回帰: エスパー技はあくタイプの相手に対して
+        # 無効(0倍)ではなく「いまひとつ」(0.5倍)になる
+        # （TYPE_MODIFIER["エスパー"]["あく"]が誤って0.0になっていた）
+        ("ゾロアーク", "しねんのずつき", 4096*0.5),
+    ]
+)
+def test_防御側タイプ相性補正計算(defender_name: str, move: str, expected: float | None):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=[move])],
+        team1=[Pokemon(defender_name)],
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.def_type_modifier == expected
 
 
 if __name__ == "__main__":
