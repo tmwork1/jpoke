@@ -888,6 +888,10 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "リチャージ": VolatileData(
         handlers={
+            Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
+                h.force_command,
+                subject_spec="source:self",
+            ),
             Event.ON_TRY_ACTION: h.VolatileHandler(
                 h.リチャージ_block_action,
                 subject_spec="attacker:self",

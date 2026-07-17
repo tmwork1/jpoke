@@ -826,6 +826,32 @@ def test_やどりぎのタネ_回復先満タンでも対象のHPは減る():
     assert heal_mon.hp == heal_hp
 
 
+def test_リチャージ_中はテラスタルを選択できない():
+    """seed=1948 (fuzz_log) の回帰テスト。
+
+    ギガインパクト・プリズムレーザー等の反動技を使用した直後の「リチャージ」状態
+    （行動不能ターン）中は、docs/spec/terastal.md「発動条件・制限」の通り
+    テラスタルが発動できないはず。修正前はリチャージにON_MODIFY_COMMAND_OPTIONS
+    ハンドラが登録されておらず、行動候補からテラスタルコマンドが除外されなかった。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"リチャージ": 1},
+    )
+    mon = battle.actives[0]
+    player = battle.players[0]
+
+    with battle.phase_context("action"):
+        commands = battle.get_available_commands(player)
+    assert commands == [Command.FORCED]
+    assert Command.TERASTAL_0 not in commands
+
+    # 強制行動のためわるあがきさえ選べず、テラスタルは発動しない
+    t.run_move(battle, 0)
+    assert not mon.is_terastallized
+
+
 def test_リチャージ_動けないログがリチャージ解除ログより先に記録される():
     """seed=19 (LogInconsistency@volatile.py:リチャージ_block_action:1428) の回帰テスト。
 
