@@ -45,7 +45,7 @@ PYTHONUTF8=1 python examples/01_basics/01_battle_against_intro.py
 | `01_basics/02_quickstart.py` | `Battle` / `Player` を手動管理する最小構成の1vs1バトル | 導入 |
 | `01_basics/03_team_battle.py` | 3体チーム・複数選出・複数ターンのバトルループ | 導入 |
 | `01_basics/04_pokedex_ability_lookup.py` | `POKEDEX[name].abilities` によるポケモンが持てる特性の確認 | 導入 |
-| `01_basics/05_explicit_commands.py` | `Command` の種類の識別（`is_regular_move`/`is_terastal`/`is_switch`）、`Command.get_switch_command()` / `get_terastal_command()` / `get_megaevol_command()` による交代・テラスタル・メガシンカコマンドの明示的な組み立て | 導入 |
+| `01_basics/05_explicit_commands.py` | `battle.get_available_commands()` が返す `Command` の種類の識別（`is_regular_move`/`is_terastal`/`is_switch`） | 導入 |
 | `01_basics/06_structured_log_extraction.py` | `LogCode` の種類の確認、`battle.get_event_logs()` が返す構造化ログ（LogCode付きのEventLog） | 導入 |
 | `02_ai/01_custom_player.py` | `Player` を継承した最小のカスタム方策（`choose_command()` のオーバーライド） | AI開発 |
 | `02_ai/02_selection_customization.py` | `choose_selection()` のオーバーライドによる選出順のカスタマイズ | AI開発 |
