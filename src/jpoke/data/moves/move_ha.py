@@ -109,6 +109,9 @@ MOVES_HA: dict[MoveName, MoveData] = {
             Event.ON_END_MOVE: h.MoveHandler(
                 ha.はきだす_apply_after,
             ),
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.はきだす_reset_stockpile)
         }
     ),
     "ハサミギロチン": MoveData(
@@ -1064,6 +1067,9 @@ MOVES_HA: dict[MoveName, MoveData] = {
             Event.ON_HIT: h.MoveHandler(
                 ha.ホイールスピン_sharply_lower_attacker_spe,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.ホイールスピン_sharply_lower_attacker_spe)
         }
     ),
     "ほうでん": MoveData(

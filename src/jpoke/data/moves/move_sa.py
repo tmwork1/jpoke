@@ -286,6 +286,9 @@ MOVES_SA: dict[MoveName, MoveData] = {
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
                 ha.reduce_damage_in_double_battle,
             ),
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.しっとのほのお_apply_burn_to_defender)
         }
     ),
     "しっぺがえし": MoveData(

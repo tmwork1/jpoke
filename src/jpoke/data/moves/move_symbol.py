@@ -121,6 +121,9 @@ MOVES_SYMBOL: dict[MoveName, MoveData] = {
             Event.ON_HIT: h.MoveHandler(
                 ha.Vジェネレート_lower_attacker_def_spd_spe,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.Vジェネレート_lower_attacker_def_spd_spe)
         }
     ),
 }
