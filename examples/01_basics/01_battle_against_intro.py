@@ -1,8 +1,8 @@
 """Player.battle_against() を使い、最小構成でバトルを実行する。
 
-Battle / Player を手動で管理してターンを1つずつ進める方法（02のquickstart）も
-当然必要になるが、まずは対戦相手を指定して勝敗だけを見たい場合に一番手軽な
-battle_against()（poke-env互換API）から始める。
+Battle / Player を直接扱う方法（02以降）も当然必要になるが、まずは対戦相手を
+指定して勝敗だけを見たい場合に一番手軽なbattle_against()（poke-env互換API）
+から始める。
 """
 from __future__ import annotations
 

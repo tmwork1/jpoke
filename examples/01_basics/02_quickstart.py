@@ -1,11 +1,10 @@
-"""Battle と Player だけを使い、最小構成でバトルを実行する。
+"""Battle と Player を直接使い、最小構成でバトルを実行する。
 
 ピカチュウ vs フシギダネの1体ずつのバトルを最後まで進め、勝者とログを表示する。
-README のクイックスタートと同内容。
 
-01の battle_against() は「多数回対戦させて勝率を見る」用途に向くが、1回の対戦を
-ターンごとに手動で進めながら中身を観察したい場合はこちらのように Battle / Player を
-直接使う。
+01の battle_against() は「多数回対戦させて勝率を見る」用途に向くが、Battle/Player
+を直接扱いたい場合は battle.play_out() で決着まで自動的に進められる。ターンごとに
+手動でstep()を呼びながら中身を観察する方法は03_team_battle.py以降で示す。
 """
 from __future__ import annotations
 
@@ -23,14 +22,9 @@ def main() -> None:
     # seed: 乱数シードを固定し、命中判定・急所判定などを再現可能にする
     battle = Battle(player1, player2, seed=1)
 
-    # start() は選出と初期繰り出し（先頭のポケモンを場に出す処理）を完了させ、
-    # 以降 step() でターンを進められる状態にする
-    battle.start()
-
-    # 決着がつくかターン上限に達するまで手動でstep()する
-    # （バトルを最後まで自動的に進めたいだけなら battle.play_out() も使える）
-    while battle.can_continue(max_turns=100):
-        battle.step()
+    # play_out()は未開始ならstart()を行い、決着がつくかターン上限に達するまで
+    # 自動的にstep()を繰り返す（戻り値はNone。結果はbattle.winner等から取得する）
+    battle.play_out(max_turns=100)
 
     battle.print_logs("all")
 
