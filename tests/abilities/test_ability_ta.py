@@ -1802,6 +1802,24 @@ def test_どくげしょう_直接攻撃でない物理技でも発動する():
     assert foe_side.get("どくびし").count == 1
 
 
+def test_どくげしょう_致命打でも発動する():
+    """どくげしょう: 物理技でHPが0になったときも、特性を発動させてからひんしになる
+    （seed=2225 fuzz_log 回帰テスト。docs/spec/abilities/どくげしょう.md）"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="どくげしょう")],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+    )
+    defender = battle.actives[0]
+    defender.hp = 1
+    t.fix_damage(battle, 9999)
+
+    t.run_move(battle, 1)
+
+    assert defender.fainted
+    foe_side = battle.get_side(battle.players[1])
+    assert foe_side.get("どくびし").count == 1
+
+
 def test_どくしゅ_どく付与():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="どくしゅ", move_names=["たいあたり"])],
@@ -2064,6 +2082,26 @@ def test_どくのトゲ_みがわりに阻まれたときは発動しない():
 
     attacker = battle.actives[1]
     assert not attacker.ailment.is_active
+
+
+def test_どくのトゲ_致命打でも発動する():
+    """どくのトゲ: 攻撃技でひんしになったときも発動する
+    （seed=2225 fuzz_log 回帰テスト。docs/spec/abilities/どくのトゲ.md）"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="どくのトゲ")],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender = battle.actives[0]
+    defender.hp = 1
+    t.fix_damage(battle, 9999)
+    t.fix_random(battle, 0.0)
+
+    t.run_move(battle, 1)
+
+    assert defender.fainted
+    attacker = battle.actives[1]
+    assert attacker.has_ailment("どく")
 
 
 def test_どくぼうそう_どく状態でない場合は倍率なし():
