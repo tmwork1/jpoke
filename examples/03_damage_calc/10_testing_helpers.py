@@ -24,7 +24,6 @@ def main() -> None:
     )
     # start_battle() は Player インスタンスを返さないため、battle.players から取得する
     player0, player1 = battle.players
-    attacker = battle.get_active(player0)
     defender = battle.get_active(player1)
 
     # calc_lethal() は player_idx（アクティブのインデックス）を渡すだけで済む

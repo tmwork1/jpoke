@@ -2186,7 +2186,6 @@ def test_ごりむちゅう_最初に選んだ技のみ選択可能になる():
     )
     t.run_move(battle, 0, move_idx=0)
     player = battle.players[0]
-    mon = battle.actives[0]
     with battle.phase_context("action"):
         commands = battle.get_available_commands(player)
     move_commands = [cmd for cmd in commands if cmd.is_type("move")]
