@@ -1,11 +1,10 @@
-"""poke-env 互換化（docs/poke-env/compat_plan.md）のクロスカッティングなテスト。
+"""poke-env 互換化（.internal/poke-env/compat_plan.md）のクロスカッティングなテスト。
 
 Phase 3（property追加）・Phase 4（変換テーブル）・Phase 5（`Player.battle_against`）を対象とする。
 特定の特性・技・アイテムに紐づかない横断的な互換性テストのため、トップレベルに配置する。
 """
 import os
 import subprocess
-import sys
 from pathlib import Path
 from typing import get_args
 
@@ -24,9 +23,13 @@ from jpoke.types.poke_env import (
 )
 
 from . import test_utils as t
+from .conftest import resolve_subprocess_python
 import jpoke.core.player as player_module
 
 ROOT = Path(__file__).resolve().parent.parent
+# subprocessで起動する子プロセス用のインタプリタ。sys.executableにjpokeが
+# 入っていない環境でも、リポジトリ直下の.venvにjpokeが入っていればそちらを優先する。
+PYTHON = resolve_subprocess_python("jpoke")
 
 # ── Phase 3: Pokemon のproperty ──────────────────────────────────────
 
@@ -271,7 +274,7 @@ def test_battle_decision_randomの種はpythonhashseedに依存しない():
 
     def run_with_hashseed(hashseed: str) -> str:
         result = subprocess.run(
-            [sys.executable, "-c", script],
+            [PYTHON, "-c", script],
             cwd=ROOT,
             capture_output=True,
             text=True,
@@ -602,7 +605,7 @@ def test_変換マップの値は対応するliteral型の値に含まれる(map
 def test_無限交代ループの再現条件下でもコマンドが技を含んで決着する():
     """バグ報告の再現条件（3体チーム・両陣営RandomPlayer）で無限交代ループが解消し、
     技コマンドが実際に選ばれた上で規定ターン数以内に決着することを確認する
-    （`docs/api_feedback/pre_loop/04_sonnet_investigation.md` 4度目のレビュー指摘の回帰テスト）。
+    （`.internal/api_feedback/pre_loop/04_sonnet_investigation.md` 4度目のレビュー指摘の回帰テスト）。
 
     修正前は `seed=1,2,3,5` で技コマンドが一度も選ばれないまま交代コマンドだけが
     ターン上限まで選ばれ続けた。

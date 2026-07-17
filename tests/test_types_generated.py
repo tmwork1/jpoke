@@ -8,7 +8,6 @@ Note:
 import json
 import os
 import subprocess
-import sys
 from pathlib import Path
 from typing import get_args
 
@@ -20,8 +19,13 @@ from jpoke.data.megaevol import MEGA_STONES
 from jpoke.data.move import MOVES
 from jpoke.types import AbilityName, ItemName, MoveName, PokemonName
 
+from .conftest import resolve_subprocess_python
+
 ROOT = Path(__file__).resolve().parent.parent
 POKEDEX_JSON = ROOT / "src/jpoke/data/ps-champ-ja/pokedex.json"
+# subprocessで起動する生成スクリプト用のインタプリタ。sys.executableにjpokeが
+# 入っていない環境でも、リポジトリ直下の.venvにjpokeが入っていればそちらを優先する。
+PYTHON = resolve_subprocess_python("jpoke")
 
 GENERATE_SCRIPTS = [
     ("generate_ability_literal.py", "src/jpoke/types/ability.py"),
@@ -49,7 +53,7 @@ def test_generateliteralスクリプト_再実行しても差分が出ない(scr
     before = target_path.read_text(encoding="utf-8")
 
     result = subprocess.run(
-        [sys.executable, str(script_path)],
+        [PYTHON, str(script_path)],
         cwd=ROOT,
         capture_output=True,
         text=True,
