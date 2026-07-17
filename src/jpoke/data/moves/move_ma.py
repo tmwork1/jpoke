@@ -116,6 +116,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(hs.まねっこ_can_use, allow_fainted_subject=True),
             Event.ON_STATUS_HIT: h.MoveHandler(hs.まねっこ_execute, allow_fainted_subject=True),
+            Event.ON_MODIFY_PP_CONSUMED: h.MoveHandler(hs.まねっこ_suppress_pp, allow_fainted_subject=True),
         },
     ),
     "まほうのこな": MoveData(

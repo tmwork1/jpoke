@@ -2845,22 +2845,51 @@ def まねっこ_can_use(battle: Battle, ctx: AttackContext, value: Any) -> Hand
 
 def まねっこ_execute(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """まねっこの効果: バトルで最後に使われた技をそのまま使用する。
+    コピーした技の PP は消費しない（まねっこ自体のみ消費）。
 
-    まねっこ自身のハンドラ（ON_STATUS_HIT の本ハンドラ等）は、この呼び出しが
-    完了するまでイベントマネージャーに登録されたままになる。コピーした技が
-    変化技（status）だった場合、その技の実行中にも ON_STATUS_HIT が発火するため、
-    登録されたままだとまねっこ_execute が再度呼ばれてしまい、コピー技を実行する
-    たびに再帰が繰り返されて無限ループになる（コピー技が状態異常等で失敗し続ける
-    ケースを含む）。これを避けるため、コピー技の実行中はまねっこ自身のハンドラを
-    一時的に解除し、実行後に元に戻す。
+    まねっこ自身の ON_BEFORE_APPLY_MOVE（まねっこ_can_use）・ON_STATUS_HIT
+    （本ハンドラ）は、この呼び出しが完了するまでイベントマネージャーに登録された
+    ままになる。コピーした技の実行中にも同じ攻撃者に対してこれらのイベントが
+    発火するため、登録されたままだと以下の問題が起きる。
+    - コピーした技が status 技の場合、その ON_STATUS_HIT でまねっこ_execute
+      が再度呼ばれ、実行するたびに再帰が繰り返されて無限ループになる。
+    - コピーした技の ON_BEFORE_APPLY_MOVE でまねっこ_can_use が再度評価され、
+      まねっこ自身の使用条件チェックが無関係な技に対して誤って行われる。
+    これを避けるため、コピーした技の実行中はまねっこ自身の ON_BEFORE_APPLY_MOVE /
+    ON_STATUS_HIT ハンドラのみを一時的に解除する
+    （ON_MODIFY_PP_CONSUMED はコピーした技のPP消費を抑制するために実行中も
+    登録したままにする必要があるため対象外）。
     """
     from jpoke.model import Move
     copied_move = Move(battle.last_used_move_name)
-    ctx.move.unregister_handlers(battle.events, ctx.attacker)
+    # まねっこのON_MODIFY_PP_CONSUMEDハンドラがPP消費を0にするため、
+    # サブ実行フラグを立てる
+    ctx.attacker.copycat_active = True
+    suppressed_events = (Event.ON_BEFORE_APPLY_MOVE, Event.ON_STATUS_HIT)
+    handlers_data = ctx.move.data.handlers
+    for event in suppressed_events:
+        handler = handlers_data.get(event)
+        if handler is None:
+            continue
+        for h in (handler if isinstance(handler, list) else [handler]):
+            battle.events.off(event, h, ctx.attacker)
     try:
         battle.run_move(ctx.attacker, copied_move)
     finally:
-        ctx.move.register_handlers(battle.events, ctx.attacker)
+        for event in suppressed_events:
+            handler = handlers_data.get(event)
+            if handler is None:
+                continue
+            for h in (handler if isinstance(handler, list) else [handler]):
+                battle.events.on(event, h, ctx.attacker)
+        ctx.attacker.copycat_active = False
+    return HandlerReturn(value=value)
+
+
+def まねっこ_suppress_pp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """まねっこのサブ実行中はコピーした技のPP消費を0にする。"""
+    if ctx.attacker.copycat_active:
+        return HandlerReturn(value=0, stop_event=True)
     return HandlerReturn(value=value)
 
 

@@ -223,6 +223,15 @@ class Pokemon:
         self.memory["turn"]["metronome_active"] = value
 
     @property
+    def copycat_active(self) -> bool:
+        """まねっこによるサブ技実行中フラグ。呼び出し元のtry/finallyで必ずFalseに戻される。"""
+        return self.memory["turn"].get("copycat_active", False)
+
+    @copycat_active.setter
+    def copycat_active(self, value: bool):
+        self.memory["turn"]["copycat_active"] = value
+
+    @property
     def hits_taken(self) -> int:
         """このターン中に受けた攻撃回数（カウント等）。"""
         return self.memory["turn"].get("hits_taken", 0)
