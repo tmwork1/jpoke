@@ -24,6 +24,75 @@ def test_さわぐ_さわぎだしでねむりを起こす():
     assert not foe.ailment.is_active
 
 
+def test_さわぐ_交代してきた新しい相手にもさわがしいが引き継がれる():
+    """さわぐ: 継続中に相手が交代した場合、新しく出てきた相手にもさわがしいが
+    正しく付与され、ねむるが阻止される（fuzzログ seed=1823の回帰テスト）。
+
+    修正前は、さわがしいがさわぐ開始時（ON_VOLATILE_START）の相手にのみ一度だけ
+    付与されており、さわぐ継続中に相手が交代すると新しく出てきた相手には
+    さわがしいが付与されないまま漏れ、ねむるを成功させてしまっていた。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["さわぐ"])],
+        team1=[Pokemon("ピカチュウ"), Pokemon("コラッタ", move_names=["ねむる"])],
+        volatile0={"さわぐ": 3},
+        accuracy=100,
+    )
+    # 交代前: 最初の相手には既にさわがしいが付与されている
+    assert battle.actives[1].has_volatile("さわがしい")
+
+    t.run_switch(battle, 1, 1)
+    new_foe = battle.actives[1]
+    assert new_foe.name == "コラッタ"
+    assert new_foe.has_volatile("さわがしい")
+
+    # ねむるはHP満タンだと別理由（HP満タン）で先に失敗してしまうため、
+    # さわぐによる失敗を確認できるようHPを減らしておく
+    new_foe.hp = new_foe.max_hp - 10
+
+    t.run_move(battle, 1, 0)
+    assert not battle.move_executor.move_success
+    assert not new_foe.has_ailment("ねむり")
+
+    logs = [
+        log for log in battle.event_logger.logs
+        if log.log == LogCode.MOVE_FAILED
+    ]
+    assert len(logs) == 1
+    assert logs[0].payload.move == "ねむる"
+    assert logs[0].payload.display_reason == "さわぐ"
+
+
+def test_さわぐ_強制続行ターンはPPを消費しない():
+    """さわぐ: 2・3ターン目の強制続行ターン（Command.FORCED）ではPPを消費しない。
+
+    docs/spec/moves/さわぐ.md「PP消費は最初の使用時の1回のみ（さわぐ状態継続中の
+    強制行動ではPPを消費しない）」の回帰テスト。修正前は、強制続行ターンで
+    command_manager.resolve_move_from_command が生成する使い捨てMoveインスタンス
+    でも無条件にON_MODIFY_PP_CONSUMEDイベントが発火し、「PP -1」とログに出続ける
+    不整合があった（fuzzログ seed=1823で発見）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["さわぐ", "たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.volatile_manager.apply(mon, "さわぐ", count=2, move_name="さわぐ")
+    move = battle.command_manager.resolve_move_from_command(battle.players[0], Command.FORCED)
+    assert move.is_forced_continuation
+    full_pp = move.pp
+
+    battle.run_move(mon, move)
+    battle.print_logs()
+
+    # 使い捨てインスタンスのPPも減らない
+    assert move.pp == full_pp
+
+    logs = [log for log in battle.event_logger.logs if log.log == LogCode.PP_CONSUMED]
+    assert logs
+    assert logs[-1].payload.value == 0
+
+
 def test_さわぐ_技固定():
     """さわぐ: Command.FORCED が返り、解決後の技がさわぐになる"""
     battle = t.start_battle(

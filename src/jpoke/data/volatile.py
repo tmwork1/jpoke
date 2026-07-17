@@ -319,6 +319,10 @@ VOLATILES: dict[str, VolatileData] = {
                 h.さわぐ_remove_さわがしい,
                 subject_spec="source:self",
             ),
+            Event.ON_SWITCH_IN: h.VolatileHandler(
+                h.さわぐ_apply_to_new_opponent,
+                subject_spec="source:foe",
+            ),
             Event.ON_TURN_END: h.VolatileHandler(
                 h.さわぐ_tick_volatile,
                 subject_spec="source:self",

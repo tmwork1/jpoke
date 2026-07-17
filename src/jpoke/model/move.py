@@ -18,13 +18,18 @@ class Move(GameEffect):
     Attributes:
         pp: 技の残りPP（使用可能回数）
         _type: 技のタイプ（一部の効果で変更される可能性がある）
+        is_forced_continuation: あばれる・さわぐ等、Command.FORCEDによる強制続行
+            ターンで使い捨て生成されたインスタンスかどうか
     """
 
-    def __init__(self, name: MoveName):
+    def __init__(self, name: MoveName, is_forced_continuation: bool = False):
         """技を初期化する。
 
         Args:
             name: 技名
+            is_forced_continuation: Command.FORCEDによる強制続行ターンで
+                生成された使い捨てインスタンスの場合True。CommandManager
+                （`resolve_move_from_command`）が明示的に指定する
         """
         super().__init__(MOVES[name])
         self.pp: int = self.data.pp
@@ -32,6 +37,7 @@ class Move(GameEffect):
         self.type: Type = self.data.type
         self.base_power: int | None = self.data.power
         self.category: MoveCategory = self.data.category
+        self.is_forced_continuation: bool = is_forced_continuation
 
         self.data: MoveData  # type hint
 
