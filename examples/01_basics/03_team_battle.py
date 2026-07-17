@@ -30,7 +30,7 @@ def main() -> None:
     # 決着がつくかターン上限に達するまで手動でstep()する
     # （バトルを最後まで自動的に進めたいだけなら battle.play_out(max_turns=30) も使えるが、
     #   ここではターンごとに battle.print_logs() で経過を観察したいため手動ループにしている）
-    while not battle.finished and battle.turn < max_turns:
+    while battle.can_continue(max_turns=max_turns):
         battle.step()
         battle.print_logs()
         print("-" * 50)

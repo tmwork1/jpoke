@@ -51,7 +51,7 @@ PYTHONUTF8=1 python examples/01_basics/01_battle_against_intro.py
 | `02_ai/02_selection_customization.py` | `choose_selection()` のオーバーライドによる選出順のカスタマイズ | AI開発 |
 | `02_ai/03_tree_search_ai.py` | `TreeSearchPlayer` を継承した木探索AIとランダム方策の対戦 | AI開発（発展） |
 | `02_ai/04_command_evaluation_debug.py` | `TreeSearchPlayer.evaluate_commands()` によるコマンド候補・評価値のデバッグ確認 | AI開発（発展） |
-| `02_ai/05_opponent_estimation.py` | `TreeSearchPlayer.opponent_estimator()` のオーバーライドによる、相手の未公開の技構成の推定と、それを踏まえた木探索 | AI開発（発展） |
+| `02_ai/05_opponent_estimation.py` | `TreeSearchPlayer.estimate_opponent()` のオーバーライドによる、相手の未公開の技構成の推定と、それを踏まえた木探索 | AI開発（発展） |
 | `02_ai/06_deterministic_search.py` | `TreeSearchPlayer.configure_sim()` のオーバーライドによる、探索中だけ命中率・ダメージ乱数を固定する決定論化 | AI開発（発展） |
 | `02_ai/07_fallback_policy.py` | `TreeSearchPlayer.fallback()` のオーバーライドによる、探索できない局面での代替方策のカスタマイズ | AI開発（発展） |
 | `02_ai/08_poke_env_style_player.py` | poke-env互換プロパティ（`battle.available_moves` 等）を使った `choose_command()` の実装 | AI開発 |

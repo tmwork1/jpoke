@@ -36,7 +36,6 @@ def main() -> None:
     player2.add_pokemon("ゼニガメ", move_names=["なみのり"])
 
     battle = Battle(player1, player2, seed=1)
-    battle.start()
     battle.play_out(max_turns=30)
 
     show_logcode_variety()

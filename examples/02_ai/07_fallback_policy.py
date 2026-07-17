@@ -1,7 +1,7 @@
 """TreeSearchPlayer.fallback() をオーバーライドして、
 探索できない局面での代替方策をカスタマイズする方法を示す。
 
-fallback() は (1) 相手の合法手が未公開で opponent_estimator でも推定できない
+fallback() は (1) 相手の合法手が未公開で estimate_opponent でも推定できない
 局面（実対戦の初手など）、(2) 探索中に発生した割り込み交代（瀕死交代等）による
 choose_command() の再入時、の2箇所で使われる（tree_search_player.py のdocstring
 参照）。既定は battle.decision_random.choice() による完全ランダム選択だが、
@@ -45,7 +45,7 @@ def main() -> None:
     battle = Battle(ai_player, opponent_player, seed=1)
     battle.start()
 
-    # 1ターン目: 相手の技が未公開でopponent_estimatorも未実装のためfallback()に
+    # 1ターン目: 相手の技が未公開でestimate_opponentも未実装のためfallback()に
     # 委譲される。既定のランダム選択なら「まもる」も等確率で選ばれ得るが、この
     # 実装では攻撃技「のしかかり」が優先して選ばれる
     battle.step()

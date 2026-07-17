@@ -46,6 +46,45 @@ def test_configure_simが各分岐でsim_step実行前に呼ばれる():
     assert len(player1.configure_sim_calls) == player1.nodes_expanded
 
 
+def test_estimate_opponentを指定すると推定情報から探索が継続される():
+    """FW-U1: 相手の合法手が未公開で空でも、estimate_opponent が相手ポケモンの
+    moves に推定した技を書き込めば、実際のコマンド列挙は CommandManager が
+    代行し、evaluate が実際に呼ばれ探索が継続されること（fallbackへ即座に
+    委譲されるのではなく、シミュレーションが実行されること）。利用者は
+    Command を直接組み立てる必要がない。
+    """
+    class EstimatorPlayer(TreeSearchPlayer):
+        def __init__(self, username: str):
+            super().__init__(username=username)
+            self.evaluate_calls: list[int] = []
+
+        def evaluate(self, battle: Battle) -> float:
+            self.evaluate_calls.append(1)
+            return super().evaluate(battle)
+
+        def estimate_opponent(self, battle: Battle, opponent: Player) -> None:
+            # Command を組み立てず、推定した技（Move）を書き込むだけでよい。
+            active = battle.player_states[opponent].active
+            active.moves = [Move("たいあたり"), Move("みずでっぽう")]
+
+    player1 = EstimatorPlayer(username="SearchPlayer")
+    player1.team = [
+        Pokemon("ヒトカゲ", item_name="", move_names=["たいあたり", "10まんボルト"]),
+    ]
+
+    player2 = Player(username="RandomPlayer")
+    player2.team = [Pokemon("ゼニガメ", item_name="", move_names=["たいあたり", "みずでっぽう"])]
+    # 相手の技は一切 revealed にしない -> estimator がなければ空リストになる盤面
+
+    battle = Battle(player1, player2, n_selected=1, seed=1)
+    battle.test_option.accuracy = 100
+    battle.start()
+
+    battle.step()
+
+    assert player1.evaluate_calls, "estimate_opponent指定時はevaluateが呼ばれ探索が行われるはず"
+
+
 def test_evaluate_commandsがmax_nodesを無視して全合法手を評価する():
     """r6-9回帰: evaluate_commands() は呼び出し中 max_nodes を一時的に無効化し、
     自分の全合法手 × 相手の全合法手を打ち切りなく評価すること。
@@ -333,45 +372,6 @@ def test_max_plies2で相手の未公開技が2手目の分岐にも現れない
         assert "みずでっぽう" not in move_names, (
             "未公開技が探索対象の盤面に現れている（マスクが1手目より後で漏れている）"
         )
-
-
-def test_opponent_estimatorを指定すると推定情報から探索が継続される():
-    """FW-U1: 相手の合法手が未公開で空でも、opponent_estimator が相手ポケモンの
-    moves に推定した技を書き込めば、実際のコマンド列挙は CommandManager が
-    代行し、evaluate が実際に呼ばれ探索が継続されること（fallbackへ即座に
-    委譲されるのではなく、シミュレーションが実行されること）。利用者は
-    Command を直接組み立てる必要がない。
-    """
-    class EstimatorPlayer(TreeSearchPlayer):
-        def __init__(self, username: str):
-            super().__init__(username=username)
-            self.evaluate_calls: list[int] = []
-
-        def evaluate(self, battle: Battle) -> float:
-            self.evaluate_calls.append(1)
-            return super().evaluate(battle)
-
-        def opponent_estimator(self, battle: Battle, opponent: Player) -> None:
-            # Command を組み立てず、推定した技（Move）を書き込むだけでよい。
-            active = battle.player_states[opponent].active
-            active.moves = [Move("たいあたり"), Move("みずでっぽう")]
-
-    player1 = EstimatorPlayer(username="SearchPlayer")
-    player1.team = [
-        Pokemon("ヒトカゲ", item_name="", move_names=["たいあたり", "10まんボルト"]),
-    ]
-
-    player2 = Player(username="RandomPlayer")
-    player2.team = [Pokemon("ゼニガメ", item_name="", move_names=["たいあたり", "みずでっぽう"])]
-    # 相手の技は一切 revealed にしない -> estimator がなければ空リストになる盤面
-
-    battle = Battle(player1, player2, n_selected=1, seed=1)
-    battle.test_option.accuracy = 100
-    battle.start()
-
-    battle.step()
-
-    assert player1.evaluate_calls, "opponent_estimator指定時はevaluateが呼ばれ探索が行われるはず"
 
 
 def test_reseedTrueにより兄弟ノード間でsimの乱数系列が独立する():

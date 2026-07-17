@@ -48,9 +48,8 @@ def main() -> None:
     player2.add_pokemon("フシギダネ", move_names=["たいあたり"])
 
     battle = Battle(player1, player2, seed=1)
-    battle.start()
-
-    winner = battle.play_out(max_turns=100)
+    battle.play_out(max_turns=100)
+    winner = battle.winner
     print(f"勝者: {winner.username if winner else '引き分け（ターン上限）'}")
     battle.print_logs("all")
     print("-" * 50)  # print_logs() の出力とその後のprint()を視覚的に区切る

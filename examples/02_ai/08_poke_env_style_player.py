@@ -1,4 +1,4 @@
-"""poke-env経験者向け: poke-env互換プロパティを使った choose_command() の実装方法を示す。
+"""poke-env経験者向け: poke-env互換プロパティ・APIを使った choose_command() の実装方法を示す。
 
 01_custom_player.py の StrongestMovePlayer は get_available_commands() +
 command_to_move() の組み合わせで実装していたが、choose_command() に渡される battle は
@@ -7,9 +7,9 @@ poke-env互換プロパティ（battle.active_pokemon / battle.opponent_active_p
 battle.available_moves / battle.available_switches / battle.side_conditions /
 battle.team）がそのまま自分視点の情報として使える。
 
-補足: poke-envではPlayer.choose_move()がcreate_order(move)で作ったBattleOrderを
-返す仕様だが、jpokeのCommandは技・交代等の選択肢を表す単純なEnum値であり、
-コマンド生成専用のクラスは存在しない。
+poke-envではPlayer.choose_move()がcreate_order(move)で作ったBattleOrderを返す仕様だが、
+jpokeのCommandは技・交代等の選択肢を表す単純なEnum値なので、battle.create_order(self, move)
+で Move/Pokemon オブジェクトから直接対応する Command を得られる（command_to_move() の逆方向）。
 """
 from __future__ import annotations
 
@@ -28,12 +28,8 @@ class PokeEnvStylePlayer(Player):
             # 交代コマンドが同時に存在すると先頭に来てしまい誤ってそちらを返すことがある）
             assert battle.is_struggle_only(self)
             return Command.STRUGGLE
-        move_commands = [c for c in battle.get_available_commands(self) if c.is_regular_move]
-        best_index = max(
-            range(len(moves)),
-            key=lambda i: moves[i].base_power if moves[i].is_attack else 0,
-        )
-        return move_commands[best_index]
+        best_move = max(moves, key=lambda m: m.base_power if m.is_attack else 0)
+        return battle.create_order(self, best_move)
 
 
 def main() -> None:
@@ -44,9 +40,8 @@ def main() -> None:
     player2.add_pokemon("フシギダネ", move_names=["たいあたり"])
 
     battle = Battle(player1, player2, seed=1)
-    battle.start()
-
-    winner = battle.play_out(max_turns=100)
+    battle.play_out(max_turns=100)
+    winner = battle.winner
     print(f"勝者: {winner.username if winner else '引き分け（ターン上限）'}")
 
     active = battle.get_active(player1)

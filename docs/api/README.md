@@ -80,22 +80,24 @@ battle.start()
 | `players` (attribute) | 参加プレイヤーのタプル（コンストラクタに渡した順）。`start_battle()` のように `Player` を直接受け取れないヘルパーからでも `battle.players` で取得できる |
 | `start()` | 選出と初期繰り出しを完了し、以降の `step()` を可能にする |
 | `step(commands=None)` | ターンを1つ進める。`commands` を省略すると各 `Player.choose_command()` に従う |
-| `play_out(max_turns=100)` | 決着がつくかターン上限に達するまで `step()` を自動的に繰り返す。勝者（`Player`）を返し、ターン上限で決着しなければ `None` |
+| `play_out(max_turns=100)` | 未開始（`start()` 未呼び出し）なら `start()` を行い、決着がつくかターン上限に達するまで `step()` を自動的に繰り返す。戻り値はなく、結果は呼び出し後に `winner`/`finished` から取得する |
+| `can_continue(max_turns)` | `not battle.finished and battle.turn < max_turns` をまとめたもの。`step()` を呼ぶ過程自体を観察したい手動ループ向け |
 | `finished` (property) | poke-env互換。対戦が終了しているか |
 | `winner` (attribute) | 勝者の `Player`（未決着なら `None`）。`judge_winner()` を一度も呼ばないと未更新のままな点に注意（`finished`/`play_out()` 経由なら自動更新される） |
 | `judge_winner()` | 勝者を判定する（未決着なら `None`） |
 | `turn` (attribute) | 現在のターン数 |
 
 ```python
-while not battle.finished and battle.turn < 100:
+while battle.can_continue(max_turns=100):
     battle.step()
 print(battle.winner.username if battle.winner else "決着つかず")
 ```
 
-`play_out()` を使うと上記ループは次の1行にまとめられる:
+`play_out()` を使うと `start()` を含めて次の1行にまとめられる:
 
 ```python
-winner = battle.play_out(max_turns=100)
+battle.play_out(max_turns=100)
+winner = battle.winner
 ```
 
 ### 状態取得系
@@ -106,6 +108,7 @@ winner = battle.play_out(max_turns=100)
 | `get_team(player)` | 指定プレイヤーの対戦中のチーム（選出漏れの控えも含む）を取得。`player.team` は開始前のスナップショットで対戦中は更新されないため、HP・瀕死・状態異常などバトル中の実際の状態を見るにはこちらを使う |
 | `get_available_commands(player)` | 現在使用可能な `Command` のリストを取得 |
 | `command_to_move(player, command)` | コマンドから `Move` オブジェクトを取得。`choose_command()` の実装で使う |
+| `create_order(player, order, *, terastal=False, megaevol=False)` | poke-env の `create_order()` 互換。`Move`/`Pokemon` オブジェクトから対応する `Command` を組み立てる（`command_to_move()` の逆方向）。`Move` なら技コマンド（`terastal`/`megaevol` 指定でテラスタル/メガシンカを伴う技コマンド）、`Pokemon` なら交代コマンドを返す |
 | `is_struggle_only(player)` | わるあがきしか選べない状態かどうかを判定する。`get_available_commands(player)[0]` で代用すると、交代コマンドが同時に存在する場合に誤ってそちらを返すことがあるため、判定にはこちらを使う。実際にわるあがきを選ぶ際は `Command.STRUGGLE` をそのまま使えばよい（`SWITCH_i`/`MOVE_i` と異なりインデックス解決が不要なため、取得専用メソッドは無い） |
 
 ```python
@@ -113,6 +116,7 @@ active = battle.get_active(player1)
 team = battle.get_team(player1)  # 瀕死・HP変化などを反映した実体
 commands = battle.get_available_commands(player1)
 move = battle.command_to_move(player1, commands[0])
+command = battle.create_order(player1, move)  # command_to_move()の逆方向
 
 if battle.is_struggle_only(player1):
     command = Command.STRUGGLE
@@ -427,14 +431,15 @@ print(f"勝率: {player1.win_rate:.1%}")
 
 ### 対戦実行系メソッドの戻り値一覧
 
-対戦を最後まで進めるメソッドは、対象によって戻り値の設計方針が異なる。
+対戦を進めるメソッド（`step()` / `play_out()` / `battle_against()`）はいずれも戻り値を持たず、
+結果は呼び出し後に対象から取得する統一的な設計にしている。
 
-| メソッド | 戻り値 | 対戦結果へのアクセス手段 |
-|---|---|---|
-| `Battle.play_out(max_turns=100)` | 勝者（`Player`）。ターン上限で未決着なら `None` | 呼び出し側が既に `battle` インスタンスを保持しているため、戻り値は勝者のみで十分。ログ等が必要なら `battle.print_logs()` / `battle.get_event_logs()` などをそのまま使う |
-| `Player.battle_against(...)` | `None` | 戦績カウンタ（`n_won_battles` 等）を自動更新するだけで、各対戦の `Battle` はループ内で使い捨てる。個々の対戦の `Battle` インスタンスにアクセスしたい場合は `on_battle_end` コールバックを使う |
+| メソッド | 対戦結果へのアクセス手段 |
+|---|---|
+| `Battle.step(commands=None)` | 呼び出し側が保持する `battle` から `battle.winner` / `battle.finished` を見る |
+| `Battle.play_out(max_turns=100)` | 同上。ログ等が必要なら `battle.print_logs()` / `battle.get_event_logs()` などをそのまま使う |
+| `Player.battle_against(...)` | 戦績カウンタ（`n_won_battles` 等）を自動更新するだけで、各対戦の `Battle` はループ内で使い捨てる。個々の対戦の `Battle` インスタンスにアクセスしたい場合は `on_battle_end` コールバックを使う |
 
-`play_out()` は既存の `Battle` の上で呼ぶ低レベルAPIなので勝者だけを返せば足りるが、
 `battle_against()` は対戦ごとに `Battle` を新規生成・破棄するループを内包するため、個々の
 `Battle` を（リストとして蓄積するのではなく）`on_battle_end` コールバックで都度受け取る設計に
 している。対戦数に比例して各対戦の `event_logger` の履歴等を保持するリストを返す設計は、

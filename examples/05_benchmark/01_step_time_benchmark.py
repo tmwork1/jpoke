@@ -102,7 +102,7 @@ def run_benchmark(
 
         battle_step_times: list[float] = []
         try:
-            while not battle.finished and battle.turn < max_turns:
+            while battle.can_continue(max_turns=max_turns):
                 t0 = time.perf_counter()
                 battle.step()
                 battle_step_times.append(time.perf_counter() - t0)

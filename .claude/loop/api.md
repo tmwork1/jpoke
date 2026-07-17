@@ -24,7 +24,7 @@
   エージェントが拾いにくい「AI開発」「ダメージ計算ツール開発」寄りの負荷を軸にレビューする:
   `battle.copy(reseed=...)` の乱数系列分離・再現性、`battle_against`/`n_battles` によるバッチ
   シミュレーションの書きやすさ、`Player`/`TreeSearchPlayer` のフック（`configure_sim`/
-  `opponent_estimator`/`fallback`等）を使った独自の探索・学習アルゴリズム組み込みの摩擦、
+  `estimate_opponent`/`fallback`等）を使った独自の探索・学習アルゴリズム組み込みの摩擦、
   `build_observation`/`evaluate_commands`等の観測・評価値取得APIが学習・探索ループに
   組み込みやすいか、といった観点。examples/02_ai・examples/04_research 配下を主な参照先とする。
 - **ポケモンには詳しいPython初心者エージェント**: **`src/jpoke/` は一切読まない**設定。
@@ -191,7 +191,7 @@ jpoke API改善レビュー（第{round}ラウンド、AI開発者視点）
 - 再現性・パフォーマンス: `battle.copy(reseed=...)` の乱数系列分離、`battle_against`/
   `n_battles` によるバッチシミュレーションの書きやすさ、大量対戦を回す際に無駄な計算・
   コピーが発生していないか
-- 拡張性: `Player`/`TreeSearchPlayer` のフック（`configure_sim`/`opponent_estimator`/
+- 拡張性: `Player`/`TreeSearchPlayer` のフック（`configure_sim`/`estimate_opponent`/
   `fallback`等）を使って独自の探索・学習アルゴリズムを組み込む際に、ドキュメント不足や
   設計上の制約で摩擦が生じていないか
 - 観測・評価値取得: `build_observation`/`evaluate_commands`等のAPIが学習・探索ループに
