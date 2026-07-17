@@ -16,6 +16,10 @@ def calc_hp(level: int, base: int, indiv: int, effort: int) -> int:
     Returns:
         HPの実数値
     """
+    # ヌケニン（種族値HP=1）は個体値・努力値・レベルに関わらずHP実数値が常に1固定
+    # （fuzzログ seed=2040で発見: 通常式で計算されLv43で81になっていた）。
+    if base == 1:
+        return 1
     return ((base*2 + indiv + effort//4) * level) // 100 + level + 10
 
 
