@@ -1146,6 +1146,14 @@ def バインド_damage(battle: Battle, ctx: EventContext, value: Any) -> Handle
     ダメージ倍率はバインド付与時に確定済み（`bind_damage_ratio`）のため、ここでは
     しめつけバンド等の再判定は行わない。
 
+    バインドを付与した側（現在の相手）が既に瀕死になっている場合はダメージを
+    与えずそのまま解除する。瀕死交代（`SwitchManager.run_faint_switch`）は
+    `Event.ON_TURN_END`より後に実行される実装のため、同ターンの行動フェーズで
+    トラッパーが瀕死になっていても、このイベント時点ではまだ
+    `Event.ON_SWITCH_OUT`経由の正規の解除処理（`バインド_remove`）が走っていない
+    （fuzzログ seed=1750で発見: トラッパーが瀕死になった同じターンにもう1回分の
+    残りダメージが適用されていた）。
+
     Args:
         battle: バトルインスタンス
         ctx: コンテキスト
@@ -1155,6 +1163,10 @@ def バインド_damage(battle: Battle, ctx: EventContext, value: Any) -> Handle
         HandlerReturn: 常にTrue
     """
     mon = ctx.source
+
+    if battle.foe(mon).fainted:
+        battle.volatile_manager.remove(mon, "バインド")
+        return HandlerReturn(value=value)
 
     # ターンカウント減少
     battle.volatile_manager.tick(mon, "バインド")
