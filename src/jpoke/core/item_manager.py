@@ -329,7 +329,7 @@ class ItemManager:
             if not self.suppress_berry_consumed_event:
                 self._events.emit(
                     Event.ON_BERRY_CONSUMED,
-                    EventContext(source=target, item_name=target.item.base_name)
+                    EventContext(source=target, item_name=cast(ItemName, target.item.base_name))
                 )
         return self.remove_item(target, source=target, track_loss=track_loss)
 

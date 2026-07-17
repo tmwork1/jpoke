@@ -1040,7 +1040,9 @@ class Battle:
             Command: 組み立てたコマンド
         """
         if isinstance(order, Move):
-            index = self.get_active(player).moves.index(order)
+            active = self.get_active(player)
+            assert active is not None, "create_order()にMoveを渡す場合、対象プレイヤーの場にポケモンが必要"
+            index = active.moves.index(order)
             if terastal:
                 return Command.get_terastal_command(index)
             if megaevol:

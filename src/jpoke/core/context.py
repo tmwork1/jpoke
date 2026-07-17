@@ -6,7 +6,7 @@ BaseContext / EventContext / AttackContext を提供する。
 
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, TypeVar
 import dataclasses
 
 if TYPE_CHECKING:
@@ -17,6 +17,8 @@ from jpoke.enums import Event
 from jpoke.model.move import Move
 from jpoke.types import RoleSpec, HPChangeReason, StatChangeReason, ItemName
 
+_ContextT = TypeVar("_ContextT", bound="BaseContext")
+
 
 @dataclass(eq=False)
 class BaseContext:
@@ -24,7 +26,7 @@ class BaseContext:
     hp_change_reason: HPChangeReason = ""
     stat_change_reason: StatChangeReason = ""
 
-    def derive(self, **kwargs) -> BaseContext:
+    def derive(self: _ContextT, **kwargs) -> _ContextT:
         """同型の新しいコンテキストを派生する。kwargs で指定したフィールドを上書きする。"""
         cls = type(self)
         cls_fields = {f.name for f in dataclasses.fields(cls)}
