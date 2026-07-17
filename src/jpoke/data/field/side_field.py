@@ -83,7 +83,13 @@ SIDE_FIELD: dict[str, FieldData] = {
             Event.ON_SWITCH_IN: h.FieldHandler(
                 h.いやしのねがい_heal,
                 subject_spec="source:self",
-                priority=100,
+                # まきびし・ステルスロック等の設置技（デフォルトpriority=100）より必ず先に
+                # 発動させるため90を明示する。同一priority同士のタイブレークはハンドラ
+                # 登録順（＝設置が先だった技が先に発動）に依存するため、設置技より後に
+                # 設置された場合でも回復が設置技のダメージより後回しになってしまっていた
+                # （docs/spec/fields/みかづきのまい.md「設置技との順序」参照。
+                # fuzzログ seed=1879で発見）。
+                priority=90,
             ),
         },
     ),
@@ -92,7 +98,8 @@ SIDE_FIELD: dict[str, FieldData] = {
             Event.ON_SWITCH_IN: h.FieldHandler(
                 h.みかづきのまい_heal,
                 subject_spec="source:self",
-                priority=100,
+                # いやしのねがいと同じ理由でpriority=90（設置技より先に発動させる）。
+                priority=90,
             ),
         },
     ),
