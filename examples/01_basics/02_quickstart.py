@@ -35,7 +35,7 @@ def main() -> None:
     battle.print_logs("all")
 
     winner = battle.winner
-    print(f"勝者: {winner.username if winner else '引き分け（ターン上限）'}")
+    print(f"勝者: {winner.username if winner else '引き分け'}")
 
     # 試してみよう: player1 の技を "ひのこ" に変えると、決着までのターン数がどう変わるか観察できる
 

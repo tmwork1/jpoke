@@ -21,7 +21,7 @@ class DeterministicSearchPlayer(TreeSearchPlayer):
     """探索中だけ命中率100%・ダメージを平均値に固定するAI（configure_sim()の拡張例）。
 
     choose_command() の直前に evaluate_commands() を2回呼び、評価値が
-    毎回一致することを表示する（04_priority_and_command_debug.pyの
+    毎回一致することを表示する（04_command_evaluation_debug.pyの
     DebugPlayerと同様、evaluate_commands()は副作用なしのメソッドなので
     表示を挟んでも探索本体の判断には影響しない）。
     """

@@ -13,14 +13,14 @@ from jpoke.players import RandomPlayer
 
 def main() -> None:
     player1 = RandomPlayer("Team A")
-    player1.add_pokemon("ピカチュウ", move_names=["かみなり"])
-    player1.add_pokemon("ヒトカゲ", move_names=["かえんほうしゃ"])
-    player1.add_pokemon("フシギダネ", move_names=["ギガドレイン"])
+    player1.add_pokemon("ピカチュウ", ability_name="せいでんき", item_name="いのちのたま", move_names=["かみなり"])
+    player1.add_pokemon("ヒトカゲ", ability_name="もうか", item_name="オボンのみ", move_names=["かえんほうしゃ"])
+    player1.add_pokemon("フシギダネ", ability_name="しんりょく", item_name="くろいヘドロ", move_names=["ギガドレイン"])
 
     player2 = RandomPlayer("Team B")
-    player2.add_pokemon("ゼニガメ", move_names=["なみのり"])
-    player2.add_pokemon("コラッタ", move_names=["すてみタックル"])
-    player2.add_pokemon("ピッピ", move_names=["ムーンフォース"])
+    player2.add_pokemon("ゼニガメ", ability_name="げきりゅう", item_name="オボンのみ", move_names=["なみのり"])
+    player2.add_pokemon("コラッタ", ability_name="はりきり", item_name="ちからのハチマキ", move_names=["すてみタックル"])
+    player2.add_pokemon("ピッピ", ability_name="マジックガード", item_name="オボンのみ", move_names=["ムーンフォース"])
 
     # n_selected: 省略時は min(3, チームの手持ち数) が自動設定される（ここでは3）
     battle = Battle(player1, player2, seed=1)

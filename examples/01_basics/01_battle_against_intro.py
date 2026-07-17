@@ -20,10 +20,7 @@ def main() -> None:
     # battle_against()は各対戦のBattleを内部で使い捨てるため戻り値はNone。
     # 対戦後のBattleインスタンス自体（ログ等）にアクセスしたい場合は
     # on_battle_end コールバックを渡す（docs/api/README.md の battle_against() 節、
-    # 05_benchmark/01_step_time_benchmark.py の進捗表示例を参照）。ここでは
-    # 最小例として対戦ログを1行で表示するだけにとどめる。
-    # lambda battle: ... は「battleを受け取ってbattle.print_logs("all")を実行するだけの
-    # 名前のない小さな関数」を、defで別途定義せずその場に書ける記法
+    # 05_benchmark/01_step_time_benchmark.py の進捗表示例を参照）
     player1.battle_against(
         player2, seed=1, on_battle_end=lambda battle: battle.print_logs("all")
     )
