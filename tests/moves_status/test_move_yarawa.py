@@ -496,6 +496,44 @@ def test_ねむる_既存の状態異常が解除される():
     assert mon.has_ailment("ねむり")
 
 
+def test_ねむる_状態異常上書き時にAILMENT_REMOVEDログが出力される():
+    """ねむる: 既存の状態異常（やけど等）をoverwriteで上書きする際、内部状態だけでなく
+    AILMENT_REMOVEDログ（解除）がAILMENT_APPLIEDログ（ねむり付与）より前に出力されること。
+
+    回帰テスト: fuzz_log seed=2316
+    （LogInconsistency@src/jpoke/core/ailment_manager.py:apply:122）。
+    修正前はAilmentManager.apply()のoverwrite経路で内部状態は正しく解除・上書き
+    されるのに、その解除を示すAILMENT_REMOVEDログが一切出力されていなかった。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ねむる"])],
+        team1=[Pokemon("ピカチュウ")],
+        ailment0=("やけど", None),
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    battle.modify_hp(mon, v=-(mon.max_hp // 2))
+    seq_before = len(battle.event_logger.logs)  # 初期付与のAILMENT_APPLIEDを除外する基点
+
+    t.run_move(battle, 0)
+
+    assert not mon.has_ailment("やけど")
+    assert mon.has_ailment("ねむり")
+
+    ailment_logs = [
+        log for log in battle.event_logger.logs[seq_before:]
+        if log.log in (LogCode.AILMENT_REMOVED, LogCode.AILMENT_APPLIED)
+        and log.pokemon == mon.name
+    ]
+    assert [log.log for log in ailment_logs] == [
+        LogCode.AILMENT_REMOVED, LogCode.AILMENT_APPLIED,
+    ]
+    assert ailment_logs[0].payload is not None
+    assert ailment_logs[0].payload.ailment == "やけど"
+    assert ailment_logs[1].payload is not None
+    assert ailment_logs[1].payload.ailment == "ねむり"
+
+
 def test_ねむる_相手がさわぐ状態のときは失敗しHPも回復しない():
     """ねむる: 場に（相手も含めて）さわぐ状態のポケモンがいるときは失敗し、HPも回復しない"""
     battle = t.start_battle(

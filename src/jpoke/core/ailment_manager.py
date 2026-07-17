@@ -119,6 +119,14 @@ class AilmentManager:
         if not resolved_name:
             return False
 
+        # overwriteで既存の状態異常を上書きする場合は解除ログを出力
+        if target.ailment.is_active:
+            self.battle.add_event_log(
+                target,
+                LogCode.AILMENT_REMOVED,
+                payload=AilmentPayload(ailment=target.ailment.name)
+            )
+
         # 既存のハンドラを削除
         target.ailment.unregister_handlers(self._events, target)
 
