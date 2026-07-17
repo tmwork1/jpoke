@@ -3,7 +3,7 @@
 import pytest
 from jpoke import Pokemon
 from jpoke.data.move import MOVES
-from jpoke.enums import Command
+from jpoke.enums import Command, LogCode
 from .. import test_utils as t
 
 
@@ -1364,6 +1364,50 @@ def test_いのちがけ_外れた場合はひんしにならない():
     t.run_move(battle, 0)
     assert attacker.hp == attacker.max_hp
     assert defender.hp == defender.max_hp
+
+
+def test_いのちがけ_急所モードでもダメージ量は変化しない():
+    """いのちがけ: 固定ダメージ（使用者の現在HP）は急所判定の有無に関わらず変化しない。"""
+    battle_always = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いのちがけ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        critical_mode="always",
+    )
+    attacker_always, defender_always = battle_always.actives
+    attacker_always.hp = 40
+    t.run_move(battle_always, 0)
+
+    battle_normal = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いのちがけ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker_normal, defender_normal = battle_normal.actives
+    attacker_normal.hp = 40
+    t.run_move(battle_normal, 0)
+
+    damage_always = defender_always.max_hp - defender_always.hp
+    damage_normal = defender_normal.max_hp - defender_normal.hp
+    assert damage_always == damage_normal == 40
+
+
+def test_いのちがけ_急所モード有効でも急所判定されない():
+    """いのちがけ: 固定ダメージ技は急所判定自体を行わない（第2世代以降の仕様）ため、
+    急所確定モードでも「急所に当たった」ログは記録されない（fuzzログ seed=1914で発見）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いのちがけ"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+        critical_mode="always",
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 40
+    t.fix_random(battle, 0.0)  # 乱数を急所に当たりやすい値に固定しても判定自体が行われない
+    t.run_move(battle, 0)
+    assert battle.move_executor.critical is False
+    logs = battle.event_logger.logs
+    assert not any(log.log == LogCode.CRITICAL_HIT for log in logs)
 
 
 def test_いびき_ぜったいねむり特性なら成功する():
