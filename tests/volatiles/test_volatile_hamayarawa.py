@@ -67,6 +67,33 @@ def test_バインド_発生源が交代すると解除():
     assert not battle.actives[1].has_volatile("バインド")
 
 
+def test_バインド_発生源が同ターン中に瀕死なら残りダメージが発生せず解除される():
+    """seed=1750 の回帰テスト。
+
+    バインドをかけた側（トラッパー）が、同ターン中の別要因（行動フェーズの攻撃等）で
+    ターン終了処理より前に既に瀕死になっている場合、ターン終了時のバインド残留ダメージ
+    （最大HPの1/8）を追加で与えてはならない。バインド状態は即座に解除される。
+    修正前はトラッパーの瀕死判定を行わず無条件にダメージを与えており、本来出ないはずの
+    残留ダメージが余分に発生していた。
+    """
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ")],
+        volatile0={"バインド": 2},
+    )
+    mon, trapper = battle.actives
+    hp_before = mon.hp
+    # 同ターン中の別要因（行動フェーズの攻撃等）でトラッパーが先に瀕死になったケースを再現する
+    battle.modify_hp(trapper, v=-trapper.hp, source=mon, reason="move_damage")
+    assert trapper.fainted
+
+    t.end_turn(battle)
+
+    # トラッパーが既に瀕死のため追加の残留ダメージは発生せず、バインドは即座に解除される
+    assert mon.hp == hp_before
+    assert not mon.has_volatile("バインド")
+
+
 def test_ひるみ_ターン終了で解除():
     """ひるみ: ターン終了後にひるみ状態が解除される（1ターン限り）"""
     battle = t.start_battle(
