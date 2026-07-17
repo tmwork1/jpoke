@@ -42,11 +42,11 @@ PYTHONUTF8=1 python examples/01_basics/01_battle_against_intro.py
 | ファイル | 学べる内容 | 対応ユースケース |
 |---|---|---|
 | `01_basics/01_battle_against_intro.py` | `Player.battle_against()` を使った最小構成のバトル実行 | 導入 |
-| `01_basics/02_quickstart.py` | `Battle.play_out()` によるBattle/Playerを直接使った最小構成の1vs1バトル自動進行 | 導入 |
+| `01_basics/02_play_out.py` | `Battle.play_out()` によるBattle/Playerを直接使った最小構成の1vs1バトル自動進行 | 導入 |
 | `01_basics/03_team_battle.py` | `battle.step()` によるターンごとの手動進行、3体チーム・複数選出のバトルループ | 導入 |
-| `01_basics/04_pokedex_ability_lookup.py` | `POKEDEX[name].abilities` によるポケモンが持てる特性の確認 | 導入 |
-| `01_basics/05_explicit_commands.py` | `battle.get_available_commands()` が返す `Command` の種類の識別（`is_regular_move`/`is_terastal`/`is_switch`） | 導入 |
-| `01_basics/06_structured_log_extraction.py` | `LogCode` の種類の確認、`battle.get_event_logs()` が返す構造化ログ（LogCode付きのEventLog） | 導入 |
+| `01_basics/04_pokedex_ability_lookup.py` | `POKEDEX[name].abilities` / `POKEDEX[name].learnset` によるポケモンが持てる特性・覚えられる技の確認 | 導入 |
+| `01_basics/05_command_type_identification.py` | `battle.get_available_commands()` が返す `Command` の種類の識別（`is_regular_move`/`is_terastal`/`is_switch`） | 導入 |
+| `01_basics/06_logcode_variety.py` | `LogCode` の種類の確認、`battle.get_event_logs()` が返す構造化ログ（LogCode付きのEventLog） | 導入 |
 | `02_ai/01_custom_player.py` | `Player` を継承した最小のカスタム方策（`choose_command()` のオーバーライド） | AI開発 |
 | `02_ai/02_selection_customization.py` | `choose_selection()` のオーバーライドによる選出順のカスタマイズ | AI開発 |
 | `02_ai/03_tree_search_ai.py` | `TreeSearchPlayer` を継承した木探索AIとランダム方策の対戦 | AI開発（発展） |
