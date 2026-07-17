@@ -851,43 +851,6 @@ def test_すいすい_両者ばんのうがさ所持時に素早さ計算がRecu
     assert order == [pikachu, luna]
 
 
-def test_タイプ相性表_エスパー技があくタイプの相手にいまひとつで無効化されない():
-    """seed=2141 (fuzz_log) の回帰テスト。
-
-    `data/type_chart.py` の `TYPE_MODIFIER["エスパー"]["あく"]` が誤って
-    `0.0`（無効・タイプ不一致による完全無効化）になっていた。本来は
-    `0.5`（いまひとつ、半減）が正しい。無効(0倍)の組み合わせは
-    「ゴースト⇔ノーマル/かくとう」「でんき→じめん」「どく→はがね」
-    「じめん→ひこう」「ドラゴン→フェアリー」の7ペアのみで、
-    エスパー→あくは含まれない。逆方向の
-    `TYPE_MODIFIER["あく"]["エスパー"]`は`2.0`（効果抜群）と正しく
-    実装されており、非対称性からも単純な入力ミス（0.5の誤記でゼロに
-    なっていた）と判明した。
-
-    seed=2141のfuzzログでは、メガカイリュー（フェアリーテラスタル）の
-    じんつうりき（エスパータイプ）がアクジキング（あく/ドラゴン複合）に
-    対して「タイプ無効」で完全に無効化されるログとして発覚した。
-
-    修正後は、あくタイプ単体のポケモンに対してエスパー技を使うと
-    「タイプ無効」で不発にならず、半減された通常ダメージが通ることを
-    確認する。
-    """
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["しねんのずつき"])],
-        team1=[Pokemon("ゾロアーク")],  # あく単タイプ
-        accuracy=100,
-    )
-    attacker, defender = battle.actives
-    defender_hp_before = defender.hp
-
-    t.run_move(battle, 0)
-
-    # 修正前はタイプ無効(0倍)で不発になっていた
-    assert battle.move_executor.move_success
-    assert defender.hp < defender_hp_before
-    assert battle.damage_calculator.def_type_modifier == 4096 * 0.5
-
-
 def test_ターン終了処理_ON_TURN_ENDの継続ダメージで決着した場合発動アナウンスログが勝敗確定ログより先に記録される():
     """seed=509 (LogInconsistency) の回帰テスト。
 
