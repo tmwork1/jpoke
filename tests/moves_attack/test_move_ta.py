@@ -2938,6 +2938,30 @@ def test_どくどくのキバ_もうどくが発動する():
     assert battle.actives[1].ailment.name == "もうどく"
 
 
+def test_どくばり_キングシールドで防がれると使用者のこうげきが1段階下がる():
+    """どくばり: 直接攻撃技のため"contact"フラグを持ち、キングシールドで防がれると
+    反撃デバフでこうげきランクが1段階下がる。
+
+    fuzzログ seed=2049で発見: "contact"フラグ欠落によりこの反撃デバフが
+    発動していなかった（docs/spec/moves/キングシールド.md）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["キングシールド"])],
+        team1=[Pokemon("カイリキー", move_names=["どくばり"])],
+    )
+    protected_mon = battle.actives[0]
+    attacker = battle.actives[1]
+    hp_before = protected_mon.hp
+
+    t.run_move(battle, 0)  # ピカチュウ: キングシールド（先制）
+    assert battle.move_executor.move_success
+
+    t.run_move(battle, 1)  # カイリキー: どくばり → キングシールドでブロックされる
+    assert not battle.move_executor.move_success
+    assert protected_mon.hp == hp_before
+    assert attacker.boosts["atk"] == -1
+
+
 def test_どくばり_どくが発動する():
     """どくばり: 30%でどくを付与する。"""
     battle = t.start_battle(

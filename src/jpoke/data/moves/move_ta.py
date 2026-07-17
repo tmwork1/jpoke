@@ -1104,7 +1104,9 @@ MOVES_TA: dict[MoveName, MoveData] = {
         pp=35,
         power=15,
         accuracy=100,
-        flags={"secondary_effect"},
+        # 直接攻撃技のため"contact"フラグが必要（キングシールド等の接触判定に影響する。
+        # fuzzログ seed=2049で発見: 欠落によりキングシールドの反撃デバフが発動しなかった）
+        flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.どくばり_apply_poison_to_defender,
