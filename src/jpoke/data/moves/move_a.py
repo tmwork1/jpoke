@@ -441,6 +441,9 @@ MOVES_A: dict[MoveName, MoveData] = {
                 h.MoveHandler(ha.いじげんラッシュ_remove_protect),
                 h.MoveHandler(ha.いじげんラッシュ_lower_attacker_def),
             ]
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.いじげんラッシュ_lower_attacker_def)
         }
     ),
     "いたみわけ": MoveData(

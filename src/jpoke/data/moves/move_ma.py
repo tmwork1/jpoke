@@ -421,6 +421,9 @@ MOVES_MA: dict[MoveName, MoveData] = {
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.みわくのボイス_apply_confusion_to_defender,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.みわくのボイス_apply_confusion_to_defender)
         }
     ),
     "みをけずる": MoveData(

@@ -789,6 +789,9 @@ MOVES_KA: dict[MoveName, MoveData] = {
             Event.ON_HIT: h.MoveHandler(
                 ha.グロウパンチ_boost_attacker_atk,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.グロウパンチ_boost_attacker_atk)
         }
     ),
     "けたぐり": MoveData(

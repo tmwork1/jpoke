@@ -4,12 +4,14 @@
 分割・並び替えは scripts/sort_data/sort_moves.py が行うため、手編集時も
 五十音順を維持すること。
 """
-from jpoke.enums import Event
+from jpoke.enums import Event, LethalEvent
+from jpoke.core.lethal import LethalHandler
 from jpoke.types import MoveName
 
 from jpoke.handlers import move as h
 from jpoke.handlers import move_attack as ha
 from jpoke.handlers import move_status as hs
+from jpoke.handlers import lethal as l
 
 from ..models import MoveData
 
@@ -109,6 +111,9 @@ MOVES_NA: dict[MoveName, MoveData] = {
             Event.ON_MOVE_END: h.MoveHandler(
                 ha.なげつける_consume_item,
             ),
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.なげつける_apply_item_effect)
         },
     ),
     "なまける": MoveData(

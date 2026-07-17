@@ -208,6 +208,21 @@ def イアのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) ->
     return _heal_at_pinch(hp_dist, ctx.defender, r=1/3, threshold_rate=1/4, heal_with="item", consume=True)
 
 
+def Vジェネレート_lower_attacker_def_spd_spe(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """Vジェネレート: 命中後、追加効果有効時に攻撃側のぼうぎょ・とくぼう・すばやさを1段階ずつ下げる。"""
+    if ctx.move_secondary:
+        ctx.attacker.boosts["def"] = clamp_stats(ctx.attacker.boosts["def"] - 1)
+        ctx.attacker.boosts["spd"] = clamp_stats(ctx.attacker.boosts["spd"] - 1)
+        ctx.attacker.boosts["spe"] = clamp_stats(ctx.attacker.boosts["spe"] - 1)
+    return hp_dist
+
+
+def いじげんラッシュ_lower_attacker_def(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """いじげんラッシュ: 命中後、攻撃側のぼうぎょを1段階下げる（確定効果、ちからずくの対象外）。"""
+    ctx.attacker.boosts["def"] = clamp_stats(ctx.attacker.boosts["def"] - 1)
+    return hp_dist
+
+
 def _type_resist_berry(battle: Battle, ctx: LethalContext, hp_dist: StateDist,
                        type_: str, super_effective_only: bool = True) -> StateDist:
     """タイプ半減きのみの共通処理。
@@ -383,6 +398,13 @@ def グラスフィールド_heal(battle: Battle, ctx: LethalContext, hp_dist: S
     return _heal(hp_dist, ctx.defender, r=1/16)
 
 
+def グロウパンチ_boost_attacker_atk(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """グロウパンチ: 命中後、追加効果有効時に攻撃側のこうげきを1段階上げる。"""
+    if ctx.move_secondary:
+        ctx.attacker.boosts["atk"] = clamp_stats(ctx.attacker.boosts["atk"] + 1)
+    return hp_dist
+
+
 def ゴールドラッシュ_lower_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """ゴールドラッシュ: 命中後、攻撃側のとくこうを2段階下げる（Champions基準）。"""
     ctx.attacker.boosts["spa"] = clamp_stats(ctx.attacker.boosts["spa"] - 2)
@@ -425,6 +447,14 @@ def しおづけ_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) 
     else:
         damage = max(1, ctx.defender.max_hp // 16)
     return _damage(hp_dist, damage)
+
+
+def しっとのほのお_apply_burn_to_defender(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """しっとのほのお: 追加効果有効時、そのターンにランクが上がった相手をやけど状態にする。"""
+    if ctx.move_secondary and ctx.defender.stat_raised_this_turn and not ctx.defender.ailment.is_active:
+        from jpoke.model.ailment import Ailment
+        ctx.defender.ailment = Ailment("やけど")
+    return hp_dist
 
 
 def シュカのみ_resist_ground(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
@@ -542,6 +572,92 @@ def どく_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> Sta
     return _damage(hp_dist, damage)
 
 
+def なげつける_apply_item_effect(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """なげつける: 追加効果有効時、投げたアイテムに応じた効果を防御側に適用する。
+
+    HP分布や以降のダメージ計算に影響する効果（状態異常の付与・回復・能力ランク変化）のみを
+    対象とする。ひるみ・きゅうしょアップ・めいちゅうアップ・PP回復は、防御側が行動しない
+    この致死率計算モデル上ではHP分布に影響しないため対象外とする。
+    """
+    if not ctx.move_secondary:
+        return hp_dist
+
+    from jpoke.model.ailment import Ailment
+    from jpoke.model.volatile import Volatile
+    from jpoke.handlers.item import is_ripen, berry_heal_amount
+
+    item_name = ctx.attacker.item.base_name
+    defender = ctx.defender
+
+    if item_name == "でんきだま":
+        if not defender.ailment.is_active:
+            defender.ailment = Ailment("まひ")
+    elif item_name == "かえんだま":
+        if not defender.ailment.is_active:
+            defender.ailment = Ailment("やけど")
+    elif item_name == "どくバリ":
+        if not defender.ailment.is_active:
+            defender.ailment = Ailment("どく")
+    elif item_name == "どくどくだま":
+        if not defender.ailment.is_active:
+            defender.ailment = Ailment("もうどく")
+    elif item_name == "しろいハーブ":
+        for stat, v in list(defender.boosts.items()):
+            if v < 0:
+                defender.boosts[stat] = 0
+    elif item_name == "メンタルハーブ":
+        for volatile_name in ("メロメロ", "アンコール", "いちゃもん", "かなしばり", "ちょうはつ", "かいふくふうじ"):
+            defender.volatiles.pop(volatile_name, None)
+    elif item_name == "ラムのみ":
+        if defender.ailment.is_active:
+            defender.ailment = Ailment()
+        defender.volatiles.pop("こんらん", None)
+    elif item_name == "クラボのみ" and defender.ailment.name == "まひ":
+        defender.ailment = Ailment()
+    elif item_name == "カゴのみ" and defender.ailment.name == "ねむり":
+        defender.ailment = Ailment()
+    elif item_name == "モモンのみ" and defender.ailment.name in ("どく", "もうどく"):
+        defender.ailment = Ailment()
+    elif item_name == "チーゴのみ" and defender.ailment.name == "やけど":
+        defender.ailment = Ailment()
+    elif item_name == "ナナシのみ" and defender.ailment.name == "こおり":
+        defender.ailment = Ailment()
+    elif item_name == "キーのみ":
+        defender.volatiles.pop("こんらん", None)
+    elif item_name == "オレンのみ":
+        hp_dist = _heal(hp_dist, defender, v=berry_heal_amount(defender, v=10))
+    elif item_name == "オボンのみ":
+        hp_dist = _heal(hp_dist, defender, v=berry_heal_amount(defender, r=1/4))
+    elif item_name in ("フィラのみ", "ウイのみ", "マゴのみ", "バンジのみ", "イアのみ"):
+        hp_dist = _heal(hp_dist, defender, v=berry_heal_amount(defender, r=1/3))
+        confuse_natures = {
+            "フィラのみ": ("ずぶとい", "ひかえめ", "おだやか", "おくびょう"),
+            "ウイのみ": ("いじっぱり", "わんぱく", "ようき", "しんちょう"),
+            "マゴのみ": ("ゆうかん", "のんき", "れいせい", "なまいき"),
+            "バンジのみ": ("やんちゃ", "のうてんき", "うっかりや", "むじゃき"),
+            "イアのみ": ("さみしがり", "おっとり", "おとなしい", "せっかち"),
+        }[item_name]
+        if defender.nature in confuse_natures and "こんらん" not in defender.volatiles:
+            defender.volatiles["こんらん"] = Volatile("こんらん", count=2)
+    elif item_name == "チイラのみ":
+        defender.boosts["atk"] = clamp_stats(defender.boosts["atk"] + (2 if is_ripen(defender) else 1))
+    elif item_name in ("リュガのみ", "アッキのみ"):
+        defender.boosts["def"] = clamp_stats(defender.boosts["def"] + (2 if is_ripen(defender) else 1))
+    elif item_name == "カムラのみ":
+        defender.boosts["spe"] = clamp_stats(defender.boosts["spe"] + (2 if is_ripen(defender) else 1))
+    elif item_name == "ヤタピのみ":
+        defender.boosts["spa"] = clamp_stats(defender.boosts["spa"] + (2 if is_ripen(defender) else 1))
+    elif item_name in ("ズアのみ", "タラプのみ"):
+        defender.boosts["spd"] = clamp_stats(defender.boosts["spd"] + (2 if is_ripen(defender) else 1))
+    elif item_name == "スターのみ":
+        candidates = [s for s in ("atk", "def", "spa", "spd", "spe") if defender.boosts[s] < 6]
+        if candidates:
+            stat = battle.random.choice(candidates)
+            defender.boosts[stat] = clamp_stats(defender.boosts[stat] + (4 if is_ripen(defender) else 2))
+
+    return hp_dist
+
+
 def ナモのみ_resist_dark(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """ナモのみ: あくタイプの効果バツグン技のダメージを1/2にして消費する。"""
     return _type_resist_berry(battle, ctx, hp_dist, "あく")
@@ -556,6 +672,25 @@ def のろい_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> 
     """のろい: ターン終了時に最大HPの1/4ダメージを受ける。"""
     damage = max(1, ctx.defender.max_hp // 4)
     return _damage(hp_dist, damage)
+
+
+def はきだす_reset_stockpile(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """はきだす: 使用後、たくわえるで上がったぼうぎょ・とくぼうランク分を戻し、たくわえる状態を解除する。
+
+    2回目以降の使用（複数回攻撃のリーサル計算）で威力が正しく0（たくわえ無し）に
+    戻るようにするための後処理。はきだす_apply_after（ON_END_MOVE）と同じ効果。
+    """
+    mon = ctx.attacker
+    volatile = mon.volatiles.get("たくわえる")
+    if volatile is None:
+        return hp_dist
+    count = volatile.count or 0
+    if count == 0:
+        return hp_dist
+    mon.boosts["def"] = clamp_stats(mon.boosts["def"] - count)
+    mon.boosts["spd"] = clamp_stats(mon.boosts["spd"] - count)
+    del mon.volatiles["たくわえる"]
+    return hp_dist
 
 
 def ハバンのみ_resist_dragon(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
@@ -642,6 +777,12 @@ def フレアソング_boost_spa(battle: Battle, ctx: LethalContext, hp_dist: St
     return hp_dist
 
 
+def ホイールスピン_sharply_lower_attacker_spe(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """ホイールスピン: 命中後、攻撃側のすばやさを2段階下げる（確定効果、ちからずくの対象外）。"""
+    ctx.attacker.boosts["spe"] = clamp_stats(ctx.attacker.boosts["spe"] - 2)
+    return hp_dist
+
+
 def ホズのみ_resist_normal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """ホズのみ: ノーマルタイプの技のダメージを1/2にして消費する（抜群不要）。"""
     return _type_resist_berry(battle, ctx, hp_dist, "ノーマル", super_effective_only=False)
@@ -671,6 +812,18 @@ def ポイズンヒール_heal(battle: Battle, ctx: LethalContext, hp_dist: Stat
 def マゴのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """マゴのみ: HP が 1/4 以下になると max_hp の 1/3 回復し、消費する。"""
     return _heal_at_pinch(hp_dist, ctx.defender, r=1/3, threshold_rate=1/4, heal_with="item", consume=True)
+
+
+def みわくのボイス_apply_confusion_to_defender(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """みわくのボイス: 追加効果有効時、そのターンにランクが上がった相手をこんらん状態にする。"""
+    if (
+        ctx.move_secondary
+        and ctx.defender.stat_raised_this_turn
+        and "こんらん" not in ctx.defender.volatiles
+    ):
+        from jpoke.model.volatile import Volatile
+        ctx.defender.volatiles["こんらん"] = Volatile("こんらん", count=2)
+    return hp_dist
 
 
 def メテオビーム_boost_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
