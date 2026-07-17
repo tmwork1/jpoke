@@ -358,6 +358,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 ha.がむしゃら_modify_damage,
                 subject_spec="attacker:self",
+                priority=15,
             )
         }
     ),

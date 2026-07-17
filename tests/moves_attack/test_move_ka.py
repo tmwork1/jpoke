@@ -934,6 +934,24 @@ def test_がむしゃら_ゴーストタイプに無効():
     assert defender.hp == hp_before
 
 
+def test_がむしゃら_みがわり状態では実HPにダメージが貫通しない():
+    """がむしゃら: 固定ダメージの計算はみがわりのダメージブロックより先に確定するため、
+    みがわり状態の相手に対しては実HPではなくみがわりがダメージを吸収する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["がむしゃら"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    attacker.hp = 30
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.has_volatile("みがわり")
+    assert defender.volatiles["みがわり"].hp < 999
+    assert defender.hp == hp_before
+
+
 @pytest.mark.parametrize(
     ("attacker_hp", "defender_hp"),
     [
