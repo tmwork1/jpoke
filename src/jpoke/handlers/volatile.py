@@ -965,8 +965,18 @@ def とくせいなし_enable_ability(battle: Battle, ctx: EventContext, value: 
     イベントであり、解除された揮発性状態名が value に渡される。value がとくせいなし
     自身でない場合は何もしない（無関係な揮発性状態の解除でとくせいなしがまだ有効な
     のに特性が誤って再有効化されるのを防ぐ）。
+
+    交代退場処理中（remove_all_volatiles によるとくせいなしの強制解除）は特性を
+    再有効化しない。デルタストリーム等のON_ABILITY_ENABLEDで発動する天候形成特性が、
+    退場処理の途中（ON_SWITCH_OUTでの解除機会をとくせいなしで無効化されたまま
+    逃した後）に一時的に再発動し、天候が解除されないまま残留してしまうのを防ぐ
+    （ほろびのうた・ねむけと同じ switching_out_mon ガードの考え方。fuzzログ
+    seed=1730で発見: デルタストリーム持ちがとくせいなし状態のまま退場すると
+    らんきりゅうが解除されなくなっていた）。
     """
     if value != "とくせいなし":
+        return HandlerReturn(value=value)
+    if battle.switch_manager.switching_out_mon is ctx.source:
         return HandlerReturn(value=value)
     battle.remove_ability_disabled_reason(ctx.source, "とくせいなし")
     return HandlerReturn(value=value)

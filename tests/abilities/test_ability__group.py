@@ -1333,6 +1333,54 @@ def test_強制天候特性_瀕死交代でも強制天候を解除する(abilit
         ("デルタストリーム", "らんきりゅう"),
     ],
 )
+def test_強天候始動特性_とくせいなし状態のまま退場しても天候が再発動せず解除される(
+    ability_name: str, weather_name: str,
+):
+    """fuzz_log seed=1730の回帰テスト。
+
+    いえき等で「とくせいなし」状態にされた強天候始動特性持ちが、そのまま
+    交代で退場すると、天候が正しく解除されずに残留し続けるバグがあった。
+
+    交代退場処理（SwitchManager._switch_out）は、Event.ON_SWITCH_OUT発火
+    （この時点では既にとくせいなしで特性が無効化されているためハンドラが
+    スキップされ天候解除の機会を逃す）の後、remove_all_volatilesで
+    「とくせいなし」自体を強制解除する。この強制解除
+    （handlers/volatile.pyのとくせいなし_enable_ability）が無条件に
+    battle.remove_ability_disabled_reasonを呼びEvent.ON_ABILITY_ENABLEDを
+    発火すると、退場処理未完了（reset_on_switch_out前）のためまだ「場にいる」
+    扱いの当該ポケモンの強天候始動特性が一瞬再発動し、天候が開始してしまう。
+    直後に退場が完了するため、この再開した天候を止めるイベントが二度と
+    発生せず、天候が永続的に残留する。
+
+    修正後はとくせいなし_enable_abilityに交代退場処理中（switching_out_mon）
+    のガードを追加し、この再発動自体が起きないため、退場後も天候が
+    解除されたままであることを確認する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name), Pokemon("コラッタ")],
+        team1=[Pokemon("ライチュウ", ability_name="せいでんき")],
+    )
+    mon = battle.actives[0]
+    assert battle.weather.name == weather_name  # 場に出た時点で強天候が発動している
+
+    battle.set_volatile(mon, "とくせいなし", count=3)
+    assert battle.weather.name == ""  # とくせいなし付与で正しく解除される
+
+    # 修正前はここでとくせいなしの強制解除経由で天候が一瞬再発動し、
+    # 退場後も解除されないまま残留していた
+    t.run_switch(battle, 0, 1)
+    assert battle.weather.name == ""
+    assert not battle.weather.is_active
+
+
+@pytest.mark.parametrize(
+    "ability_name, weather_name",
+    [
+        ("おわりのだいち", "おおひでり"),
+        ("はじまりのうみ", "おおあめ"),
+        ("デルタストリーム", "らんきりゅう"),
+    ],
+)
 def test_強天候始動特性_相手も同じ特性だと退場しても解除されない(ability_name: str, weather_name: str):
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name=ability_name), Pokemon("ピカチュウ")],
