@@ -1896,7 +1896,7 @@ def じょおうのいげん_block_priority(battle: Battle, ctx: AttackContext, 
     battle.add_event_log(
         ctx.attacker,
         LogCode.MOVE_FAILED,
-        payload=FailureLogPayload(move=ctx.move.name, display_reason="じょおうのいげん")
+        payload=FailureLogPayload(move=ctx.move.name, display_reason=ctx.defender.ability.base_name)
     )
     return HandlerReturn(value=False, stop_event=True)
 
