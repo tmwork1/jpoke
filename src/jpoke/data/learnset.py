@@ -19,6 +19,6 @@ with open(file, encoding='utf-8') as f:
 # ps-champ-ja由来の生データ（フィルタなし）。シングルバトルで戦闘に影響しない技の除外は
 # Pokemon.learnset側で行う（data.move.MOVESへの依存はdata.pokedex経由の循環インポートに
 # なるため、ここでは行えない）。
-LEARNSETS: dict[PokemonName, frozenset[MoveName]] = {
-    name: frozenset(moves) for name, moves in data.items()
+LEARNSETS: dict[PokemonName, list[MoveName]] = {
+    name: sorted(moves) for name, moves in data.items()
 }
