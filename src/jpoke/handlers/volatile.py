@@ -616,6 +616,23 @@ def ゴッドバード_remove_volatile(battle: Battle, ctx: EventContext, value:
     return remove_volatile(battle, ctx, value, volatile="ゴッドバード")
 
 
+def さわぐ_apply_to_new_opponent(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """さわぐ継続中に新しく場に出た相手にもさわがしいを付与する。
+
+    「さわぐ状態のポケモンがいる間は、場のポケモン全員がねむり状態になれない」
+    （docs/spec/volatiles/さわぐ.md）という仕様に対し、さわがしいはさわぐ開始時
+    （ON_VOLATILE_START）にその時点の相手にのみ一度だけ付与される実装のため、
+    さわぐ継続中に相手が瀕死交代・通常交代で入れ替わると、新しく出てきた相手に
+    さわがしいが付与されないまま漏れ、ねむるが成功してしまっていた（fuzzログ
+    seed=1823で発見）。
+    """
+    new_mon = ctx.source
+    holder = battle.foe(new_mon)
+    count = holder.volatiles["さわぐ"].count
+    battle.volatile_manager.apply(new_mon, "さわがしい", count=count)
+    return HandlerReturn(value=value)
+
+
 def さわぐ_prevent_sleep(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """さわぐ状態でねむりを防ぐ
 

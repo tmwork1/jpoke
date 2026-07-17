@@ -712,7 +712,15 @@ class MoveExecutor:
         """
         move = ctx.move
         move.revealed = True
-        v = self._events.emit(Event.ON_MODIFY_PP_CONSUMED, ctx, 1)
+        # あばれる・さわぐ等、Command.FORCEDによる強制続行ターンは使い捨てMove
+        # インスタンス（実際の技スロットのPPには影響しない）で実行されるため、
+        # PPは消費しない（docs/spec/moves/さわぐ.md「PP消費は最初の使用時の1回のみ」。
+        # fuzzログ seed=1823で、続行ターンでも「PP -1」が表示され続ける
+        # ログ不整合を発見。実データ（技スロットのPP）自体は元々影響を受けていない）。
+        if move.is_forced_continuation:
+            v = 0
+        else:
+            v = self._events.emit(Event.ON_MODIFY_PP_CONSUMED, ctx, 1)
         move.pp = max(0, move.pp - v)
         if v > 0:
             # 実際にPPを消費した技として記録する（とっておき用）

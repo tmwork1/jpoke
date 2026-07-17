@@ -144,7 +144,7 @@ class CommandManager:
         if command == Command.FORCED:
             move_name = self.battle.query.get_forced_move_name(attacker)
             if move_name:
-                return Move(cast(MoveName, move_name))
+                return Move(cast(MoveName, move_name), is_forced_continuation=True)
             return Move("わるあがき")
 
         if command.is_gigamax:
