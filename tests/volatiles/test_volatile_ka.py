@@ -231,6 +231,44 @@ def test_かくれる_特定技は命中する(hidden_move_name, hit_move_name):
 
 
 @pytest.mark.parametrize("hidden_move_name", ["あなをほる", "そらをとぶ", "ダイビング", "シャドーダイブ"])
+def test_かくれる_相手が潜伏中でものろい呪いは外れる(hidden_move_name):
+    """のろい(ゴーストタイプ＝呪い)は相手を対象にする必中技だが、相手が潜伏中だと
+    引き続き外れる（.internal/spec/moves/のろい.md「必中技だが、相手が姿を隠している
+    ときは外れる」の既存仕様の回帰防止。使用者のHPも消費されない）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["のろい"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker, defender = battle.actives
+    battle.volatile_manager.apply(defender, hidden_move_name, count=1)
+    max_hp = attacker.max_hp
+    t.run_move(battle, 0)
+    assert not battle.move_executor.move_success
+    assert not defender.has_volatile("のろい")
+    assert attacker.hp == max_hp
+
+
+@pytest.mark.parametrize("hidden_move_name", ["あなをほる", "そらをとぶ", "ダイビング", "シャドーダイブ"])
+def test_かくれる_相手が潜伏中でものろい鈍いは成功する(hidden_move_name):
+    """のろい(ゴーストタイプ以外＝鈍い)は自分のランク変化のみで相手に直接効果を
+    及ぼさないため、相手が潜伏中でも回避判定を受けず成功する
+    （fuzz_log seed=2859で発見: MoveData.targetがps-champ-jaデータにより常に"foe"に
+    縮約されるため、can_hit_hidden_targetの回避判定に巻き込まれ、無条件で
+    「技が外れた」になっていたバグの回帰）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["のろい"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker, defender = battle.actives
+    battle.volatile_manager.apply(defender, hidden_move_name, count=1)
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success
+    assert attacker.boosts["atk"] == 1
+    assert attacker.boosts["def"] == 1
+    assert attacker.boosts["spe"] == -1
+
+
+@pytest.mark.parametrize("hidden_move_name", ["あなをほる", "そらをとぶ", "ダイビング", "シャドーダイブ"])
 def test_かくれる_相手が潜伏中でも自分を対象とする技は回避判定を受けない(hidden_move_name):
     """相手が潜伏中でも、target="self"の技（こらえる）は相手を狙っていないため
     can_hit_hidden_targetの回避判定の対象外で正常に成功する
