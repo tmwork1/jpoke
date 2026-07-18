@@ -1236,14 +1236,23 @@ ABILITIES: dict[AbilityName, AbilityData] = {
     ),
     "じきゅうりょく": AbilityData(
         handlers={
-            # ON_DAMAGE_HIT は actual_damage<=0 のとき発火しないため採用しない。こらえるで
-            # HP1のまま耐えたときなど（実HPダメージ0）も発動する仕様（.internal/spec/abilities/
-            # じきゅうりょく.md）を満たすため、常に発火する Event.ON_HIT を使用する
-            # （みがわりに阻まれた場合はハンドラ内で ctx.substitute_damage を見て除外する）。
+            # 通常のダメージ（実HPダメージ>0）はEvent.ON_DAMAGE_HITで処理する。
+            # クリアスモッグのランクリセット（priority=10）より後に発火させることで、
+            # 「クリアスモッグを受けた場合、ランクがリセットされた後にじきゅうりょくが発動する」
+            # （.internal/spec/abilities/じきゅうりょく.md）という仕様どおりの順序にする。
+            Event.ON_DAMAGE_HIT: h.AbilityHandler(
+                h.じきゅうりょく_boost_B_on_damage_hit,
+                subject_spec="defender:self",
+            ),
+            # ON_DAMAGE_HIT は actual_damage<=0 のとき発火しないため、こらえるでHP1のまま
+            # 耐えたときなど（実HPダメージ0）も発動する仕様（.internal/spec/abilities/
+            # じきゅうりょく.md）を満たすため、常に発火する Event.ON_HIT も併用する
+            # （実HPダメージ>0の通常ケースはON_DAMAGE_HIT側で処理済みのためハンドラ内で除外し、
+            # みがわりに阻まれた場合はctx.substitute_damageを見て除外する）。
             Event.ON_HIT: h.AbilityHandler(
                 h.じきゅうりょく_boost_B_on_hit,
                 subject_spec="defender:self",
-            )
+            ),
         },
         lethal_handlers={
             LethalEvent.ON_HIT: LethalHandler(

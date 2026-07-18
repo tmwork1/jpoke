@@ -918,6 +918,24 @@ def test_シンクロ_自発的な状態異常は伝染しない():
     assert not foe.has_ailment("どく")
 
 
+def test_じきゅうりょく_クリアスモッグでランクリセット後に発動する():
+    """じきゅうりょく: クリアスモッグを受けた場合、ランクが+6→0にリセットされた後に
+    じきゅうりょくが発動し、最終的に+1になる（.internal/spec/abilities/じきゅうりょく.md）。
+    ぼうぎょが上限(+6)のままだとリセット前にじきゅうりょくが不発判定されてしまう
+    順序バグの回帰テスト（fuzz_log seed=2717）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="じきゅうりょく")],
+        team1=[Pokemon("ベトベトン", move_names=["クリアスモッグ"])],
+    )
+    defender = battle.actives[0]
+    defender.boosts["def"] = 6
+
+    t.run_move(battle, 1)
+
+    assert defender.boosts["def"] == 1
+
+
 def test_じきゅうりょく_こらえるでHP1のまま耐えたときも発動する():
     """じきゅうりょく: こらえるでHP1のまま耐えた（実ダメージ0）ときも発動する"""
     battle = t.start_battle(
