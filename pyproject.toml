@@ -29,6 +29,15 @@ Homepage = "https://github.com/tmwork1/jpoke"
 Repository = "https://github.com/tmwork1/jpoke"
 Issues = "https://github.com/tmwork1/jpoke/issues"
 Changelog = "https://github.com/tmwork1/jpoke/blob/main/CHANGELOG.md"
+Documentation = "https://tmwork1.github.io/jpoke/"
+
+[project.optional-dependencies]
+docs = [
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.5",
+    "mkdocstrings[python]>=0.26",
+    "mkdocs-include-markdown-plugin>=6.2",
+]
 
 [dependency-groups]
 dev = [

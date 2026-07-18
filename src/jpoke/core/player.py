@@ -4,7 +4,7 @@
 選出、交代、行動の選択などプレイヤー固有の処理を提供します。
 """
 from __future__ import annotations
-from typing import Callable, TYPE_CHECKING
+from typing import Any, Callable, TYPE_CHECKING
 if TYPE_CHECKING:
     from jpoke.core import Battle
     from jpoke.model import Pokemon
@@ -153,7 +153,7 @@ class Player:
         *opponents: "Player",
         n_battles: int = 1,
         on_battle_end: Callable[["Battle"], None] | None = None,
-        **battle_kwargs,
+        **battle_kwargs: Any,
     ) -> None:
         """poke-env 互換: 各 opponent と n_battles 回ずつ対戦し、双方の戦績を更新する。
 

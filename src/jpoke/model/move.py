@@ -55,11 +55,11 @@ class Move(GameEffect):
         memo[id(self)] = new
         return fast_copy(self, new)
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """技の情報を辞書形式で返す。
 
         Returns:
-            技名とPPを含む辞書
+            dict: 技名とPPを含む辞書
         """
         return {"name": self.name, "pp": self.pp}
 
@@ -67,8 +67,8 @@ class Move(GameEffect):
         """技が特定のフラグを持っているかを判定する。
 
         Args:
-            label: 判定するフラグ（単一のフラグまたは複数のフラグのリスト）
-            複数のフラグが指定された場合、いずれかのフラグを持っていればTrueを返す
+            flag: 判定するフラグ（単一のフラグまたは複数のフラグのリスト）。
+                複数のフラグが指定された場合、いずれかのフラグを持っていればTrueを返す
 
         Returns:
             技が指定されたフラグを持っている場合True
