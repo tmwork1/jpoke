@@ -151,6 +151,21 @@ def test_あつぞこブーツ_まきびし系ハザード無効(side_name):
     assert not raichu.ailment.is_active
 
 
+def test_イアのみ_HP満タンでもおちゃかいで強制発動しこんらんする():
+    """イアのみ: HPが満タンでおちゃかいにより強制消費された場合、回復量が0でも
+    嫌いな味の性格ならこんらんが付与される（回復量とこんらん判定は独立）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おちゃかい"], item_name="イアのみ", nature="せっかち")],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    assert mon.hp == mon.max_hp
+    t.run_move(battle, 0)
+    assert mon.hp == mon.max_hp
+    assert not mon.has_item()
+    assert mon.has_volatile("こんらん")
+
+
 def test_イアのみ_それ以外の性格ではこんらんしない():
     """イアのみ: すっぱい味が嫌いでない性格では発動してもこんらんしない"""
     battle = t.start_battle(
@@ -487,6 +502,21 @@ def test_イバンのみ_瀕死になったときはフラグが立たない():
     assert mon.fainted
     assert mon.item.count == 0
     assert mon.has_item()
+
+
+def test_ウイのみ_HP満タンでもおちゃかいで強制発動しこんらんする():
+    """ウイのみ: HPが満タンでおちゃかいにより強制消費された場合、回復量が0でも
+    嫌いな味の性格ならこんらんが付与される（回復量とこんらん判定は独立）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おちゃかい"], item_name="ウイのみ", nature="ようき")],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    assert mon.hp == mon.max_hp
+    t.run_move(battle, 0)
+    assert mon.hp == mon.max_hp
+    assert not mon.has_item()
+    assert mon.has_volatile("こんらん")
 
 
 def test_ウイのみ_それ以外の性格ではこんらんしない():
