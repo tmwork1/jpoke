@@ -3,6 +3,8 @@
 ポケモンチャンピオンズ準拠のシングル対戦シミュレーション環境とダメージ計算ロジックを提供する
 Python ライブラリ。イベント駆動でポケモンの技・特性・アイテム・状態異常・場の効果などを再現している。戦術研究・AI 開発・ダメージ計算ツール開発などの用途を想定している。
 
+**ドキュメントサイト**: <https://tmwork1.github.io/jpoke/>（このREADME・APIリファレンス・サンプル・変更履歴をまとめて閲覧できる）
+
 > 本プロジェクトは株式会社ポケモン・任天堂・株式会社ゲームフリークとは無関係の非公式（fan-made）
 > プロジェクトです。
 >
@@ -91,6 +93,9 @@ battle.print_logs()                 # このターンのログを表示
 （`data/move.py` はそれらを統合する薄いファイル）。
 
 ## ドキュメント
+
+利用者向けドキュメントは <https://tmwork1.github.io/jpoke/> にまとめている
+（この README・APIリファレンス・自動生成のクラスリファレンス・サンプル・変更履歴・貢献ガイド）。
 
 | ディレクトリ | 役割 |
 |---|---|
@@ -234,7 +239,7 @@ CI（`.github/workflows/test.yml`）で push/PR ごとに Windows + Linux × Pyt
 
 本プロジェクトはコードとゲームデータで異なるライセンスを適用する二層構成になっている。
 
-- **コード**（`src/jpoke/` 配下の実装ロジックなど）: MIT License（[LICENSE](LICENSE)）
+- **コード**（`src/jpoke/` 配下の実装ロジックなど）: MIT License（[LICENSE](https://github.com/tmwork1/jpoke/blob/main/LICENSE)）
 - **ゲームデータ**（`src/jpoke/data/`, `.internal/wiki/`, `.internal/spec/` 配下の技・特性・アイテム等の数値・効果テキスト）:
-  CC BY-NC-SA 4.0（[LICENSE-DATA](LICENSE-DATA)）。出典は
+  CC BY-NC-SA 4.0（[LICENSE-DATA](https://github.com/tmwork1/jpoke/blob/main/LICENSE-DATA)）。出典は
   [ポケモンWiki](https://wiki.pokemonwiki.com/)（CC BY-NC-SA 3.0）

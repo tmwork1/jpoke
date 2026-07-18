@@ -669,7 +669,7 @@ print(len(POKEDEX["ピカチュウ"].learnset))       # 覚えられる技の総
 | `Command.FORCED` | 強制再行動（きゅうしょにあたる等、選択の余地がない行動） |
 
 > **注記**: `GIGAMAX_*` / `ZMOVE_*` はダイマックス・Zワザに対応するための定義だが、本プロジェクトの
-> 対象範囲（[README.md 対象範囲](../../README.md#対象範囲)参照）であるポケモンチャンピオンズの
+> 対象範囲（[README.md 対象範囲](../index.md#対象範囲)参照）であるポケモンチャンピオンズの
 > シングルバトルにダイマックス・Zワザは存在しないため未実装。`get_available_commands()` が
 > これらのコマンドを選択肢として返すことはなく、`battle.step()` に明示的に渡した場合も常に
 > わるあがき扱いになる（`command_manager.py` の `resolve_move_from_command()` を参照）。将来的な

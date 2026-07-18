@@ -1,0 +1,3 @@
+# RandomPlayer
+
+::: jpoke.players.RandomPlayer
