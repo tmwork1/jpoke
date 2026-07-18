@@ -1924,17 +1924,37 @@ def しんりょくもうかげきりゅうむしのしらせ_modify_atk(battle:
     return HandlerReturn(value=value)
 
 
-def じきゅうりょく_boost_B_on_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """じきゅうりょく特性: 攻撃技でダメージを受けるたびにぼうぎょが1段階上がる。
-
-    こらえるでHP1のまま耐えたときなど（実HPダメージ0）も発動するが、
-    みがわりに攻撃を防がれたとき（実HPダメージ0）は発動しない。
-    """
-    if ctx.substitute_damage:
-        return HandlerReturn(value=value)
+def _じきゅうりょく_apply_boost(battle: Battle, ctx: AttackContext) -> None:
+    """じきゅうりょくの本体処理: ぼうぎょを1段階上げる（上限なら発動しない）。"""
     mon = ctx.defender
     if battle.modify_stats(mon, {"def": +1}, source=ctx.attacker):
         _announce_ability_triggered(battle, mon)
+
+
+def じきゅうりょく_boost_B_on_damage_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """じきゅうりょく特性: 通常の攻撃（実HPダメージ>0）を受けたときにぼうぎょが1段階上がる。
+
+    Event.ON_DAMAGE_HIT はクリアスモッグのランクリセット（priority=10）より後に発火するため、
+    「クリアスモッグを受けた場合、ランクがリセットされた後にじきゅうりょくが発動する」
+    （.internal/spec/abilities/じきゅうりょく.md）という仕様どおりの順序で発動する。
+    Event.ON_DAMAGE_HIT は実HPダメージが0（こらえる・みがわり等）のときは発火しないため、
+    その場合の発動は Event.ON_HIT 側（じきゅうりょく_boost_B_on_hit）が担う。
+    """
+    _じきゅうりょく_apply_boost(battle, ctx)
+    return HandlerReturn(value=value)
+
+
+def じきゅうりょく_boost_B_on_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """じきゅうりょく特性: こらえるでHP1のまま耐えたときなど（実HPダメージ0）に発動する。
+
+    通常のダメージ（実HPダメージ>0）が発生するケースは
+    じきゅうりょく_boost_B_on_damage_hit（Event.ON_DAMAGE_HIT）側で処理済みのため、
+    ここで二重に発動しないよう value（実HPダメージ）が0以下のときのみ処理する。
+    みがわりに攻撃を防がれたとき（実HPダメージ0）は発動しない。
+    """
+    if value > 0 or ctx.substitute_damage:
+        return HandlerReturn(value=value)
+    _じきゅうりょく_apply_boost(battle, ctx)
     return HandlerReturn(value=value)
 
 
