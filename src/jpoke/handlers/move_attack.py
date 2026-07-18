@@ -2269,77 +2269,101 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
             effect_applied = True
     elif item_name == "オレンのみ":
         defender = ctx.defender
-        effect_applied = bool(battle.modify_hp(defender, v=berry_heal_amount(defender, v=10)))
+        # 同じ一撃で既に瀕死になった対象には回復を適用しない
+        # （やどりぎのタネ_drain_hpと同様のガード。.internal/progress/item.md参照）
+        if not defender.fainted:
+            effect_applied = bool(battle.modify_hp(defender, v=berry_heal_amount(defender, v=10)))
     elif item_name == "オボンのみ":
         defender = ctx.defender
-        effect_applied = bool(battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/4)))
+        if not defender.fainted:
+            effect_applied = bool(battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/4)))
     elif item_name == "フィラのみ":
         defender = ctx.defender
-        healed = battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/3))
+        healed = False
         confused = False
-        if defender.nature in ("ずぶとい", "ひかえめ", "おだやか", "おくびょう"):
-            confused = battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
+        if not defender.fainted:
+            healed = battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/3))
+            if defender.nature in ("ずぶとい", "ひかえめ", "おだやか", "おくびょう"):
+                confused = battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
         effect_applied = bool(healed) or confused
     elif item_name == "ウイのみ":
         defender = ctx.defender
-        healed = battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/3))
+        healed = False
         confused = False
-        if defender.nature in ("いじっぱり", "わんぱく", "ようき", "しんちょう"):
-            confused = battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
+        if not defender.fainted:
+            healed = battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/3))
+            if defender.nature in ("いじっぱり", "わんぱく", "ようき", "しんちょう"):
+                confused = battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
         effect_applied = bool(healed) or confused
     elif item_name == "マゴのみ":
         defender = ctx.defender
-        healed = battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/3))
+        healed = False
         confused = False
-        if defender.nature in ("ゆうかん", "のんき", "れいせい", "なまいき"):
-            confused = battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
+        if not defender.fainted:
+            healed = battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/3))
+            if defender.nature in ("ゆうかん", "のんき", "れいせい", "なまいき"):
+                confused = battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
         effect_applied = bool(healed) or confused
     elif item_name == "バンジのみ":
         defender = ctx.defender
-        healed = battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/3))
+        healed = False
         confused = False
-        if defender.nature in ("やんちゃ", "のうてんき", "うっかりや", "むじゃき"):
-            confused = battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
+        if not defender.fainted:
+            healed = battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/3))
+            if defender.nature in ("やんちゃ", "のうてんき", "うっかりや", "むじゃき"):
+                confused = battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
         effect_applied = bool(healed) or confused
     elif item_name == "イアのみ":
         defender = ctx.defender
-        healed = battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/3))
+        healed = False
         confused = False
-        if defender.nature in ("さみしがり", "おっとり", "おとなしい", "せっかち"):
-            confused = battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
+        if not defender.fainted:
+            healed = battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/3))
+            if defender.nature in ("さみしがり", "おっとり", "おとなしい", "せっかち"):
+                confused = battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
         effect_applied = bool(healed) or confused
     elif item_name == "チイラのみ":
         defender = ctx.defender
-        changed = battle.modify_stats(defender, {"atk": 2 if is_ripen(defender) else 1}, source=ctx.attacker)
-        effect_applied = bool(changed)
+        # 能力ランク変化も瀕死になった対象には適用しない（battle.modify_statsに
+        # 瀕死ガードがないため呼び出し側でガードする）
+        if not defender.fainted:
+            changed = battle.modify_stats(defender, {"atk": 2 if is_ripen(defender) else 1}, source=ctx.attacker)
+            effect_applied = bool(changed)
     elif item_name in ("リュガのみ", "アッキのみ"):
         defender = ctx.defender
-        changed = battle.modify_stats(defender, {"def": 2 if is_ripen(defender) else 1}, source=ctx.attacker)
-        effect_applied = bool(changed)
+        if not defender.fainted:
+            changed = battle.modify_stats(defender, {"def": 2 if is_ripen(defender) else 1}, source=ctx.attacker)
+            effect_applied = bool(changed)
     elif item_name == "カムラのみ":
         defender = ctx.defender
-        changed = battle.modify_stats(defender, {"spe": 2 if is_ripen(defender) else 1}, source=ctx.attacker)
-        effect_applied = bool(changed)
+        if not defender.fainted:
+            changed = battle.modify_stats(defender, {"spe": 2 if is_ripen(defender) else 1}, source=ctx.attacker)
+            effect_applied = bool(changed)
     elif item_name == "ヤタピのみ":
         defender = ctx.defender
-        changed = battle.modify_stats(defender, {"spa": 2 if is_ripen(defender) else 1}, source=ctx.attacker)
-        effect_applied = bool(changed)
+        if not defender.fainted:
+            changed = battle.modify_stats(defender, {"spa": 2 if is_ripen(defender) else 1}, source=ctx.attacker)
+            effect_applied = bool(changed)
     elif item_name in ("ズアのみ", "タラプのみ"):
         defender = ctx.defender
-        changed = battle.modify_stats(defender, {"spd": 2 if is_ripen(defender) else 1}, source=ctx.attacker)
-        effect_applied = bool(changed)
+        if not defender.fainted:
+            changed = battle.modify_stats(defender, {"spd": 2 if is_ripen(defender) else 1}, source=ctx.attacker)
+            effect_applied = bool(changed)
     elif item_name == "サンのみ":
+        # volatile_manager.applyは内部で瀕死ガード済みのため対象外（対象が瀕死の場合は
+        # 何もせずFalseを返す）
         effect_applied = battle.volatile_manager.apply(
             ctx.defender, "きゅうしょアップ", count=2, source=ctx.attacker
         )
     elif item_name == "スターのみ":
         defender = ctx.defender
-        candidates = [s for s in ("atk", "def", "spa", "spd", "spe") if defender.boosts[s] < 6]
-        if candidates:
-            stat = battle.random.choice(candidates)
-            boost = 4 if is_ripen(defender) else 2
-            changed = battle.modify_stats(defender, {stat: boost}, source=ctx.attacker)
-            effect_applied = bool(changed)
+        if not defender.fainted:
+            candidates = [s for s in ("atk", "def", "spa", "spd", "spe") if defender.boosts[s] < 6]
+            if candidates:
+                stat = battle.random.choice(candidates)
+                boost = 4 if is_ripen(defender) else 2
+                changed = battle.modify_stats(defender, {stat: boost}, source=ctx.attacker)
+                effect_applied = bool(changed)
     elif item_name == "ミクルのみ":
         effect_applied = battle.volatile_manager.apply(ctx.defender, "めいちゅうアップ", source=ctx.attacker)
 
