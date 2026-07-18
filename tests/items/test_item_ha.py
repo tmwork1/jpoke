@@ -1227,6 +1227,24 @@ def test_ふうせん_変化技では割れない():
     assert mon.has_item()
 
 
+def test_ふうせん_致命打でも割れる():
+    """ふうせん: 攻撃技でひんしになったときもふうせんが割れる
+    （fuzz_log横断監査。.internal/spec/items/ふうせん.md）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ふうせん")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender = battle.actives[0]
+    defender.hp = 1
+    t.fix_damage(battle, 9999)
+
+    t.run_move(battle, 1)
+
+    assert defender.fainted
+    assert not defender.has_item()
+
+
 def test_フォーカスレンズ_一撃必殺技には適用されない():
     """フォーカスレンズ: 一撃必殺技の命中率には影響しない"""
     battle = t.start_battle(
