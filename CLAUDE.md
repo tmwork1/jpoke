@@ -76,7 +76,7 @@ data/ability.py  →  handlers/ability.py に実装  →  data/ability.py に登
 5. `src/jpoke/model/pokemon.py`
 6. 対象の `src/jpoke/data/<category>.py` と `src/jpoke/handlers/<category>.py`
 7. `tests/test_utils.py` と最寄りの既存テスト
-8. **`docs/spec/turn.md`** — 実装するイベントの priority を確認し、計画書に明記する
+8. **`.internal/spec/turn.md`** — 実装するイベントの priority を確認し、計画書に明記する
 
 ## Handler の約束事
 
@@ -87,7 +87,7 @@ data/ability.py  →  handlers/ability.py に実装  →  data/ability.py に登
 - 固有効果のロジックは `handlers/*` に名前付き関数で実装し、`data/*.py` からその関数を登録する
 - `handlers/*` の並びは `data/*.py` の定義順（五十音順）に合わせる
 - イベント発火側で前提が保証されている場合、ハンドラ側の重複ガード（`if not mon.alive` など）は不要
-- **priority は `docs/spec/turn.md` で対象イベントの行を必ず確認する。未掲載のイベント（ダメージ計算内部等）は既存の同種ハンドラを参照して決定し、計画書に根拠を明記する**
+- **priority は `.internal/spec/turn.md` で対象イベントの行を必ず確認する。未掲載のイベント（ダメージ計算内部等）は既存の同種ハンドラを参照して決定し、計画書に根拠を明記する**
 
 ## 状態変更ルール
 
@@ -98,16 +98,22 @@ data/ability.py  →  handlers/ability.py に実装  →  data/ability.py に登
 
 ## 仕様書・ドキュメント
 
+`docs/` は外部公開向け（`docs/api/` のAPIリファレンスのみ）。開発の実行計画・進捗・
+レビュー履歴など内部専用のドキュメントは `.internal/` に置く。
+
 | ディレクトリ | 役割 |
 |---|---|
-| `docs/spec/` | 技・アイテム・特性・場の効果の挙動仕様（実装前に読む） |
-| `docs/plan/` | 現在の実行計画と優先順位 |
-| `docs/progress/` | カテゴリ別の実装追跡（`ability.md`, `item.md`, `move.md`） |
-| `docs/tests/` | テスト一覧（`scripts/generate_test_list.py` で生成） |
+| `docs/api/` | 外部公開用のAPIリファレンス |
+| `.internal/spec/` | 技・アイテム・特性・場の効果の挙動仕様（実装前に読む） |
+| `.internal/plan/` | 現在の実行計画と優先順位 |
+| `.internal/progress/` | カテゴリ別の実装追跡（`ability.md`, `item.md`, `move.md`） |
+| `.internal/review/` | レビュー履歴 |
+| `.internal/wiki/` | 特性・技・アイテム別の外部wiki解説（スクレイピングキャッシュ） |
+| `.internal/tests/logs/` | `.loop` 系フローが保存するテスト実行ログ |
 
 実装が完了したら、以下の順で進捗を更新する：
 
-1. `docs/progress/<category>.md` の該当行を更新する（実装済みフラグ・件数）
+1. `.internal/progress/<category>.md` の該当行を更新する（実装済みフラグ・件数）
 
 ## ループディスパッチャー
 
@@ -139,8 +145,8 @@ data/ability.py  →  handlers/ability.py に実装  →  data/ability.py に登
   （`gh pr create` → 即 `gh pr merge`、人間レビュー待ちはしない）で自動的にmainへ反映する。
   **ローカルの `jpoke/`（main の作業ツリー）へ直接コミット・マージすることは絶対にしない**
   （同一 `.git` を共有する他セッション・他worktreeのローカル `main` refを不用意に動かし混乱を招くため）
-- ループはmain反映を自動かつ継続的に行うため、手動ブランチと `data/*.py` / `docs/progress/*` /
-  `docs/tests/*` など同じ共有ファイルに触れる作業を始める直前は `git pull` してmainを最新化すると
+- ループはmain反映を自動かつ継続的に行うため、手動ブランチと `data/*.py` / `.internal/progress/*` /
+  `.internal/tests/*` など同じ共有ファイルに触れる作業を始める直前は `git pull` してmainを最新化すると
   衝突を避けやすい
 
 ### 一時保存・worktree
@@ -187,5 +193,4 @@ data/ability.py  →  handlers/ability.py に実装  →  data/ability.py に登
 - `test_utils.py` の `start_battle`、`run_move`、`run_switch` などを再利用する
 - テスト項目を追加・修正したら、以下の順で実行する：
   1. `python scripts/sort_tests.py <対象ファイル>` — テスト関数を五十音順に並び替える（複数指定可、例: `tests/abilities/test_ability_ka.py tests/moves_attack/test_move_ka.py`）
-  2. `python scripts/generate_test_list.py` — `docs/tests/` のテスト一覧を更新する
-  3. `python -m pytest tests/ -v` — 全テストが通ることを確認する
+  2. `python -m pytest tests/ -v` — 全テストが通ることを確認する

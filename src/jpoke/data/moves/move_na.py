@@ -90,14 +90,14 @@ MOVES_NA: dict[MoveName, MoveData] = {
                 priority=30,
             ),
             Event.ON_HIT: [
-                # docs/spec/turn.md ON_HIT: 追加効果は明記された優先度がないため、
+                # .internal/spec/turn.md ON_HIT: 追加効果は明記された優先度がないため、
                 # 同一ハンドラであるアイテム消費(priority=100)より前に発動するよう
                 # priority=90を明示する（消費前にctx.attacker.item.base_nameを参照するため）。
                 h.MoveHandler(
                     ha.なげつける_apply_item_effect,
                     priority=90,
                 ),
-                # docs/spec/turn.md ON_HIT: 「100 なげつける使用者のアイテム消費」。
+                # .internal/spec/turn.md ON_HIT: 「100 なげつける使用者のアイテム消費」。
                 # いのちのたまの反動(priority=160)より前にアイテムを失わせることで、
                 # 一次情報の「いのちのたまを投げた際は反動を受けない」を再現する。
                 h.MoveHandler(

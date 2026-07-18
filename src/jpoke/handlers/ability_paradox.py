@@ -20,7 +20,7 @@ def _select_paradox_boost_stat(battle: Battle, mon: Pokemon) -> Stat:
     ワンダールーム状態では、ぼうぎょ/とくぼうの実数値（ランク補正を除く）が
     入れ替わった状態で比較する。ランク補正は技の分類に対応する本来の区分のまま
     据え置く（handlers/field.py の ワンダールーム_def_modifier と同じ仕様。
-    docs/spec/abilities/こだいかっせい.md「パワーシェア/ガードシェア/パワートリック/
+    .internal/spec/abilities/こだいかっせい.md「パワーシェア/ガードシェア/パワートリック/
     スピードスワップ/ワンダールームによる実数値変動も考慮する」
     「実数値の変動はステータスの比較より先に考慮する」を参照）。
     """
@@ -124,7 +124,7 @@ def apply_atk_modifier(battle: Battle, ctx: AttackContext, value: int) -> Handle
     ダメージ計算で参照する実数値が通常と異なる技でも、パラドックス特性の補正はあくまで
     「使用者自身」の攻撃側スロット（物理技なら攻撃、特殊技なら特攻）に対してのみ適用される。
     どの実数値が計算に使われているかは影響しない
-    （docs/spec/abilities/クォークチャージ.md 「特性の効果はランク補正上昇とは異なる」の項を参照）。
+    （.internal/spec/abilities/クォークチャージ.md 「特性の効果はランク補正上昇とは異なる」の項を参照）。
 
     こんらんの自傷ダメージ（"_こんらん"）には影響しない
     （同項「特性で攻撃/防御が上がってもこんらんのダメージには影響しない」を参照）。
@@ -144,7 +144,7 @@ def apply_def_modifier(battle: Battle, ctx: AttackContext, value: int) -> Handle
     """防御側補正時: 強化対象能力と参照能力が一致すれば 1.3 倍補正を適用する。
 
     こんらんの自傷ダメージ（"_こんらん"）には影響しない
-    （docs/spec/abilities/クォークチャージ.md 「特性で攻撃/防御が上がってもこんらんの
+    （.internal/spec/abilities/クォークチャージ.md 「特性で攻撃/防御が上がってもこんらんの
     ダメージには影響しない」を参照）。
 
     ワンダールーム状態では、防御側の実数値参照そのものが入れ替わる
@@ -152,7 +152,7 @@ def apply_def_modifier(battle: Battle, ctx: AttackContext, value: int) -> Handle
     対象判定も入れ替えて追従させる。これにより、ぼうぎょ/とくぼうが強化対象のとき
     ワンダールームの発生・解除に応じて補正が掛かる能力（物理/特殊いずれの防御計算に
     乗るか）が入れ替わる
-    （docs/spec/abilities/こだいかっせい.md「防御か特防が上昇しているときに
+    （.internal/spec/abilities/こだいかっせい.md「防御か特防が上昇しているときに
     ワンダールーム状態が発生した場合や、解除された場合では、その度に補正が
     掛かっている能力も入れ替わる」を参照）。
     """

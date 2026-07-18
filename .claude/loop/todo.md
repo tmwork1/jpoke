@@ -99,12 +99,11 @@ jpoke {config.category} レビュー・テストタスク: {entry}
 1. 修正内容を対象ファイルで確認し、問題があれば修正する
 2. {config.test_files} に必要なテストを追加・修正する
 3. python scripts/sort_tests.py <変更したテストファイル> でソートする
-4. python scripts/generate_test_list.py でテスト一覧を更新する
-5. python -m pytest tests/ -v でテストを実行し、結果を docs/test/logs/<entry_slug>.log に保存する
+4. python -m pytest tests/ -v でテストを実行し、結果を .internal/tests/logs/<entry_slug>.log に保存する
    （entry_slug は entry の先頭20文字をファイル名として使用する）
    全テストが通ることを確認する。今回の修正と無関係な既存テストが flaky と判明した場合は
    `.claude/loop/_common.md` §共通13 に従いその場で修正する
-6. 変更をすべてコミットする（作業は `loop/todo` ブランチ上で行う）:
+5. 変更をすべてコミットする（作業は `loop/todo` ブランチ上で行う）:
    git add -A
    git commit -m "todo: {entry}"
 {config.review_extra}

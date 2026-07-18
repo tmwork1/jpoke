@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-docs/wiki_html/items/*.html を読み込み、
-テンプレート準拠のアイテム仕様書 docs/spec/items/*.md を生成する。
+.internal/wiki_html/items/*.html を読み込み、
+テンプレート準拠のアイテム仕様書 .internal/spec/items/*.md を生成する。
 
 - 対戦シミュレータに不要な要素（価格・ウッウロボ・こんな時に使おう）を除外
 - 効果の種類が同じアイテムは GROUPS で定義したグループ仕様書にまとめる

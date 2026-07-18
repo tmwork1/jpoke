@@ -58,7 +58,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         handlers={
             # ON_HIT: いのちのたまの反動（priority=160、Event.ON_HIT で実装）より後に
             # 実行し、反動で使用者がひんしになった場合の除外判定を成立させるため
-            # priority=180 とする（`docs/plan/moves/アイススピナー.md` 参照）。
+            # priority=180 とする（`.internal/plan/moves/アイススピナー.md` 参照）。
             Event.ON_HIT: h.MoveHandler(
                 ha.アイススピナー_clear_terrain_on_zero_damage_hit,
                 subject_spec="attacker:self",
@@ -117,8 +117,8 @@ MOVES_A: dict[MoveName, MoveData] = {
         flags={"contact", "secondary_effect"},
         handlers={
             # みずがため等（priority=20）より先に発動させる必要があるため priority=10
-            # を明示（docs/spec/turn.md ON_DAMAGE priority=10「追加効果（特殊なもの除く）」、
-            # docs/spec/abilities/みずがため.md「アクアブレイク/シェルブレードを受けた場合、
+            # を明示（.internal/spec/turn.md ON_DAMAGE priority=10「追加効果（特殊なもの除く）」、
+            # .internal/spec/abilities/みずがため.md「アクアブレイク/シェルブレードを受けた場合、
             # 追加効果の後にみずがためが発動する」）
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.アクアブレイク_lower_defender_def,
@@ -466,7 +466,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         pp=10,
         power=80,
         accuracy=100,
-        flags={"secondary_effect"},  # 追加効果自体は無いが、ちからずく対象技として扱われる（docs/spec/abilities/ちからずく.md参照）
+        flags={"secondary_effect"},  # 追加効果自体は無いが、ちからずく対象技として扱われる（.internal/spec/abilities/ちからずく.md参照）
         handlers={},  # しれいとう連携のランクアップはダブル専用のため対象外（実装しない）
     ),
     "いてつくしせん": MoveData(

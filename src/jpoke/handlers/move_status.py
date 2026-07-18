@@ -29,20 +29,20 @@ from jpoke.core.log_payload import AbilityPayload, FailureLogPayload, ItemPayloa
 from jpoke.data.type_chart import TYPE_MODIFIER, TYPES
 
 # バトンタッチで交代先に引き継ぐ揮発性状態の名前セット
-# docs/wiki/moves/バトンタッチ.html「状態変化の引き継ぎ」表（第9世代列）を正とする。
+# .internal/wiki/moves/バトンタッチ.html「状態変化の引き継ぎ」表（第9世代列）を正とする。
 # 表の凡例: ○=引き継がれる／×=引き継がれない／－=その世代に存在しない／？=判別不能。
 # 対象に含めているもの（第9世代で○）:
 #   みがわり・こんらん・きゅうしょアップ・やどりぎのタネ・のろい・ほろびのうた・
 #   ねをはる・とくせいなし・アクアリング・かいふくふうじ・でんじふゆう
 # 対象外としているもの（第9世代で×、または本プロジェクトで未実装のため到達不能）:
-# - docs/spec/volatiles/じゅうでん.md: じゅうでんはバトンタッチで引き継がれない（×）
-# - docs/spec/volatiles/ちょうはつ.md: ちょうはつはバトンタッチで引き継がれない
+# - .internal/spec/volatiles/じゅうでん.md: じゅうでんはバトンタッチで引き継がれない（×）
+# - .internal/spec/volatiles/ちょうはつ.md: ちょうはつはバトンタッチで引き継がれない
 #   （通常はちょうはつ状態の効果でバトンタッチ自体を使用できないため実質到達不能だが、
 #   原作Wikiの記載に合わせて明示的に除外している）
-# - docs/spec/volatiles/たくわえる.md: たくわえるはバトンタッチで引き継がれない（×）。
+# - .internal/spec/volatiles/たくわえる.md: たくわえるはバトンタッチで引き継がれない（×）。
 #   ただし、たくわえるで上昇したぼうぎょ・とくぼうのランク変化は能力変化として別途引き継がれる。
-# - docs/spec/volatiles/しおづけ.md: しおづけはバトンタッチで引き継がれない（×）
-# - docs/spec/volatiles/ちいさくなる.md・docs/spec/volatiles/まるくなる.md:
+# - .internal/spec/volatiles/しおづけ.md: しおづけはバトンタッチで引き継がれない（×）
+# - .internal/spec/volatiles/ちいさくなる.md・.internal/spec/volatiles/まるくなる.md:
 #   ちいさくなる・まるくなるの揮発状態自体は第三世代以降バトンタッチで引き継がれない
 #   （第9世代欄は空欄だが第3〜8世代が一貫して×のため対象外とする。まるくなる・ちいさくなるで
 #   上がった防御・回避のランクは能力変化として別途引き継がれるため、揮発状態自体を
@@ -52,7 +52,7 @@ from jpoke.data.type_chart import TYPE_MODIFIER, TYPES
 # ARシステム/アイスフェイス等の protected フラグ持ち特性を防げないため、
 # switch_manager 側でバトン先の特性が protected フラグを持つ場合／
 # とくせいガード等で変更がブロックされる場合は個別に適用をスキップする
-# （docs/spec/volatiles/とくせいなし.md「他のポケモンがとくせいなしにならない特性を
+# （.internal/spec/volatiles/とくせいなし.md「他のポケモンがとくせいなしにならない特性を
 # 持つ場合は消える」）。
 _BATON_PASS_VOLATILES: frozenset[str] = frozenset({
     "みがわり",
@@ -68,7 +68,7 @@ _BATON_PASS_VOLATILES: frozenset[str] = frozenset({
     "でんじふゆう",
 })
 
-# さいはいで指示できない技の名前セット（docs/spec/moves/さいはい.md「さいはいが失敗する技」節）
+# さいはいで指示できない技の名前セット（.internal/spec/moves/さいはい.md「さいはいが失敗する技」節）
 # 本プロジェクトの技データに存在しない技名（Zワザ・ダイマックス関連等）も
 # 将来の追加に備えて含めているが、現状は該当技が存在しないため実害はない。
 _INSTRUCT_BLOCKED_MOVES: frozenset[str] = frozenset({
@@ -105,7 +105,7 @@ def _blocked_by_ougon_no_karada(battle: Battle, mon: Pokemon) -> bool:
     通常の変化技は Event.ON_BEFORE_APPLY_MOVE の時点で技全体が無効化されるが、
     自分含む全員が対象の技は使用者自身にも効果が及ぶため一律には無効化できない。
     そのため各技のハンドラ側で対象ポケモンごとに本関数を用いて免疫判定を行う
-    （docs/spec/abilities/おうごんのからだ.md「自分含む全員が対象の技」）。
+    （.internal/spec/abilities/おうごんのからだ.md「自分含む全員が対象の技」）。
     呼び出し側で使用者自身は対象から除外すること
     （自身が使用する技が自身の特性で防がれることはないため）。
     """
@@ -127,7 +127,7 @@ def _blocked_by_bouon(battle: Battle, mon: Pokemon) -> bool:
     自分含む全員が対象の音技は使用者自身にも効果が及ぶため一律には無効化できない
     （防いだ場合でも他の対象への効果は通常通り発動する）。
     そのため各技のハンドラ側で対象ポケモンごとに本関数を用いて免疫判定を行う
-    （docs/spec/abilities/ぼうおん.md、handlers/ability.py の _BOUON_EXCLUDED_MOVES）。
+    （.internal/spec/abilities/ぼうおん.md、handlers/ability.py の _BOUON_EXCLUDED_MOVES）。
     呼び出し側で使用者自身は対象から除外すること
     （現行世代では自身のぼうおんは無視され、自身の技の効果を自身の特性で防ぐことはないため）。
     """
@@ -156,7 +156,7 @@ def on_blow_check_switch_target(battle: Battle, ctx: AttackContext, value: Any) 
     """吹き飛ばし技の失敗判定を行う。
 
     相手に交代できる控えポケモン（生存しているベンチポケモン）がいない場合、
-    技自体が失敗する（docs/spec/turn.md の Event.ON_APPLY_MOVE priority=100
+    技自体が失敗する（.internal/spec/turn.md の Event.ON_APPLY_MOVE priority=100
     「ほえる・ふきとばし: 交代不可・野生」に対応）。
     """
     player = battle.get_player(ctx.defender)
@@ -273,7 +273,7 @@ def アロマセラピー_cure_team_ailment(battle: Battle, ctx: AttackContext, 
 def アンコール_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """アンコールの効果を発動する。
 
-    ロックする対象は仕様（docs/spec/moves/アンコール.md）の「最後にPPを消費した技」。
+    ロックする対象は仕様（.internal/spec/moves/アンコール.md）の「最後にPPを消費した技」。
     ねごとのサブ技（PP消費0）ではなくねごと自身が対象になる。
     """
     move = ctx.defender.pp_consumed_move
@@ -352,7 +352,7 @@ def いとをはく_lower_defender_spe(battle: Battle, ctx: AttackContext, value
 def いのちのしずく_heal(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """いのちのしずく: 最大HPの1/4を回復する。HPが満タンの場合は失敗する。
 
-    端数は四捨五入で丸める（一次情報: docs/wiki/moves/いのちのしずく.html 技の仕様節）。
+    端数は四捨五入で丸める（一次情報: .internal/wiki/moves/いのちのしずく.html 技の仕様節）。
     同じ1/4回復技でも `ジャングルヒール` `みかづきのいのり` は切り捨てのため、
     本技のみ `round_half_up` を使う点に注意。
     """
@@ -504,7 +504,7 @@ def うつしえ_change_ability(battle: Battle, ctx: AttackContext, value: Any) 
 def うらみ_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """うらみの失敗チェック。
 
-    仕様（docs/spec/moves/うらみ.md）の「最後にPPを消費した技」を対象とするため、
+    仕様（.internal/spec/moves/うらみ.md）の「最後にPPを消費した技」を対象とするため、
     ねごとのサブ技（PP消費0）ではなくねごと自身が対象になる。
     以下のいずれかに該当する場合は失敗する。
     - 相手がPPを消費する行動をしていない（pp_consumed_move が None）
@@ -694,7 +694,7 @@ def かたくなる_boost_attacker_def(battle: Battle, ctx: AttackContext, value
 def かなしばり_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """かなしばりの効果: 相手に「かなしばり」状態を付与する（4 ターン）。
 
-    封じる対象は仕様（docs/spec/moves/かなしばり.md）の「相手が最後にPPを消費した技」。
+    封じる対象は仕様（.internal/spec/moves/かなしばり.md）の「相手が最後にPPを消費した技」。
     ねごとのサブ技（PP消費0）ではなくねごと自身が封じられる。
     """
     move = ctx.defender.pp_consumed_move
@@ -779,7 +779,7 @@ def きりばらい_defog(battle: Battle, ctx: AttackContext, value: Any) -> Han
     みがわり状態では回避率変化のみ防がれ、場の効果解除は独立して発動する
     （技自体は MoveData の bypass_substitute フラグでみがわりを貫通する）。
     しろいきりも回避率変化を防いだ後に自身を含む場の効果を解除されるため、
-    回避率変化を場の効果解除より先に行う（一次情報: docs/wiki/moves/きりばらい.html
+    回避率変化を場の効果解除より先に行う（一次情報: .internal/wiki/moves/きりばらい.html
     技の仕様節）。
     """
     changed = False
@@ -884,7 +884,7 @@ def こわいかお_lower_defender_spe(battle: Battle, ctx: AttackContext, value
 # おいかぜ・しろいきり・しんぴのまもりのみが対象。
 # いやしのねがい/みかづきのまい/ねがいごと/みらいよち/はめつのねがいは
 # SideFieldName型には含まれるが「単体の場に発生する状態」のため対象外
-# （docs/spec/moves/コートチェンジ.md、docs/spec/fields/ねがいごと.md参照）。
+# （.internal/spec/moves/コートチェンジ.md、.internal/spec/fields/ねがいごと.md参照）。
 # ひのうみ/にじ/しつげん/キョダイ○○（キョダイマックス専用の場）は
 # 本プロジェクト（チャンピオンズ）で未実装のダイマックス関連要素のため対象外。
 _COURT_CHANGE_TARGET_FIELDS: tuple[SideFieldName, ...] = (
@@ -957,7 +957,7 @@ def さいきのいのり_revive(battle: Battle, ctx: AttackContext, value: Any)
 
     実機では復活させる味方をプレイヤーが選ぶが、通信対戦で選択が時間切れに
     なった場合は選出順で最初のひんし状態のポケモンが自動的に選ばれる
-    （一次情報: docs/wiki/moves/さいきのいのり.html 技の仕様節）。本プロジェクトは
+    （一次情報: .internal/wiki/moves/さいきのいのり.html 技の仕様節）。本プロジェクトは
     復活対象選択のUIを持たないため、常にこの自動選択と同じ挙動（選出順で
     最初にひんし状態の味方）を採用する。`さいきのいのり_check` が呼び出し前に
     候補の存在を保証しているため、ここでは存在チェックを行わない。
@@ -977,7 +977,7 @@ def サイコフィールド_activate_terrain(battle: Battle, ctx: AttackContext
 def さいはい_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """さいはいの失敗条件を判定する。
 
-    仕様（docs/spec/moves/さいはい.md「技の仕様」）では対象は「直近のPPを消費した行動」の技
+    仕様（.internal/spec/moves/さいはい.md「技の仕様」）では対象は「直近のPPを消費した行動」の技
     であるため、pp_consumed_move を参照する（ねごとのサブ技はPPを消費しないため対象に
     ならず、ねごと自身が対象となり指示不可技として失敗する）。
     - 相手が場に出てからPPを消費する行動を一度もしていない（pp_consumed_move が None）
@@ -1189,7 +1189,7 @@ def じこあんじ_copy_ranks(battle: Battle, ctx: AttackContext, value: Any) -
     相手のランクは変化しない。direct代入により、たんじゅん・あまのじゃく・
     クリアボディ・だっしゅつパック等のランク変化に反応する特性・アイテムを
     経由しない。ただし、しろいハーブのみコピー直後にマイナスのランクを
-    打ち消す特例がある（一次情報: docs/wiki/moves/じこあんじ.html 技の仕様節）。
+    打ち消す特例がある（一次情報: .internal/wiki/moves/じこあんじ.html 技の仕様節）。
     """
     attacker = ctx.attacker
     defender = ctx.defender
@@ -2715,7 +2715,7 @@ def ほおばる_check_defense_max(battle: Battle, ctx: AttackContext, value: An
 
     通常はぼうぎょランク+6のときに失敗する。あまのじゃく持ちのポケモンは
     ぼうぎょの上昇効果が下降に反転するため、ぼうぎょランク-6のときに失敗する
-    （docs/spec/abilities/あまのじゃく.md）。
+    （.internal/spec/abilities/あまのじゃく.md）。
     このチェックは battle.modify_stats の内部（ON_TRY_MOVE_2 の後）で
     行われるわけではないため、ここで明示的にガードする。
     """
@@ -2957,7 +2957,7 @@ def みかづきのいのり_apply(battle: Battle, ctx: AttackContext, value: An
     """みかづきのいのり: 自分のHPを最大HPの1/4回復し、状態異常を治す。
 
     HPが満タンかつ状態異常もない場合は失敗する（ジャングルヒールと同様の判定。
-    docs/spec/turn.md Event.ON_APPLY_MOVE「ジャングルヒール: HP満タン・状態異常無」参照）。
+    .internal/spec/turn.md Event.ON_APPLY_MOVE「ジャングルヒール: HP満タン・状態異常無」参照）。
     端数は切り捨て。
     """
     mon = ctx.attacker
@@ -3224,10 +3224,10 @@ def ゆきげしき_activate_weather(battle: Battle, ctx: AttackContext, value: 
     return HandlerReturn(value=battle.weather_manager.apply("ゆき", 5, source=ctx.attacker))
 
 
-# ゆびをふるで選ばれない技の名前セット（docs/spec/moves/ゆびをふる.md「選ばれる技の範囲」参照）。
+# ゆびをふるで選ばれない技の名前セット（.internal/spec/moves/ゆびをふる.md「選ばれる技の範囲」参照）。
 # 実機Wikiの代表的な分類のみを反映した非網羅的な一覧であり、第五世代以降の伝説・幻ポケモンの
 # 専用技の一部・第八世代以降の一般ポケモン専用技の一部（原作仕様が「一部、全てではない」と
-# 明記する区分）は対象外とする（詳細はdocs/plan/moves/ゆびをふる.md）。
+# 明記する区分）は対象外とする（詳細は.internal/plan/moves/ゆびをふる.md）。
 # まもる系統の技は個別に列挙せず、protectフラグ（MoveData.flags）で動的に判定する。
 _METRONOME_EXCLUDED_MOVES: frozenset[str] = frozenset({
     # ゆびをふる自身
@@ -3247,7 +3247,7 @@ def ゆびをふる_select_and_execute(battle: Battle, ctx: AttackContext, value
     """ゆびをふるで選んだ技を実行する。
 
     「一部を除いたほぼ全ての技」の中からランダムに1つを選び、その場で実行する
-    （docs/spec/moves/ゆびをふる.md「選ばれる技の範囲」。除外の scope は
+    （.internal/spec/moves/ゆびをふる.md「選ばれる技の範囲」。除外の scope は
     _METRONOME_EXCLUDED_MOVES のコメント参照）。選ばれた技のPPは消費しない
     （ゆびをふる自体のみ消費）。
 

@@ -754,7 +754,7 @@ def test_オボンのみ_こんらんの自傷では発動しない():
 
 def test_オボンのみ_瀕死になったときは発動しない():
     """オボンのみ: ダメージでHPが0(ひんし)になったときは回復せず、消費もされない
-    （設置技等で先にHPが0になった場合を含む。ref: docs/spec/items/_HP回復ピンチきのみ.md）
+    （設置技等で先にHPが0になった場合を含む。ref: .internal/spec/items/_HP回復ピンチきのみ.md）
     """
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", item_name="オボンのみ")],
@@ -839,7 +839,7 @@ def test_おんみつマント_変化技の状態異常は防げない():
     でんじは・どくどく等の変化技（category=="status"）は状態異常付与そのものが技の
     唯一の効果であり「追加効果」には該当しないため防げない
     （一次情報: 「相手の“攻撃技”による追加効果を受けなくなる」。
-    docs/spec/items/おんみつマント.md）。"""
+    .internal/spec/items/おんみつマント.md）。"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["でんじは"])],
         team1=[Pokemon("カビゴン", item_name="おんみつマント")],

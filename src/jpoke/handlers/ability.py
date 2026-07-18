@@ -82,7 +82,7 @@ _メガソーラー_WEATHER_SETTING_MOVES: frozenset[str] = frozenset({
 これらの技を使用する際は天候の仮想上書きを行わない。上書きしたまま
 技自身の天候変更処理（weather_manager.apply）を通すと、既に「はれ」に
 上書き済みであるせいで「元から同じ天候」と誤判定され、技自身の天候変更が
-機能しなくなってしまう（一次情報: docs/wiki/abilities/メガソーラー.html
+機能しなくなってしまう（一次情報: .internal/wiki/abilities/メガソーラー.html
 特性の仕様「この特性であっても技のにほんばれは使用でき、場をにほんばれ
 状態に変えることができる」）。
 """
@@ -184,7 +184,7 @@ def _apply_contact_counter_chip(battle: Battle,
         v = battle.modify_hp(ctx.attacker, r=-ratio, reason="")
         if v:
             # ダメおし判定用: さめはだ/てつのトゲによるダメージも「そのターンに
-            # 攻撃を受けた」扱いにする（一次情報: docs/wiki/moves/ダメおし.html 技の仕様節）。
+            # 攻撃を受けた」扱いにする（一次情報: .internal/wiki/moves/ダメおし.html 技の仕様節）。
             ctx.attacker.hits_taken += 1
             _announce_ability_triggered(battle, ctx.defender)
     return HandlerReturn(value=value)
@@ -192,7 +192,7 @@ def _apply_contact_counter_chip(battle: Battle,
 def _trigger_emergency_switch(battle: Battle, mon: Pokemon):
     """緊急交代を発動する。
 
-    docs/spec/abilities/にげごし.md の通り、控えのポケモンがいない場合のみ
+    .internal/spec/abilities/にげごし.md の通り、控えのポケモンがいない場合のみ
     発動しない。特性かげふみ/ありじごく/じりょくの影響や、にげられない/バインド/
     ねをはる/フェアリーロック状態の効果は無視して発動するため、`can_switch`
     （とらわれ状態を考慮する）ではなく `has_available_bench`
@@ -795,7 +795,7 @@ def えんかく_nullify_contact(battle: Battle, ctx: AttackContext, value: Any)
 # 自分含む全員が対象の技（使用者自身にも効果が及ぶ技）は、技全体を無効化すると
 # 使用者自身への効果まで防いでしまうため、通常の全体無効化の対象から除外する。
 # 対象ポケモンごとの免疫判定は各技のハンドラ側（handlers/move_status.py の
-# _blocked_by_ougon_no_karada）で行う（docs/spec/abilities/おうごんのからだ.md
+# _blocked_by_ougon_no_karada）で行う（.internal/spec/abilities/おうごんのからだ.md
 # 「自分含む全員が対象の技」）。
 _OUGON_NO_KARADA_EXCLUDED_MOVES: frozenset[str] = frozenset({"ほろびのうた"})
 
@@ -834,15 +834,15 @@ def おどりこ_copy_dance_move(battle: Battle, ctx: EventContext, value: Any) 
     Event.ON_AFTER_ACTION_RESOLVED の発火点（TurnController._run_move_phase() の
     行動枠ループ）を経由しない同期的な呼び出しであるため、ここで実行した踊り技の
     コピーがさらに別のおどりこ持ちにコピーされることはない
-    （docs/plan/abilities/おどりこ.md「再入防止」）。
+    （.internal/plan/abilities/おどりこ.md「再入防止」）。
 
     対象は常に「元の使用者」になる。本プロジェクトはシングルバトル専用のため、
     battle.run_move() が内部で battle.foe(自分) を解決することで自然に定まり、
-    味方関連の対象選択ロジックは不要（docs/spec/abilities/おどりこ.md参照）。
+    味方関連の対象選択ロジックは不要（.internal/spec/abilities/おどりこ.md参照）。
 
     Note (スコープ外): こだわり系アイテムのロック・メトロノーム（アイテム）の連続
     使用カウントの継続・ミクルのみ・Z技の付加効果非発動など、一部の道具・特殊仕様との
-    相互作用は対象外とする（詳細は docs/plan/abilities/おどりこ.md）。
+    相互作用は対象外とする（詳細は .internal/plan/abilities/おどりこ.md）。
     """
     dancer = ctx.source
     mon = battle.foe(dancer)
@@ -1068,7 +1068,7 @@ def かちき_boost_spa_on_stat_drop(battle: Battle, ctx: EventContext, value: d
     """かちき特性: 能力が下がると特攻が2段階上昇する。下がった能力の数だけ発動する。
 
     くすぐる・おきみやげのように一度に複数の能力を下げる技を受けた場合、
-    下がった能力の数だけかちきが発動する（一次情報: docs/wiki/abilities/かちき.html
+    下がった能力の数だけかちきが発動する（一次情報: .internal/wiki/abilities/かちき.html
     特性の仕様節）。
 
     Args:
@@ -1238,7 +1238,7 @@ def カーリーヘアー_lower_spd_on_contact(battle: Battle, ctx: AttackContex
 def がんじょう_block_ohko(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """がんじょう特性: 一撃必殺技を無効化する。(ON_TRY_MOVE_2 / subject_spec="defender:self")
 
-    命中判定(Interrupt)より前に無効化する（docs/spec/abilities/がんじょう.md 参照）。
+    命中判定(Interrupt)より前に無効化する（.internal/spec/abilities/がんじょう.md 参照）。
     """
     if ctx.move.has_flag("ohko"):
         _announce_ability_triggered(battle, ctx.defender)
@@ -1254,7 +1254,7 @@ def がんじょう_survive_confusion_damage(battle: Battle, ctx: EventContext, 
 
     だいばくはつ等の自滅効果(reason="self_cost")、反動ダメージ(reason="recoil")、
     みちづれ/ほろびのうたによるひんし(reason="perish")には発動しない
-    （docs/spec/abilities/がんじょう.md 参照）。
+    （.internal/spec/abilities/がんじょう.md 参照）。
     """
     if ctx.hp_change_reason != "self_attack":
         return HandlerReturn(value=value)
@@ -1291,7 +1291,7 @@ def ききかいひ_switch_on_half_hp(battle: Battle, ctx: EventContext, value: 
     ソウルビートなどの自己HP消費(self_cost)によるHP減少では発動しない。
     特性ちからずくの効果が発動した技のダメージでHPが半分以下になっても発動しない制限は
     第七世代からSVまでの仕様であり、Championsでは撤廃されているため判定しない
-    （ぎゃくじょう/いかりのこうらと同様の修正。docs/spec/abilities/ききかいひ.md参照）。
+    （ぎゃくじょう/いかりのこうらと同様の修正。.internal/spec/abilities/ききかいひ.md参照）。
     """
     mon = ctx.target
 
@@ -1723,7 +1723,7 @@ def さまようたましい_swap_ability_on_contact(battle: Battle, ctx: Attack
     ):
         return HandlerReturn(value=value)
     battle.ability_manager.swap_ability(defender, attacker)
-    # docs/spec/abilities/わるいてぐせ.md「効果の処理順」: てつのトゲ等ダメージを受けて
+    # .internal/spec/abilities/わるいてぐせ.md「効果の処理順」: てつのトゲ等ダメージを受けて
     # 発動する特性とは異なり、わるいてぐせは特性を交換した直後に発動判定があるため、
     # 通常の発動タイミング（ON_DAMAGE_HIT priority=180）を待たずにここで即座に判定する。
     if defender.ability.base_name == "わるいてぐせ":
@@ -2342,7 +2342,7 @@ def そうだいしょう_announce_on_entry(battle: Battle, ctx: EventContext, v
     """そうだいしょう特性: 特性発動時点（場に出たとき、または他の特性からそうだいしょうに
     書き変わったとき）で、その戦闘で自分側がひんしになった延べ回数×10%の威力補正率を
     確定させる（最大+50%）。復活しても延べ回数は減らず、再度ひんしになれば加算される
-    （一次情報: docs/wiki/abilities/そうだいしょう.html 特性の仕様節）。
+    （一次情報: .internal/wiki/abilities/そうだいしょう.html 特性の仕様節）。
     確定した補正率は `ability.count` に保持し、以後その戦闘中に味方がひんしになっても
     再計算しない（威力の補正率は発動時点で決まる）。
     """
@@ -2449,7 +2449,7 @@ def だっぴ_cure_ailment(battle: Battle, ctx: EventContext, value: Any) -> Han
 
     この30%は技の追加効果確率ではなく特性自身の発動確率であり、りんぷん・
     おんみつマント・ちからずく・てんのめぐみ等の影響を受けない（一次情報:
-    docs/spec/abilities/だっぴ.md にこれらとの相互作用の記載はない）ため、
+    .internal/spec/abilities/だっぴ.md にこれらとの相互作用の記載はない）ため、
     ON_MODIFY_SECONDARY_CHANCE（attacker/defender前提のAttackContext用イベント）
     を経由する resolve_secondary_chance は使わず battle.random.random() で
     直接判定する。
@@ -2873,10 +2873,10 @@ def どくしゅ_maybe_poison_on_contact(battle: Battle, ctx: AttackContext, val
 
     Event.ON_DAMAGE_HIT は実HPダメージが0以下のときは発火しないため、こらえるでHP1のまま
     耐えた場合やばけのかわ/アイスフェイスで攻撃を肩代わりされた場合（実HPダメージ0）は
-    発動しない（docs/spec/abilities/どくしゅ.md に記載の一部エッジケースは未対応）。
+    発動しない（.internal/spec/abilities/どくしゅ.md に記載の一部エッジケースは未対応）。
     Event.ON_HIT に変更すればこれらのケースには対応できるが、ON_HIT は技自身の追加効果
     （Event.ON_DAMAGE_HIT で処理される、例: どくづき）より先に発火してしまい、「追加効果の
-    判定の後にどくしゅの判定がある」という基本仕様が崩れるため、docs/spec/turn.md の
+    判定の後にどくしゅの判定がある」という基本仕様が崩れるため、.internal/spec/turn.md の
     Event.ON_DAMAGE（実装上の Event.ON_DAMAGE_HIT）の記載どおり本イベントを使用する。
     """
     if (
@@ -3195,7 +3195,7 @@ def はやおき_extra_decrement(battle: Battle, ctx: AttackContext, value: Any)
         return HandlerReturn(value=value)
     if ctx.move.name not in ["いびき", "ねごと"] and mon.has_volatile("こんらん"):
         # こんらん状態のときはねむり_check_action側でカウント消費自体を行わないため、
-        # 追加消費も行わない（docs/spec/ailments/ねむり.md 参照）。
+        # 追加消費も行わない（.internal/spec/ailments/ねむり.md 参照）。
         return HandlerReturn(value=value)
     # ねむり_check_action より先 (priority=9) に追加tickを実行
     battle.ailment_manager.tick(mon)
@@ -3340,7 +3340,7 @@ def ばけのかわ_block_confusion_damage(battle: Battle, ctx: EventContext, va
     """ばけのかわを消費して、こんらんによる自傷ダメージを0にする。
     (ON_MODIFY_NON_MOVE_DAMAGE / subject_spec="target:self")
 
-    docs/spec/abilities/ばけのかわ.md「こんらん時の自分への攻撃には発動し、
+    .internal/spec/abilities/ばけのかわ.md「こんらん時の自分への攻撃には発動し、
     ダメージを防ぐ」を参照。攻撃技によるダメージ肩代わりと異なり、
     ダメおし・きあいパンチの判定に用いる hits_taken は増加させない
     （こんらんで技が失敗した時点でそのターンの行動自体が失敗するため）。
@@ -3413,7 +3413,7 @@ def ばんけん_block_blow(battle: Battle, ctx: AttackContext, value: Any) -> H
     """ばんけん特性: 強制交代技・レッドカードによる交代を防ぐ。
 
     きゅうばんと異なり、特性バーやメッセージは流れないまま交代のみが
-    無効化される（一次情報: docs/wiki/abilities/ばんけん.html 特性の仕様節）。
+    無効化される（一次情報: .internal/wiki/abilities/ばんけん.html 特性の仕様節）。
     ほえる/ふきとばしの「しかし うまく 決まらなかった!!」表示は on_blow_apply /
     _force_switch_random 側の MOVE_IMMUNED ログで別途処理されるため、
     ここでは特性の発動演出（_announce_ability_triggered）を行わない。
@@ -3425,7 +3425,7 @@ def ばんけん_boost_atk_on_intimidate(battle: Battle, ctx: EventContext, valu
     """ばんけん特性: いかくによるこうげき低下を、こうげきの上昇に変える。
 
     あまのじゃく（メッセージなし）と異なり、いかくを受けたときは特性バーが
-    表れて発動する（一次情報: docs/wiki/abilities/ばんけん.html 特性の仕様節）。
+    表れて発動する（一次情報: .internal/wiki/abilities/ばんけん.html 特性の仕様節）。
     こうげきが既に最大ランク（+6）でいかくの効果が無かったときは発動しない
     （あまのじゃくの同種の仕様に準拠。ビビリだまの at_limit 判定と同じロジック）。
     """
@@ -3563,7 +3563,7 @@ def ビーストブースト_boost_best_stat_on_ko(battle: Battle, ctx: AttackCo
     """ビーストブースト特性: 攻撃技で倒すと最も実数値が高い能力が1段階上がる。
 
     ワンダールーム下ではぼうぎょ・とくぼうの実数値が入れ替わった状態で
-    比較する（docs/spec/abilities/ビーストブースト.md）。
+    比較する（.internal/spec/abilities/ビーストブースト.md）。
     """
     mon = ctx.attacker
     stats = dict(mon.stats)
@@ -3749,7 +3749,7 @@ def ふみん_cure_sleep_on_enable(battle: Battle, ctx: EventContext, value: Any
     かがくへんかガス・かたやぶりの効果が終わって特性が再び有効になった場合、
     メガシンカで特性がふみんに変わった場合などに発動する。
     ON_SWITCH_INにも同じ関数を登録しており、すでにねむり状態のふみんの
-    ポケモンを場に出した場合にも即座に回復する（docs/spec/turn.md の
+    ポケモンを場に出した場合にも即座に回復する（.internal/spec/turn.md の
     ON_SWITCH_IN priority=100「ふみん（特性）による状態異常回復」に対応。
     どくびしのどく付与判定も同じpriority=100だが、どくびしの方が先に
     ハンドラ登録されているため実行順は保たれる）。
@@ -3866,7 +3866,7 @@ def プレッシャー_extra_pp(battle: Battle, ctx: AttackContext, value: int) 
     - のろい: ゴーストタイプが使う"呪い"のときのみ影響を受け、
       それ以外のタイプが使う"鈍い"は影響を受けない（どちらも target="foe"）。
     - ねばねばネット: 相手の場が対象の技（target="foe_side"）だが、
-      唯一プレッシャーの効果を受けない例外（docs/spec/abilities/プレッシャー.md参照。
+      唯一プレッシャーの効果を受けない例外（.internal/spec/abilities/プレッシャー.md参照。
       fuzzログ seed=2020で発見: 通常はPP-1のところPP-2になっていた）。
     """
     move_name = ctx.move.name
@@ -3916,7 +3916,7 @@ def へんしょく_copy_move_type(battle: Battle, ctx: AttackContext, value: An
 
     特性ちからずくの効果が発動した技（secondary_effect フラグを持つ技をちからずく
     所持者が使用した場合）を受けた場合はタイプが変化しない
-    （docs/spec/abilities/へんしょく.md参照）。
+    （.internal/spec/abilities/へんしょく.md参照）。
     """
     mon = ctx.defender
     move_type = ctx.move.type
@@ -4017,8 +4017,8 @@ def ほろびのボディ_apply_perish_song_on_contact(battle: Battle, ctx: Atta
 # 自分含む全員が対象の音技（使用者自身にも効果が及ぶ技）は、技全体を無効化すると
 # 使用者自身への効果まで防いでしまうため、通常の全体無効化の対象から除外する。
 # 対象ポケモンごとの免疫判定は各技のハンドラ側（handlers/move_status.py の
-# _blocked_by_bouon）で行う（docs/spec/abilities/ぼうおん.md「特性の仕様」、
-# docs/spec/moves/ほろびのうた.md「技の仕様」）。
+# _blocked_by_bouon）で行う（.internal/spec/abilities/ぼうおん.md「特性の仕様」、
+# .internal/spec/moves/ほろびのうた.md「技の仕様」）。
 _BOUON_EXCLUDED_MOVES: frozenset[str] = frozenset({"ほろびのうた"})
 
 
@@ -4127,7 +4127,7 @@ def まけんき_boost_atk_on_stat_drop(battle: Battle, ctx: EventContext, value
     """まけんき特性: 敵から能力を下げられるとこうげきが2段階上昇する。下がった能力の数だけ発動する。
 
     くすぐる・おきみやげのように一度に複数の能力を下げる技を受けた場合、
-    下がった能力の数だけまけんきが発動する（一次情報: docs/wiki/abilities/まけんき.html
+    下がった能力の数だけまけんきが発動する（一次情報: .internal/wiki/abilities/まけんき.html
     特性の仕様節）。
 
     Args:
@@ -4151,7 +4151,7 @@ def まけんき_boost_atk_on_stat_drop(battle: Battle, ctx: EventContext, value
     return HandlerReturn(value=value)
 
 
-# マジシャンが発動しない技（docs/spec/abilities/マジシャン.md「技の仕様」）。
+# マジシャンが発動しない技（.internal/spec/abilities/マジシャン.md「技の仕様」）。
 # なげつける: 使用者自身のアイテムを消費して攻撃するため、通常のダメージ処理を経由するが
 # マジシャンは発動しない。しぜんのめぐみ/みらいよち/はめつのねがいは本プロジェクトでは
 # 通常のON_DAMAGE_HITを経由しない実装（しぜんのめぐみは未実装、みらいよち/はめつのねがいは
@@ -4225,7 +4225,7 @@ def _overwrite_ability_on_contact(battle: Battle,
 
     かがくへんかガスは通常uncopyableで上書きできないが、いえき/コアパニッシャー等で
     自身の特性がとくせいなし状態になっている場合は例外的に上書きできる
-    （docs/spec/abilities/ミイラ.md「特性の仕様」）。
+    （.internal/spec/abilities/ミイラ.md「特性の仕様」）。
 
     Returns:
         書き換えに成功した場合True
@@ -4270,7 +4270,7 @@ def みずのベール_cure_burn_on_enable(battle: Battle, ctx: EventContext, va
 
     かがくへんかガス・かたやぶりの効果が終わって特性が再び有効になった場合などに発動する。
     ON_SWITCH_INにも同じ関数を登録しており、すでにやけど状態のみずのベールの
-    ポケモンを場に出した場合にも即座に回復する（docs/spec/turn.md の
+    ポケモンを場に出した場合にも即座に回復する（.internal/spec/turn.md の
     ON_SWITCH_IN priority=100「みずのベール（特性）による状態異常回復」に対応。
     どくびしのどく付与判定も同じpriority=100だが、どくびしの方が先に
     ハンドラ登録されているため実行順は保たれる）。
@@ -4301,7 +4301,7 @@ def ミラーアーマー_reflect_stat_drop(battle: Battle, ctx: EventContext, v
         value = {stat: v for stat, v in value.items() if v > 0}
 
         # 相手が既に最低ランクで実際には何も変化しなかった場合は特性バーを出さない
-        # （一次情報: docs/wiki/abilities/ミラーアーマー.html 特性の仕様「相手のランクがすでに最低で…」）。
+        # （一次情報: .internal/wiki/abilities/ミラーアーマー.html 特性の仕様「相手のランクがすでに最低で…」）。
         if changed:
             _announce_ability_triggered(battle, ctx.target)
 
@@ -4531,7 +4531,7 @@ def やるき_cure_sleep_on_enable(battle: Battle, ctx: EventContext, value: Any
     かがくへんかガス・かたやぶりの効果が終わって特性が再び有効になって
     ONに戻った場合などに発動する。
     ON_SWITCH_INにもこの関数を登録しており、すでにねむり状態のやるきの
-    ポケモンが場に出た場合にも即座に回復する（docs/spec/turn.md の
+    ポケモンが場に出た場合にも即座に回復する（.internal/spec/turn.md の
     ON_SWITCH_IN priority=100「やるき（特性）による状態異常回復」に対応。
     どくびし等その他のpriority=100効果とは、どくびしが場設置時に一度だけ
     priority=100が登録されるのに対し、やるきは交代のたびに新規登録される
@@ -4550,7 +4550,7 @@ def ゆうばく_damage_attacker_on_ko(battle: Battle, ctx: AttackContext, value
     しめりけ特性のポケモンが場にいる場合は発動しない
     （かたやぶり等でしめりけが無効化されている場合は通常通り発動する）。
     この無効化が発生したとき、しめりけ・ゆうばくいずれのメッセージも表示されない
-    （docs/spec/abilities/しめりけ.md）。
+    （.internal/spec/abilities/しめりけ.md）。
     """
     attacker = ctx.attacker
     if (
@@ -4768,7 +4768,7 @@ def りんぷん_block_secondary_chance(battle: Battle, ctx: AttackContext, valu
 
     でんじは・どくどく等の変化技（ctx.move.category == "status"）は、状態異常等の
     付与そのものが技の唯一の効果であり「追加効果」には当たらないため対象外とする
-    （一次情報: 「相手の“攻撃技”による追加効果を受けない」。docs/spec/abilities/りんぷん.md）。
+    （一次情報: 「相手の“攻撃技”による追加効果を受けない」。.internal/spec/abilities/りんぷん.md）。
     どくしゅ・どくのくさり等、攻撃技への接触・命中を契機に発動する特性由来の効果は
     攻撃技（ctx.move.category != "status"）を経由するため、この分岐では従来どおり防げる。
     """
@@ -4864,7 +4864,7 @@ def わたげ_lower_spd_on_hit(battle: Battle, ctx: AttackContext, value: Any) -
     """わたげ特性: 攻撃を受けたとき攻撃者のすばやさを1段階下げる。
 
     攻撃してきたポケモンがみがわり状態であるときは効果を受けない
-    （一次情報: docs/wiki/abilities/わたげ.html 特性の仕様節）。
+    （一次情報: .internal/wiki/abilities/わたげ.html 特性の仕様節）。
     """
     mon = ctx.defender
     attacker = ctx.attacker
@@ -4880,7 +4880,7 @@ def わるいてぐせ_steal_item(battle: Battle, ctx: AttackContext, value: Any
 
     自身（わるいてぐせのポケモン）がひんしになった場合は発動しない。反動ダメージ等で
     攻撃側がひんしになった場合は発動する（このとき攻撃側の特性ねんちゃくによる
-    奪取阻止も無視する。docs/spec/abilities/わるいてぐせ.md「ねんちゃくのポケモンが
+    奪取阻止も無視する。.internal/spec/abilities/わるいてぐせ.md「ねんちゃくのポケモンが
     技の反動などでひんしになったときは、ねんちゃくは発動せずに道具を奪える」）。
 
     レッドカード（priority=150）が同じON_DAMAGE_HITでわるいてぐせ（priority=180）より

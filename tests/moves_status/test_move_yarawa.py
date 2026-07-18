@@ -335,7 +335,7 @@ def test_ねむる_HP満タンでは失敗する():
 
 
 def test_ねむる_PPはchampions仕様で8():
-    """ねむる: championsルールによりPPは8（docs/champions/move_list.txt準拠）"""
+    """ねむる: championsルールによりPPは8（.internal/champions/move_list.txt準拠）"""
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", move_names=["ねむる"])],
         team1=[Pokemon("ピカチュウ")],
@@ -1281,7 +1281,7 @@ def test_わるだくみ_とくこう最大なら失敗する():
 
 
 def test_ワンダールーム_PPは12():
-    """ワンダールーム: チャンピオンズでのPPは12（docs/champions/move_list.txt準拠）。Gen5〜9本家は10。"""
+    """ワンダールーム: チャンピオンズでのPPは12（.internal/champions/move_list.txt準拠）。Gen5〜9本家は10。"""
     assert MOVES["ワンダールーム"].pp == 12
 
 

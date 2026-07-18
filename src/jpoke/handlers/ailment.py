@@ -33,7 +33,7 @@ def こおり_action(battle: Battle, ctx: AttackContext, value: Any) -> HandlerR
     - self_thawフラグを持つ技（ハイドロスチーム・フレアドライブ等）を選択した場合は、
       この確率判定を行わずに素通りする。解凍自体は各技のON_TRY_ACTIONハンドラ
       （priority=170、こんらん等の行動不能判定より後）で確定的に行われる
-      （docs/spec/turn.md Event.ON_TRY_ACTION参照）。
+      （.internal/spec/turn.md Event.ON_TRY_ACTION参照）。
     """
     mon = ctx.attacker
 
@@ -81,7 +81,7 @@ def こおり_cure_by_thaw_move(battle: Battle, ctx: AttackContext, value: Any) 
     （りんぷんの影響は受けない）。
     ハイドロスチームは「secondary_effect」フラグを持たずちからずくの対象技
     ではないため、使用者がちからずくでもこの効果は常に発動する
-    （docs/spec/moves/ハイドロスチーム.md参照）。
+    （.internal/spec/moves/ハイドロスチーム.md参照）。
     """
     if ctx.move.type != "ほのお" and not ctx.move.has_flag("thaw"):
         return HandlerReturn(value=value)

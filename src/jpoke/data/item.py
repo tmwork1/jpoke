@@ -188,7 +188,7 @@ ITEMS: dict[ItemName, ItemData] = {
             # （実装上の Event.ON_DAMAGE_HIT に相当）に掲載されているが、
             # ON_DAMAGE_HIT は actual_damage<=0 のとき発火しないため採用しない。
             # 0ダメージ時（HP1相手へのみねうち等）も反動が発生する仕様
-            # （docs/spec/items/いのちのたま.md 詳細な仕様）を満たすため、
+            # （.internal/spec/items/いのちのたま.md 詳細な仕様）を満たすため、
             # 常に発火する Event.ON_HIT を使用し、priority のみ turn.md の値に合わせる。
             Event.ON_HIT: h.ItemHandler(
                 h.いのちのたま_recoil,
@@ -249,7 +249,7 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_SWITCH_IN: h.ItemHandler(
                 h.エレキシード_boost_defense,
                 subject_spec="source:self",
-                priority=120,  # docs/spec/turn.md ON_SWITCH_IN: 「120 エレキシードの発動」
+                priority=120,  # .internal/spec/turn.md ON_SWITCH_IN: 「120 エレキシードの発動」
             ),
             Event.ON_FIELD_CHANGE: h.ItemHandler(
                 h.エレキシード_boost_defense,
@@ -343,7 +343,7 @@ ITEMS: dict[ItemName, ItemData] = {
             # （実装上の Event.ON_DAMAGE_HIT に相当）に掲載されているが、
             # ON_DAMAGE_HIT はみがわりに阻まれた場合（実HPダメージ0）に発火しないため採用しない。
             # 第五世代以降はみがわりへの与ダメージでも回復する仕様
-            # （docs/spec/items/かいがらのすず.md 詳細な仕様）を満たすため、
+            # （.internal/spec/items/かいがらのすず.md 詳細な仕様）を満たすため、
             # 常に発火する Event.ON_HIT を使用し、priority のみ turn.md の値に合わせる。
             Event.ON_HIT: h.ItemHandler(
                 h.かいがらのすず_drain_on_hit,
@@ -494,7 +494,7 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_DAMAGE_HIT: h.ItemHandler(
                 h.きゅうこん_boost_spatk_on_water_hit,
                 subject_spec="defender:self",
-                # docs/spec/abilities/マジシャン.md: 「じゅうでんち/ゆきだま/きゅうこん/ひかりごけ等の
+                # .internal/spec/abilities/マジシャン.md: 「じゅうでんち/ゆきだま/きゅうこん/ひかりごけ等の
                 # 効果が発動する場合、マジシャンで奪う前に発動する」。マジシャン特性ハンドラ(priority=100)
                 # より確実に先に発動させるため、素早さに依存しないpriority=90を指定する。
                 priority=90,
@@ -603,7 +603,7 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_DAMAGE_HIT: h.ItemHandler(
                 h.くっつきバリ_transfer_on_contact,
                 subject_spec="defender:self",
-                priority=30,  # docs/spec/turn.md ON_DAMAGE: 「30 くっつきバリが攻撃側に渡る」
+                priority=30,  # .internal/spec/turn.md ON_DAMAGE: 「30 くっつきバリが攻撃側に渡る」
             ),
         }
     ),
@@ -698,7 +698,7 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_SWITCH_IN: h.ItemHandler(
                 h.グラスシード_boost_defense,
                 subject_spec="source:self",
-                priority=120,  # docs/spec/turn.md ON_SWITCH_IN: 「120 グラスシードの発動」
+                priority=120,  # .internal/spec/turn.md ON_SWITCH_IN: 「120 グラスシードの発動」
             ),
             Event.ON_FIELD_CHANGE: h.ItemHandler(
                 h.グラスシード_boost_defense,
@@ -842,7 +842,7 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_DAMAGE_HIT: h.ItemHandler(
                 h.ゴツゴツメット_chip_contact_attacker,
                 subject_spec="defender:self",
-                # docs/spec/abilities/マジシャン.md: 「きあいのハチマキ/きあいのタスキ/ゴツゴツメット/
+                # .internal/spec/abilities/マジシャン.md: 「きあいのハチマキ/きあいのタスキ/ゴツゴツメット/
                 # じゃくてんほけん/じゅうでんち/ゆきだま/きゅうこん/ひかりごけ/ふうせんの効果が発動する場合、
                 # マジシャンで奪う前に発動する」。マジシャン特性ハンドラ(priority=100)より確実に先に
                 # 発動させるため、素早さに依存しないpriority=90を指定する。
@@ -862,7 +862,7 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_SWITCH_IN: h.ItemHandler(
                 h.サイコシード_boost_spdef,
                 subject_spec="source:self",
-                priority=120,  # docs/spec/turn.md ON_SWITCH_IN: 「120 サイコシードの発動」
+                priority=120,  # .internal/spec/turn.md ON_SWITCH_IN: 「120 サイコシードの発動」
             ),
             Event.ON_FIELD_CHANGE: h.ItemHandler(
                 h.サイコシード_boost_spdef,
@@ -962,7 +962,7 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_SWITCH_IN: h.ItemHandler(
                 h.しろいハーブ_reset_if_already_lowered,
                 subject_spec="source:self",
-                priority=160,  # docs/spec/turn.md ON_SWITCH_IN: 「160 しろいハーブの発動」
+                priority=160,  # .internal/spec/turn.md ON_SWITCH_IN: 「160 しろいハーブの発動」
             ),
             Event.ON_ITEM_GAINED: h.ItemHandler(
                 h.しろいハーブ_reset_if_already_lowered,
@@ -1003,7 +1003,7 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_DAMAGE_HIT: h.ItemHandler(
                 h.じゃくてんほけん_boost_on_super_effective,
                 subject_spec="defender:self",
-                # docs/spec/abilities/マジシャン.md: 「きあいのハチマキ/きあいのタスキ/ゴツゴツメット/
+                # .internal/spec/abilities/マジシャン.md: 「きあいのハチマキ/きあいのタスキ/ゴツゴツメット/
                 # じゃくてんほけん/じゅうでんち/ゆきだま/きゅうこん/ひかりごけ/ふうせんの効果が発動する場合、
                 # マジシャンで奪う前に発動する」。マジシャン特性ハンドラ(priority=100)より確実に先に
                 # 発動させるため、素早さに依存しないpriority=90を指定する。
@@ -1017,7 +1017,7 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_DAMAGE_HIT: h.ItemHandler(
                 h.ジャポのみ_retaliate_physical,
                 subject_spec="defender:self",
-                # docs/spec/abilities/マジシャン.md: 「弱点半減のきのみ/ナゾのみ/ジャポのみ/
+                # .internal/spec/abilities/マジシャン.md: 「弱点半減のきのみ/ナゾのみ/ジャポのみ/
                 # レンブのみはマジシャンより先に発動する」。マジシャン特性ハンドラ(priority=100)
                 # より確実に先に発動させるため、素早さに依存しないpriority=90を指定する。
                 priority=90,
@@ -1030,7 +1030,7 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_DAMAGE_HIT: h.ItemHandler(
                 h.じゅうでんち_boost_atk_on_electric_hit,
                 subject_spec="defender:self",
-                # docs/spec/abilities/マジシャン.md: 「きあいのハチマキ/きあいのタスキ/ゴツゴツメット/
+                # .internal/spec/abilities/マジシャン.md: 「きあいのハチマキ/きあいのタスキ/ゴツゴツメット/
                 # じゃくてんほけん/じゅうでんち/ゆきだま/きゅうこん/ひかりごけ/ふうせんの効果が発動する場合、
                 # マジシャンで奪う前に発動する」。マジシャン特性ハンドラ(priority=100)より確実に先に
                 # 発動させるため、素早さに依存しないpriority=90を指定する。
@@ -1293,7 +1293,7 @@ ITEMS: dict[ItemName, ItemData] = {
             # （ON_DAMAGE 節の末尾）としてのみ言及されている。ON_DAMAGE_HIT は
             # actual_damage<=0 のとき発火しないため採用しない。ばけのかわ/アイスフェイスの
             # 肩代わりやこらえるでHP1のまま耐えたとき（実HPダメージ0）も発動する仕様
-            # （docs/spec/items/だっしゅつボタン.md 詳細な仕様）を満たすため、いのちのたま
+            # （.internal/spec/items/だっしゅつボタン.md 詳細な仕様）を満たすため、いのちのたま
             # と同様に常に発火する Event.ON_HIT を使用する（priority は既定値のまま）。
             Event.ON_HIT: h.ItemHandler(
                 h.だっしゅつボタン_reserve_switch,
@@ -1440,7 +1440,7 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_DAMAGE_HIT: h.ItemHandler(
                 h.ナゾのみ_heal_on_super_effective,
                 subject_spec="defender:self",
-                # docs/spec/abilities/マジシャン.md: 「弱点半減のきのみ/ナゾのみ/ジャポのみ/
+                # .internal/spec/abilities/マジシャン.md: 「弱点半減のきのみ/ナゾのみ/ジャポのみ/
                 # レンブのみはマジシャンより先に発動する」。マジシャン特性ハンドラ(priority=100)
                 # より確実に先に発動させるため、素早さに依存しないpriority=90を指定する。
                 priority=90,
@@ -1632,7 +1632,7 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_DAMAGE_HIT: h.ItemHandler(
                 h.ひかりごけ_boost_spdef_on_water_hit,
                 subject_spec="defender:self",
-                # docs/spec/abilities/マジシャン.md: 「きあいのハチマキ/きあいのタスキ/ゴツゴツメット/
+                # .internal/spec/abilities/マジシャン.md: 「きあいのハチマキ/きあいのタスキ/ゴツゴツメット/
                 # じゃくてんほけん/じゅうでんち/ゆきだま/きゅうこん/ひかりごけ/ふうせんの効果が発動する場合、
                 # マジシャンで奪う前に発動する」。マジシャン特性ハンドラ(priority=100)より確実に先に
                 # 発動させるため、素早さに依存しないpriority=90を指定する。
@@ -1711,7 +1711,7 @@ ITEMS: dict[ItemName, ItemData] = {
         handlers={
             # priority=50: しろいきり(130)やクリアボディ等の無効化ハンドラ(既定100)より先に
             # 判定し、いかくが無効化された場合でも発動するようにする（一次情報:
-            # docs/wiki/abilities/いかく.html 特性の仕様#ランク低下効果 の発動順一覧 3.）。
+            # .internal/wiki/abilities/いかく.html 特性の仕様#ランク低下効果 の発動順一覧 3.）。
             Event.ON_BEFORE_MODIFY_STAT: h.ItemHandler(
                 h.ビビリだま_boost_speed_on_intimidate,
                 subject_spec="target:self",
@@ -1758,7 +1758,7 @@ ITEMS: dict[ItemName, ItemData] = {
             ),
             # ON_HITはみがわり肩代わり・ばけのかわ/アイスフェイス肩代わり・
             # ダメージ0補正のケースでも発火するため、これらでも正しく割れる
-            # （docs/spec/turn.md の Event.ON_HIT 参照）
+            # （.internal/spec/turn.md の Event.ON_HIT 参照）
             Event.ON_HIT: h.ItemHandler(
                 h.ふうせん_pop_on_hit,
                 subject_spec="defender:self",
@@ -1894,7 +1894,7 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_SWITCH_IN: h.ItemHandler(
                 h.ミストシード_boost_spdef,
                 subject_spec="source:self",
-                priority=120,  # docs/spec/turn.md ON_SWITCH_IN: 「120 ミストシードの発動」
+                priority=120,  # .internal/spec/turn.md ON_SWITCH_IN: 「120 ミストシードの発動」
             ),
             Event.ON_FIELD_CHANGE: h.ItemHandler(
                 h.ミストシード_boost_spdef,
@@ -2055,7 +2055,7 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_DAMAGE_HIT: h.ItemHandler(
                 h.ゆきだま_boost_attack_on_ice_hit,
                 subject_spec="defender:self",
-                # docs/spec/abilities/マジシャン.md: 「きあいのハチマキ/きあいのタスキ/ゴツゴツメット/
+                # .internal/spec/abilities/マジシャン.md: 「きあいのハチマキ/きあいのタスキ/ゴツゴツメット/
                 # じゃくてんほけん/じゅうでんち/ゆきだま/きゅうこん/ひかりごけ/ふうせんの効果が発動する場合、
                 # マジシャンで奪う前に発動する」。マジシャン特性ハンドラ(priority=100)より確実に先に
                 # 発動させるため、素早さに依存しないpriority=90を指定する。
@@ -2198,7 +2198,7 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_SWITCH_IN: h.ItemHandler(
                 h.ルームサービス_drop_speed_on_switch_in,
                 subject_spec="source:self",
-                priority=120,  # docs/spec/turn.md ON_SWITCH_IN: 「120 ルームサービスの発動」
+                priority=120,  # .internal/spec/turn.md ON_SWITCH_IN: 「120 ルームサービスの発動」
             ),
         }
     ),
@@ -2206,7 +2206,7 @@ ITEMS: dict[ItemName, ItemData] = {
         fling_power=10,
         handlers={
             # 実HPダメージ(>0)を受けたときの通常ケース。ゴツゴツメット等の反動処理より後、
-            # いのちのたまの反動より先に発動させるため、docs/spec/turn.md ON_DAMAGE:
+            # いのちのたまの反動より先に発動させるため、.internal/spec/turn.md ON_DAMAGE:
             # 「150 レッドカードの発動・交代」に合わせて priority=150 を指定する。
             Event.ON_DAMAGE_HIT: h.ItemHandler(
                 h.レッドカード_force_switch,
@@ -2215,7 +2215,7 @@ ITEMS: dict[ItemName, ItemData] = {
             ),
             # ON_DAMAGE_HIT は actual_damage<=0 のとき発火しないため、ばけのかわ/
             # アイスフェイスの肩代わりやこらえるでHP1のまま耐えたとき（実HPダメージ0）も
-            # 発動する仕様（docs/spec/items/レッドカード.md 詳細な仕様）を満たすため、
+            # 発動する仕様（.internal/spec/items/レッドカード.md 詳細な仕様）を満たすため、
             # いのちのたま・だっしゅつボタンと同様に常に発火する Event.ON_HIT でも
             # 実HPダメージ0のケースのみを処理する（handlers/item.py 参照）。
             Event.ON_HIT: h.ItemHandler(
@@ -2231,7 +2231,7 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_DAMAGE_HIT: h.ItemHandler(
                 h.レンブのみ_retaliate_special,
                 subject_spec="defender:self",
-                # docs/spec/abilities/マジシャン.md: 「弱点半減のきのみ/ナゾのみ/ジャポのみ/
+                # .internal/spec/abilities/マジシャン.md: 「弱点半減のきのみ/ナゾのみ/ジャポのみ/
                 # レンブのみはマジシャンより先に発動する」。マジシャン特性ハンドラ(priority=100)
                 # より確実に先に発動させるため、素早さに依存しないpriority=90を指定する。
                 priority=90,

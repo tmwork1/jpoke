@@ -114,8 +114,7 @@ data/ability.py  →  handlers/ability.py に実装  →  data/ability.py に登
 
 1. `python scripts/sort_tests.py <対象ファイル>` — テスト関数を五十音順に並び替える
    （複数指定可、例: `tests/abilities/test_ability_ka.py tests/moves_attack/test_move_ka.py`）
-2. `python scripts/generate_test_list.py` — `docs/tests/` のテスト一覧を更新する
-3. `python -m pytest tests/ -v` — 全テストが通ることを確認する
+2. `python -m pytest tests/ -v` — 全テストが通ることを確認する
 
 新しい `Literal` 型（`Stat`, `Type`, `AilmentName` など）が必要な場合は `types/` に
 追加してください。

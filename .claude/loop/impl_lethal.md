@@ -7,7 +7,7 @@
 > （impl.md 手順3・新規 entry は `-` を残さない）。この impl_lethal フローは、それ以前に実装された
 > **`リーサル実装 = -` のバックログを総ざらいで消化するための一時的な後追いフロー**。
 > バックログを消化しきったら（下記コマンドで `-` が 0 件になったら）このフローと状態ファイルは削除してよい。
-> 残バックログ確認: `awk -F'\t' 'NR>1 && $6=="-"' docs/progress/*.md`
+> 残バックログ確認: `awk -F'\t' 'NR>1 && $6=="-"' .internal/progress/*.md`
 
 `impl.md` を簡略化したシングルエージェント実装ループ（計画書なし）。進捗ファイルのリーサル列を
 読んで実装対象を決定し、`loop/impl_lethal` 上で 1 件ずつ実装・テスト・進捗更新・コミットを行う。
@@ -20,9 +20,9 @@
 {
   "config": {
     "category":       "リーサル計算ハンドラ",
-    "spec_hint":      "docs/spec/ 以下の仕様書を参照",
+    "spec_hint":      ".internal/spec/ 以下の仕様書を参照",
     "test_files":     ["tests/test_lethal.py"],
-    "progress_files": ["docs/progress/item.md", "docs/progress/ability.md", "..."],
+    "progress_files": [".internal/progress/item.md", ".internal/progress/ability.md", "..."],
     "worktree":       "{ROOTの親}\\jpoke-loop\\impl_lethal"
   },
   "completed": [{"name": "...", "type": "item|ability|ailment|volatile|global_field|move"}],
@@ -70,7 +70,7 @@ jpoke リーサル計算ハンドラ実装タスク: {name}（{type}）
 効果: {効果列の説明}
 
 手順:
-1. docs/spec/ に仕様書があれば読む。なければ現状の実装（handlers/lethal.py・core/lethal.py）を調査する
+1. .internal/spec/ に仕様書があれば読む。なければ現状の実装（handlers/lethal.py・core/lethal.py）を調査する
 2. `.claude/loop/_common.md` §共通11「リーサル計算ハンドラの実装パターン」に従ってハンドラ関数を実装する
    （この entry は progress ファイルで「影響する」と既に確定済みなので、影響有無の判断は不要）
 3. type に対応する data ファイルの lethal_handlers にエントリを追加する（§共通11 の種別対応の一覧を参照）
@@ -79,13 +79,12 @@ jpoke リーサル計算ハンドラ実装タスク: {name}（{type}）
    （data ファイルを変更した場合は scripts/sort_data/sort_abilities.py / sort_items.py / sort_moves.py も実行）
 5. tests/test_lethal.py にテストを追加する（t.calc_lethal を使用）
 6. python scripts/sort_tests.py tests/test_lethal.py を実行する
-7. python scripts/generate_test_list.py を実行する
-8. python -m pytest tests/ -v を実行し全テストが通ることを確認する
+7. python -m pytest tests/ -v を実行し全テストが通ることを確認する
    （今回の実装と無関係な既存テストが flaky と判明した場合は `.claude/loop/_common.md` §共通13 に
    従いその場で修正する）
-9. 対象行がある progress ファイル（`config.progress_files` のいずれか）の「リーサル実装」
+8. 対象行がある progress ファイル（`config.progress_files` のいずれか）の「リーサル実装」
    「リーサルテスト」列を `-` → `x` に更新する（自分の行だけ）
-10. 変更をすべてコミットする（作業は `loop/impl_lethal` ブランチ上で行う）:
+9. 変更をすべてコミットする（作業は `loop/impl_lethal` ブランチ上で行う）:
     git add -A
     git commit -m "impl: impl_lethal/{name}"
 

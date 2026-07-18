@@ -17,9 +17,9 @@ HEADERS = {
 
 # 進捗表の1列目から名前を取得する対象（進捗表にある名前がそのままwikiページ名になるもののみ）
 PROGRESS_FILES = {
-    "abilities": "docs/progress/ability.md",
-    "items": "docs/progress/item.md",
-    "moves": "docs/progress/move.md",
+    "abilities": ".internal/progress/ability.md",
+    "items": ".internal/progress/item.md",
+    "moves": ".internal/progress/move.md",
 }
 
 FOREIGN_NAMES_PAGE = "ポケモンの外国語名一覧"
@@ -39,7 +39,7 @@ def read_names_from_list(file_path: Path) -> list[str]:
 def read_names(target: str) -> list[str]:
     if target in PROGRESS_FILES:
         return read_names_from_progress(Path(PROGRESS_FILES[target]))
-    return read_names_from_list(Path(f"docs/wiki/_list/{target}.txt"))
+    return read_names_from_list(Path(f".internal/wiki/_list/{target}.txt"))
 
 
 def download_html(name: str, output_dir: Path) -> Path:
@@ -58,12 +58,12 @@ def download_html(name: str, output_dir: Path) -> Path:
 
 
 def download_foreign_names() -> Path:
-    output_dir = Path("docs/wiki/")
+    output_dir = Path(".internal/wiki/")
     return download_html(FOREIGN_NAMES_PAGE, output_dir)
 
 
 def main(target: str):
-    output_dir = Path(f"docs/wiki/{target}/")
+    output_dir = Path(f".internal/wiki/{target}/")
 
     if not output_dir.exists():
         output_dir.mkdir(parents=True)

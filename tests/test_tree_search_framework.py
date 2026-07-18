@@ -1,6 +1,6 @@
 """jpoke.players.TreeSearchPlayer の単体テスト。
 
-木探索フレームワーク（docs/plan/archives/tree_search_framework.md）が解消する
+木探索フレームワーク（.internal/plan/archives/tree_search_framework.md）が解消する
 CRIT-1（相手の合法手が required_command_type でフィルタされない）と
 ISSUE-1（探索中の割り込み交代による再帰呼び出しが copy_depth の決め打ちで
 クラッシュする）の回帰確認を兼ねる。

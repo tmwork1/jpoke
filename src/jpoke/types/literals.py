@@ -132,9 +132,9 @@ MoveFlag = Literal[
                # 本プロジェクトはシングル専用で target フィールドにはこの区分がないため、
                # ワイドガードの防御対象判定専用にこのフラグで表現する
                # （src/jpoke/data/ps-champ-ja/moves.json の target が allAdjacentFoes/
-               # allAdjacent の技に付与。docs/spec/moves/ワイドガード.md参照）。
+               # allAdjacent の技に付与。.internal/spec/moves/ワイドガード.md参照）。
     "thaw",  # 被弾した相手のこおりを解凍する技（ほのおタイプ技はタイプ判定で自動的に対象になるため、
-             # このフラグは非ほのおタイプでこの効果を持つ技専用。docs/spec/ailments/こおり.md参照）。
+             # このフラグは非ほのおタイプでこの効果を持つ技専用。.internal/spec/ailments/こおり.md参照）。
     "self_thaw",  # こおり状態でも確実に使用でき、行動判定の終盤（こんらん等の判定より後、
                   # Event.ON_TRY_ACTION priority=170）で自分のこおりを解凍する技。
     "wind",  # 風技。かぜのり等の対象判定に使う。

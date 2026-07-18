@@ -637,7 +637,7 @@ print(mon.types, mon.stats)
 | API | 概要 |
 |---|---|
 | `POKEDEX[name].abilities` | そのポケモンが持てる特性のリスト（通常特性1・2・隠れ特性の順）。持てる特性が1つや2つしかないポケモンでは、存在しない枠は含まれず短いリストになる |
-| `POKEDEX[name].learnset` | そのポケモンが覚えられる技の集合（`frozenset[MoveName]`）。技数が多く順序も保証されない |
+| `POKEDEX[name].learnset` | そのポケモンが覚えられる技のリスト（`list[MoveName]`、五十音順にソート済み） |
 
 ```python
 from jpoke.data import POKEDEX

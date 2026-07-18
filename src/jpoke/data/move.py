@@ -80,7 +80,7 @@ def common_setup() -> None:
         実際の命中判定・特性相互作用（ちょすい等のみずタイプ変化技吸収、
         サイコフィールドの先制技ブロック等）は「foe」の技と同じ挙動を示すため、
         move_*.py側で明示的に`target="foe"`を指定して縮約結果を上書きしている
-        （詳細はmove_ha.py内のコメント、docs/spec/moves/ほろびのうた.md参照）。
+        （詳細はmove_ha.py内のコメント、.internal/spec/moves/ほろびのうた.md参照）。
     """
     ps_champ = _load_ps_champ_moves()
     symbol_names = set(MOVES_SYMBOL.keys())

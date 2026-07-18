@@ -273,7 +273,7 @@ def test_木探索用の観測でswitchフェーズ中の相手コマンドがre
     修正前は公開状況（revealed）のみでフィルタしており、木探索が
     battle.get_available_commands(opponent) をそのまま itertools.product() 等に
     渡すと sim.step() の validate_command() に弾かれて ValueError になっていた
-    （docs/review/code/tree_search.md CRIT-1）。
+    （.internal/review/code/tree_search.md CRIT-1）。
     """
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["とんぼがえり"]), Pokemon("ライチュウ")],

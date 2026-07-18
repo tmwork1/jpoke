@@ -87,7 +87,7 @@ SIDE_FIELD: dict[str, FieldData] = {
                 # 発動させるため90を明示する。同一priority同士のタイブレークはハンドラ
                 # 登録順（＝設置が先だった技が先に発動）に依存するため、設置技より後に
                 # 設置された場合でも回復が設置技のダメージより後回しになってしまっていた
-                # （docs/spec/fields/みかづきのまい.md「設置技との順序」参照。
+                # （.internal/spec/fields/みかづきのまい.md「設置技との順序」参照。
                 # fuzzログ seed=1879で発見）。
                 priority=90,
             ),

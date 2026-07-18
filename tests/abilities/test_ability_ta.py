@@ -1804,7 +1804,7 @@ def test_どくげしょう_直接攻撃でない物理技でも発動する():
 
 def test_どくげしょう_致命打でも発動する():
     """どくげしょう: 物理技でHPが0になったときも、特性を発動させてからひんしになる
-    （seed=2225 fuzz_log 回帰テスト。docs/spec/abilities/どくげしょう.md）"""
+    （seed=2225 fuzz_log 回帰テスト。.internal/spec/abilities/どくげしょう.md）"""
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", ability_name="どくげしょう")],
         team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
@@ -2086,7 +2086,7 @@ def test_どくのトゲ_みがわりに阻まれたときは発動しない():
 
 def test_どくのトゲ_致命打でも発動する():
     """どくのトゲ: 攻撃技でひんしになったときも発動する
-    （seed=2225 fuzz_log 回帰テスト。docs/spec/abilities/どくのトゲ.md）"""
+    （seed=2225 fuzz_log 回帰テスト。.internal/spec/abilities/どくのトゲ.md）"""
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", ability_name="どくのトゲ")],
         team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],

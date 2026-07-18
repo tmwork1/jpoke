@@ -65,7 +65,7 @@ def test_HP25以下でランク上昇するきのみ_こんらんの自傷では
                          )
 def test_HP25以下でランク上昇するきのみ_瀕死になったときは発動しない(item_name, stat, amount):
     """ダメージでHPが0(ひんし)になったときはランク上昇せず、アイテムも消費されない
-    （ref: docs/spec/items/_ランク上昇ピンチきのみ.md「所持者がひんしになったときは発動しない」）
+    （ref: .internal/spec/items/_ランク上昇ピンチきのみ.md「所持者がひんしになったときは発動しない」）
     """
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", item_name=item_name)],
@@ -121,7 +121,7 @@ def test_HP4分の1以下で回復するきのみ(item_name):
 def test_HP4分の1以下で回復するきのみ_瀕死になったときは発動しない(item_name):
     """ダメージでHPが0(ひんし)になったときは回復せず、こんらんも付与されず、
     アイテムも消費されない
-    （ref: docs/spec/items/_HP回復ピンチきのみ.md）
+    （ref: .internal/spec/items/_HP回復ピンチきのみ.md）
     """
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", item_name=item_name)],

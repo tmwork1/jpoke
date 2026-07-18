@@ -4,8 +4,8 @@
 
 対象ディレクトリ:
 - `src/jpoke/data/`
-- `docs/wiki/`
-- `docs/spec/`
+- `.internal/wiki/`
+- `.internal/spec/`
 
 ## 出典
 

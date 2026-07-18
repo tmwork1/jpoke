@@ -667,7 +667,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 subject_spec="target:self",
             ),
             # 命中判定(Interrupt)より前に無効化するため ON_TRY_MOVE_2 で判定する
-            # (docs/spec/turn.md の ON_TRY_MOVE_2 priority=140 を参照)
+            # (.internal/spec/turn.md の ON_TRY_MOVE_2 priority=140 を参照)
             Event.ON_TRY_MOVE_2: h.AbilityHandler(
                 h.がんじょう_block_ohko,
                 subject_spec="defender:self",
@@ -857,7 +857,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 paradox.refresh_paradox_charge_state,
                 subject_spec="source:self",
-                priority=140,  # docs/spec/turn.md ON_SWITCH_IN: 「140 クォークチャージ（特性）」
+                priority=140,  # .internal/spec/turn.md ON_SWITCH_IN: 「140 クォークチャージ（特性）」
             ),
             Event.ON_ABILITY_ENABLED: h.AbilityHandler(
                 paradox.refresh_paradox_charge_state,
@@ -962,7 +962,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 paradox.refresh_paradox_charge_state,
                 subject_spec="source:self",
-                priority=140,  # docs/spec/turn.md ON_SWITCH_IN: 「140 こだいかっせい（特性）」
+                priority=140,  # .internal/spec/turn.md ON_SWITCH_IN: 「140 こだいかっせい（特性）」
             ),
             Event.ON_ABILITY_ENABLED: h.AbilityHandler(
                 paradox.refresh_paradox_charge_state,
@@ -992,13 +992,13 @@ ABILITIES: dict[AbilityName, AbilityData] = {
         handlers={
             # ON_DAMAGE_HIT は actual_damage<=0 のとき発火しないため採用しない。こらえるで
             # HP1のまま耐えたときやみねうちを受けたとき（実HPダメージ0）も発動する仕様
-            # （docs/spec/abilities/こぼれダネ.md）を満たすため、常に発火する Event.ON_HIT
+            # （.internal/spec/abilities/こぼれダネ.md）を満たすため、常に発火する Event.ON_HIT
             # を使用する（みがわりに阻まれた場合はハンドラ内で ctx.substitute_damage を見て除外する）。
             Event.ON_HIT: h.AbilityHandler(
                 h.こぼれダネ_set_grassy_terrain,
                 subject_spec="defender:self",
                 # 攻撃技でHPが0になったときも特性を発動させてからひんしになる仕様
-                # （docs/spec/abilities/こぼれダネ.md）のため、瀕死主体でも発動を許可する。
+                # （.internal/spec/abilities/こぼれダネ.md）のため、瀕死主体でも発動を許可する。
                 allow_fainted_subject=True,
             )
         }
@@ -1154,7 +1154,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_TURN_END: h.AbilityHandler(
                 h.しゅうかく_restore_berry,
                 subject_spec="source:self",
-                priority=150,  # docs/spec/turn.md ON_TURN_END: 「150 しゅうかく」
+                priority=150,  # .internal/spec/turn.md ON_TURN_END: 「150 しゅうかく」
             ),
         }
     ),
@@ -1237,7 +1237,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
     "じきゅうりょく": AbilityData(
         handlers={
             # ON_DAMAGE_HIT は actual_damage<=0 のとき発火しないため採用しない。こらえるで
-            # HP1のまま耐えたときなど（実HPダメージ0）も発動する仕様（docs/spec/abilities/
+            # HP1のまま耐えたときなど（実HPダメージ0）も発動する仕様（.internal/spec/abilities/
             # じきゅうりょく.md）を満たすため、常に発火する Event.ON_HIT を使用する
             # （みがわりに阻まれた場合はハンドラ内で ctx.substitute_damage を見て除外する）。
             Event.ON_HIT: h.AbilityHandler(
@@ -1281,7 +1281,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
         handlers={
             # 技側の ON_DAMAGE_HIT ハンドラ（h.MoveHandler、デフォルト priority=100）より
             # 大きい値を指定し、バブルこうせん等の追加効果（S-1）の後にじょうききかん
-            # （S+6）が発動する仕様（docs/spec/abilities/じょうききかん.md）を満たす。
+            # （S+6）が発動する仕様（.internal/spec/abilities/じょうききかん.md）を満たす。
             # priority を指定しない場合、(priority, -speed) のタイブレークで攻撃側・
             # 防御側どちらが速いかによって発動順が変わってしまうため明示する。
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
@@ -1479,13 +1479,13 @@ ABILITIES: dict[AbilityName, AbilityData] = {
         handlers={
             # ON_DAMAGE_HIT は actual_damage<=0 のとき発火しないため採用しない。こらえるで
             # HP1のまま耐えたときやみねうちを受けたとき（実HPダメージ0）も発動する仕様
-            # （docs/spec/abilities/すなはき.md）を満たすため、常に発火する Event.ON_HIT
+            # （.internal/spec/abilities/すなはき.md）を満たすため、常に発火する Event.ON_HIT
             # を使用する（みがわりに阻まれた場合はハンドラ内で ctx.substitute_damage を見て除外する）。
             Event.ON_HIT: h.AbilityHandler(
                 h.すなはき_set_sandstorm,
                 subject_spec="defender:self",
                 # 攻撃技でHPが0になったときも特性を発動させてからひんしになる仕様
-                # （docs/spec/abilities/すなはき.md）のため、瀕死主体でも発動を許可する。
+                # （.internal/spec/abilities/すなはき.md）のため、瀕死主体でも発動を許可する。
                 allow_fainted_subject=True,
             )
         }
@@ -2102,24 +2102,24 @@ ABILITIES: dict[AbilityName, AbilityData] = {
         handlers={
             # ON_DAMAGE_HIT は actual_damage<=0 のとき発火しないため採用しない。こらえるで
             # HP1のまま耐えたときやみねうちを受けたとき（実HPダメージ0）も発動する仕様
-            # （docs/spec/abilities/どくげしょう.md）を満たすため、常に発火する Event.ON_HIT
+            # （.internal/spec/abilities/どくげしょう.md）を満たすため、常に発火する Event.ON_HIT
             # を使用する（みがわりに阻まれた場合はハンドラ内で ctx.substitute_damage を見て除外する）。
             Event.ON_HIT: h.AbilityHandler(
                 h.どくげしょう_set_toxic_spikes,
                 subject_spec="defender:self",
                 # 物理技でHPが0になったときも特性を発動させてからひんしになる仕様
-                # （docs/spec/abilities/どくげしょう.md）のため、瀕死主体でも発動を許可する。
+                # （.internal/spec/abilities/どくげしょう.md）のため、瀕死主体でも発動を許可する。
                 allow_fainted_subject=True,
             )
         }
     ),
     "どくしゅ": AbilityData(
         handlers={
-            # docs/spec/turn.md の Event.ON_DAMAGE（実装上の Event.ON_DAMAGE_HIT に相当）に
+            # .internal/spec/turn.md の Event.ON_DAMAGE（実装上の Event.ON_DAMAGE_HIT に相当）に
             # 「10 | 攻撃側のどくしゅによるどく」と明記されているため priority=10 を指定する。
             # ミイラ/さまようたましい/とれないにおい（同イベントpriority=20）や
             # はたきおとす等のアイテム効果（同100）より先に発動する必要がある
-            # （docs/spec/abilities/どくしゅ.md）ため、デフォルト(100)のままでは順序が壊れる。
+            # （.internal/spec/abilities/どくしゅ.md）ため、デフォルト(100)のままでは順序が壊れる。
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.どくしゅ_maybe_poison_on_contact,
                 subject_spec="attacker:self",
@@ -2131,7 +2131,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
         handlers={
             # ON_DAMAGE_HIT は actual_damage<=0 のとき発火しないため採用しない。こらえるで
             # HP1のまま耐えたときやみねうちを受けたとき（実HPダメージ0）も発動する仕様
-            # （docs/spec/abilities/どくのくさり.md）を満たすため、常に発火する Event.ON_HIT
+            # （.internal/spec/abilities/どくのくさり.md）を満たすため、常に発火する Event.ON_HIT
             # を使用する（みがわりに阻まれた場合はハンドラ内で ctx.substitute_damage を見て除外する）。
             Event.ON_HIT: h.AbilityHandler(
                 h.どくのくさり_maybe_badly_poison,
@@ -2150,7 +2150,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.どくのトゲ_maybe_poison_attacker,
                 subject_spec="defender:self",
                 # 攻撃技でひんしになったときも発動する仕様
-                # （docs/spec/abilities/どくのトゲ.md）のため、瀕死主体でも発動を許可する。
+                # （.internal/spec/abilities/どくのトゲ.md）のため、瀕死主体でも発動を許可する。
                 allow_fainted_subject=True,
             )
         }
@@ -2454,7 +2454,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_TURN_END: h.AbilityHandler(
                 h.はらぺこスイッチ_on_turn_end,
                 subject_spec="source:self",
-                # docs/spec/turn.md ON_TURN_END: 「160 ダルマモード/リミットシールド/
+                # .internal/spec/turn.md ON_TURN_END: 「160 ダルマモード/リミットシールド/
                 # スワームチェンジ/ぎょぐんによるフォルムチェンジ」と同じ160だと
                 # _sort_handlers の (priority, -speed) tie-break ですばやさ次第で
                 # 順序が入れ替わってしまう。一次情報で「すばやさに関係なくはらぺこ
@@ -2492,7 +2492,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_TURN_END: h.AbilityHandler(
                 h.はんすう_on_turn_end,
                 subject_spec="source:self",
-                priority=150,  # docs/spec/turn.md ON_TURN_END: 「150 はんすう」
+                priority=150,  # .internal/spec/turn.md ON_TURN_END: 「150 はんすう」
             ),
         }
     ),
@@ -2516,7 +2516,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             "gas_proof",
         },
         handlers={
-            # docs/spec/turn.md Event.ON_MODIFY_DAMAGE: 40番（ばけのかわに被弾）。
+            # .internal/spec/turn.md Event.ON_MODIFY_DAMAGE: 40番（ばけのかわに被弾）。
             # アイスフェイス（同じ40）と同一の優先度。ちきゅうなげ/ナイトヘッド等の
             # level_fixed_damage（priority=15）より後に実行し、確定した攻撃側の
             # ダメージ値を0へ上書きする必要がある。がんじょう/きあいのタスキ/
@@ -2689,7 +2689,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             ),
             # priority=140: しろいきり(130)やクリアボディ等の無効化ハンドラ(既定100)より後に
             # 判定し、いかくの効果が実際に無効化された場合は発動しないようにする
-            # （一次情報: docs/wiki/abilities/びびり.html 特性の仕様#第八世代以降）。
+            # （一次情報: .internal/wiki/abilities/びびり.html 特性の仕様#第八世代以降）。
             Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
                 h.びびり_boost_spd_on_intimidate,
                 subject_spec="target:self",
@@ -2751,13 +2751,13 @@ ABILITIES: dict[AbilityName, AbilityData] = {
         handlers={
             # ON_DAMAGE_HIT は actual_damage<=0 のとき発火しないため採用しない。こらえるで
             # HP1のまま耐えたときなど（実HPダメージ0）も発動する仕様
-            # （docs/spec/abilities/ふうりょくでんき.md）を満たすため、常に発火する Event.ON_HIT
+            # （.internal/spec/abilities/ふうりょくでんき.md）を満たすため、常に発火する Event.ON_HIT
             # を使用する（みがわりに阻まれた場合はハンドラ内で ctx.substitute_damage を見て除外する）。
             Event.ON_HIT: h.AbilityHandler(
                 h.ふうりょくでんき_on_damage,
                 subject_spec="defender:self",
                 # 風の技でHPが0になったときも特性が発動してからひんしになる仕様
-                # （docs/spec/abilities/ふうりょくでんき.md）のため、瀕死主体でも発動を許可する。
+                # （.internal/spec/abilities/ふうりょくでんき.md）のため、瀕死主体でも発動を許可する。
                 allow_fainted_subject=True,
             ),
             Event.ON_FIELD_ACTIVATE: h.AbilityHandler(
@@ -3073,7 +3073,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.ほのおのからだ_maybe_burn_attacker,
                 subject_spec="defender:self",
                 # 攻撃技でひんしになったときも発動する仕様
-                # （docs/spec/abilities/ほのおのからだ.md）のため、瀕死主体でも発動を許可する。
+                # （.internal/spec/abilities/ほのおのからだ.md）のため、瀕死主体でも発動を許可する。
                 allow_fainted_subject=True,
             )
         }
@@ -3329,7 +3329,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
         handlers={
             # priority=140: クリアチャーム(既定100)やしろいきり(130)の無効化ハンドラより
             # 後に判定し、それらで既にランク低下が無効化されている場合は反射しないようにする
-            # （一次情報: docs/wiki/abilities/ミラーアーマー.html 特性の仕様）。
+            # （一次情報: .internal/wiki/abilities/ミラーアーマー.html 特性の仕様）。
             Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
                 h.ミラーアーマー_reflect_stat_drop,
                 subject_spec="target:self",

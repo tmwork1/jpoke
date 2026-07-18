@@ -234,7 +234,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         }
     ),
     "ダブルアタック": MoveData(
-        pp=12,  # チャンピオンズ基準（docs/champions/move_list.txt）。第9世代本家基準は10
+        pp=12,  # チャンピオンズ基準（.internal/champions/move_list.txt）。第9世代本家基準は10
         flags={"contact"},
         multi_hit={
             "min": 2,
@@ -376,7 +376,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
             # HP反映（Event.ON_HP_CHANGED発火）前に奪取するため、被弾側自身のHP閾値
             # きのみ（オボンのみ等）より確実に先行させる必要がある。がんじょう・
             # きあいのタスキ等のHP1残し補正（priority=100）より後の110で実行する
-            # （docs/plan/moves/むしくい.md「Priority根拠」参照）。
+            # （.internal/plan/moves/むしくい.md「Priority根拠」参照）。
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 ha.むしくい_steal_and_use_berry,
                 priority=110,
@@ -1030,7 +1030,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         }
     ),
     "トーチカ": MoveData(
-        pp=8,  # champions基準（docs/champions/move_list.txt）。Gen9本家は10
+        pp=8,  # champions基準（.internal/champions/move_list.txt）。Gen9本家は10
         flags={"protect"},
         handlers={
             Event.ON_TRY_MOVE_2: h.MoveHandler(
@@ -1262,10 +1262,10 @@ MOVES_TA: dict[MoveName, MoveData] = {
         }
     ),
     "どろぼう": MoveData(
-        pp=20,  # champions基準（docs/champions/move_list.txt）。旧値25はSV本家基準の移行漏れ。
+        pp=20,  # champions基準（.internal/champions/move_list.txt）。旧値25はSV本家基準の移行漏れ。
         flags={"contact", "non_copycat"},
         handlers={
-            # docs/spec/turn.md ON_DAMAGE: 「100 はたきおとす等のアイテム効果」
+            # .internal/spec/turn.md ON_DAMAGE: 「100 はたきおとす等のアイテム効果」
             # くっつきバリの転移判定（priority=30）より後に発動する必要があるため ON_DAMAGE_HIT を使用する。
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.どろぼう_steal_item,

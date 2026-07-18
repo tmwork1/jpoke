@@ -217,8 +217,8 @@ MOVES_SA: dict[MoveName, MoveData] = {
         flags={"contact", "slash", "secondary_effect"},
         handlers={
             # みずがため等（priority=20）より先に発動させる必要があるため priority=10
-            # を明示（docs/spec/turn.md ON_DAMAGE priority=10「追加効果（特殊なもの除く）」、
-            # docs/spec/abilities/みずがため.md「アクアブレイク/シェルブレードを受けた場合、
+            # を明示（.internal/spec/turn.md ON_DAMAGE priority=10「追加効果（特殊なもの除く）」、
+            # .internal/spec/abilities/みずがため.md「アクアブレイク/シェルブレードを受けた場合、
             # 追加効果の後にみずがためが発動する」）
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.シェルブレード_lower_defender_def,
@@ -770,7 +770,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         flags={"non_encore", "non_negoto", "non_copycat", "unprotectable", "unreflectable"},
         # 実装保留: 相手が最後に使った技を技スロットへ恒久的に追加する技コピー機構
         # （ものまねの一時差し替えより復元条件が複雑）が必要なため対応を見送る。
-        # 詳細は docs/plan/moves/スケッチ.md 参照（前例: へんしん・ものまね・ゆびをふる）。
+        # 詳細は .internal/plan/moves/スケッチ.md 参照（前例: へんしん・ものまね・ゆびをふる）。
         handlers={},
     ),
     "スチームバースト": MoveData(

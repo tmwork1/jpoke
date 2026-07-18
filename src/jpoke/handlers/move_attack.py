@@ -113,7 +113,7 @@ def アイススピナー_clear_terrain(battle: Battle, ctx: AttackContext, valu
     """アイススピナー: ダメージ後にフィールドを解除する。
 
     使用者がいのちのたまの反動・ゴツゴツメット・さめはだ等、自身へのダメージ処理中に
-    ひんしになった場合はフィールドを解除しない（一次情報: docs/wiki/moves/アイススピナー.html
+    ひんしになった場合はフィールドを解除しない（一次情報: .internal/wiki/moves/アイススピナー.html
     技の仕様節「自分のいのちのたまの反動で使用者がひんしになったときはフィールドを
     解除できない」）。
     """
@@ -127,7 +127,7 @@ def アイススピナー_clear_terrain_on_zero_damage_hit(battle: Battle, ctx: 
 
     これらの場合は実際のダメージが0になり Event.ON_DAMAGE_HIT が発火しないため、
     ヒット自体は必ず発火する Event.ON_HIT（value=実際のダメージ量）側で
-    value == 0 のときのみ解除処理を行う（一次情報: docs/wiki/moves/アイススピナー.html
+    value == 0 のときのみ解除処理を行う（一次情報: .internal/wiki/moves/アイススピナー.html
     技の仕様節「対象のみがわり状態や、特性ばけのかわ/アイスフェイスにダメージを
     肩代わりされたときはフィールドを解除できる」）。
     使用者がいのちのたまの反動でひんしになった場合はフィールドを解除しない
@@ -613,7 +613,7 @@ def かえんぐるま_thaw_attacker(battle: Battle, ctx: AttackContext, value: 
     self_thawフラグを持つ技のため、こおり_action（priority=10）は確率判定を行わず素通りする。
     このハンドラは行動不能判定の終盤（priority=170、こんらん等の判定より後）で発火し、
     それまでに行動が阻害されなかった場合に限りこおりを解凍する
-    （docs/spec/turn.md Event.ON_TRY_ACTION参照）。
+    （.internal/spec/turn.md Event.ON_TRY_ACTION参照）。
     """
     mon = ctx.attacker
     if mon.ailment.name == "こおり":
@@ -639,7 +639,7 @@ def かえんボール_thaw_attacker(battle: Battle, ctx: AttackContext, value: 
     self_thawフラグを持つ技のため、こおり_action（priority=10）は確率判定を行わず素通りする。
     このハンドラは行動不能判定の終盤（priority=170、こんらん等の判定より後）で発火し、
     それまでに行動が阻害されなかった場合に限りこおりを解凍する
-    （docs/spec/turn.md Event.ON_TRY_ACTION参照）。
+    （.internal/spec/turn.md Event.ON_TRY_ACTION参照）。
     """
     mon = ctx.attacker
     if mon.ailment.name == "こおり":
@@ -1099,7 +1099,7 @@ def クロスフレイム_thaw_attacker(battle: Battle, ctx: AttackContext, valu
     self_thawフラグを持つ技のため、こおり_action（priority=10）は確率判定を行わず素通りする。
     このハンドラは行動不能判定の終盤（priority=170、こんらん等の判定より後）で発火し、
     それまでに行動が阻害されなかった場合に限りこおりを解凍する
-    （docs/spec/turn.md Event.ON_TRY_ACTION参照）。
+    （.internal/spec/turn.md Event.ON_TRY_ACTION参照）。
     """
     mon = ctx.attacker
     if mon.ailment.name == "こおり":
@@ -1430,7 +1430,7 @@ def シャカシャカほう_thaw_attacker(battle: Battle, ctx: AttackContext, v
     self_thawフラグを持つ技のため、こおり_action（priority=10）は確率判定を行わず素通りする。
     このハンドラは行動不能判定の終盤（priority=170、こんらん等の判定より後）で発火し、
     それまでに行動が阻害されなかった場合に限りこおりを解凍する
-    （docs/spec/turn.md Event.ON_TRY_ACTION参照）。
+    （.internal/spec/turn.md Event.ON_TRY_ACTION参照）。
     """
     mon = ctx.attacker
     if mon.ailment.name == "こおり":
@@ -1573,7 +1573,7 @@ def スチームバースト_thaw_attacker(battle: Battle, ctx: AttackContext, v
     self_thawフラグを持つ技のため、こおり_action（priority=10）は確率判定を行わず素通りする。
     このハンドラは行動不能判定の終盤（priority=170、こんらん等の判定より後）で発火し、
     それまでに行動が阻害されなかった場合に限りこおりを解凍する
-    （docs/spec/turn.md Event.ON_TRY_ACTION参照）。
+    （.internal/spec/turn.md Event.ON_TRY_ACTION参照）。
     """
     mon = ctx.attacker
     if mon.ailment.name == "こおり":
@@ -1623,7 +1623,7 @@ def せいなるほのお_thaw_attacker(battle: Battle, ctx: AttackContext, valu
     self_thawフラグを持つ技のため、こおり_action（priority=10）は確率判定を行わず素通りする。
     このハンドラは行動不能判定の終盤（priority=170、こんらん等の判定より後）で発火し、
     それまでに行動が阻害されなかった場合に限りこおりを解凍する
-    （docs/spec/turn.md Event.ON_TRY_ACTION参照）。
+    （.internal/spec/turn.md Event.ON_TRY_ACTION参照）。
     """
     mon = ctx.attacker
     if mon.ailment.name == "こおり":
@@ -2509,7 +2509,7 @@ def ねっさのだいち_thaw_attacker(battle: Battle, ctx: AttackContext, valu
     self_thawフラグを持つ技のため、こおり_action（priority=10）は確率判定を行わず素通りする。
     このハンドラは行動不能判定の終盤（priority=170、こんらん等の判定より後）で発火し、
     それまでに行動が阻害されなかった場合に限りこおりを解凍する
-    （docs/spec/turn.md Event.ON_TRY_ACTION参照）。
+    （.internal/spec/turn.md Event.ON_TRY_ACTION参照）。
     """
     mon = ctx.attacker
     if mon.ailment.name == "こおり":
@@ -2527,7 +2527,7 @@ def ねっとう_thaw_attacker(battle: Battle, ctx: AttackContext, value: Any) -
     self_thawフラグを持つ技のため、こおり_action（priority=10）は確率判定を行わず素通りする。
     このハンドラは行動不能判定の終盤（priority=170、こんらん等の判定より後）で発火し、
     それまでに行動が阻害されなかった場合に限りこおりを解凍する
-    （docs/spec/turn.md Event.ON_TRY_ACTION参照）。
+    （.internal/spec/turn.md Event.ON_TRY_ACTION参照）。
     """
     mon = ctx.attacker
     if mon.ailment.name == "こおり":
@@ -2579,7 +2579,7 @@ def ハイドロスチーム_thaw_attacker(battle: Battle, ctx: AttackContext, v
     self_thawフラグを持つ技のため、こおり_action（priority=10）は確率判定を行わず素通りする。
     このハンドラは行動不能判定の終盤（priority=170、こんらん等の判定より後）で発火し、
     それまでに行動が阻害されなかった場合に限りこおりを解凍する
-    （docs/spec/turn.md Event.ON_TRY_ACTION参照）。
+    （.internal/spec/turn.md Event.ON_TRY_ACTION参照）。
     """
     mon = ctx.attacker
     if mon.ailment.name == "こおり":
@@ -3096,7 +3096,7 @@ def フレアドライブ_thaw_attacker(battle: Battle, ctx: AttackContext, valu
     self_thawフラグを持つ技のため、こおり_action（priority=10）は確率判定を行わず素通りする。
     このハンドラは行動不能判定の終盤（priority=170、こんらん等の判定より後）で発火し、
     それまでに行動が阻害されなかった場合に限りこおりを解凍する
-    （docs/spec/turn.md Event.ON_TRY_ACTION参照）。
+    （.internal/spec/turn.md Event.ON_TRY_ACTION参照）。
     """
     mon = ctx.attacker
     if mon.ailment.name == "こおり":
@@ -3130,7 +3130,7 @@ def Vジェネレート_lower_attacker_def_spd_spe(battle: Battle, ctx: AttackCo
 def ぶきみなじゅもん_reduce_defender_pp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ぶきみなじゅもん: 相手が最後にPPを消費した技のPPを3減らす。
 
-    仕様（docs/spec/moves/ぶきみなじゅもん.md）の「最後にPPを消費した技」を対象と
+    仕様（.internal/spec/moves/ぶきみなじゅもん.md）の「最後にPPを消費した技」を対象と
     するため、ねごとのサブ技（PP消費0）ではなくねごと自身のPPが減る。
     相手がPPを消費する行動をしていない場合はPP減少のみスキップする
     （ダメージは通常どおり与えられており、技自体は失敗しない）。
@@ -3549,7 +3549,7 @@ def ムーンフォース_lower_defender_spa(battle: Battle, ctx: AttackContext,
     """ムーンフォース: 相手の『とくこう』ランクを1段階下げる。
 
     本家では発動確率30%だが、Championsでは10%に変更されている
-    （docs/spec/moves/ムーンフォース.md 参照）。
+    （.internal/spec/moves/ムーンフォース.md 参照）。
     """
     return modify_defender_stats(battle, ctx, value, stats={"spa": -1}, chance=0.1)
 
@@ -3679,7 +3679,7 @@ def もえつきる_thaw_attacker(battle: Battle, ctx: AttackContext, value: Any
     self_thawフラグを持つ技のため、こおり_action（priority=10）は確率判定を行わず素通りする。
     このハンドラは行動不能判定の終盤（priority=170、こんらん等の判定より後）で発火し、
     それまでに行動が阻害されなかった場合に限りこおりを解凍する
-    （docs/spec/turn.md Event.ON_TRY_ACTION参照）。
+    （.internal/spec/turn.md Event.ON_TRY_ACTION参照）。
     """
     mon = ctx.attacker
     if mon.ailment.name == "こおり" and mon.has_type("ほのお"):

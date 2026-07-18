@@ -457,7 +457,7 @@ class TurnController:
 
             # 今の行動枠で実際に技を実行した場合のみ、その行動（技実行 +
             # 上記一連の割り込み交代）が完全に終わった直後のフックを発火する
-            # （おどりこ用。docs/spec/abilities/おどりこ.md「おどりこによる行動は、
+            # （おどりこ用。.internal/spec/abilities/おどりこ.md「おどりこによる行動は、
             # 元の技による効果やきのみの発動などが完了してから行われる」
             # 「交代先のポケモンが出てきてからおどりこが発動する」）。
             if acted_this_slot and self.battle.winner is None:

@@ -29,9 +29,9 @@
   "config": {
     "flow":               "impl",
     "category":           "変化技",
-    "plan_dir":           "docs/plan/moves",
-    "spec_hint":          "docs/spec/ を参照",
-    "progress_file":      "docs/progress/move.md",
+    "plan_dir":           ".internal/plan/moves",
+    "spec_hint":          ".internal/spec/ を参照",
+    "progress_file":      ".internal/progress/move.md",
     "test_files":         ["tests/test_move.py"],
     "impl_extra":         "",
     "review_extra":       "",
@@ -142,7 +142,7 @@ jpoke {config.category} レビュー・テストタスク: {entry}
 3. python -m pytest tests/ -v を実行し全テストが通ることを確認する
    （今回の実装と無関係な既存テストが flaky と判明した場合は `.claude/loop/_common.md` §共通13 に
    従いその場で修正する）
-   ※ sort_tests.py / generate_test_list.py は実行しない（マージ後にディスパッチャーが一括実行）
+   ※ sort_tests.py は実行しない（マージ後にディスパッチャーが一括実行）
 4. {config.progress_file} の {entry} 行のテスト済み列を更新する（自分の行だけ）
    手順2でリーサルテストを追加した場合は「リーサルテスト」列も `x` にする
 5. 変更をすべてコミットする（loop/impl/{entry} ブランチ上で）:
@@ -211,7 +211,7 @@ jpoke {config.category} 計画書作成タスク: {entry}
 作業ディレクトリ: {config.worktree_base}\work
 
 {config.spec_hint}
-ハンドラ構成・subject_spec・priority（docs/spec/turn.md 参照）・実装コードを含む計画書を
+ハンドラ構成・subject_spec・priority（.internal/spec/turn.md 参照）・実装コードを含む計画書を
 {config.plan_dir}/{entry}.md に作成すること。CLAUDE.md のハンドラ約束事を厳守。
 {entry} の効果がリーサル計算の HP 分布に影響する場合（回復・残留ダメージ・ピンチ回復・
 ダメージ補正・耐え・みがわり貫通など）は、リーサル計算ハンドラ（handlers/lethal.py）の
@@ -243,9 +243,9 @@ jpoke {config.category} 計画書作成タスク: {entry}
 ```json
 {
   "config": {
-    "flow": "impl", "category": "変化技", "plan_dir": "docs/plan/moves",
-    "spec_hint": "docs/spec/ の対応仕様書を参照（volatiles/, moves/, side_fields/, global_fields/ 以下も確認）",
-    "progress_file": "docs/progress/move.md", "test_files": ["tests/test_move.py"],
+    "flow": "impl", "category": "変化技", "plan_dir": ".internal/plan/moves",
+    "spec_hint": ".internal/spec/ の対応仕様書を参照（volatiles/, moves/, side_fields/, global_fields/ 以下も確認）",
+    "progress_file": ".internal/progress/move.md", "test_files": ["tests/test_move.py"],
     "impl_extra": "- data/move.py の MoveData に技が未登録なら追加する", "review_extra": "",
     "planning_slots_max": 2,
     "worktree_base": "{ROOTの親}\\jpoke-loop\\impl"

@@ -306,7 +306,7 @@ class MoveExecutor:
                 # （タイプ相性判定・ON_TRY_MOVE_2・くさタイプ粉技無効判定等より前）で
                 # 確定させることで、それらの判定により技自体が不発になった場合でも
                 # 「選択した技」として正しく記録される（PPは既に消費済みのため。
-                # docs/spec/volatiles/いちゃもん.md 参照）。
+                # .internal/spec/volatiles/いちゃもん.md 参照）。
                 if self._run_move_depth == 1:
                     ctx.attacker.selected_move = ctx.move
 
@@ -437,7 +437,7 @@ class MoveExecutor:
 
         # HPコストの支払い (Event.ON_PAY_HP)
         # じばく・だいばくはつ・てっていこうせん・ミストバースト等はここでHPを消費する。
-        # docs/spec/moves/じばく.md「命中判定・タイプ相性・まもるなどにより攻撃が不発になった
+        # .internal/spec/moves/じばく.md「命中判定・タイプ相性・まもるなどにより攻撃が不発になった
         # 場合であっても、使用者は必ずひんしになる」「しめりけによる失敗判定はON_PAY_HPより前に
         # 行われるため、失敗時は現在HPの消費も発生しない」を満たすため、ON_TRY_MOVE_1
         # （しめりけ等の失敗経路）の直後・対象瀕死チェック/タイプ相性判定/ON_TRY_MOVE_2/
@@ -446,7 +446,7 @@ class MoveExecutor:
         #
         # てっていこうせん等、HPコストの支払いにより使用者が瀕死になった場合でも
         # 以降の判定・ヒット処理（命中判定・ダメージ適用・ON_MOVE_KO等の撃破時効果）は
-        # 通常どおり進行する（docs/spec/moves/てっていこうせん.md「HP消費の順序」
+        # 通常どおり進行する（.internal/spec/moves/てっていこうせん.md「HP消費の順序」
         # 「HP0でのひんし・全滅判定」を参照）。
         # そのため、HPコスト支払いの時点で使用者が瀕死になり勝敗が確定しても、
         # 以降の処理が完了するまではGAME_WON/GAME_LOSTログの記録を遅延させる。
@@ -579,7 +579,7 @@ class MoveExecutor:
             return
 
         # 固定ダメージ技（いのちがけ・ちきゅうなげ等）は攻撃・防御・威力・急所・
-        # 乱数補正を一切使用しない（docs/spec/moves/_fixed_damage.md 7.1・7.3）。
+        # 乱数補正を一切使用しない（.internal/spec/moves/_fixed_damage.md 7.1・7.3）。
         # 実際のダメージ値はEvent.ON_MODIFY_MOVE_DAMAGEで後から上書きされるため
         # ここでの急所判定自体は数値に影響しないが、判定・ログを行うと「急所に
         # 当たった」という誤ったログが記録され、いかりのつぼ等の急所被弾を
@@ -723,7 +723,7 @@ class MoveExecutor:
         move.revealed = True
         # あばれる・さわぐ等、Command.FORCEDによる強制続行ターンは使い捨てMove
         # インスタンス（実際の技スロットのPPには影響しない）で実行されるため、
-        # PPは消費しない（docs/spec/moves/さわぐ.md「PP消費は最初の使用時の1回のみ」。
+        # PPは消費しない（.internal/spec/moves/さわぐ.md「PP消費は最初の使用時の1回のみ」。
         # fuzzログ seed=1823で、続行ターンでも「PP -1」が表示され続ける
         # ログ不整合を発見。実データ（技スロットのPP）自体は元々影響を受けていない）。
         if move.is_forced_continuation:

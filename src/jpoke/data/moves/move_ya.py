@@ -23,11 +23,11 @@ MOVES_YA: dict[MoveName, MoveData] = {
         accuracy=100,
         flags={"spread"},
         handlers={
-            # docs/spec/turn.md では Event.ON_DAMAGE 優先度30に記載されているが、
+            # .internal/spec/turn.md では Event.ON_DAMAGE 優先度30に記載されているが、
             # HP回復ピンチきのみ（オボンのみ等）はダメージ反映時のON_HP_CHANGEDで
             # 発動判定されるため、それより前のEvent.ON_MODIFY_MOVE_DAMAGE
             # （roll_damage後・modify_hp前）で焼却しないと燃やす前に回復してしまう。
-            # 詳細は docs/plan/moves/やきつくす.md を参照。
+            # 詳細は .internal/plan/moves/やきつくす.md を参照。
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 ha.やきつくす_burn_item,
                 subject_spec="attacker:self",
@@ -81,7 +81,7 @@ MOVES_YA: dict[MoveName, MoveData] = {
     "ゆびをふる": MoveData(
         type="ノーマル",
         category="status",
-        pp=10,  # champions_move_list.txtに記載なし。第9世代の値を採用（docs/plan/moves/ゆびをふる.md参照）
+        pp=10,  # champions_move_list.txtに記載なし。第9世代の値を採用（.internal/plan/moves/ゆびをふる.md参照）
         flags={"non_negoto", "non_copycat"},  # まねっこでコピー不可（第二世代以降一貫して×）
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(

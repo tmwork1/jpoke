@@ -11,7 +11,7 @@
 | [`01_battle_against_intro.ipynb`](https://colab.research.google.com/github/tmwork1/jpoke/blob/main/examples/01_basics/01_battle_against_intro.ipynb) | `Player.battle_against()` を使った最小構成のバトル実行 |
 | [`02_play_out.ipynb`](https://colab.research.google.com/github/tmwork1/jpoke/blob/main/examples/01_basics/02_play_out.ipynb) | `Battle.play_out()` による最小構成のバトル自動進行 |
 | [`03_team_battle.ipynb`](https://colab.research.google.com/github/tmwork1/jpoke/blob/main/examples/01_basics/03_team_battle.ipynb) | `battle.step()` によるターン進行、3vs3バトル |
-| [`04_pokedex_ability_lookup.ipynb`](https://colab.research.google.com/github/tmwork1/jpoke/blob/main/examples/01_basics/04_pokedex_ability_lookup.ipynb) | `POKEDEX` の使い方 |
+| [`04_pokedex_intro.ipynb`](https://colab.research.google.com/github/tmwork1/jpoke/blob/main/examples/01_basics/04_pokedex_intro.ipynb) | `POKEDEX` の紹介 |
 | [`05_command_type_identification.ipynb`](https://colab.research.google.com/github/tmwork1/jpoke/blob/main/examples/01_basics/05_command_type_identification.ipynb) | 行動を決定する `Command` の種類の識別 |
 | [`06_logcode_variety.ipynb`](https://colab.research.google.com/github/tmwork1/jpoke/blob/main/examples/01_basics/06_logcode_variety.ipynb) | ログの構造と種類の確認 |
 
@@ -69,4 +69,4 @@ Windowsで日本語ログが文字化けする場合は `PYTHONUTF8=1` を指定
 
 | ファイル | 内容 |
 |---|---|
-| [`01_step_time_benchmark.ipynb`](https://colab.research.google.com/github/tmwork1/jpoke/blob/main/examples/05_benchmark/01_step_time_benchmark.ipynb) | 完全ランダムな3vs3全選出バトルを繰り返し実行し、`Battle.step()` 1回あたりの所要時間（mean ± σ）を計測。既定値は数分かかるためノートブック内のパラメータセルで`n_battles`等を調整できる |
+| [`01_step_time_benchmark.py`](https://github.com/tmwork1/jpoke/blob/main/examples/05_benchmark/01_step_time_benchmark.py) | 完全ランダムな3vs3全選出バトルを繰り返し実行し、`Battle.step()` 1回あたりの所要時間（mean ± σ）を計測。既定値は数分かかるため`--n-battles`等のコマンドライン引数で調整できる |

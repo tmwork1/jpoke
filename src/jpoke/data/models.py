@@ -11,7 +11,7 @@ from jpoke.types import AbilityFlag, Type, MoveCategory, MoveTarget, MoveFlag, P
 
 
 class PokemonData:
-    def __init__(self, name, data, learnset: frozenset[MoveName] = frozenset()) -> None:
+    def __init__(self, name, data, learnset: list[MoveName] | None = None) -> None:
         self.name: PokemonName = name
         self.pre_evolution: PokemonName | Literal[""] = data.get("prevo", "")
         self.weight: float = data["weight"]
@@ -19,7 +19,7 @@ class PokemonData:
         self.abilities: list[AbilityName] = list(data["abilities"])
         stats = data["baseStats"]
         self.base: list[int] = [stats["hp"], stats["atk"], stats["def"], stats["spa"], stats["spd"], stats["spe"]]
-        self.learnset: frozenset[MoveName] = learnset
+        self.learnset: list[MoveName] = learnset if learnset is not None else []
 
         if not self.abilities:
             self.abilities = [""]
