@@ -253,8 +253,11 @@ def _heal_berry(battle: Battle,
             return HandlerReturn(value=value)
     if forced or mon.hp * denominator <= mon.max_hp:
         healed = battle.modify_hp(mon, v=berry_heal_amount(mon, r=heal_r, v=heal_v))
-        # かいふくふうじ等で回復が完全に無効化された場合は消費しない
-        if healed:
+        # 通常発動（HP閾値到達）時、かいふくふうじ等で回復が完全に無効化された場合は
+        # 発動条件を満たしていないとみなし消費しない。一方、なげつける・おちゃかい・
+        # ほおばる等による強制発動では、既に満タンHPで回復量が0であっても
+        # 味覚（アイテム消費・こんらん判定）は独立して発生する。
+        if forced or healed:
             _announce_and_consume_item(battle, mon)
             # 嫌いな味（性格でぼうぎょ等が下がりにくい/上がりにくい組）のときこんらんする
             if confuse_natures is not None and mon.nature in confuse_natures:

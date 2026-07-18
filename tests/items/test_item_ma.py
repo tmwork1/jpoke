@@ -4,6 +4,40 @@ from jpoke import Pokemon
 from .. import test_utils as t
 
 
+def test_マゴのみ_HP満タンでもおちゃかいで強制発動しこんらんする():
+    """マゴのみ: HPが満タンでおちゃかいにより強制消費された場合、回復量が0でも
+    嫌いな味の性格ならこんらんが付与される（回復量とこんらん判定は独立。
+    fuzz_logのseed=2777で検出されたバグの回帰テスト）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おちゃかい"], item_name="マゴのみ", nature="なまいき")],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    assert mon.hp == mon.max_hp
+    t.run_move(battle, 0)
+    assert mon.hp == mon.max_hp
+    assert not mon.has_item()
+    assert mon.has_volatile("こんらん")
+
+
+def test_マゴのみ_HP満タン未満の強制発動では回復とこんらんの両方が機能する():
+    """マゴのみ: HPが満タン未満（かつ通常のHP閾値は満たさない）状態でおちゃかいにより
+    強制消費された場合、従来通り回復とこんらん付与の両方が発生する（回帰確認）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おちゃかい"], item_name="マゴのみ", nature="なまいき")],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    hp_before = mon.max_hp - 1
+    mon.hp = hp_before
+    t.run_move(battle, 0)
+    # 回復量は最大HPの1/3だが、満タンを超える分は切り詰められる
+    assert mon.hp == min(mon.max_hp, hp_before + mon.max_hp // 3)
+    assert mon.hp > hp_before
+    assert not mon.has_item()
+    assert mon.has_volatile("こんらん")
+
+
 def test_マゴのみ_それ以外の性格ではこんらんしない():
     """マゴのみ: あまい味が嫌いでない性格では発動してもこんらんしない"""
     battle = t.start_battle(
