@@ -1,0 +1,83 @@
+site_name: jpoke
+site_description: ポケモンチャンピオンズ準拠のシングル対戦シミュレーション環境とダメージ計算ロジックを提供するPythonライブラリ
+site_url: https://tmwork1.github.io/jpoke/
+repo_url: https://github.com/tmwork1/jpoke
+repo_name: tmwork1/jpoke
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  language: ja
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: red
+      toggle:
+        icon: material/brightness-7
+        name: ダークモードに切り替え
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: red
+      toggle:
+        icon: material/brightness-4
+        name: ライトモードに切り替え
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - search.suggest
+    - content.code.copy
+    - content.action.edit
+
+nav:
+  - ホーム: index.md
+  - APIリファレンス: api/README.md
+  - リファレンス（自動生成）:
+      - reference/index.md
+      - Battle: reference/battle.md
+      - Player: reference/player.md
+      - RandomPlayer: reference/random_player.md
+      - TreeSearchPlayer: reference/tree_search_player.md
+      - Pokemon: reference/pokemon.md
+      - Move: reference/move.md
+      - jpoke.testing: reference/testing.md
+  - サンプル: examples.md
+  - 変更履歴: changelog.md
+  - 開発への貢献: contributing.md
+  - ライセンス: license.md
+
+plugins:
+  - search
+  - include-markdown
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: google
+            docstring_section_style: table
+            show_source: true
+            show_root_heading: true
+            show_root_full_path: false
+            merge_init_into_class: true
+            separate_signature: true
+            show_signature_annotations: true
+            members_order: source
+            heading_level: 2
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - tables
+  - toc:
+      permalink: true
+      slugify: !!python/name:pymdownx.slugs.uslugify
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/tmwork1/jpoke

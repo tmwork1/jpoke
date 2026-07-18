@@ -279,7 +279,7 @@ class Battle:
                 keys.append(key)
         return keys
 
-    def __deepcopy__(self, memo):
+    def __deepcopy__(self, memo: dict) -> Battle:
         """Battleインスタンスのディープコピーを作成する。
 
         Args:

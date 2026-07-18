@@ -1091,7 +1091,7 @@ class Pokemon:
         """指定された状態異常を持っているか判定する。
 
         Args:
-            ailments: 状態異常名の可変長引数
+            ailment_names: 状態異常名の可変長引数
 
         Returns:
             指定状態異常を持っていればTrue
