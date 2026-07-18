@@ -1602,6 +1602,9 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.せいでんき_maybe_paralyze_attacker,
                 subject_spec="defender:self",
+                # 攻撃技でひんしになったときも発動する仕様
+                # （.internal/spec/abilities/せいでんき.md）のため、瀕死主体でも発動を許可する。
+                allow_fainted_subject=True,
             )
         }
     ),
@@ -2048,6 +2051,9 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.とびだすハバネロ_burn_attacker,
                 subject_spec="defender:self",
+                # 攻撃技でひんしになったときも発動する仕様
+                # （.internal/spec/abilities/とびだすハバネロ.md）のため、瀕死主体でも発動を許可する。
+                allow_fainted_subject=True,
             ),
         }
     ),
@@ -2307,6 +2313,9 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.のろわれボディ_maybe_disable_move,
                 subject_spec="defender:self",
                 priority=20,
+                # その攻撃で自身がひんしになったときでも発動する仕様
+                # （.internal/spec/abilities/のろわれボディ.md）のため、瀕死主体でも発動を許可する。
+                allow_fainted_subject=True,
             )
         }
     ),
@@ -3030,6 +3039,9 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 # かいふくふうじの回復ブロック（優先度100）より先に処理し、
                 # 回復量をダメージへ変換したうえで通過させる必要があるため優先度を上げる。
                 priority=90,
+                # ヘドロえきのポケモンがひんしになったときも発動する仕様
+                # （.internal/spec/abilities/ヘドロえき.md）のため、瀕死主体でも発動を許可する。
+                allow_fainted_subject=True,
             ),
         }
     ),

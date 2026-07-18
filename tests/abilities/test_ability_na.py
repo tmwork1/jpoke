@@ -533,6 +533,22 @@ def test_のろわれボディ_ダメージがない技では発動しない():
     assert not battle.actives[1].has_volatile("かなしばり")
 
 
+def test_のろわれボディ_ひんしになっても発動する():
+    """のろわれボディ: 攻撃技を受けて自身がひんしになったときも発動する
+    （.internal/spec/abilities/のろわれボディ.md「その攻撃で自身がひんしになったときでも発動する」）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="のろわれボディ")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender = battle.actives[0]
+    defender.hp = 1
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 1)
+    assert defender.fainted
+    assert battle.actives[1].has_volatile("かなしばり")
+
+
 def test_のろわれボディ_接触技を受けたとき30パーセントでかなしばり():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="のろわれボディ")],

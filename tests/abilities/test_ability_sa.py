@@ -2006,6 +2006,22 @@ def test_せいしんりょく_ひるみを防ぐ():
     assert not battle.volatile_manager.apply(battle.actives[0], "ひるみ", count=1)
 
 
+def test_せいでんき_ひんしになっても発動する():
+    """せいでんき: 直接攻撃を受けて自身がひんしになったときも攻撃者をまひ状態にする
+    （.internal/spec/abilities/せいでんき.md「攻撃技でひんしになったときも発動する」）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいでんき")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender = battle.actives[0]
+    defender.hp = 1
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 1)
+    assert defender.fainted
+    assert battle.actives[1].has_ailment("まひ")
+
+
 def test_ぜったいねむり_どくどくだまでも状態異常にならない():
     """ぜったいねむり: どくどくだまを持たせてもターン終了時にもうどくが発動しない。"""
     battle = t.start_battle(
