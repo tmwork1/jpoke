@@ -145,6 +145,14 @@ class AttackContext(BaseContext):
     自身の能力変化はりんぷん・おんみつマントで防げないため）。ちからずく・てんのめぐみ
     （'attacker:self' で登録）はこの値に関わらず常に反応する。
     battle.resolve_secondary_chance() 経由でのみ設定される。"""
+    blocked_by_protect: bool = False
+    """まもる・ワイドガード等のprotect系揮発状態によって技がブロックされたかどうか。
+    `handlers/volatile.py` の `_run_protect` がブロック成立時に True を設定する。
+    Event.ON_TRY_MOVE_1 はしめりけ（HPコスト支払い前に失敗すべき）と同じイベントで
+    発火するが、だいばくはつ等の自爆技はまもる等でブロックされても使用者は必ず
+    ひんしになる必要がある（`.internal/spec/moves/だいばくはつ.md`）。この違いを
+    区別するため、move_executor はこのフラグを見て、まもるブロックの場合のみ
+    ON_TRY_MOVE_1失敗後もEvent.ON_PAY_HPを発火させる。"""
 
     def is_foe_target(self) -> bool:
         """attacker と defender が異なるポケモンかを返す。"""

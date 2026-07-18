@@ -1299,6 +1299,11 @@ def _run_protect(battle: Battle,
         if chip_on_contact is not None:
             battle.modify_hp(ctx.attacker, r=-chip_on_contact, reason="")
 
+    # だいばくはつ等の自爆技はまもる系にブロックされてもHPコストを支払い必ずひんしになる
+    # 必要がある（.internal/spec/moves/だいばくはつ.md）。しめりけによる失敗（HPコスト
+    # 支払い前に失敗すべき）と区別するため、move_executor が参照するフラグを立てる。
+    ctx.blocked_by_protect = True
+
     return HandlerReturn(value=False, stop_event=True)
 
 
