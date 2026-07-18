@@ -2466,5 +2466,21 @@ def test_ソウルハート_自分自身がひんしになってもCは上がら
     assert attacker.boosts["spa"] == 0
 
 
+def test_てつのトゲ_ひんしになっても発動する():
+    """てつのトゲ: さめはだと同じ効果を持つため、自身が直接攻撃でひんしになった
+    ときも反撃ダメージが発動する（fuzz_log横断監査。.internal/spec/abilities/てつのトゲ.md
+    「さめはだ#特性の仕様を参照」）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="てつのトゲ")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender, attacker = battle.actives
+    battle.modify_hp(defender, v=-(defender.max_hp - 1))
+    t.run_move(battle, 1)
+    assert defender.fainted
+    assert attacker.hp == attacker.max_hp - int(attacker.max_hp * (1 / 8))
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

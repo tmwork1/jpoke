@@ -604,6 +604,9 @@ ITEMS: dict[ItemName, ItemData] = {
                 h.くっつきバリ_transfer_on_contact,
                 subject_spec="defender:self",
                 priority=30,  # .internal/spec/turn.md ON_DAMAGE: 「30 くっつきバリが攻撃側に渡る」
+                # 所持者がひんしになった場合も攻撃した相手にくっつく仕様
+                # （.internal/spec/items/くっつきバリ.md）のため、瀕死主体でも発動を許可する。
+                allow_fainted_subject=True,
             ),
         }
     ),
@@ -847,6 +850,9 @@ ITEMS: dict[ItemName, ItemData] = {
                 # マジシャンで奪う前に発動する」。マジシャン特性ハンドラ(priority=100)より確実に先に
                 # 発動させるため、素早さに依存しないpriority=90を指定する。
                 priority=90,
+                # ゴツゴツメットを持つポケモンがひんしになったときも発動する仕様
+                # （.internal/spec/items/ゴツゴツメット.md）のため、瀕死主体でも発動を許可する。
+                allow_fainted_subject=True,
             )
         }
     ),
@@ -1021,6 +1027,9 @@ ITEMS: dict[ItemName, ItemData] = {
                 # レンブのみはマジシャンより先に発動する」。マジシャン特性ハンドラ(priority=100)
                 # より確実に先に発動させるため、素早さに依存しないpriority=90を指定する。
                 priority=90,
+                # 所持者がひんしになったときでも発動する仕様
+                # （.internal/spec/items/ジャポのみ.md）のため、瀕死主体でも発動を許可する。
+                allow_fainted_subject=True,
             )
         }
     ),
@@ -1762,6 +1771,9 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_HIT: h.ItemHandler(
                 h.ふうせん_pop_on_hit,
                 subject_spec="defender:self",
+                # 攻撃技でひんしになったときもふうせんが割れる仕様
+                # （.internal/spec/items/ふうせん.md）のため、瀕死主体でも発動を許可する。
+                allow_fainted_subject=True,
             ),
         }
     ),
@@ -2235,6 +2247,9 @@ ITEMS: dict[ItemName, ItemData] = {
                 # レンブのみはマジシャンより先に発動する」。マジシャン特性ハンドラ(priority=100)
                 # より確実に先に発動させるため、素早さに依存しないpriority=90を指定する。
                 priority=90,
+                # 所持者がひんしになったときでも発動する仕様
+                # （.internal/spec/items/レンブのみ.md）のため、瀕死主体でも発動を許可する。
+                allow_fainted_subject=True,
             )
         }
     ),

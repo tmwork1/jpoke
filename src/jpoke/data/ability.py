@@ -276,6 +276,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.うのミサイル_spit_out_prey,
                 subject_spec="defender:self",
+                # 攻撃を受けてウッウがひんしになったときも獲物を吐き出してダメージと効果を
+                # 与える仕様（.internal/spec/abilities/うのミサイル.md）のため、瀕死主体でも
+                # 発動を許可する。
+                allow_fainted_subject=True,
             ),
             Event.ON_SWITCH_OUT: h.AbilityHandler(
                 h.うのミサイル_revert_form,
@@ -649,6 +653,9 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.カーリーヘアー_lower_spd_on_contact,
                 subject_spec="defender:self",
+                # ぬめぬめと同じ効果（.internal/spec/abilities/カーリーヘアー.md）のため、
+                # ぬめぬめと同様に瀕死主体でも発動を許可する。
+                allow_fainted_subject=True,
             )
         }
     ),
@@ -1871,6 +1878,9 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.さめはだ_chip_contact_attacker,
                 subject_spec="defender:self",
+                # さめはだと同じ効果（.internal/spec/abilities/てつのトゲ.md「さめはだ#特性の
+                # 仕様を参照」）のため、さめはだと同様に瀕死主体でも発動を許可する。
+                allow_fainted_subject=True,
             )
         }
     ),
@@ -3072,6 +3082,9 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.ほうし_maybe_inflict_ailment_on_contact,
                 subject_spec="defender:self",
+                # その攻撃で特性所有者がひんし状態になったときも発動する仕様
+                # （.internal/spec/abilities/ほうし.md）のため、瀕死主体でも発動を許可する。
+                allow_fainted_subject=True,
             )
         }
     ),
@@ -3413,6 +3426,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.メロメロボディ_maybe_infatuate_attacker,
                 subject_spec="defender:self",
+                # 攻撃技でひんしになったときもメロメロボディは発動する（即座に効果は消える）
+                # 仕様（.internal/spec/abilities/メロメロボディ.md）のため、瀕死主体でも
+                # 発動を許可する。
+                allow_fainted_subject=True,
             )
         }
     ),

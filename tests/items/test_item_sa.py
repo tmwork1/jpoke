@@ -519,6 +519,25 @@ def test_ジャポのみ_特殊技では発動しない():
     assert attacker.hp == attacker.max_hp
 
 
+def test_ジャポのみ_致命打でも発動する():
+    """ジャポのみ: 所持者がひんしになったときでも発動する
+    （fuzz_log横断監査。.internal/spec/items/ジャポのみ.md）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ジャポのみ")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender, attacker = battle.actives
+    defender.hp = 1
+    t.fix_damage(battle, 9999)
+
+    t.run_move(battle, 1)
+
+    assert defender.fainted
+    assert attacker.hp == attacker.max_hp - attacker.max_hp // 8
+    assert not defender.has_item()
+
+
 def test_じゅうでんち_あまのじゃくでAランクが最小のとき発動しない():
     """じゅうでんち: あまのじゃく所持者はこうげきランクがすでに最小のとき発動せず消費もしない"""
     battle = t.start_battle(

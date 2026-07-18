@@ -3255,6 +3255,25 @@ def test_ほうし_攻撃側がぼうじん特性なら発動しない():
     assert not battle.actives[1].ailment.is_active
 
 
+def test_ほうし_致命打でも発動する():
+    """ほうし: その攻撃で特性所有者がひんし状態になったときも発動する
+    （fuzz_log横断監査。.internal/spec/abilities/ほうし.md）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="ほうし")],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender = battle.actives[0]
+    defender.hp = 1
+    t.fix_damage(battle, 9999)
+    battle.random.random = lambda: 0.0
+
+    t.run_move(battle, 1)
+
+    assert defender.fainted
+    assert battle.actives[1].ailment.name == "どく"
+
+
 def test_ほうし_連続攻撃技でねむりが発動すると中断される():
     """ほうし: 連続攻撃技のヒット中に新たにねむり状態になった場合、それ以降のヒットは中断される。"""
     battle = t.start_battle(

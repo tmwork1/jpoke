@@ -110,6 +110,19 @@ def test_ゆきだま_こおり被弾でA上昇():
     assert not foe.has_item()
 
 
+def test_ゆきだま_たんじゅんで2段階上昇():
+    """ゆきだま: たんじゅん所持者はこうげきランクが2段階上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["こなゆき"])],
+        team1=[Pokemon("カビゴン", item_name="ゆきだま", ability_name="たんじゅん")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.boosts["atk"] == 2
+    assert not foe.has_item()
+
+
 def test_ゆきだま_マジシャンより先に発動して奪われない():
     """ゆきだま: 特性マジシャンのこおり技を受けても、ゆきだまが先に発動して消費されるため奪われない
     （攻撃側の素早さが防御側より高い場合でも、素早さに依存せずゆきだまが先に発動する）
@@ -125,19 +138,6 @@ def test_ゆきだま_マジシャンより先に発動して奪われない():
     assert foe.boosts["atk"] == 1
     assert not foe.has_item()
     assert not attacker.has_item()
-
-
-def test_ゆきだま_たんじゅんで2段階上昇():
-    """ゆきだま: たんじゅん所持者はこうげきランクが2段階上がる"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["こなゆき"])],
-        team1=[Pokemon("カビゴン", item_name="ゆきだま", ability_name="たんじゅん")],
-        accuracy=100,
-    )
-    foe = battle.actives[1]
-    t.run_move(battle, 0)
-    assert foe.boosts["atk"] == 2
-    assert not foe.has_item()
 
 
 def test_ゆきだま_ランク上限で発動しない():
@@ -589,6 +589,25 @@ def test_レンブのみ_特殊被弾で攻撃者にダメージ():
     t.run_move(battle, 0)
     assert attacker.hp == attacker.max_hp - attacker.max_hp // 8
     assert not battle.actives[1].has_item()
+
+
+def test_レンブのみ_致命打でも発動する():
+    """レンブのみ: 所持者がひんしになったときでも発動する
+    （fuzz_log横断監査。.internal/spec/items/レンブのみ.md）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="レンブのみ")],
+        team1=[Pokemon("カビゴン", move_names=["でんきショック"])],
+        accuracy=100,
+    )
+    defender, attacker = battle.actives
+    defender.hp = 1
+    t.fix_damage(battle, 9999)
+
+    t.run_move(battle, 1)
+
+    assert defender.fainted
+    assert attacker.hp == attacker.max_hp - attacker.max_hp // 8
+    assert not defender.has_item()
 
 
 if __name__ == "__main__":

@@ -541,6 +541,24 @@ def test_カーリーヘアー_直接攻撃で攻撃者のSが1段階下がる()
     assert attacker.boosts["spe"] == -1
 
 
+def test_カーリーヘアー_致命打でも発動する():
+    """カーリーヘアー: 攻撃技でひんしになったときも発動する（ぬめぬめと同じ効果。
+    fuzz_log横断監査。.internal/spec/abilities/カーリーヘアー.md）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="カーリーヘアー")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender, attacker = battle.actives
+    defender.hp = 1
+    t.fix_damage(battle, 9999)
+
+    t.run_move(battle, 1)
+
+    assert defender.fainted
+    assert attacker.boosts["spe"] == -1
+
+
 def test_カーリーヘアー_非接触技では発動しない():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="カーリーヘアー")],
