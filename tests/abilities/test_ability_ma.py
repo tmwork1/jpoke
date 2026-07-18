@@ -1001,6 +1001,24 @@ def test_メガソーラー_ノーてんき相手でも有効():
     assert battle.damage_calculator.power_modifier == 6144
 
 
+def test_メガソーラー_まねっこでネストした技使用中の天候変化も維持される():
+    """まねっこ経由で技実行がネストする場合でも（weather_override_depth>0の内側の
+    deactivateでは判定せず、最も外側のdeactivateでのみ判定する）、ネスト中に
+    相手のすなはきで本物の天候が変化していれば、外側のdeactivateでもそれを
+    正しく維持する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="メガソーラー", move_names=["まねっこ"])],
+        team1=[Pokemon("カビゴン", ability_name="すなはき", move_names=["ひのこ"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)  # カビゴン: ひのこ（まねっこのコピー対象を作る。まだすなはきは発動しない）
+    t.run_move(battle, 0)  # ピカチュウ: まねっこ（内部でひのこがネストして実行され、カビゴンのすなはきが発動する）
+    assert battle.weather.name == "すなあらし"
+    assert battle.actives[0].ability.state == ""
+    assert battle.actives[0].ability.weather_override_depth == 0
+    assert battle.actives[0].ability.saved_weather_version == 0
+
+
 def test_メガソーラー_まねっこでネストしても天候が正しく元に戻る():
     """まねっこ経由で技実行がネストしても（ON_BEGIN_MOVE/ON_END_MOVEが二重発火しても）、
     行動全体が終わった後には実際の天候が正しく元に戻る。"""
@@ -1032,6 +1050,44 @@ def test_メガソーラー_天候なしでみず技が0_5倍():
     )
     t.run_move(battle, 0)
     assert battle.damage_calculator.power_modifier == 2048
+
+
+def test_メガソーラー_技使用中にすなはきで本物の天候が変化すると復元されない():
+    """メガソーラー使用中に相手のすなはきで本物の天候がすなあらしに変化した場合、
+    技終了時に元の天候（天候なし）へ誤って戻さず、すなあらしをそのまま維持する
+    （fuzz_log seed=2991 で発見されたバグの回帰確認。孤児化した Field オブジェクトが
+    次回の再発動でハンドラ二重登録・ターン終了処理の重複発火を起こす原因になっていた）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="メガソーラー", move_names=["ひのこ"])],
+        team1=[Pokemon("カビゴン", ability_name="すなはき")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.weather.name == "すなあらし"
+    assert battle.actives[0].ability.state == ""
+    assert battle.actives[0].ability.weather_override_depth == 0
+    assert battle.actives[0].ability.saved_weather_version == 0
+
+    # 次のターンも正常にすなあらしのターン終了処理が1回だけ発火することを確認
+    # （孤児化していた場合はハンドラ二重登録によりダメージが2回入る）
+    mon = battle.actives[0]
+    hp_before = mon.hp
+    t.end_turn(battle)
+    damage = hp_before - mon.hp
+    assert damage == mon.max_hp // 16
+
+
+def test_メガソーラー_技使用中に天候変化がなければ従来通り元に戻る():
+    """回帰確認: すなはき等の介在がない通常ケースでは、技終了後に元の天候
+    （あめ）へ正しく復元される（change_version が変化しないケース）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="メガソーラー", move_names=["ひのこ"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("あめ", 5),
+    )
+    t.run_move(battle, 0)
+    assert battle.weather.name == "あめ"
+    assert battle.actives[0].ability.saved_weather_version == 0
 
 
 def test_メガソーラー_攻撃後に天候が元に戻る():

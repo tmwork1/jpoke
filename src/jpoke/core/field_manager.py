@@ -133,6 +133,12 @@ class ExclusiveFieldManager(BaseFieldManager[T]):
 
     Attributes:
         current: 現在有効なフィールド
+        change_version: current_name が実際に変化した回数を数えるカウンター。
+            メガソーラー等、一時的に current_name を仮想的に上書きする効果が、
+            その最中に本物の変化（apply/remove/tick_down_current 経由）が
+            発生したかどうかを検知するために使う（直接の代入である
+            `current_name = ...` はカウントされない。`メガソーラー_deactivate`
+            参照）。
     """
 
     def __init__(self, battle: Battle, owners: tuple[Player, ...], kind: Any):
@@ -154,6 +160,7 @@ class ExclusiveFieldManager(BaseFieldManager[T]):
 
         self.inactive_name: T = cast(T, "")  # 非アクティブ状態を表すフィールド名
         self.current_name: T = self.inactive_name
+        self.change_version: int = 0
 
     @property
     def current(self) -> Field:
@@ -196,6 +203,7 @@ class ExclusiveFieldManager(BaseFieldManager[T]):
 
         self._activate_field(name, modified_count)
         self.current_name = name
+        self.change_version += 1
         self._events.emit(Event.ON_FIELD_CHANGE)
 
         # 瀕死交代・緊急交代など、このターンのON_TURN_END通過後に新規発動した場合は
@@ -215,6 +223,7 @@ class ExclusiveFieldManager(BaseFieldManager[T]):
             return False
         self._deactivate_field(self.current)
         self.current_name = self.inactive_name
+        self.change_version += 1
         self._events.emit(Event.ON_FIELD_CHANGE)
         return True
 
@@ -241,6 +250,7 @@ class ExclusiveFieldManager(BaseFieldManager[T]):
         if not field.count:
             self._deactivate_field(field)
             self.current_name = self.inactive_name
+            self.change_version += 1
             self._events.emit(Event.ON_FIELD_CHANGE)
 
 
