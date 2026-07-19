@@ -63,6 +63,9 @@ Windowsで日本語ログが文字化けする場合は `PYTHONUTF8=1` を指定
 | [`03_janken_nash_fictitious_play.py`](https://github.com/tmwork1/jpoke/blob/main/examples/04_research/03_janken_nash_fictitious_play.py) | 実バトルのモンテカルロ推定 + 反復最適反応（fictitious play）によるNash均衡（固定の混合戦略）の近似、`ProcessPoolExecutor` による並列化（発展） |
 | [`04_janken_nash_cfr.py`](https://github.com/tmwork1/jpoke/blob/main/examples/04_research/04_janken_nash_cfr.py) | `Battle.copy()` を使ったロールアウトベースのregret matching（CFR風）による、HP状況に応じた適応的な戦略の自己対戦学習（発展） |
 
+`03,04` は対戦セットアップ等の共通処理を `_janken_common.py`（単独では実行しない内部ヘルパー）
+に切り出して共有している。
+
 ## 05_benchmark/
 
 計算速度の計測
