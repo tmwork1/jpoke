@@ -6,8 +6,8 @@ if TYPE_CHECKING:
 
 from dataclasses import dataclass, field
 
-from jpoke.types import AbilityFlag, Type, MoveCategory, MoveTarget, MoveFlag, PokemonName, AbilityName, MoveName, \
-    ItemName
+from jpoke.types import AbilityFlag, Type, MoveCategory, MoveTarget, MoveFlag, \
+    PokemonName, AbilityName, MoveName, ItemName, Regulation
 
 
 class PokemonData:
@@ -20,6 +20,7 @@ class PokemonData:
         stats = data["baseStats"]
         self.base: list[int] = [stats["hp"], stats["atk"], stats["def"], stats["spa"], stats["spd"], stats["spe"]]
         self.learnset: list[MoveName] = learnset if learnset is not None else []
+        self.regulations: set[Regulation] = field(default_factory=set)
 
         if not self.abilities:
             self.abilities = [""]
@@ -44,6 +45,7 @@ class ItemData:
     handlers: dict[Event | DomainEvent, Handler | list[Handler]] = field(default_factory=dict)
     lethal_handlers: dict[LethalEvent, LethalHandler] = field(default_factory=dict)
     name: ItemName = ""
+    regulations: set[Regulation] = field(default_factory=set)
 
 
 class MultiHit(TypedDict):

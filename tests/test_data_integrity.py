@@ -3,11 +3,14 @@
 フラグの typo は実行時に「フラグが立っていない」扱いで静かに間違うため、
 全データのフラグが Literal 型に定義済みであることを機械的に検証する。
 """
+import csv
+from importlib import resources
 from typing import get_args
 
 import pytest
 
 from jpoke.data import ABILITIES, MOVES, POKEDEX
+from jpoke.data.item import ITEMS
 from jpoke.model.pokemon import Pokemon
 from jpoke.types import AbilityFlag, MoveFlag
 
@@ -47,6 +50,80 @@ def test_特性データ_flagsが全てAbilityFlagに定義されている():
         if unknown:
             errors.append(f"{name}: {sorted(unknown)}")
     assert not errors, "AbilityFlag に未定義のフラグ:\n" + "\n".join(errors)
+
+
+def test_アイテムのレギュレーションCSVがITEMSへ反映される():
+    """regulation/item.csv の内容と ItemData.regulations が全件一致することを確認する。"""
+    regulation_path = resources.files("jpoke").joinpath("data", "regulation", "item.csv")
+
+    with regulation_path.open(encoding="utf-8", newline="") as f:
+        reader = csv.DictReader(f)
+        assert reader.fieldnames is not None
+        regulation_names = [
+            name
+            for name in reader.fieldnames
+            if name not in {"name", "implemented"}
+        ]
+        expected = {}
+
+        for row in reader:
+            if row["implemented"] != "1":
+                continue
+
+            expected[row["name"]] = {
+                name
+                for name in regulation_names
+                if row[name] == "1"
+            }
+
+    unknown_items = set(expected) - set(ITEMS)
+    assert not unknown_items, f"regulation/item.csv に未定義のアイテム名があります: {sorted(unknown_items)}"
+
+    errors = []
+    for name, data in ITEMS.items():
+        actual = data.regulations
+        expected_regulations = expected.get(name, set())
+        if actual != expected_regulations:
+            errors.append(f"{name}: actual={sorted(actual)}, expected={sorted(expected_regulations)}")
+
+    assert not errors, "ItemData.regulations と regulation/item.csv が一致しません:\n" + "\n".join(errors)
+
+
+def test_ポケモンのレギュレーションCSVがPOKEDEXへ反映される():
+    """regulation/pokemon.csv の内容と PokemonData.regulations が全件一致することを確認する。"""
+    regulation_path = resources.files("jpoke").joinpath("data", "regulation", "pokemon.csv")
+
+    with regulation_path.open(encoding="utf-8", newline="") as f:
+        reader = csv.DictReader(f)
+        assert reader.fieldnames is not None
+        regulation_names = [
+            name
+            for name in reader.fieldnames
+            if name not in {"dex_no", "name", "implemented"}
+        ]
+        expected = {}
+
+        for row in reader:
+            if row["implemented"] != "1":
+                continue
+
+            expected[row["name"]] = {
+                name
+                for name in regulation_names
+                if row[name] == "1"
+            }
+
+    unknown_pokemon = set(expected) - set(POKEDEX)
+    assert not unknown_pokemon, f"regulation/pokemon.csv に未定義のポケモン名があります: {sorted(unknown_pokemon)}"
+
+    errors = []
+    for name, data in POKEDEX.items():
+        actual = data.regulations
+        expected_regulations = expected.get(name, set())
+        if actual != expected_regulations:
+            errors.append(f"{name}: actual={sorted(actual)}, expected={sorted(expected_regulations)}")
+
+    assert not errors, "PokemonData.regulations と regulation/pokemon.csv が一致しません:\n" + "\n".join(errors)
 
 
 if __name__ == "__main__":

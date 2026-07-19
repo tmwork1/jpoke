@@ -4,5 +4,12 @@
 """
 
 from .copy_utils import fast_copy, recursive_copy
+from .pokeapi import get_pokeapi_url, get_pokemon_image_url, get_item_image_url
 
-__all__ = ["fast_copy", "recursive_copy"]
+__all__ = [
+	"fast_copy",
+	"recursive_copy",
+	"get_pokeapi_url",
+	"get_pokemon_image_url",
+	"get_item_image_url",
+]

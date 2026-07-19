@@ -3,21 +3,56 @@
 Note:
     このモジュール内のアイテム定義はITEMS辞書内で五十音順に配置されています。
 """
+import csv
+from importlib import resources
+
 from jpoke.enums import Event, DomainEvent, LethalEvent
 from jpoke.core.lethal import LethalHandler
 from jpoke.handlers import item as h, lethal as l
 from jpoke.data.models import ItemData
-from jpoke.types import ItemName
+from jpoke.types import ItemName, Regulation
 
 from .megaevol import MEGA_STONES
+
+
+def _load_item_regulations() -> dict[ItemName, set[Regulation]]:
+    """regulation/item.csv からアイテムごとの使用可能レギュレーションを読み込む。"""
+    regulation_path = resources.files("jpoke").joinpath("data", "regulation", "item.csv")
+    regulations_by_item = {}
+
+    with regulation_path.open(encoding="utf-8", newline="") as f:
+        reader = csv.DictReader(f)
+        assert reader.fieldnames is not None, "regulation/item.csv のヘッダが読み取れません"
+        regulation_names = [
+            name
+            for name in reader.fieldnames
+            if name not in {"name", "implemented"}
+        ]
+
+        for row in reader:
+            if row["implemented"] != "1":
+                continue
+
+            regulations_by_item[row["name"]] = {
+                regulation
+                for regulation in regulation_names
+                if row[regulation] == "1"
+            }
+
+    return regulations_by_item
 
 
 def common_setup():
     """共通のセットアップ処理"""
     _add_mega_stones(ITEMS)
+    item_regulations = _load_item_regulations()
+
+    for name in item_regulations:
+        assert name in ITEMS, f"regulation/item.csv に未定義のアイテム名があります: {name}"
 
     for name in ITEMS:
         ITEMS[name].name = name
+        ITEMS[name].regulations = set(item_regulations.get(name, set()))
 
 
 def _add_mega_stones(items: dict[ItemName, ItemData]):

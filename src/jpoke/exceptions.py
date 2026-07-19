@@ -26,3 +26,7 @@ class PokemonNotFoundError(JpokeError, ValueError):
 
 class InvalidStatModificationError(JpokeError, ValueError):
     """`modify_hp` 等のステータス変更呼び出しの引数が仕様と矛盾している場合の例外。"""
+
+
+class PokeApiResolveError(JpokeError, ValueError):
+    """和名からPokeAPI URLやIDを解決できない場合の例外。"""
