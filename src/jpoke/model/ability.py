@@ -48,6 +48,11 @@ class Ability(GameEffect):
         """メガソーラー専用: ねごと・まねっこ等で技実行がネストした場合に対応する深度カウンター。
         最も外側の ON_BEGIN_MOVE でのみ本来の天候を保存し、深度が0に戻る
         ON_END_MOVE でのみ復元する。"""
+        self.saved_weather_version: int = 0
+        """メガソーラー専用: 天候を上書きした時点の WeatherManager.change_version を
+        一時保存する。技使用中に相手のすなはき等で本物の天候変化が発生したかどうかを
+        判定するために使う（一致していれば仮想上書きのみ、一致しなければ本物の
+        天候変化が発生済みなので復元処理をスキップする。`メガソーラー_deactivate` 参照）。"""
 
         self.data: AbilityData  # 型ヒントのための属性。実際のデータはsuper().__init__で設定される
 
@@ -70,6 +75,7 @@ class Ability(GameEffect):
         self.saved_weather_name = ""
         self.saved_weather_count = 0
         self.weather_override_depth = 0
+        self.saved_weather_version = 0
         self.reset_enable_state()
 
     def reset_enable_state(self):

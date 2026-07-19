@@ -92,6 +92,22 @@ def test_バコウのみ_フライングプレスでは発動しない():
     assert defender.has_item()  # バコウのみは消費されない
 
 
+def test_バンジのみ_HP満タンでもほおばるで強制発動しこんらんする():
+    """バンジのみ: HPが満タンでほおばるにより強制消費された場合、回復量が0でも
+    嫌いな味の性格ならこんらんが付与される（回復量とこんらん判定は独立）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ほおばる"], item_name="バンジのみ", nature="むじゃき")],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    assert mon.hp == mon.max_hp
+    t.run_move(battle, 0)
+    assert mon.hp == mon.max_hp
+    assert not mon.has_item()
+    assert mon.has_volatile("こんらん")
+    assert mon.boosts["def"] == 2
+
+
 def test_バンジのみ_それ以外の性格ではこんらんしない():
     """バンジのみ: にがい味が嫌いでない性格では発動してもこんらんしない"""
     battle = t.start_battle(
@@ -1012,6 +1028,21 @@ def test_ピントレンズ_急所ランク加算():
     assert battle.move_executor.critical_rank == 1
 
 
+def test_フィラのみ_HP満タンでもおちゃかいで強制発動しこんらんする():
+    """フィラのみ: HPが満タンでおちゃかいにより強制消費された場合、回復量が0でも
+    嫌いな味の性格ならこんらんが付与される（回復量とこんらん判定は独立）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おちゃかい"], item_name="フィラのみ", nature="おくびょう")],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    assert mon.hp == mon.max_hp
+    t.run_move(battle, 0)
+    assert mon.hp == mon.max_hp
+    assert not mon.has_item()
+    assert mon.has_volatile("こんらん")
+
+
 @pytest.mark.parametrize(
     "nature",
     ["ずぶとい", "ひかえめ", "おだやか", "おくびょう"]
@@ -1194,6 +1225,24 @@ def test_ふうせん_変化技では割れない():
     mon = battle.actives[0]
     t.run_move(battle, 1)
     assert mon.has_item()
+
+
+def test_ふうせん_致命打でも割れる():
+    """ふうせん: 攻撃技でひんしになったときもふうせんが割れる
+    （fuzz_log横断監査。.internal/spec/items/ふうせん.md）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ふうせん")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender = battle.actives[0]
+    defender.hp = 1
+    t.fix_damage(battle, 9999)
+
+    t.run_move(battle, 1)
+
+    assert defender.fainted
+    assert not defender.has_item()
 
 
 def test_フォーカスレンズ_一撃必殺技には適用されない():

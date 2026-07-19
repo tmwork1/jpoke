@@ -48,6 +48,26 @@ def _tick_side_field(battle: Battle, ctx: EventContext, value: Any, name: SideFi
     side.tick_down(name)
     return HandlerReturn(value=value)
 
+def _is_own_field(value: Field, own_field: Field) -> bool:
+    """Event.ON_FIELD_DEACTIVATE 等、単一のFieldインスタンスをvalueとして受け取る
+    イベントで、valueが「自分自身の効果に紐づくFieldインスタンス」と一致するかを判定する。
+
+    EventManagerはON_FIELD_DEACTIVATEを、そのイベントに登録された全ハンドラが
+    共有する単一のバケツへ発火する。そのため、あるFieldインスタンス（例:
+    Player2のねがいごと）の解除で発火したemit呼び出しに、
+    - 同名だが別インスタンスのフィールド（例: Player1のねがいごと。まだ解除されて
+      いない）のハンドラ
+    - 同じPlayerに紐づく別種のフィールド（例: マジックルーム）のハンドラ
+    も、subject_spec の一致判定だけでは区別できず巻き込まれて誤発動してしまう
+    （valueは解除された側のFieldインスタンスのままのため、無関係な側に誤った
+    回復量・ダメージ量が適用されたり、まだ解除されていないはずの効果が解除
+    されてしまったりする）。呼び出し側で「本来自分自身が対応すべきFieldインスタンス」
+    （`battle.get_side(...).get(name)` や `battle.global_manager.get(name)` で
+    取得したもの）と value の同一性を比較することで、無関係なemitへの巻き込みを
+    防ぐ（fuzzログ seed=2946で発見。field_manager.BaseFieldManager._deactivate_field 参照）。
+    """
+    return value is own_field
+
 
 def あめ_power_modifier(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """雨状態での技威力補正。防御側がばんのうがさを持つ場合は無効。"""
@@ -405,6 +425,8 @@ def どくびし_apply_poison(battle: Battle, ctx: EventContext, value: Any) -> 
 
 def ねがいごと_heal(battle: Battle, ctx: EventContext, value: Field) -> HandlerReturn:
     """ねがいごとのターン終了時HP回復"""
+    if not _is_own_field(value, battle.get_side(ctx.source).get("ねがいごと")):
+        return HandlerReturn(value=value)
     battle.modify_hp(ctx.source, v=value.heal)
     return HandlerReturn(value=value)
 
@@ -428,6 +450,8 @@ def ねばねばネット_reduce_spe(battle: Battle, ctx: EventContext, value: A
 
 def はめつのねがい_damage(battle: Battle, ctx: EventContext, value: Field) -> HandlerReturn:
     """はめつのねがい: フィールド解除時に相手のポケモンへ蓄積ダメージを適用する。"""
+    if not _is_own_field(value, battle.get_side(ctx.source).get("はめつのねがい")):
+        return HandlerReturn(value=value)
     if not ctx.source.alive:
         return HandlerReturn(value=value)
     battle.modify_hp(ctx.source, v=-value.damage, reason="move_damage")
@@ -510,8 +534,16 @@ def マジックルーム_apply(battle: Battle, ctx: EventContext, value: Any) -
     return HandlerReturn(value=value)
 
 
-def マジックルーム_remove(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """マジックルーム解除時にアイテム有効状態を再計算する。"""
+def マジックルーム_remove(battle: Battle, ctx: EventContext, value: Field) -> HandlerReturn:
+    """マジックルーム解除時にアイテム有効状態を再計算する。
+
+    Event.ON_FIELD_DEACTIVATE は共有ハンドラバケツで発火するため、ねがいごと等の
+    無関係なフィールドの解除に巻き込まれてマジックルームがまだ有効なのに
+    解除処理が走ってしまわないよう、valueが自分自身（マジックルーム）の
+    Fieldインスタンスかを確認する。
+    """
+    if not _is_own_field(value, battle.global_manager.get("マジックルーム")):
+        return HandlerReturn(value=value)
     battle.item_manager.remove_disabled_reason(ctx.source, "マジックルーム")
     return HandlerReturn(value=value)
 
@@ -581,6 +613,8 @@ def ミストフィールド_prevent_confusion(battle: Battle, ctx: EventContext
 
 def みらいよち_damage(battle: Battle, ctx: EventContext, value: Field) -> HandlerReturn:
     """みらいよち: フィールド解除時に相手のポケモンへ蓄積ダメージを適用する。"""
+    if not _is_own_field(value, battle.get_side(ctx.source).get("みらいよち")):
+        return HandlerReturn(value=value)
     if not ctx.source.alive:
         return HandlerReturn(value=value)
     battle.modify_hp(ctx.source, v=-value.damage, reason="move_damage")

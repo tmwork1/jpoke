@@ -119,6 +119,11 @@ def can_hit_hidden_target(battle: Battle,
     # 適用する（自分自身や場・自陣を対象とする技は潜伏による回避の対象外）。
     if ctx.move.target != "foe":
         return HandlerReturn(value=value)
+    # のろいはMoveData.target="foe"固定だが、使用者がゴーストタイプでない場合（鈍い）は
+    # 自分のランク変化のみで相手に直接効果を及ぼさないため、潜伏による回避判定の対象外とする
+    # （ゴーストタイプののろい＝呪いは相手を対象にするため対象外にしない）。
+    if ctx.move.name == "のろい" and not ctx.attacker.has_type("ゴースト"):
+        return HandlerReturn(value=value)
     if ctx.attacker.ability.name == "ノーガード" or ctx.defender.ability.name == "ノーガード":
         return HandlerReturn(value=value)
     allowed_moves = HIDDEN_MOVE_ALLOWED_MOVES.get(volatile, [])
@@ -1298,6 +1303,11 @@ def _run_protect(battle: Battle,
             battle.ailment_manager.apply(ctx.attacker, ailment_on_contact, source=ctx.defender)
         if chip_on_contact is not None:
             battle.modify_hp(ctx.attacker, r=-chip_on_contact, reason="")
+
+    # だいばくはつ等の自爆技はまもる系にブロックされてもHPコストを支払い必ずひんしになる
+    # 必要がある（.internal/spec/moves/だいばくはつ.md）。しめりけによる失敗（HPコスト
+    # 支払い前に失敗すべき）と区別するため、move_executor が参照するフラグを立てる。
+    ctx.blocked_by_protect = True
 
     return HandlerReturn(value=False, stop_event=True)
 

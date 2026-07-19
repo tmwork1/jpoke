@@ -432,6 +432,24 @@ class MoveExecutor:
             # ON_MOVE_CHARGEより前に無条件で呼ばれる）。実機ではPP消費後の
             # 不発でもこだわり系アイテム等のロックはかかるため、ON_MOVE_ENDを
             # 発火してこだわり_lock_move等の後処理を確実に実行させる。
+            if ctx.blocked_by_protect:
+                # まもる・ワイドガード等のprotect系による不発は、しめりけによる
+                # 不発とは異なり使用者が必ずひんしになる
+                # （.internal/spec/moves/だいばくはつ.md「まもる: 防がれる
+                # （防がれてもひんしになる）」）。protect系のブロック判定は
+                # しめりけ（HPコスト支払い前に失敗すべき）と同じEvent.ON_TRY_MOVE_1
+                # で発火するため、通常はON_PAY_HPより前に不発が確定してしまう。
+                # ここでctx.blocked_by_protectを見て、protectブロック時のみ
+                # ON_PAY_HPを発火させHPコスト支払いを保証する
+                # （じばく・だいばくはつ・ミストバースト対応。しめりけの場合は
+                # blocked_by_protectがFalseのままなので従来どおりHP消費は発生しない）。
+                self.battle.begin_deferred_winner_log()
+                try:
+                    self._events.emit(Event.ON_PAY_HP, ctx)
+                    self._events.emit(Event.ON_MOVE_END, ctx)
+                finally:
+                    self.battle.end_deferred_winner_log()
+                return
             self._events.emit(Event.ON_MOVE_END, ctx)
             return
 

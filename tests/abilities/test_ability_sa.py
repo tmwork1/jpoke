@@ -918,6 +918,24 @@ def test_シンクロ_自発的な状態異常は伝染しない():
     assert not foe.has_ailment("どく")
 
 
+def test_じきゅうりょく_クリアスモッグでランクリセット後に発動する():
+    """じきゅうりょく: クリアスモッグを受けた場合、ランクが+6→0にリセットされた後に
+    じきゅうりょくが発動し、最終的に+1になる（.internal/spec/abilities/じきゅうりょく.md）。
+    ぼうぎょが上限(+6)のままだとリセット前にじきゅうりょくが不発判定されてしまう
+    順序バグの回帰テスト（fuzz_log seed=2717）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="じきゅうりょく")],
+        team1=[Pokemon("ベトベトン", move_names=["クリアスモッグ"])],
+    )
+    defender = battle.actives[0]
+    defender.boosts["def"] = 6
+
+    t.run_move(battle, 1)
+
+    assert defender.boosts["def"] == 1
+
+
 def test_じきゅうりょく_こらえるでHP1のまま耐えたときも発動する():
     """じきゅうりょく: こらえるでHP1のまま耐えた（実ダメージ0）ときも発動する"""
     battle = t.start_battle(
@@ -1988,6 +2006,22 @@ def test_せいしんりょく_ひるみを防ぐ():
     assert not battle.volatile_manager.apply(battle.actives[0], "ひるみ", count=1)
 
 
+def test_せいでんき_ひんしになっても発動する():
+    """せいでんき: 直接攻撃を受けて自身がひんしになったときも攻撃者をまひ状態にする
+    （.internal/spec/abilities/せいでんき.md「攻撃技でひんしになったときも発動する」）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいでんき")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender = battle.actives[0]
+    defender.hp = 1
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 1)
+    assert defender.fainted
+    assert battle.actives[1].has_ailment("まひ")
+
+
 def test_ぜったいねむり_どくどくだまでも状態異常にならない():
     """ぜったいねむり: どくどくだまを持たせてもターン終了時にもうどくが発動しない。"""
     battle = t.start_battle(
@@ -2430,6 +2464,22 @@ def test_ソウルハート_自分自身がひんしになってもCは上がら
 
     assert attacker.fainted
     assert attacker.boosts["spa"] == 0
+
+
+def test_てつのトゲ_ひんしになっても発動する():
+    """てつのトゲ: さめはだと同じ効果を持つため、自身が直接攻撃でひんしになった
+    ときも反撃ダメージが発動する（fuzz_log横断監査。.internal/spec/abilities/てつのトゲ.md
+    「さめはだ#特性の仕様を参照」）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="てつのトゲ")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender, attacker = battle.actives
+    battle.modify_hp(defender, v=-(defender.max_hp - 1))
+    t.run_move(battle, 1)
+    assert defender.fainted
+    assert attacker.hp == attacker.max_hp - int(attacker.max_hp * (1 / 8))
 
 
 if __name__ == "__main__":

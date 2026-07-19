@@ -2885,6 +2885,24 @@ def test_ヘドロえき_回復がダメージになる():
     assert defender.hp < defender.max_hp
 
 
+def test_ヘドロえき_自分がひんしになった一撃でも回復を逆転させる():
+    """ヘドロえき: 吸収技を受けて自身がひんしになった一撃でも、回復をダメージに変換する効果が発動する
+    （.internal/spec/abilities/ヘドロえき.md「ヘドロえきのポケモンがひんしになったときも発動する」）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ギガドレイン"])],
+        team1=[Pokemon("カビゴン", ability_name="ヘドロえき")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    defender.hp = 20
+    t.fix_damage(battle, 20)
+    hp_before = attacker.hp
+    t.run_move(battle, 0)
+    assert defender.fainted
+    # 吸収量10(20の50%)は通常なら回復だが、ヘドロえきにより反転してダメージとして攻撃側に入る
+    assert attacker.hp == hp_before - 10
+
+
 def test_ヘドロえき_通常の回復には影響しない():
     """ヘドロえき: drain以外の理由の回復には影響しない"""
     battle = t.start_battle(
@@ -3235,6 +3253,25 @@ def test_ほうし_攻撃側がぼうじん特性なら発動しない():
     t.run_move(battle, 1)
 
     assert not battle.actives[1].ailment.is_active
+
+
+def test_ほうし_致命打でも発動する():
+    """ほうし: その攻撃で特性所有者がひんし状態になったときも発動する
+    （fuzz_log横断監査。.internal/spec/abilities/ほうし.md）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="ほうし")],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender = battle.actives[0]
+    defender.hp = 1
+    t.fix_damage(battle, 9999)
+    battle.random.random = lambda: 0.0
+
+    t.run_move(battle, 1)
+
+    assert defender.fainted
+    assert battle.actives[1].ailment.name == "どく"
 
 
 def test_ほうし_連続攻撃技でねむりが発動すると中断される():

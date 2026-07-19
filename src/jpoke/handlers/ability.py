@@ -1924,17 +1924,37 @@ def しんりょくもうかげきりゅうむしのしらせ_modify_atk(battle:
     return HandlerReturn(value=value)
 
 
-def じきゅうりょく_boost_B_on_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """じきゅうりょく特性: 攻撃技でダメージを受けるたびにぼうぎょが1段階上がる。
-
-    こらえるでHP1のまま耐えたときなど（実HPダメージ0）も発動するが、
-    みがわりに攻撃を防がれたとき（実HPダメージ0）は発動しない。
-    """
-    if ctx.substitute_damage:
-        return HandlerReturn(value=value)
+def _じきゅうりょく_apply_boost(battle: Battle, ctx: AttackContext) -> None:
+    """じきゅうりょくの本体処理: ぼうぎょを1段階上げる（上限なら発動しない）。"""
     mon = ctx.defender
     if battle.modify_stats(mon, {"def": +1}, source=ctx.attacker):
         _announce_ability_triggered(battle, mon)
+
+
+def じきゅうりょく_boost_B_on_damage_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """じきゅうりょく特性: 通常の攻撃（実HPダメージ>0）を受けたときにぼうぎょが1段階上がる。
+
+    Event.ON_DAMAGE_HIT はクリアスモッグのランクリセット（priority=10）より後に発火するため、
+    「クリアスモッグを受けた場合、ランクがリセットされた後にじきゅうりょくが発動する」
+    （.internal/spec/abilities/じきゅうりょく.md）という仕様どおりの順序で発動する。
+    Event.ON_DAMAGE_HIT は実HPダメージが0（こらえる・みがわり等）のときは発火しないため、
+    その場合の発動は Event.ON_HIT 側（じきゅうりょく_boost_B_on_hit）が担う。
+    """
+    _じきゅうりょく_apply_boost(battle, ctx)
+    return HandlerReturn(value=value)
+
+
+def じきゅうりょく_boost_B_on_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """じきゅうりょく特性: こらえるでHP1のまま耐えたときなど（実HPダメージ0）に発動する。
+
+    通常のダメージ（実HPダメージ>0）が発生するケースは
+    じきゅうりょく_boost_B_on_damage_hit（Event.ON_DAMAGE_HIT）側で処理済みのため、
+    ここで二重に発動しないよう value（実HPダメージ）が0以下のときのみ処理する。
+    みがわりに攻撃を防がれたとき（実HPダメージ0）は発動しない。
+    """
+    if value > 0 or ctx.substitute_damage:
+        return HandlerReturn(value=value)
+    _じきゅうりょく_apply_boost(battle, ctx)
     return HandlerReturn(value=value)
 
 
@@ -4367,13 +4387,21 @@ def メガソーラー_activate(battle: Battle, ctx: AttackContext, value: Any) 
                 wm.fields["はれ"].register_handlers(battle.events, player)
 
         wm.current_name = "はれ"
+        mon.ability.saved_weather_version = wm.change_version
         mon.ability.state = "active"
     mon.ability.weather_override_depth += 1
     return HandlerReturn(value=value)
 
 
 def メガソーラー_deactivate(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """メガソーラー特性: 技使用後に天候を元に戻す（最も外側の呼び出しでのみ実行）。"""
+    """メガソーラー特性: 技使用後に天候を元に戻す（最も外側の呼び出しでのみ実行）。
+
+    技使用中に相手のすなはき等で本物の天候が実際に変化した場合
+    （`WeatherManager.change_version` が上書き開始時点から変化している場合）は、
+    仮想上書き（はれ）は既に `apply()` 経由で正規に解除・置き換え済みのため、
+    無条件に元の天候へ戻さず、その本物の天候変化をそのまま維持する
+    （signature: LogInconsistency@ability.py:メガソーラー_deactivate:4395）。
+    """
     if ctx.move.name in _メガソーラー_WEATHER_SETTING_MOVES:
         return HandlerReturn(value=value)
 
@@ -4387,19 +4415,23 @@ def メガソーラー_deactivate(battle: Battle, ctx: AttackContext, value: Any
         return HandlerReturn(value=value)
 
     wm = battle.weather_manager
-    original_name = mon.ability.saved_weather_name
-    if original_name != "はれ":
-        # 「はれ」のハンドラを解除して元天候のハンドラを復元する
-        for player in wm.fields["はれ"].owners:
-            wm.fields["はれ"].unregister_handlers(battle.events, player)
-        wm.fields["はれ"].count = mon.ability.saved_weather_count
-        if wm.fields[original_name].is_active:
-            for player in wm.fields[original_name].owners:
-                wm.fields[original_name].register_handlers(battle.events, player)
-    wm.current_name = original_name
+    if wm.change_version == mon.ability.saved_weather_version:
+        # 技使用中に本物の天候変化が発生していない場合のみ、仮想上書きを元に戻す
+        original_name = mon.ability.saved_weather_name
+        if original_name != "はれ":
+            # 「はれ」のハンドラを解除して元天候のハンドラを復元する
+            for player in wm.fields["はれ"].owners:
+                wm.fields["はれ"].unregister_handlers(battle.events, player)
+            wm.fields["はれ"].count = mon.ability.saved_weather_count
+            if wm.fields[original_name].is_active:
+                for player in wm.fields[original_name].owners:
+                    wm.fields[original_name].register_handlers(battle.events, player)
+        wm.current_name = original_name
+
     mon.ability.state = ""
     mon.ability.saved_weather_name = ""
     mon.ability.saved_weather_count = 0
+    mon.ability.saved_weather_version = 0
     return HandlerReturn(value=value)
 
 

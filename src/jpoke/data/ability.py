@@ -276,6 +276,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.うのミサイル_spit_out_prey,
                 subject_spec="defender:self",
+                # 攻撃を受けてウッウがひんしになったときも獲物を吐き出してダメージと効果を
+                # 与える仕様（.internal/spec/abilities/うのミサイル.md）のため、瀕死主体でも
+                # 発動を許可する。
+                allow_fainted_subject=True,
             ),
             Event.ON_SWITCH_OUT: h.AbilityHandler(
                 h.うのミサイル_revert_form,
@@ -649,6 +653,9 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.カーリーヘアー_lower_spd_on_contact,
                 subject_spec="defender:self",
+                # ぬめぬめと同じ効果（.internal/spec/abilities/カーリーヘアー.md）のため、
+                # ぬめぬめと同様に瀕死主体でも発動を許可する。
+                allow_fainted_subject=True,
             )
         }
     ),
@@ -1236,14 +1243,23 @@ ABILITIES: dict[AbilityName, AbilityData] = {
     ),
     "じきゅうりょく": AbilityData(
         handlers={
-            # ON_DAMAGE_HIT は actual_damage<=0 のとき発火しないため採用しない。こらえるで
-            # HP1のまま耐えたときなど（実HPダメージ0）も発動する仕様（.internal/spec/abilities/
-            # じきゅうりょく.md）を満たすため、常に発火する Event.ON_HIT を使用する
-            # （みがわりに阻まれた場合はハンドラ内で ctx.substitute_damage を見て除外する）。
+            # 通常のダメージ（実HPダメージ>0）はEvent.ON_DAMAGE_HITで処理する。
+            # クリアスモッグのランクリセット（priority=10）より後に発火させることで、
+            # 「クリアスモッグを受けた場合、ランクがリセットされた後にじきゅうりょくが発動する」
+            # （.internal/spec/abilities/じきゅうりょく.md）という仕様どおりの順序にする。
+            Event.ON_DAMAGE_HIT: h.AbilityHandler(
+                h.じきゅうりょく_boost_B_on_damage_hit,
+                subject_spec="defender:self",
+            ),
+            # ON_DAMAGE_HIT は actual_damage<=0 のとき発火しないため、こらえるでHP1のまま
+            # 耐えたときなど（実HPダメージ0）も発動する仕様（.internal/spec/abilities/
+            # じきゅうりょく.md）を満たすため、常に発火する Event.ON_HIT も併用する
+            # （実HPダメージ>0の通常ケースはON_DAMAGE_HIT側で処理済みのためハンドラ内で除外し、
+            # みがわりに阻まれた場合はctx.substitute_damageを見て除外する）。
             Event.ON_HIT: h.AbilityHandler(
                 h.じきゅうりょく_boost_B_on_hit,
                 subject_spec="defender:self",
-            )
+            ),
         },
         lethal_handlers={
             LethalEvent.ON_HIT: LethalHandler(
@@ -1593,6 +1609,9 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.せいでんき_maybe_paralyze_attacker,
                 subject_spec="defender:self",
+                # 攻撃技でひんしになったときも発動する仕様
+                # （.internal/spec/abilities/せいでんき.md）のため、瀕死主体でも発動を許可する。
+                allow_fainted_subject=True,
             )
         }
     ),
@@ -1859,6 +1878,9 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.さめはだ_chip_contact_attacker,
                 subject_spec="defender:self",
+                # さめはだと同じ効果（.internal/spec/abilities/てつのトゲ.md「さめはだ#特性の
+                # 仕様を参照」）のため、さめはだと同様に瀕死主体でも発動を許可する。
+                allow_fainted_subject=True,
             )
         }
     ),
@@ -2039,6 +2061,9 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.とびだすハバネロ_burn_attacker,
                 subject_spec="defender:self",
+                # 攻撃技でひんしになったときも発動する仕様
+                # （.internal/spec/abilities/とびだすハバネロ.md）のため、瀕死主体でも発動を許可する。
+                allow_fainted_subject=True,
             ),
         }
     ),
@@ -2298,6 +2323,9 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.のろわれボディ_maybe_disable_move,
                 subject_spec="defender:self",
                 priority=20,
+                # その攻撃で自身がひんしになったときでも発動する仕様
+                # （.internal/spec/abilities/のろわれボディ.md）のため、瀕死主体でも発動を許可する。
+                allow_fainted_subject=True,
             )
         }
     ),
@@ -3021,6 +3049,9 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 # かいふくふうじの回復ブロック（優先度100）より先に処理し、
                 # 回復量をダメージへ変換したうえで通過させる必要があるため優先度を上げる。
                 priority=90,
+                # ヘドロえきのポケモンがひんしになったときも発動する仕様
+                # （.internal/spec/abilities/ヘドロえき.md）のため、瀕死主体でも発動を許可する。
+                allow_fainted_subject=True,
             ),
         }
     ),
@@ -3051,6 +3082,9 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.ほうし_maybe_inflict_ailment_on_contact,
                 subject_spec="defender:self",
+                # その攻撃で特性所有者がひんし状態になったときも発動する仕様
+                # （.internal/spec/abilities/ほうし.md）のため、瀕死主体でも発動を許可する。
+                allow_fainted_subject=True,
             )
         }
     ),
@@ -3392,6 +3426,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.メロメロボディ_maybe_infatuate_attacker,
                 subject_spec="defender:self",
+                # 攻撃技でひんしになったときもメロメロボディは発動する（即座に効果は消える）
+                # 仕様（.internal/spec/abilities/メロメロボディ.md）のため、瀕死主体でも
+                # 発動を許可する。
+                allow_fainted_subject=True,
             )
         }
     ),
