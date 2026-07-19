@@ -65,10 +65,8 @@ class LethalContext:
 
 @dataclass
 class LethalPokemonState:
+    # TODO: 一般化という観点では、これらの情報はHitごとに一意に定まる確証はないため、State に持たせるべき。
     """致死率計算時点でのポケモン片側の状態スナップショット。
-
-    将来的に item/ability の有効状態など他のフィールドを追加しやすいように、
-    boosts と ailment を1つのオブジェクトにまとめる。
 
     Attributes:
         boosts: 計算時のランク補正
@@ -97,8 +95,10 @@ class LethalHitResult:
     hit_count: int
     hp_dist: StateDist
     damage_dist: StateDist
-    attacker_state: LethalPokemonState = field(default_factory=LethalPokemonState)
-    defender_state: LethalPokemonState = field(default_factory=LethalPokemonState)
+    attacker_state: LethalPokemonState = field(
+        default_factory=LethalPokemonState)
+    defender_state: LethalPokemonState = field(
+        default_factory=LethalPokemonState)
 
     def __add__(self, other: LethalHitResult) -> LethalHitResult:
         """2つのLethalHitResultのHP分布・ダメージ分布を合成する。
@@ -110,7 +110,8 @@ class LethalHitResult:
             return NotImplemented
 
         # TODO: hp_distの合成ロジックを変更したのでテストで検証する
-        hp_dist = subtract_dist(self.hp_dist, subtract_dist(other.initial_hp, other.hp_dist))
+        hp_dist = subtract_dist(self.hp_dist, subtract_dist(
+            other.initial_hp, other.hp_dist))
         damage_dist = add_dist(self.damage_dist, other.damage_dist)
         return LethalHitResult(
             initial_hp=self.initial_hp,
@@ -165,7 +166,7 @@ def fainted(dist: StateDist) -> bool:
 def calc_lethal(battle: Battle,
                 attacker: Pokemon,
                 moves: MoveName | Move | tuple[MoveName | Move, int]
-                    | list[MoveName | Move | tuple[MoveName | Move, int]],
+                | list[MoveName | Move | tuple[MoveName | Move, int]],
                 critical: bool,
                 move_secondary: bool,
                 max_attack: int) -> list[LethalHitResult]:
@@ -199,7 +200,7 @@ def calc_lethal(battle: Battle,
     )
     move_list = _generate_move_list(moves)
 
-    return _lethal_loop(hp_dist, battle, attacker, defender, move_list, critical, move_secondary, max_attack)
+    return _lethal_loop(initial_hp, hp_dist, battle, attacker, defender, move_list, critical, move_secondary, max_attack)
 
 
 def _generate_move_list(
@@ -232,7 +233,8 @@ def _generate_move_list(
         return [(to_move(moves), 1)]
 
 
-def _lethal_loop(hp_dist: StateDist,
+def _lethal_loop(initial_hp: int,
+                 hp_dist: StateDist,
                  battle: Battle,
                  attacker: Pokemon,
                  defender: Pokemon,
@@ -247,7 +249,8 @@ def _lethal_loop(hp_dist: StateDist,
     """
     # move ごとに LethalContext を作成しておく（ループ内で毎回作る必要がないため）
     ctx_list: list[tuple[int, LethalContext]] = [
-        (n_hits, LethalContext(attacker, defender, move, critical=critical, move_secondary=move_secondary))
+        (n_hits, LethalContext(attacker, defender, move,
+         critical=critical, move_secondary=move_secondary))
         for move, n_hits in move_list
     ]
 
@@ -256,7 +259,8 @@ def _lethal_loop(hp_dist: StateDist,
         for n_hits, ctx in ctx_list:
             ctx.attack_count = atk
             # ON_EVERY_EVENT ハンドラは同じ ctx では変化しないため、1回だけ取得する
-            every_event_handlers = _get_handlers(LethalEvent.ON_EVERY_EVENT, battle, ctx)
+            every_event_handlers = _get_handlers(
+                LethalEvent.ON_EVERY_EVENT, battle, ctx)
 
             hp_dist = _before_move(battle, ctx, hp_dist, every_event_handlers)
 
@@ -317,24 +321,28 @@ def _calc_damage_dist(battle: Battle, ctx: LethalContext, hp_dist: StateDist) ->
     )
 
     if not needs_full_hp_split:
-        damages = battle.calc_damages(ctx.attacker, ctx.defender, ctx.move, critical=ctx.critical)
+        damages = battle.calc_damages(
+            ctx.attacker, ctx.defender, ctx.move, critical=ctx.critical)
         ctx.damage_dist = to_dist(damages)
         ctx.damage_dist_full = None
         return
 
     saved_hp = ctx.defender.hp
     ctx.defender.hp = max_hp
-    full_damages = battle.calc_damages(ctx.attacker, ctx.defender, ctx.move, critical=ctx.critical)
+    full_damages = battle.calc_damages(
+        ctx.attacker, ctx.defender, ctx.move, critical=ctx.critical)
     ctx.defender.hp = saved_hp
 
     ctx.defender.ability.add_disable_reason("lethal_calculation")
     try:
-        damages = battle.calc_damages(ctx.attacker, ctx.defender, ctx.move, critical=ctx.critical)
+        damages = battle.calc_damages(
+            ctx.attacker, ctx.defender, ctx.move, critical=ctx.critical)
     finally:
         ctx.defender.ability.remove_disable_reason("lethal_calculation")
 
     ctx.damage_dist = to_dist(damages)
-    ctx.damage_dist_full = to_dist(full_damages) if full_damages != damages else None
+    ctx.damage_dist_full = to_dist(
+        full_damages) if full_damages != damages else None
 
 
 def _apply_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
@@ -391,14 +399,16 @@ def _run_move(battle: Battle,
     _calc_damage_dist(battle, ctx, hp_dist)
 
     # 技を適用する直前の処理（ハンドラは ctx.damage_dist を参照・更新する）
-    hp_dist = _emit(LethalEvent.ON_BEFORE_HIT, battle, ctx, hp_dist, every_event_handlers)
+    hp_dist = _emit(LethalEvent.ON_BEFORE_HIT, battle,
+                    ctx, hp_dist, every_event_handlers)
 
     # ダメージを適用する（満タン枝・非満タン枝を分けて処理する）
     hp_dist = _apply_damage(battle, ctx, hp_dist)
     _update_hp(ctx.defender, hp_dist)
 
     # ヒット時のハンドラを適用（きのみ回復など）
-    hp_dist = _emit(LethalEvent.ON_HIT, battle, ctx, hp_dist, every_event_handlers)
+    hp_dist = _emit(LethalEvent.ON_HIT, battle, ctx,
+                    hp_dist, every_event_handlers)
 
     return hp_dist
 
@@ -419,7 +429,8 @@ def _get_pokemon_handlers(event: LethalEvent,
         mon.item.data.lethal_handlers.get(event),
         mon.ailment.data.lethal_handlers.get(event),
     ]
-    candidates += [v.data.lethal_handlers.get(event) for v in mon.volatiles.values()]
+    candidates += [v.data.lethal_handlers.get(event)
+                   for v in mon.volatiles.values()]
     return [h for h in candidates if h is not None and h.subject in {subject, None}]
 
 
@@ -433,7 +444,8 @@ def _get_global_field_handlers(event: LethalEvent, battle: Battle) -> list[Letha
     """天候・地形・共通フィールドから該当ハンドラを取得する。"""
     fields = [battle.weather, battle.terrain] + \
         list(battle.global_manager.fields.values())
-    candidates = [field.data.lethal_handlers.get(event) for field in fields if field.is_active]
+    candidates = [field.data.lethal_handlers.get(
+        event) for field in fields if field.is_active]
     return [h for h in candidates if h is not None]
 
 
@@ -442,7 +454,8 @@ def _get_side_field_handlers(event: LethalEvent,
                              subject: LethalSubject) -> list[LethalHandler]:
     """片側フィールド（ステルスロックなど）から該当ハンドラを取得する。"""
     fields = side.fields.values()
-    candidates = [field.data.lethal_handlers.get(event) for field in fields if field.is_active]
+    candidates = [field.data.lethal_handlers.get(
+        event) for field in fields if field.is_active]
     return [h for h in candidates if h is not None and h.subject in {subject, None}]
 
 
@@ -455,8 +468,10 @@ def _get_handlers(event: LethalEvent,
     handlers += _get_pokemon_handlers(event, ctx.defender, "defender")
     handlers += _get_move_handlers(event, ctx)
     handlers += _get_global_field_handlers(event, battle)
-    handlers += _get_side_field_handlers(event, battle.get_side(ctx.attacker), "attacker")
-    handlers += _get_side_field_handlers(event, battle.get_side(ctx.defender), "defender")
+    handlers += _get_side_field_handlers(event,
+                                         battle.get_side(ctx.attacker), "attacker")
+    handlers += _get_side_field_handlers(event,
+                                         battle.get_side(ctx.defender), "defender")
     return sorted(handlers, key=lambda h: h.priority)
 
 
