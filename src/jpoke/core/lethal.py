@@ -26,7 +26,7 @@ from collections import defaultdict
 
 from jpoke.types import Stat, AilmentName, LethalSubject
 from jpoke.enums import LethalEvent
-from jpoke.utils.lethal_dist import StateDist, to_dist, subtract_dist, add_dist
+from jpoke.utils.lethal_dist import StateDist, to_dist, add_dist, subtract_dist
 
 
 @dataclass(frozen=True)
@@ -83,6 +83,7 @@ class LethalHitResult:
     """1ヒットごとの致死率計算結果。
 
     Attributes:
+        initial_hp: 防御側の初期状態のHP
         move: 使用した技
         attack_count: 何回目の攻撃か（1始まり）
         hit_count: 多段技の何ヒット目か（1始まり）
@@ -90,6 +91,7 @@ class LethalHitResult:
         damage_dist: このヒットで与えたダメージの分布
         attacker_state / defender_state: 計算時の攻撃側・防御側の状態スナップショット
     """
+    initial_hp: int
     move: Move
     attack_count: int
     hit_count: int
@@ -99,19 +101,24 @@ class LethalHitResult:
     defender_state: LethalPokemonState = field(default_factory=LethalPokemonState)
 
     def __add__(self, other: LethalHitResult) -> LethalHitResult:
-        """2つのLethalHitResultのdamage_distを合算(畳み込み)した新しいLethalHitResultを返す。
+        """2つのLethalHitResultのHP分布・ダメージ分布を合成する。
 
-        attack_count/hit_count/move/hp_dist/attacker/defenderには数学的に自然な「和」が存在しないため、
-        合成後はother側の値をそのまま引き継ぐ。damage_distのみadd_distで畳み込み合成する。
+        hp_dist: other.initial_hpからother.hp_distを差し引いた分布を加算されるダメージとみなし、self.hp_distから引く。
+        damage_dist: self.damage_distとother.damage_distを加算する。
         """
         if not isinstance(other, LethalHitResult):
             return NotImplemented
+
+        # TODO: hp_distの合成ロジックを変更したのでテストで検証する
+        hp_dist = subtract_dist(self.hp_dist, subtract_dist(other.initial_hp, other.hp_dist))
+        damage_dist = add_dist(self.damage_dist, other.damage_dist)
         return LethalHitResult(
+            initial_hp=self.initial_hp,
             move=other.move,
-            attack_count=other.attack_count,
-            hit_count=other.hit_count,
-            hp_dist=other.hp_dist,
-            damage_dist=add_dist(self.damage_dist, other.damage_dist),
+            attack_count=self.attack_count + other.attack_count,
+            hit_count=1,
+            hp_dist=hp_dist,
+            damage_dist=damage_dist,
             attacker_state=other.attacker_state,
             defender_state=other.defender_state,
         )
@@ -183,6 +190,7 @@ def calc_lethal(battle: Battle,
     battle = deepcopy(battle)
     attacker = battle.actives[attacker_index]
     defender = battle.foe(attacker)
+    initial_hp = defender.hp
 
     hp_dist = to_dist(
         defender.hp,
@@ -258,6 +266,7 @@ def _lethal_loop(hp_dist: StateDist,
                 hp_dist = _run_move(battle, ctx, hp_dist, every_event_handlers)
 
                 result = LethalHitResult(
+                    initial_hp=initial_hp,
                     move=ctx.move,
                     attack_count=ctx.attack_count,
                     hit_count=ctx.hit_count,
