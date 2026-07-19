@@ -10,7 +10,7 @@ Battle に依存しないため `jpoke.utils.lethal_dist` に置く。
 主要な型:
   LethalState  — HP・特性/道具の有効フラグをまとめた不変値（utils.lethal_dist）
   StateDist   — LethalState → 出現頻度 の辞書（確率分布、utils.lethal_dist）
-  LethalResult — 1ヒット分の計算結果（HP分布・ダメージ分布・致死率など）
+  LethalHitResult — 1ヒット分の計算結果（HP分布・ダメージ分布・致死率など）
 """
 
 from __future__ import annotations
@@ -54,8 +54,8 @@ class LethalContext:
     move: Move
     critical: bool = False
     move_secondary: bool = False
-    n_attack: int = 1
-    hit: int = 1
+    attack_count: int = 1
+    hit_count: int = 1
     # このヒットで与えたダメージ分布。ハンドラはこれを参照・更新して良い。
     damage_dist: StateDist = field(default_factory=lambda: to_dist(0))
     # HP満タン枝専用のダメージ分布。defender が full_hp_damage_modifier を持ち、
@@ -79,41 +79,41 @@ class LethalPokemonState:
 
 
 @dataclass
-class LethalResult:
-    """1ヒット時点の致死率計算結果。
+class LethalHitResult:
+    """1ヒットごとの致死率計算結果。
 
     Attributes:
-        n_attack: 何回目の攻撃か（1始まり）
         move: 使用した技
-        hit: 多段技の何ヒット目か（1始まり）
+        attack_count: 何回目の攻撃か（1始まり）
+        hit_count: 多段技の何ヒット目か（1始まり）
         hp_dist: ダメージ適用後のHP分布
         damage_dist: このヒットで与えたダメージの分布
-        attacker / defender: 計算時の攻撃側・防御側の状態スナップショット
+        attacker_state / defender_state: 計算時の攻撃側・防御側の状態スナップショット
     """
-    n_attack: int
     move: Move
-    hit: int
+    attack_count: int
+    hit_count: int
     hp_dist: StateDist
     damage_dist: StateDist
-    attacker: LethalPokemonState = field(default_factory=LethalPokemonState)
-    defender: LethalPokemonState = field(default_factory=LethalPokemonState)
+    attacker_state: LethalPokemonState = field(default_factory=LethalPokemonState)
+    defender_state: LethalPokemonState = field(default_factory=LethalPokemonState)
 
-    def __add__(self, other: LethalResult) -> LethalResult:
-        """2つのLethalResultのdamage_distを合算(畳み込み)した新しいLethalResultを返す。
+    def __add__(self, other: LethalHitResult) -> LethalHitResult:
+        """2つのLethalHitResultのdamage_distを合算(畳み込み)した新しいLethalHitResultを返す。
 
-        n_attack/hit/move/hp_dist/attacker/defenderには数学的に自然な「和」が存在しないため、
+        attack_count/hit_count/move/hp_dist/attacker/defenderには数学的に自然な「和」が存在しないため、
         合成後はother側の値をそのまま引き継ぐ。damage_distのみadd_distで畳み込み合成する。
         """
-        if not isinstance(other, LethalResult):
+        if not isinstance(other, LethalHitResult):
             return NotImplemented
-        return LethalResult(
-            n_attack=other.n_attack,
+        return LethalHitResult(
             move=other.move,
-            hit=other.hit,
+            attack_count=other.attack_count,
+            hit_count=other.hit_count,
             hp_dist=other.hp_dist,
             damage_dist=add_dist(self.damage_dist, other.damage_dist),
-            attacker=other.attacker,
-            defender=other.defender,
+            attacker_state=other.attacker_state,
+            defender_state=other.defender_state,
         )
 
     def _counter(self, dist: StateDist) -> dict[int, int]:
@@ -161,7 +161,7 @@ def calc_lethal(battle: Battle,
                     | list[MoveName | Move | tuple[MoveName | Move, int]],
                 critical: bool,
                 move_secondary: bool,
-                max_attack: int) -> list[LethalResult]:
+                max_attack: int) -> list[LethalHitResult]:
     """致死率計算のエントリーポイント。
 
     Args:
@@ -174,7 +174,7 @@ def calc_lethal(battle: Battle,
         max_attack: 最大攻撃回数
 
     Returns:
-        各ヒット後の LethalResult のリスト（確定数が出た時点で打ち切り）
+        各ヒット後の LethalHitResult のリスト（確定数が出た時点で打ち切り）
     """
     # 攻撃側のインデックスを取得
     attacker_index = battle._get_player_index(attacker)
@@ -231,10 +231,10 @@ def _lethal_loop(hp_dist: StateDist,
                  move_list: list[tuple[Move, int]],
                  critical: bool,
                  move_secondary: bool,
-                 max_attack: int) -> list[LethalResult]:
+                 max_attack: int) -> list[LethalHitResult]:
     """致死率計算のメインループ。
 
-    max_attack 回分、move_list の技を順に使用し、各ヒット後の LethalResult を返す。
+    max_attack 回分、move_list の技を順に使用し、各ヒット後の LethalHitResult を返す。
     いずれかの時点で HP=0 の状態が現れたら途中で打ち切る。
     """
     # move ごとに LethalContext を作成しておく（ループ内で毎回作る必要がないため）
@@ -246,25 +246,27 @@ def _lethal_loop(hp_dist: StateDist,
     results = []
     for atk in range(1, max_attack + 1):
         for n_hits, ctx in ctx_list:
-            ctx.n_attack = atk
+            ctx.attack_count = atk
             # ON_EVERY_EVENT ハンドラは同じ ctx では変化しないため、1回だけ取得する
             every_event_handlers = _get_handlers(LethalEvent.ON_EVERY_EVENT, battle, ctx)
 
             hp_dist = _before_move(battle, ctx, hp_dist, every_event_handlers)
 
             for hit in range(1, n_hits + 1):
-                ctx.hit = hit
+                ctx.hit_count = hit
                 # 技の適用
                 hp_dist = _run_move(battle, ctx, hp_dist, every_event_handlers)
 
-                # TODO: 関数に分離すべき - 結果を記録（ハンドラ適用前の最終ダメージ分布を反映）
-                result = LethalResult(
-                    n_attack=ctx.n_attack, move=ctx.move, hit=ctx.hit,
-                    hp_dist=hp_dist, damage_dist=ctx.damage_dist,
-                    attacker=LethalPokemonState(
+                result = LethalHitResult(
+                    move=ctx.move,
+                    attack_count=ctx.attack_count,
+                    hit_count=ctx.hit_count,
+                    hp_dist=hp_dist,
+                    damage_dist=ctx.damage_dist,
+                    attacker_state=LethalPokemonState(
                         boosts=ctx.attacker.boosts.copy(), ailment=cast(AilmentName, ctx.attacker.ailment.name)
                     ),
-                    defender=LethalPokemonState(
+                    defender_state=LethalPokemonState(
                         boosts=ctx.defender.boosts.copy(), ailment=cast(AilmentName, ctx.defender.ailment.name)
                     ),
                 )
@@ -334,7 +336,7 @@ def _apply_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> Sta
     非満タン枝には damage_dist をそのまま適用する。
     該当ハンドラが無ければ通常の subtract_dist(hp_dist, ctx.damage_dist) と完全に同じ結果になる。
 
-    処理後、LethalResult 等の記録用に ctx.damage_dist を「実際に適用されたダメージ分布」
+    処理後、LethalHitResult 等の記録用に ctx.damage_dist を「実際に適用されたダメージ分布」
     に更新する（満タン枝のみなら damage_dist_full、両方混在するなら合算）。
     """
     max_hp = ctx.defender.max_hp

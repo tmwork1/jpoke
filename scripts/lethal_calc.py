@@ -3,7 +3,7 @@
 """
 
 from jpoke import Battle, Player, Pokemon, Move
-from jpoke.core.lethal import LethalResult
+from jpoke.core.lethal import LethalHitResult
 from jpoke.types import VolatileName
 
 
@@ -12,7 +12,7 @@ def main(attacker: str,
          moves: list[tuple[str, int]],
          defender_ability: str = "",
          defender_item: str = "",
-         defender_volatiles: dict[VolatileName, int] | None = None) -> LethalResult:
+         defender_volatiles: dict[VolatileName, int] | None = None) -> LethalHitResult:
 
     # Attacker
     player1 = Player()
@@ -41,7 +41,7 @@ def main(attacker: str,
     print(f"Attacker: {attacker_mon.name}")
     print(f"Defender: {defender_mon.name} HP={defender_mon.max_hp}")
     print(f"Damages: {result.min_damage}~{result.max_damage}")
-    print(f"Lethal count: {result.n_attack}")
+    print(f"Lethal count: {result.attack_count}")
     print(f"Lethal probability: {result.lethal_probability: .2%}")
 
     return result

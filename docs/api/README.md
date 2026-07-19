@@ -161,7 +161,7 @@ speed_order = battle.resolve_speed_order()
 
 | API | 概要 |
 |---|---|
-| `calc_lethal(attacker, moves, critical=False, secondary=False, max_attack=10)` | 指定した技（列）を最大 `max_attack` 回撃ち込んだ場合の致死率を計算する（確定数が出た時点で打ち切る）。`moves` には技名の文字列・`Move`・`(技, ヒット数)` のタプル、およびそれらのリストを渡せる。リストで複数の技を渡した場合はその順番通りに1ラウンドとして使用し（例: `["でんこうせっか", "かみなり"]` は1発目にでんこうせっか、2発目にかみなり）、`max_attack>1` にするとこのラウンド自体を繰り返す。防御側の状態異常・天候ダメージ（どく・やけど・すなあらし等）はダメージに自動的に合算される。`critical` は急所として計算するかどうか、`secondary` は追加効果ハンドラ（やけど付与等、致死率計算に組み込まれている技に限る）を適用するかどうかで、りゅうせいぐんの自傷効果のように攻撃側自身に必ず発生する効果は `secondary` の指定に関わらず常に加味される。`list[LethalResult]` を返す（各要素が1ヒットに対応し、最終的な致死率は `results[-1].lethal_probability`） |
+| `calc_lethal(attacker, moves, critical=False, secondary=False, max_attack=10)` | 指定した技（列）を最大 `max_attack` 回撃ち込んだ場合の致死率を計算する（確定数が出た時点で打ち切る）。`moves` には技名の文字列・`Move`・`(技, ヒット数)` のタプル、およびそれらのリストを渡せる。リストで複数の技を渡した場合はその順番通りに1ラウンドとして使用し（例: `["でんこうせっか", "かみなり"]` は1発目にでんこうせっか、2発目にかみなり）、`max_attack>1` にするとこのラウンド自体を繰り返す。防御側の状態異常・天候ダメージ（どく・やけど・すなあらし等）はダメージに自動的に合算される。`critical` は急所として計算するかどうか、`secondary` は追加効果ハンドラ（やけど付与等、致死率計算に組み込まれている技に限る）を適用するかどうかで、りゅうせいぐんの自傷効果のように攻撃側自身に必ず発生する効果は `secondary` の指定に関わらず常に加味される。`list[LethalHitResult]` を返す（各要素が1ヒットに対応し、最終的な致死率は `results[-1].lethal_probability`） |
 | `calc_damages(attacker, defender, move, critical=False)` | 乱数によるダメージ幅を考慮した、可能な全ダメージ値のリスト（通常16通り）を返す |
 | `roll_damage(attacker, defender, move, critical=False)` | `calc_damages()` の結果から `option.damage_roll` に従って1つ選んで返す |
 

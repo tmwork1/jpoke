@@ -6,7 +6,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Literal, cast
 if TYPE_CHECKING:
-    from .lethal import LethalResult
+    from .lethal import LethalHitResult
     from .context import AttackContext
 
 from dataclasses import dataclass
@@ -459,7 +459,7 @@ class Battle:
                         | list[MoveName | Move | tuple[MoveName | Move, int]],
                     critical: bool = False,
                     secondary: bool = False,
-                    max_attack: int = 10) -> list[LethalResult]:
+                    max_attack: int = 10) -> list[LethalHitResult]:
         """指定した技（列）を最大 max_attack 回撃ち込んだ場合の致死率を計算する（LethalCalculatorへの委譲）。
 
         `moves` には技名の文字列（`MoveName`）・`Move` インスタンス・
@@ -476,7 +476,7 @@ class Battle:
             max_attack: 最大攻撃回数（確定数が出た時点で打ち切り）
 
         Returns:
-            list[LethalResult]: 各ヒット後の致死率計算結果のリスト。
+            list[LethalHitResult]: 各ヒット後の致死率計算結果のリスト。
                 リストの1要素が1ヒットに対応し、`hp_dist` はそのヒットを
                 適用した後の防御側HP分布を表す。多段技はヒットごとに
                 要素が分かれる。最終的な致死率（max_attack回、または

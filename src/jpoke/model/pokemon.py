@@ -111,6 +111,7 @@ class Pokemon:
         self.volatiles: dict[VolatileName, Volatile] = {}
         self.boosts: dict[Stat, int] = {k: 0 for k in STATS}
         self.last_move: Move | None = None
+        # TODO: self.transform_xxx, self._pre_transform_xxx は self.memory で管理するように修正
         # へんしん/かわりものによる変身のコピー元タイプ・体重（種族データ自体=self.dataは
         # 変更しない）。変身していない間は常にNone。
         self.transform_types: list[Type] | None = None

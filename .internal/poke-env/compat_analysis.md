@@ -460,7 +460,7 @@ Battle `available_moves` / `available_switches` / `team` は当初 export 扱い
 | 機能 | 説明 |
 |---|---|
 | `build_observation(observer) -> Battle` | 情報隠蔽バトルコピー（相手非公開情報を隠蔽） |
-| `calc_lethal(attacker, moves, ...) -> list[LethalResult]` | 確定数計算 |
+| `calc_lethal(attacker, moves, ...) -> list[LethalHitResult]` | 確定数計算 |
 | `roll_damage() / calc_damages()` | ダメージ分布の全候補計算 |
 | `EventManager + Event Enum` | イベント駆動の特性・アイテム・技発動管理 |
 | `MoveFlag システム`（旧 `MoveLabel`） | contact, sound, punch 等のフラグによるメタ分類 |

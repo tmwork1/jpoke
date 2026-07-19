@@ -39,7 +39,7 @@
   `battle.command_to_move(self, command)` に書き換え（未使用になった `mon` 変数も削除）、該当TODOコメントを
   削除した。`Battle.command_to_move` のdocstringに用途（方策実装でコマンドから技を引く）を追記した
 - [x] `Battle.calc_lethal`（`battle.py:352`）に **docstring が一切ない**（委譲先の `core/lethal.py:157`
-  にはある）。戻り値 `list[LethalResult]` の構造（1要素=1ヒット、`hp_dist`はそのヒット適用後のHP分布、
+  にはある）。戻り値 `list[LethalHitResult]` の構造（1要素=1ヒット、`hp_dist`はそのヒット適用後のHP分布、
   最終致死率は `results[-1].lethal_probability`）が呼び出し側から読み取れない（04 L38の指摘）。
   `Battle.calc_lethal` にdocstringを追加して解消する
   → 対応内容 (2026-07-12): `Battle.calc_lethal` に、戻り値の構造（1要素=1ヒット、`hp_dist` はそのヒット
@@ -131,7 +131,7 @@
 - `examples/03_custom_player.py`: `mon.moves[command.index]` を
   `battle.command_to_move(self, command)` に書き換え（未使用になった `mon` 変数を削除）。
   該当TODOコメントを削除。`Battle.command_to_move` のdocstringに用途を一言追記
-- `Battle.calc_lethal` に、戻り値 `list[LethalResult]` の構造
+- `Battle.calc_lethal` に、戻り値 `list[LethalHitResult]` の構造
   （1要素=1ヒット、`hp_dist`はそのヒット適用後のHP分布、最終致死率は
   `results[-1].lethal_probability`）を明記したdocstringを追加
 - `Battle.calc_lethal` / `core.lethal.calc_lethal` の `moves` 引数の型を

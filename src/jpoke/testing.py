@@ -9,7 +9,7 @@
 デバッグ用のモンキーパッチであり、本番の対戦進行（bot 運用等）では使わないこと。
 """
 from jpoke.core import Battle, Player, AttackContext
-from jpoke.core.lethal import LethalResult
+from jpoke.core.lethal import LethalHitResult
 from jpoke.model import Pokemon, Move
 from jpoke.types import AilmentName, VolatileName, WeatherName, TerrainName, GlobalFieldName, SideFieldName, \
     CriticalMode, DamageRollMode, ItemName
@@ -353,7 +353,7 @@ def calc_lethal(battle: Battle,
                 moves: Move | tuple[Move, int] | list[Move | tuple[Move, int]],
                 critical: bool = False,
                 secondary: bool = False,
-                max_attack: int = 10) -> list[LethalResult]:
+                max_attack: int = 10) -> list[LethalHitResult]:
     """致死率計算を実行するヘルパー関数。
 
     Args:
@@ -365,7 +365,7 @@ def calc_lethal(battle: Battle,
         max_attack: 最大攻撃回数（デフォルト: 10）
 
     Returns:
-        各ヒット後の LethalResult のリスト（確定数が出た時点で打ち切り）
+        各ヒット後の LethalHitResult のリスト（確定数が出た時点で打ち切り）
     """
     attacker = battle.actives[player_idx]
     return battle.calc_lethal(
