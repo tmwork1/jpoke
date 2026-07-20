@@ -146,7 +146,7 @@ class Player:
         Returns:
             選択された行動コマンド
         """
-        commands = battle.get_available_commands(self)
+        commands = battle.available_commands(self)
         return commands[0]
 
     def battle_against(

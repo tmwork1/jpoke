@@ -32,7 +32,7 @@ class CommandManager:
     def update_reference(self, battle: Battle):
         self.battle = battle
 
-    def get_available_switch_commands(self, player: Player, force: bool = False) -> list[Command]:
+    def available_switch_commands(self, player: Player, force: bool = False) -> list[Command]:
         """交代可能なコマンドのリストを取得する。
 
         Args:
@@ -83,7 +83,7 @@ class CommandManager:
             if mon in bench and mon.alive
         ]
 
-    def get_available_action_commands(self, player: Player) -> list[Command]:
+    def available_action_commands(self, player: Player) -> list[Command]:
         """行動時に使用可能なコマンドを取得する。"""
         state = self.battle.player_states[player]
         active = state.active
@@ -107,7 +107,7 @@ class CommandManager:
             commands += [Command.get_terastal_command(i) for i in move_indexes]
 
         # 交代コマンドを追加
-        commands += self.get_available_switch_commands(player)
+        commands += self.available_switch_commands(player)
 
         # コマンド修正
         ctx = EventContext(source=active)
@@ -173,7 +173,7 @@ class CommandManager:
             for ply in players:
                 state = battle.player_states[ply]
                 # 利用できるコマンドを記録
-                state.last_available_commands = battle.get_available_commands(ply)
+                state.last_available_commands = battle.available_commands(ply)
                 # 木探索を行う際に補完すべきコマンドタイプを指定
                 state.required_command_type = "any" if battle.phase == "action" else "switch"
 

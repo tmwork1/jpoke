@@ -109,7 +109,7 @@ class LethalHitResult:
         if not isinstance(other, LethalHitResult):
             return NotImplemented
 
-        # TODO: hp_distの合成ロジックを変更したのでテストで検証する
+        # TODO: hp_distの合成ロジックを検証するテストを追加
         hp_dist = subtract_dist(self.hp_dist, subtract_dist(other.initial_hp, other.hp_dist))
         damage_dist = add_dist(self.damage_dist, other.damage_dist)
         return LethalHitResult(
@@ -133,12 +133,12 @@ class LethalHitResult:
     @property
     def hp_counter(self) -> dict[int, int]:
         """HP値 → 出現頻度 の辞書を返す。ability_enabled / item_enabled は無視する。"""
-        return self._counter(self.hp_dist)
+        return dict(sorted(self._counter(self.hp_dist).items()))
 
     @property
     def damage_counter(self) -> dict[int, int]:
         """ダメージ値 → 出現頻度 の辞書を返す。ability_enabled / item_enabled は無視する。"""
-        return self._counter(self.damage_dist)
+        return dict(sorted(self._counter(self.damage_dist).items()))
 
     @property
     def min_damage(self) -> int:

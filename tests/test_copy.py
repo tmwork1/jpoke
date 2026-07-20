@@ -289,7 +289,7 @@ def test_木探索用の観測でswitchフェーズ中の相手コマンドがre
     # 通常のターン開始時にresolve_command("action")が記録するスナップショットを再現する
     # （ベンチが生存しているためSWITCH_xも含む）
     battle.player_states[player1].last_available_commands = (
-        battle.command_manager.get_available_action_commands(player1)
+        battle.command_manager.available_action_commands(player1)
     )
 
     t.run_move(battle, 0)

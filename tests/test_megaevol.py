@@ -57,7 +57,7 @@ def test_メガシンカ_コマンドが追加される(stone: str, normal_name:
     )
     player = battle.players[0]
     with battle.phase_context("action"):
-        commands = battle.get_available_commands(player)
+        commands = battle.available_commands(player)
     assert Command.MEGAEVOL_0 in commands
 
 

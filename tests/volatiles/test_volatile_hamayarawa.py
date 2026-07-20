@@ -843,7 +843,7 @@ def test_リチャージ_中はテラスタルを選択できない():
     player = battle.players[0]
 
     with battle.phase_context("action"):
-        commands = battle.get_available_commands(player)
+        commands = battle.available_commands(player)
     assert commands == [Command.FORCED]
     assert Command.TERASTAL_0 not in commands
 
@@ -929,7 +929,7 @@ def test_使える技がなければわるあがきになる():
         volatile0={"じごくづき": 2}
     )
     with battle.phase_context("action"):
-        commands = battle.get_available_commands(battle.players[0])
+        commands = battle.available_commands(battle.players[0])
     assert commands == [Command.STRUGGLE]
 
 

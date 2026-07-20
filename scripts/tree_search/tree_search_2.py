@@ -16,7 +16,7 @@ from jpoke.players import TreeSearchPlayer
 
 class RandomPlayer(Player):
     def choose_command(self, battle: Battle) -> Command:
-        commands = battle.get_available_commands(self)
+        commands = battle.available_commands(self)
         return random.choice(commands)
 
 

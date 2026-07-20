@@ -647,7 +647,7 @@ class Battle:
             raise ValueError(f"{active.name} は場に出ていないため、相手のポケモンを特定できません。")
         return actives[1 - actives.index(active)]
 
-    def get_available_commands(self, player: Player) -> list[Command]:
+    def available_commands(self, player: Player) -> list[Command]:
         """指定したプレイヤーが現在使用可能なコマンドのリストを取得する。
 
         Args:
@@ -662,9 +662,9 @@ class Battle:
 
         match self.phase:
             case "action":
-                return self.command_manager.get_available_action_commands(player)
+                return self.command_manager.available_action_commands(player)
             case "switch":
-                return self.command_manager.get_available_switch_commands(player)
+                return self.command_manager.available_switch_commands(player)
 
         raise InvalidPhaseError(f"Invalid phase: {self.phase}")
 
@@ -686,7 +686,7 @@ class Battle:
         Returns:
             bool: わるあがきコマンドが選択可能ならTrue
         """
-        return Command.STRUGGLE in self.get_available_commands(player)
+        return Command.STRUGGLE in self.available_commands(player)
 
     def can_switch(self, player: Player) -> bool:
         """指定したプレイヤーが交代可能かどうかを判定する（PokemonQueryへの委譲）。
@@ -1708,7 +1708,7 @@ class Battle:
         """
         if self.observer is None:
             return []
-        commands = self.get_available_commands(self.observer)
+        commands = self.available_commands(self.observer)
         moves = [
             self.command_to_move(self.observer, cmd)
             for cmd in commands
@@ -1726,6 +1726,6 @@ class Battle:
         """
         if self.observer is None:
             return []
-        commands = self.get_available_commands(self.observer)
+        commands = self.available_commands(self.observer)
         team = self.player_states[self.observer].team
         return [team[cmd.index] for cmd in commands if cmd.is_switch]

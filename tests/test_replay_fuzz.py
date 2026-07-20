@@ -35,7 +35,7 @@ class _RandomPlayer(Player):
         return self.rng.sample(range(len(self.team)), n)
 
     def choose_command(self, battle: Battle) -> Command:
-        commands = battle.get_available_commands(self)
+        commands = battle.available_commands(self)
         return self.rng.choice(commands)
 
 def _run_random_battle(seed: int) -> Battle:

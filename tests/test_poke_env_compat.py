@@ -522,7 +522,7 @@ def test_randomplayerが選ぶコマンドは常にget_available_commandsに含�
             self.checked: list[bool] = []
 
         def choose_command(self, battle: "Battle"):
-            available = battle.get_available_commands(self)
+            available = battle.available_commands(self)
             command = super().choose_command(battle)
             self.checked.append(command in available)
             return command
