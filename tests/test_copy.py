@@ -311,7 +311,7 @@ def test_木探索用の観測でswitchフェーズ中の相手コマンドがre
 
     assert captured["required_command_type"] == "move"
     assert captured["commands"]
-    assert all(cmd.is_type("move") for cmd in captured["commands"])
+    assert all(cmd.is_move for cmd in captured["commands"])
 
 
 if __name__ == "__main__":

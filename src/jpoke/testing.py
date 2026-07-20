@@ -370,7 +370,7 @@ def calc_lethal(battle: Battle,
     attacker = battle.actives[player_idx]
     return battle.calc_lethal(
         attacker=attacker, moves=moves, critical=critical,
-        secondary=secondary, max_attack=max_attack
+        move_secondary=secondary, max_attack=max_attack
     )
 
 

@@ -101,6 +101,11 @@ class Move(GameEffect):
         return self.data.crit_ratio
 
     @property
+    def guaranteed_crit(self) -> bool:
+        """技が必ず急所に当たるかどうかを判定する。"""
+        return self.data.crit_ratio >= 3
+
+    @property
     def target(self) -> MoveTarget:
         """技の対象を取得する。"""
         return self.data.target

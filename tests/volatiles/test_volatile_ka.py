@@ -79,7 +79,7 @@ def test_かいふくふうじ_コマンド制限():
     battle.volatile_manager.apply(mon, "かいふくふうじ", count=3)
     with battle.phase_context("action"):
         commands = battle.get_available_commands(player)
-    move_commands = [cmd for cmd in commands if cmd.is_type("move")]
+    move_commands = [cmd for cmd in commands if cmd.is_move]
     assert all(cmd.index != 0 for cmd in move_commands)
 
 
@@ -94,7 +94,7 @@ def test_かいふくふうじ_コマンド制限で他の技は選択可能():
     battle.volatile_manager.apply(mon, "かいふくふうじ", count=3)
     with battle.phase_context("action"):
         commands = battle.get_available_commands(player)
-    move_commands = [cmd for cmd in commands if cmd.is_type("move")]
+    move_commands = [cmd for cmd in commands if cmd.is_move]
     assert any(cmd.index == 1 for cmd in move_commands)
 
 
@@ -338,7 +338,7 @@ def test_かなしばり_コマンド制限で他の技は選択可能():
     battle.volatile_manager.apply(mon, "かなしばり", move_name="たいあたり")
     with battle.phase_context("action"):
         commands = battle.get_available_commands(player)
-    move_commands = [cmd for cmd in commands if cmd.is_type("move")]
+    move_commands = [cmd for cmd in commands if cmd.is_move]
     assert any(cmd.index == 1 for cmd in move_commands)
 
 

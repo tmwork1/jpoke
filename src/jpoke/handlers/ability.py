@@ -1681,8 +1681,8 @@ def ごりむちゅう_restrict_commands(battle: Battle, ctx: EventContext, valu
     new_options = [
         cmd for cmd in value
         if (
-            cmd.is_type("switch")
-            or (cmd.is_type("move") and mon.moves[cmd.index].name == fixed_move_name)
+            cmd.is_switch
+            or (cmd.is_move and mon.moves[cmd.index].name == fixed_move_name)
         )
     ]
     return HandlerReturn(value=new_options)

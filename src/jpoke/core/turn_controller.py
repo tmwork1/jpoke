@@ -271,7 +271,7 @@ class TurnController:
 
             # 交代
             if self.battle.is_new_turn():
-                if not state.has_switched and state.next_command.is_type("switch"):
+                if not state.has_switched and state.next_command.is_switch:
                     # 行動順を記録
                     self.action_order.append(idx)
 
@@ -388,7 +388,7 @@ class TurnController:
 
             mon = state.active
             command = state.next_command
-            if not command.is_type("move") or mon.fainted:
+            if not command.is_move or mon.fainted:
                 continue
 
             move = self.battle.command_to_move(player, command)

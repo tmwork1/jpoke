@@ -379,7 +379,7 @@ def test_いちゃもん_別の技は選択できる():
     battle.volatile_manager.apply(mon, "いちゃもん", move_name="たいあたり")
     with battle.phase_context("action"):
         commands = battle.get_available_commands(battle.players[0])
-    move_indices = {cmd.index for cmd in commands if cmd.is_type("move")}
+    move_indices = {cmd.index for cmd in commands if cmd.is_move}
     assert move_indices == {1, 2}
 
 

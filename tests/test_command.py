@@ -130,7 +130,7 @@ def test_is_struggle_only_こだわりで変化技に固定されちょうはつ
     with battle.phase_context("action"):
         commands = battle.get_available_commands(player)
         assert Command.STRUGGLE in commands
-        assert not any(cmd.is_type("move") and cmd is not Command.STRUGGLE for cmd in commands)
+        assert not any(cmd.is_move and cmd is not Command.STRUGGLE for cmd in commands)
         assert battle.is_struggle_only(player)
 
 
@@ -236,21 +236,21 @@ def test_is_type_moveを指定すると技系コマンドのみ真になる():
     わるあがき・強制行動コマンドもresolve_move_from_command()で技に解決されるため
     真になる。
     """
-    assert Command.MOVE_0.is_type("move")
-    assert Command.TERASTAL_0.is_type("move")
-    assert Command.MEGAEVOL_0.is_type("move")
-    assert Command.GIGAMAX_0.is_type("move")
-    assert Command.ZMOVE_0.is_type("move")
-    assert Command.STRUGGLE.is_type("move")
-    assert Command.FORCED.is_type("move")
-    assert not Command.SWITCH_0.is_type("move")
+    assert Command.MOVE_0.is_move
+    assert Command.TERASTAL_0.is_move
+    assert Command.MEGAEVOL_0.is_move
+    assert Command.GIGAMAX_0.is_move
+    assert Command.ZMOVE_0.is_move
+    assert Command.STRUGGLE.is_move
+    assert Command.FORCED.is_move
+    assert not Command.SWITCH_0.is_move
 
 
 def test_is_type_switchを指定すると交代コマンドのみ真になる():
     """"switch"はSWITCH_*コマンドのみ真になる。"""
-    assert Command.SWITCH_0.is_type("switch")
-    assert not Command.MOVE_0.is_type("switch")
-    assert not Command.STRUGGLE.is_type("switch")
+    assert Command.SWITCH_0.is_switch
+    assert not Command.MOVE_0.is_switch
+    assert not Command.STRUGGLE.is_switch
 
 
 def test_ちょうはつ_コマンド選択後に受けても行動前ならブロックされる():

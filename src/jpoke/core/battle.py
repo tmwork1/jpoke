@@ -458,7 +458,7 @@ class Battle:
                     moves: MoveName | Move | tuple[MoveName | Move, int]
                         | list[MoveName | Move | tuple[MoveName | Move, int]],
                     critical: bool = False,
-                    secondary: bool = False,
+                    move_secondary: bool = False,
                     max_attack: int = 10) -> list[LethalHitResult]:
         """指定した技（列）を最大 max_attack 回撃ち込んだ場合の致死率を計算する（LethalCalculatorへの委譲）。
 
@@ -472,7 +472,7 @@ class Battle:
             attacker: 攻撃側のポケモン
             moves: 使用する技。単体 / (技, ヒット数) / それらのリスト
             critical: 急所として計算するか
-            secondary: 追加効果ハンドラ（火傷・怯みなど）を適用するか
+            move_secondary: 追加効果ハンドラ（火傷・怯みなど）を適用するか
             max_attack: 最大攻撃回数（確定数が出た時点で打ち切り）
 
         Returns:
@@ -485,7 +485,7 @@ class Battle:
         """
         return lethal.calc_lethal(
             self, attacker, moves, critical=critical,
-            move_secondary=secondary, max_attack=max_attack
+            move_secondary=move_secondary, max_attack=max_attack
         )
 
     @property
