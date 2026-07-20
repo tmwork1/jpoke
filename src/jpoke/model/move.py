@@ -195,5 +195,4 @@ class Move(GameEffect):
         if self.min_hits == self.max_hits:
             return float(self.min_hits)
         # 2〜5回技のヒット数分布 2:3:4:5 = 35:35:15:15 の期待値 3.1（poke-env と同値）。
-        # (min_hits + max_hits) / 2 は 3.5 になり一致しないため採用しない。
         return (2 + 3) * 0.35 + (4 + 5) * 0.15

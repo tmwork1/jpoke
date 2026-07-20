@@ -199,7 +199,7 @@ def calc_lethal(battle: Battle,
     )
     move_list = _generate_move_list(moves)
 
-    return _lethal_loop(hp_dist, battle, attacker, defender, move_list, critical, move_secondary, max_attack)
+    return _lethal_loop(initial_hp, hp_dist, battle, attacker, defender, move_list, critical, move_secondary, max_attack)
 
 
 def _generate_move_list(
@@ -232,7 +232,8 @@ def _generate_move_list(
         return [(to_move(moves), 1)]
 
 
-def _lethal_loop(hp_dist: StateDist,
+def _lethal_loop(initial_hp: int,
+                 hp_dist: StateDist,
                  battle: Battle,
                  attacker: Pokemon,
                  defender: Pokemon,
