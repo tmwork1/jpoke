@@ -522,7 +522,7 @@ def test_randomplayerが選ぶコマンドは常にget_available_commandsに含�
             self.checked: list[bool] = []
 
         def choose_command(self, battle: "Battle"):
-            available = battle.get_available_commands(self)
+            available = battle.available_commands(self)
             command = super().choose_command(battle)
             self.checked.append(command in available)
             return command
@@ -629,7 +629,7 @@ def test_無限交代ループの再現条件下でもコマンドが技を含�
             battle.step()
 
         move_used = any(
-            rec.command.is_type("move") for rec in battle.command_log
+            rec.command.is_move for rec in battle.command_log
         )
         assert move_used, f"seed={seed}: 技コマンドが一度も選ばれなかった"
         assert battle.finished, f"seed={seed}: {max_turns}ターン以内に決着しなかった"

@@ -125,7 +125,7 @@ def test_テラスタル不可オプションでコマンドが出ない():
     )
     player = battle.players[0]
     with battle.phase_context("action"):
-        commands = battle.get_available_commands(player)
+        commands = battle.available_commands(player)
     assert Command.TERASTAL_0 not in commands
 
 
@@ -136,7 +136,7 @@ def test_デフォルトではメガシンカ_テラスタルのコマンドが�
     )
     player = battle.players[0]
     with battle.phase_context("action"):
-        commands = battle.get_available_commands(player)
+        commands = battle.available_commands(player)
     assert Command.MEGAEVOL_0 in commands
     assert Command.TERASTAL_0 in commands
 
@@ -149,7 +149,7 @@ def test_メガシンカ不可オプションでコマンドが出ない():
     )
     player = battle.players[0]
     with battle.phase_context("action"):
-        commands = battle.get_available_commands(player)
+        commands = battle.available_commands(player)
     assert Command.MEGAEVOL_0 not in commands
 
 

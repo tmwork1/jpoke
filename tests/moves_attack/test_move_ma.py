@@ -1481,7 +1481,7 @@ def test_メテオビーム_2ターン目をコマンド経由で強制続行し
 
     # 2ターン目: 強制続行コマンドのみが選択可能になっているはず
     with battle.phase_context("action"):
-        commands = battle.get_available_commands(player0)
+        commands = battle.available_commands(player0)
     assert commands == [Command.FORCED]
 
     hp_before = defender.hp

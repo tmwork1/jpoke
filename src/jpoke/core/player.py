@@ -62,6 +62,7 @@ class Player:
                     tera_type: Type | None = None,
                     evs: dict[Stat, int] | None = None,
                     ivs: dict[Stat, int] | None = None) -> Pokemon:
+        # TODO: ability_name -> ability, item_name -> item, move_names -> moves に短縮したい
         """ポケモンを1体作成し、チームに追加する。
 
         `from jpoke import Pokemon` を使わずにチームを組める、`team` への
@@ -145,7 +146,7 @@ class Player:
         Returns:
             選択された行動コマンド
         """
-        commands = battle.get_available_commands(self)
+        commands = battle.available_commands(self)
         return commands[0]
 
     def battle_against(

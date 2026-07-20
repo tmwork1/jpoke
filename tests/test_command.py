@@ -39,7 +39,7 @@ def test_GIGAMAXコマンド_行動候補に含まれない():
     )
     player = battle.players[0]
     with battle.phase_context("action"):
-        commands = battle.get_available_commands(player)
+        commands = battle.available_commands(player)
     assert not any(cmd.is_gigamax for cmd in commands)
 
 
@@ -62,7 +62,7 @@ def test_ZMOVEコマンド_行動候補に含まれない():
     )
     player = battle.players[0]
     with battle.phase_context("action"):
-        commands = battle.get_available_commands(player)
+        commands = battle.available_commands(player)
     assert not any(cmd.is_zmove for cmd in commands)
 
 
@@ -79,7 +79,7 @@ def test_is_struggle_only_FORCEDが優先される場合はFalse():
     t.run_move(battle, 0)
 
     with battle.phase_context("action"):
-        assert battle.get_available_commands(player) == [Command.FORCED]
+        assert battle.available_commands(player) == [Command.FORCED]
         assert not battle.is_struggle_only(player)
 
 
@@ -128,9 +128,9 @@ def test_is_struggle_only_こだわりで変化技に固定されちょうはつ
 
     player = battle.players[0]
     with battle.phase_context("action"):
-        commands = battle.get_available_commands(player)
+        commands = battle.available_commands(player)
         assert Command.STRUGGLE in commands
-        assert not any(cmd.is_type("move") and cmd is not Command.STRUGGLE for cmd in commands)
+        assert not any(cmd.is_move and cmd is not Command.STRUGGLE for cmd in commands)
         assert battle.is_struggle_only(player)
 
 
@@ -144,7 +144,7 @@ def test_is_struggle_only_ちょうはつで変化技しか使えない場合は
     )
     player = battle.players[0]
     with battle.phase_context("action"):
-        commands = battle.get_available_commands(player)
+        commands = battle.available_commands(player)
         assert Command.STRUGGLE in commands
         assert battle.is_struggle_only(player)
 
@@ -162,7 +162,7 @@ def test_is_struggle_only_交代可能な控えがいても正しくTrueを返�
     battle.actives[0].moves[0].modify_pp(-99)
 
     with battle.phase_context("action"):
-        commands = battle.get_available_commands(player)
+        commands = battle.available_commands(player)
         # 罠の再現: 交代コマンドが先頭に来てSTRUGGLEではない
         assert commands[0].is_switch
         assert Command.STRUGGLE in commands
@@ -192,7 +192,7 @@ def test_is_struggle_only_技のPPが尽き交代先もいない場合はTrue():
     battle.actives[0].moves[0].modify_pp(-99)
 
     with battle.phase_context("action"):
-        commands = battle.get_available_commands(player)
+        commands = battle.available_commands(player)
         assert commands == [Command.STRUGGLE]
         assert battle.is_struggle_only(player)
 
@@ -236,21 +236,21 @@ def test_is_type_moveを指定すると技系コマンドのみ真になる():
     わるあがき・強制行動コマンドもresolve_move_from_command()で技に解決されるため
     真になる。
     """
-    assert Command.MOVE_0.is_type("move")
-    assert Command.TERASTAL_0.is_type("move")
-    assert Command.MEGAEVOL_0.is_type("move")
-    assert Command.GIGAMAX_0.is_type("move")
-    assert Command.ZMOVE_0.is_type("move")
-    assert Command.STRUGGLE.is_type("move")
-    assert Command.FORCED.is_type("move")
-    assert not Command.SWITCH_0.is_type("move")
+    assert Command.MOVE_0.is_move
+    assert Command.TERASTAL_0.is_move
+    assert Command.MEGAEVOL_0.is_move
+    assert Command.GIGAMAX_0.is_move
+    assert Command.ZMOVE_0.is_move
+    assert Command.STRUGGLE.is_move
+    assert Command.FORCED.is_move
+    assert not Command.SWITCH_0.is_move
 
 
 def test_is_type_switchを指定すると交代コマンドのみ真になる():
     """"switch"はSWITCH_*コマンドのみ真になる。"""
-    assert Command.SWITCH_0.is_type("switch")
-    assert not Command.MOVE_0.is_type("switch")
-    assert not Command.STRUGGLE.is_type("switch")
+    assert Command.SWITCH_0.is_switch
+    assert not Command.MOVE_0.is_switch
+    assert not Command.STRUGGLE.is_switch
 
 
 def test_ちょうはつ_コマンド選択後に受けても行動前ならブロックされる():

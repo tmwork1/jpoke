@@ -458,7 +458,7 @@ class Battle:
                     moves: MoveName | Move | tuple[MoveName | Move, int]
                         | list[MoveName | Move | tuple[MoveName | Move, int]],
                     critical: bool = False,
-                    secondary: bool = False,
+                    move_secondary: bool = False,
                     max_attack: int = 10) -> list[LethalHitResult]:
         """指定した技（列）を最大 max_attack 回撃ち込んだ場合の致死率を計算する（LethalCalculatorへの委譲）。
 
@@ -472,7 +472,7 @@ class Battle:
             attacker: 攻撃側のポケモン
             moves: 使用する技。単体 / (技, ヒット数) / それらのリスト
             critical: 急所として計算するか
-            secondary: 追加効果ハンドラ（火傷・怯みなど）を適用するか
+            move_secondary: 追加効果ハンドラ（火傷・怯みなど）を適用するか
             max_attack: 最大攻撃回数（確定数が出た時点で打ち切り）
 
         Returns:
@@ -485,7 +485,7 @@ class Battle:
         """
         return lethal.calc_lethal(
             self, attacker, moves, critical=critical,
-            move_secondary=secondary, max_attack=max_attack
+            move_secondary=move_secondary, max_attack=max_attack
         )
 
     @property
@@ -647,7 +647,7 @@ class Battle:
             raise ValueError(f"{active.name} は場に出ていないため、相手のポケモンを特定できません。")
         return actives[1 - actives.index(active)]
 
-    def get_available_commands(self, player: Player) -> list[Command]:
+    def available_commands(self, player: Player) -> list[Command]:
         """指定したプレイヤーが現在使用可能なコマンドのリストを取得する。
 
         Args:
@@ -662,9 +662,9 @@ class Battle:
 
         match self.phase:
             case "action":
-                return self.command_manager.get_available_action_commands(player)
+                return self.command_manager.available_action_commands(player)
             case "switch":
-                return self.command_manager.get_available_switch_commands(player)
+                return self.command_manager.available_switch_commands(player)
 
         raise InvalidPhaseError(f"Invalid phase: {self.phase}")
 
@@ -686,7 +686,7 @@ class Battle:
         Returns:
             bool: わるあがきコマンドが選択可能ならTrue
         """
-        return Command.STRUGGLE in self.get_available_commands(player)
+        return Command.STRUGGLE in self.available_commands(player)
 
     def can_switch(self, player: Player) -> bool:
         """指定したプレイヤーが交代可能かどうかを判定する（PokemonQueryへの委譲）。
@@ -1708,7 +1708,7 @@ class Battle:
         """
         if self.observer is None:
             return []
-        commands = self.get_available_commands(self.observer)
+        commands = self.available_commands(self.observer)
         moves = [
             self.command_to_move(self.observer, cmd)
             for cmd in commands
@@ -1726,6 +1726,6 @@ class Battle:
         """
         if self.observer is None:
             return []
-        commands = self.get_available_commands(self.observer)
+        commands = self.available_commands(self.observer)
         team = self.player_states[self.observer].team
         return [team[cmd.index] for cmd in commands if cmd.is_switch]

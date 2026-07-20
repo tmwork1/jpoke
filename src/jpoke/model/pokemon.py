@@ -1171,7 +1171,7 @@ class Pokemon:
         return self.hp_fraction
 
     @property
-    def status(self) -> str:
+    def status(self) -> AilmentName:
         """poke-env 互換: 状態異常名（`ailment.name` のエイリアス、型変換なし）。"""
         return self.ailment.name
 

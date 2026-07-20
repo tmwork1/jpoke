@@ -141,9 +141,14 @@ class Command(Enum):
         raise ValueError(f"Invalid command type: {command_type}")
 
     @property
+    def is_move(self) -> bool:
+        """技系コマンドかどうか"""
+        return self.is_type("move")
+
+    @property
     def is_switch(self) -> bool:
         """交代コマンドかどうか"""
-        return self.name[:-2] == "SWITCH"
+        return self.is_type("switch")
 
     @property
     def is_regular_move(self) -> bool:
@@ -203,12 +208,12 @@ class Command(Enum):
     @classmethod
     def switch_commands(cls) -> list[Command]:
         """全ての交代コマンドを取得"""
-        return [x for x in cls if x.is_type("switch")]
+        return [x for x in cls if x.is_switch]
 
     @classmethod
     def all_move_commands(cls) -> list[Command]:
         """全ての技系コマンドを取得"""
-        return [x for x in cls if x.is_type("move")]
+        return [x for x in cls if x.is_move]
 
     @classmethod
     def regular_move_commands(cls) -> list[Command]:

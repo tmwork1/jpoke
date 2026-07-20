@@ -189,7 +189,7 @@ def get_available_commands(self, player: Player) -> list[Command]:
 控えポケモンが1匹でもいると、switch フェーズで `battle.get_available_commands(opponent)` は
 `SWITCH_x` を含んだリストを返し続ける。木探索側がこれを `required_command_type` で
 絞り込まずにそのまま `itertools.product()` へ渡すと、`sim.step({..., opponent: SWITCH_x})` は
-`validate_command()`（`required_command_type == "move"` のため `SWITCH_x.is_type("move")`
+`validate_command()`（`required_command_type == "move"` のため `SWITCH_x.is_move`
 が `False`）に弾かれ `ValueError: Invalid command type for ...` で例外になる。
 
 **再現**（`tree_search_2.py` とほぼ同一の盤面で、相手のベンチを「公開済み」にしただけ）:

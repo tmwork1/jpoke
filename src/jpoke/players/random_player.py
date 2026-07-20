@@ -10,6 +10,7 @@ from jpoke.enums import Command
 
 
 class RandomPlayer(Player):
+    # TODO: 選出もランダムにする
     """比較対象・ベースラインとして使う、合法手からランダムに選ぶだけのプレイヤー。
 
     `battle.decision_random`（行動選択専用の乱数系列）を使って選ぶため、
@@ -21,4 +22,4 @@ class RandomPlayer(Player):
 
     def choose_command(self, battle: Battle) -> Command:
         """利用可能なコマンドから `battle.decision_random` でランダムに1つ選ぶ。"""
-        return battle.decision_random.choice(battle.get_available_commands(self))
+        return battle.decision_random.choice(battle.available_commands(self))

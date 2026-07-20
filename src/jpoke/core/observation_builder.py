@@ -241,7 +241,7 @@ def _mask_command(battle: Battle, player: Player):
     for cmd in state.last_available_commands:
         idx = cmd.index
         # 交代コマンドは、控えのポケモンが公開されている場合のみ利用可能とする
-        if cmd.is_type("switch"):
+        if cmd.is_switch:
             mon = state.team[idx]
             if mon.revealed:
                 commands.append(cmd)

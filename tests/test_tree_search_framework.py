@@ -148,7 +148,7 @@ def test_evaluate_commandsが非破壊的に評価値一覧を返す():
 
     with battle.phase_context("action"):
         result = player1.evaluate_commands(battle)
-        expected_commands = set(battle.get_available_commands(player1))
+        expected_commands = set(battle.available_commands(player1))
 
     assert isinstance(result, dict)
     assert set(result.keys()) == expected_commands
@@ -231,7 +231,7 @@ def test_fallbackに独自関数を指定するとそれが使われる():
 
         def fallback(self, battle: Battle) -> Command:
             self.fallback_calls.append(1)
-            return battle.get_available_commands(self)[0]
+            return battle.available_commands(self)[0]
 
     player1 = CustomFallbackPlayer(username="SearchPlayer", max_plies=2)
     player1.team = [
@@ -511,9 +511,9 @@ def test_相手の合法手が未公開の場合fallbackに委譲される():
         def fallback(self, battle: Battle) -> Command:
             # fallback呼び出し時点で相手の合法手が空であることも併せて確認する
             opponent = battle.opponent(self)
-            assert battle.get_available_commands(opponent) == []
+            assert battle.available_commands(opponent) == []
             self.fallback_calls.append(1)
-            return battle.get_available_commands(self)[0]
+            return battle.available_commands(self)[0]
 
     player1 = TrackingFallbackPlayer(username="SearchPlayer")
     player1.team = [

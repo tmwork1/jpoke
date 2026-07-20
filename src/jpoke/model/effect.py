@@ -35,7 +35,7 @@ class GameEffect:
             data: 効果データ (AbilityData, ItemData など)
         """
         self.data: EffectData = data
-        self.revealed: bool = False
+        self.revealed: bool = False # TODO: でフォルトではTrueにして、Battle開始時に明示的にFalseにするほうが、estimate_opponentの実装が簡単になる
         self._disabled_reasons: set[AbilityDisabledReason | ItemDisabledReason] = set()
 
     @property

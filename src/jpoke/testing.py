@@ -47,7 +47,7 @@ class CustomPlayer(Player):
 
     def choose_command(self, battle: Battle) -> Command:
         """行動コマンドを選択する（常に最初の利用可能なコマンド）。"""
-        return battle.get_available_commands(self)[0]
+        return battle.available_commands(self)[0]
 
 
 def start_battle(team0: list[Pokemon],
@@ -370,7 +370,7 @@ def calc_lethal(battle: Battle,
     attacker = battle.actives[player_idx]
     return battle.calc_lethal(
         attacker=attacker, moves=moves, critical=critical,
-        secondary=secondary, max_attack=max_attack
+        move_secondary=secondary, max_attack=max_attack
     )
 
 

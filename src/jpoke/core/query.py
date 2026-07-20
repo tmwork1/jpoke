@@ -204,12 +204,12 @@ class PokemonQuery:
     def is_super_effective(self, ctx: AttackContext) -> bool:
         """技が効果抜群かどうかを判定する。"""
         type_modifier = self.battle.damage_calculator.calc_def_type_modifier(ctx)
-        return type_modifier / 4096 > 1
+        return type_modifier > 4096
 
     def is_not_very_effective(self, ctx: AttackContext) -> bool:
         """技がいまひとつかどうかを判定する。"""
         type_modifier = self.battle.damage_calculator.calc_def_type_modifier(ctx)
-        return 0 < type_modifier / 4096 < 1
+        return 0 < type_modifier < 4096
 
     def can_switch(self, player: Player) -> bool:
         """プレイヤーが交代可能かどうかを判定する。

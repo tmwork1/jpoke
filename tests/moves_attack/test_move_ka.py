@@ -3362,7 +3362,7 @@ def test_ころがる_技固定():
     attacker = battle.actives[0]
     battle.volatile_manager.apply(attacker, "ころがる", count=1, source=attacker, move_name="ころがる")
     with battle.phase_context("action"):
-        assert battle.get_available_commands(battle.players[0]) == [Command.FORCED]
+        assert battle.available_commands(battle.players[0]) == [Command.FORCED]
     move = battle.command_manager.resolve_move_from_command(battle.players[0], Command.FORCED)
     assert move.name == "ころがる"
 

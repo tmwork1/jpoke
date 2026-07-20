@@ -134,12 +134,12 @@ class LethalHitResult:
     @property
     def hp_counter(self) -> dict[int, int]:
         """HP値 → 出現頻度 の辞書を返す。ability_enabled / item_enabled は無視する。"""
-        return self._counter(self.hp_dist)
+        return dict(sorted(self._counter(self.hp_dist).items()))
 
     @property
     def damage_counter(self) -> dict[int, int]:
         """ダメージ値 → 出現頻度 の辞書を返す。ability_enabled / item_enabled は無視する。"""
-        return self._counter(self.damage_dist)
+        return dict(sorted(self._counter(self.damage_dist).items()))
 
     @property
     def min_damage(self) -> int:
@@ -201,6 +201,7 @@ def calc_lethal(battle: Battle,
     move_list = _generate_move_list(moves)
 
     return _lethal_loop(initial_hp, hp_dist, battle, attacker, defender, move_list, critical, move_secondary, max_attack)
+    return _lethal_loop(initial_hp, hp_dist, battle, attacker, defender, move_list, critical, move_secondary, max_attack)
 
 
 def _generate_move_list(
@@ -233,6 +234,8 @@ def _generate_move_list(
         return [(to_move(moves), 1)]
 
 
+def _lethal_loop(initial_hp: int,
+                 hp_dist: StateDist,
 def _lethal_loop(initial_hp: int,
                  hp_dist: StateDist,
                  battle: Battle,
@@ -358,10 +361,10 @@ def _apply_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> Sta
     """
     max_hp = ctx.defender.max_hp
     full_states = {s: f for s, f in hp_dist.items() if s.value == max_hp}
-    other_states = {s: f for s, f in hp_dist.items() if s.value != max_hp}
+    other_states={s: f for s, f in hp_dist.items() if s.value != max_hp}
 
-    baseline_dmg = ctx.damage_dist
-    full_dmg = ctx.damage_dist_full if ctx.damage_dist_full is not None else baseline_dmg
+    baseline_dmg=ctx.damage_dist
+    full_dmg=ctx.damage_dist_full if ctx.damage_dist_full is not None else baseline_dmg
 
     result: StateDist = defaultdict(int)
     if full_states:
@@ -442,7 +445,7 @@ def _get_move_handlers(event: LethalEvent, ctx: LethalContext) -> list[LethalHan
 
 def _get_global_field_handlers(event: LethalEvent, battle: Battle) -> list[LethalHandler]:
     """天候・地形・共通フィールドから該当ハンドラを取得する。"""
-    fields = [battle.weather, battle.terrain] + \
+    fields = [battle.weather, battle.terrain] +
         list(battle.global_manager.fields.values())
     candidates = [field.data.lethal_handlers.get(
         event) for field in fields if field.is_active]

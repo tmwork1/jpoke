@@ -45,7 +45,7 @@ def pivot(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
         HandlerReturn: 交代が可能な場合はTrue、不可能な場合はFalse
     """
     player = battle.get_player(ctx.attacker)
-    if battle.command_manager.get_available_switch_commands(player):
+    if battle.command_manager.available_switch_commands(player):
         battle.player_states[player].interrupt = Interrupt.PIVOT
     return HandlerReturn(value=value)
 

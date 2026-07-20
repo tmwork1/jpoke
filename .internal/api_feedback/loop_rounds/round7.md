@@ -103,8 +103,8 @@
   `match`文）を確認したところ、`"move"`判定は`self.name[:-2] not in {"SELECT", "SWITCH"}`という
   除外方式のため、`STRUGGLE`（わるあがき）・`FORCED`（強制行動）も`"move"`側の真になる（両者とも
   `resolve_move_from_command()`で実際に技オブジェクトへ解決されるため、`command_manager.py`の
-  `if not any(cmd.is_type("move") for cmd in commands): commands += [Command.STRUGGLE]`や
-  `turn_controller.py`の`if not command.is_type("move") or mon.fainted:`という既存利用箇所の
+  `if not any(cmd.is_move for cmd in commands): commands += [Command.STRUGGLE]`や
+  `turn_controller.py`の`if not command.is_move or mon.fainted:`という既存利用箇所の
   前提と整合する意図的な挙動）。この特殊コマンドの扱いは表の一文説明には収まらない細部と判断し、
   回帰テストの docstring 側に委ねドキュメント本文はbeginner向けの簡潔さを優先した。回帰テストとして
   `tests/test_command.py`に4件追加した:

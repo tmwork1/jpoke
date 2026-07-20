@@ -137,7 +137,7 @@ def いちゃもん_modify_command_options(battle, ctx, value):
     last_move_name = mon.volatiles["いちゃもん"].move_name
     new_options = []
     for cmd in value:
-        if not cmd.is_type("move") or mon.moves[cmd.index].name != last_move_name:
+        if not cmd.is_move or mon.moves[cmd.index].name != last_move_name:
             new_options.append(cmd)
     return HandlerReturn(value=new_options)
 ```

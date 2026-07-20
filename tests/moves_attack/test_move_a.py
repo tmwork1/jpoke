@@ -755,7 +755,7 @@ def test_あなをほる_2ターン目にわるあがきへすり替わらない
 
     # 2ターン目に強制実行される技を実際のコマンド解決経路で確認する
     with battle.phase_context("action"):
-        assert battle.get_available_commands(battle.players[0]) == [Command.FORCED]
+        assert battle.available_commands(battle.players[0]) == [Command.FORCED]
     move = battle.command_manager.resolve_move_from_command(battle.players[0], Command.FORCED)
     assert move.name == "あなをほる"
 
@@ -2407,7 +2407,7 @@ def test_エレクトロビーム_2ターン目をコマンド経由で強制続
 
     # 2ターン目: 強制続行コマンドのみが選択可能になっているはず
     with battle.phase_context("action"):
-        commands = battle.get_available_commands(player0)
+        commands = battle.available_commands(player0)
     assert commands == [Command.FORCED]
 
     hp_before = defender.hp
