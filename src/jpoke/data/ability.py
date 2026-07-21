@@ -1629,6 +1629,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.ぜったいねむり_switch_in,
                 subject_spec="source:self",
             ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.ぜったいねむり_switch_in,
+                subject_spec="source:self",
+            ),
         },
     ),
     "ゼロフォーミング": AbilityData(

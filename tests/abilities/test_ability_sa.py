@@ -2079,6 +2079,30 @@ def test_ぜったいねむり_ねごとが成功する():
     assert defender.hp < hp_before
 
 
+def test_ぜったいねむり_へんしんでコピーした場合もゆめうつつが付与されいびきが成功する():
+    """ぜったいねむり: 他のポケモンがへんしんでこの特性をコピーした場合も
+    ゆめうつつが付与され、いびきが成功する
+    （.internal/spec/abilities/ぜったいねむり.md:33「他のポケモンがネッコアラにへんしんした
+    場合、ぜったいねむりの効果は発動する」・15「使用するいびき/ねごとは成功する」）。
+    battle.transform()は特性コピー時にEvent.ON_ABILITY_ENABLEDしか発火せず
+    Event.ON_SWITCH_INは発火しないため、ぜったいねむりのハンドラがON_SWITCH_INのみに
+    登録されていると発動しなかった（fuzz_log seed=4218の回帰）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("メタモン", ability_name="かそく", move_names=["へんしん"])],
+        team1=[Pokemon("ネッコアラ", ability_name="ぜったいねむり", move_names=["いびき"])],
+        accuracy=100,
+    )
+    mon, target = battle.actives
+    assert not mon.ailment.is_active
+    t.run_move(battle, 0)  # へんしん
+    assert mon.ability.name == "ぜったいねむり"
+    assert mon.ailment.name == "ゆめうつつ"
+
+    hp_before = target.hp
+    t.run_move(battle, 0)  # へんしんでコピーしたいびき
+    assert target.hp < hp_before
+
+
 def test_ぜったいねむり_ミストフィールド下でも登場時にゆめうつつ状態になる():
     """ぜったいねむり: ミストフィールド展開中でもゆめうつつは無効化されずに付与される。
 
