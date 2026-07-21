@@ -234,6 +234,21 @@
 
 ### Fixed
 
+- `pyproject.toml` の `package-data` に `jpoke.data` の `regulation/*.csv`
+  （`src/jpoke/data/regulation/item.csv` / `pokemon.csv`）が未登録だったため、
+  ビルドした wheel から `pip install` すると `pokedex.py` が
+  `regulation/pokemon.csv` を読めず `FileNotFoundError` になっていた
+  （`import jpoke` が失敗する状態だった）。登録を追加して解消した
+- `src/jpoke/core/lethal.py` の `_pokemon_states()` で、`LethalPokemonState.boosts`
+  （`dict[Stat, int]`）に `dict(state.attacker_boosts or ())` / `dict(state.
+  defender_boosts or ())`（`dict[str, int]` 相当）をそのまま代入しており mypy の
+  型チェックが通っていなかった。既存の `ailment` フィールドと同様に `cast` で
+  明示するよう修正した（実行時の挙動に変更なし）
+- `src/jpoke/utils/__init__.py` の `__all__` リストがタブインデントになっており
+  ruff（W191）が警告していたため、スペースインデントに統一した
+- `examples/01_getting_started/03_custom_player.ipynb` /
+  `examples/03_lethal/02_multi_move.ipynb` の末尾・行末の余分な空白を除去し、
+  ruff（W291/W293）の警告を解消した
 - `docs/api/README.md` の `Command` 章「インスタンスプロパティ・メソッド」表に
   `is_type(command_type)`（`examples/02_ai/01_custom_player.py` で使用している、
   `"any"` / `"move"` / `"switch"` を指定できる汎用の種別判定メソッド）が掲載されて
