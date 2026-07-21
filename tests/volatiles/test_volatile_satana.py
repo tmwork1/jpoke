@@ -107,6 +107,31 @@ def test_さわぐ_技固定():
     assert move.name == "さわぐ"
 
 
+def test_さわぐ_瀕死になった相手のねむりは誤って解除されない():
+    """さわぐ: 開始時のねむり解除処理で、さわぐの攻撃自体が同じ一撃で相手を瀕死に
+    した場合、瀕死になった対象に「ねむりが回復した」ログ（AILMENT_REMOVED）が
+    誤って記録されず、ailment.nameも変化しない（fuzz_log seed=4182の回帰テスト）。
+
+    修正前は、さわぐ_startが場のアクティブ個体を無条件でループしてねむりを
+    解除していたため、さわぐの攻撃で瀕死になった直後の相手にも解除処理が
+    実行され、誤ったログが記録されていた。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ペラップ", move_names=["さわぐ"])],
+        team1=[Pokemon("キラーメ")],
+        ailment1=("ねむり", 3),
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.fix_damage(battle, foe.hp)
+    t.run_move(battle, 0)
+
+    assert foe.fainted
+    assert foe.ailment.name == "ねむり"
+    logs = [log for log in battle.event_logger.logs if log.log == LogCode.AILMENT_REMOVED]
+    assert not logs
+
+
 @pytest.mark.parametrize("volatile_name", ["さわぐ", "さわがしい"])
 def test_さわぐさわがしい_ねむけからねむりへの移行を防ぐ(volatile_name):
     """さわぐ/さわがしい: ねむけ終了時にねむり状態への移行を防ぐ"""

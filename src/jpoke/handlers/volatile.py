@@ -699,6 +699,8 @@ def さわぐ_start(battle: Battle, ctx: EventContext, value: Any) -> HandlerRet
 
     # 場のポケモンのねむり状態を解除（ねむけは解除しない）
     for mon in battle.actives:
+        if mon.fainted:
+            continue
         if mon.has_ailment("ねむり"):
             battle.ailment_manager.remove(mon)
 
