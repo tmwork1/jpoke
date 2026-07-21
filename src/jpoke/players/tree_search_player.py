@@ -122,10 +122,12 @@ class TreeSearchPlayer(Player):
             if not my_commands or not opp_commands:
                 return self.fallback(battle), float("nan")
         else:
-            # 2手目以降
-            # TODO: battle.available_action_commands()を提供する。
-            my_commands = battle.command_manager.available_action_commands(self)
-            opp_commands = battle.command_manager.available_action_commands(opponent)
+            # 2手目以降。sim.step()完了直後の全知シミュレーションかつ新規ターン開始
+            # 直後（中断的な交代は再入した choose_command 側のfallbackで既に解決済み）
+            # であるため、phaseは必ず"action"であり、battle.available_commands()の
+            # phase分岐に委ねてよい。
+            my_commands = battle.available_commands(self)
+            opp_commands = battle.available_commands(opponent)
             battle.player_states[self].required_command_type = "any"
             battle.player_states[opponent].required_command_type = "any"
 
@@ -222,13 +224,13 @@ class TreeSearchPlayer(Player):
             if self._node_limit_reached():
                 break
 
-            # TODO: Battle.copyに全知化するオプションを追加すれば、コピー後にobserverをNoneにする必要はなくなる。
-            sim = battle.copy(reseed=True, copy_logs=False)
-            sim.observer = None
+            sim = battle.copy(reseed=True, copy_logs=False, omniscient=True)
 
             # 探索専用の決定論化オプション（例: 命中固定・平均ダメージ）を
             # sim にだけ設定する。実盤面（battle）には影響しない。
-            # TODO: configure_simは最上位であるchoose_command()内で一度だけ呼ぶほうがよいのでは。
+            # 分岐（sim）ごとに新規オブジェクトのため、choose_command()側で
+            # 1度だけ呼んでも各simには伝播しない。分岐ごとの呼び出しが必須
+            # （test_configure_simが各分岐でsim_step実行前に呼ばれる で担保）。
             self.configure_sim(sim)
 
             # コマンドを指定して盤面を進める。

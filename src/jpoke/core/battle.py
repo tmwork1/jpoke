@@ -341,7 +341,10 @@ class Battle:
                     if hasattr(item, "update_reference"):
                         item.update_reference(self)
 
-    def copy(self, reseed: bool = False, copy_logs: bool = True) -> Battle:
+    def copy(self,
+             reseed: bool = False,
+             copy_logs: bool = True,
+             omniscient: bool = False) -> Battle:
         """Battleの複製を作成する。
 
         Args:
@@ -357,6 +360,15 @@ class Battle:
                 増えるため、木探索の内部シミュレーションのようにログを
                 参照しない用途で使うとコピー負荷を削減できる。既定は
                 Trueで、従来通り履歴を引き継いだ複製を作る。
+            omniscient: Trueの場合、複製先の `observer` を `None` にする。
+                `choose_command()` が受け取る `battle` は情報隠蔽済みの観測
+                （`observer` が自分自身に設定されたコピー）であることがあり、
+                これをそのまま `copy()` すると複製先にも `observer` が引き継がれ、
+                以降の `available_commands()` 等が相手の合法手をライブ計算せず
+                スナップショット（`last_available_commands`）を返し続けてしまう。
+                木探索の内部シミュレーションは全知（相手の合法手もライブ計算）を
+                前提とするため、既定はFalseで呼び出し元が明示したときだけ
+                `observer` を外す。
 
         Warning:
             copy_logs=Falseの場合、deepcopy実行中に複製元のevent_logger/command_logを
@@ -383,6 +395,8 @@ class Battle:
             new.seed = hash((self.seed, self._reseed_count)) & 0xFFFFFFFF
             new.random = Random(new.seed)
             new.decision_random = Random((new.seed + 0x9E3779B9) & 0xFFFFFFFF)
+        if omniscient:
+            new.observer = None
         return new
 
     @contextmanager
