@@ -1144,8 +1144,8 @@ class Battle:
             source.ability.register_handlers(self.events, source)
             self.events.emit(Event.ON_ABILITY_ENABLED, EventContext(source=source))
 
-        source._pre_transform_moves = source.moves
-        source._pre_transform_gender = source.gender
+        source.pre_transform_moves = source.moves
+        source.pre_transform_gender = source.gender
         source.moves = [Move(mv.name) for mv in target.moves]
         for mv in source.moves:
             mv.pp = 1 if mv.data.pp == 1 else 5

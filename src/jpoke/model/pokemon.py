@@ -111,29 +111,18 @@ class Pokemon:
         self.volatiles: dict[VolatileName, Volatile] = {}
         self.boosts: dict[Stat, int] = {k: 0 for k in STATS}
         self.last_move: Move | None = None
-        # TODO: self.transform_xxx, self._pre_transform_xxx は self.memory で管理するように修正
-        # へんしん/かわりものによる変身のコピー元タイプ・体重（種族データ自体=self.dataは
-        # 変更しない）。変身していない間は常にNone。
-        self.transform_types: list[Type] | None = None
-        self.transform_weight: float | None = None
-        # 変身前の技リスト・性別のスナップショット。変身中のみ非None。
-        # reset_on_switch_out() が交代/瀕死時にこの値へ復元する
-        # （特性・実数値ステータス・能力ランクは同メソッドの既存リセット処理がそのまま兼ねる）。
-        self._pre_transform_moves: list[Move] | None = None
-        self._pre_transform_gender: Gender | None = None
-        # トップレベルで選択した技（ねごと・さいはい等のネスト実行では更新されない）。
-        # アンコール・いちゃもん等「選択した技」を参照すべき効果はこちらを使う。
+        # トップレベルで選択した技（ねごと等のネスト実行では更新されない、アンコール等用）。
         self.selected_move: Move | None = None
-        # 最後に実際にPPを消費した技（ねごとのサブ技のように消費量0の実行では更新されない）。
-        # かなしばり・うらみ・さいはい等「最後にPPを消費した技」を参照すべき効果はこちらを使う。
-        # 複数形の pp_consumed_moves（とっておき用、場に出てから消費した技名の集合）とは別物。
+        # 最後にPPを消費した技（かなしばり・うらみ等用。複数形pp_consumed_movesとは別）。
         self.pp_consumed_move: Move | None = None
 
         # スコープ付きメモリ。技・特性個別のフラグはここに保存し、
         # リセットはスコープ単位（turn: ターン開始 / switch: 登場時・退場時 / battle: リセットなし）
         # で一括して行う。新しいフラグを追加してもリセット処理の追記は不要。
         # 代表的なフラグへのアクセスは下部のプロパティ（スコープ付きメモリ節）を参照。
-        self.memory: dict[str, dict[str, Any]] = {"turn": {}, "switch": {}, "battle": {}}
+        self.memory: dict[str, dict[str, Any]] = {
+            "turn": {}, "switch": {}, "battle": {}
+        }
 
     def __deepcopy__(self, memo):
         cls = self.__class__
@@ -141,7 +130,7 @@ class Pokemon:
         memo[id(self)] = new
         fast_copy(self, new, keys_to_deepcopy=[
             'ability', 'item', 'moves', 'ailment', 'volatiles',
-            'last_move', 'selected_move', 'pp_consumed_move', '_pre_transform_moves',
+            'last_move', 'selected_move', 'pp_consumed_move', 'memory',
         ])
         return new
 
@@ -152,19 +141,15 @@ class Pokemon:
         self.memory["switch"] = {}
 
     def reset_on_switch_out(self):
-        # switch スコープは登場時だけでなく退場時にも即座にクリアする
-        # （タイプ上書き系など、退場直後に戻す必要があるフラグを収容するため）
-        self.memory["switch"] = {}
+        # へんしん/かわりものによる変身の復元（技・性別を戻す。特性・実数値ステータス・
+        # 能力ランクは以下の既存リセット処理がそのまま兼ねる）。
+        if self.pre_transform_moves is not None:
+            self.moves = self.pre_transform_moves
+            self.gender = self.pre_transform_gender
 
-        # へんしん/かわりものによる変身の復元（技・性別・タイプ/体重上書きの解除）。
-        # 特性・実数値ステータス・能力ランクは以下の既存リセット処理がそのまま兼ねる。
-        if self._pre_transform_moves is not None:
-            self.moves = self._pre_transform_moves
-            self.gender = self._pre_transform_gender
-            self._pre_transform_moves = None
-            self._pre_transform_gender = None
-        self.transform_types = None
-        self.transform_weight = None
+        # switch スコープは登場時だけでなく退場時にも即座にクリアする
+        # （タイプ上書き系・上記の変身関連フラグなど、退場直後に戻す必要があるフラグを収容するため）
+        self.memory["switch"] = {}
 
         self.boosts = {k: 0 for k in STATS}
         # ガードシェア・パワーシェア・パワートリックなどによる実数値の書き換えを
@@ -296,8 +281,7 @@ class Pokemon:
 
     @property
     def pp_consumed_moves(self) -> set[MoveName]:
-        """場に出てからPPを消費して使用した技名の集合（とっておき用）。
-        単数形の pp_consumed_move（最後にPPを消費した1つの技）とは別物。"""
+        """場に出てからPPを消費した技名の集合（とっておき用。単数形と別）。"""
         return self.memory["switch"].setdefault("pp_consumed_moves", set())
 
     @pp_consumed_moves.setter
@@ -348,6 +332,42 @@ class Pokemon:
     @removed_types.setter
     def removed_types(self, value: list[Type]):
         self.memory["switch"]["removed_types"] = value
+
+    @property
+    def transform_types(self) -> list[Type] | None:
+        """へんしん/かわりもので変身中のコピー元タイプ（種族データ自体は変更しない）。"""
+        return self.memory["switch"].get("transform_types")
+
+    @transform_types.setter
+    def transform_types(self, value: list[Type] | None):
+        self.memory["switch"]["transform_types"] = value
+
+    @property
+    def transform_weight(self) -> float | None:
+        """へんしん/かわりもので変身中のコピー元体重（種族データ自体は変更しない）。"""
+        return self.memory["switch"].get("transform_weight")
+
+    @transform_weight.setter
+    def transform_weight(self, value: float | None):
+        self.memory["switch"]["transform_weight"] = value
+
+    @property
+    def pre_transform_moves(self) -> list[Move] | None:
+        """変身前の技リストのスナップショット（変身中のみ非None）。reset_on_switch_outで復元。"""
+        return self.memory["switch"].get("pre_transform_moves")
+
+    @pre_transform_moves.setter
+    def pre_transform_moves(self, value: list[Move] | None):
+        self.memory["switch"]["pre_transform_moves"] = value
+
+    @property
+    def pre_transform_gender(self) -> Gender | None:
+        """変身前の性別のスナップショット（変身中のみ非None）。reset_on_switch_outで復元。"""
+        return self.memory["switch"].get("pre_transform_gender")
+
+    @pre_transform_gender.setter
+    def pre_transform_gender(self, value: Gender | None):
+        self.memory["switch"]["pre_transform_gender"] = value
 
     @property
     def last_lost_item_name(self) -> ItemName:
@@ -896,9 +916,11 @@ class Pokemon:
         for chmp in range(33):
             eff = chmp_to_legacy_effort(chmp)
             if idx == 0:
-                v = calc_hp(self._level, self.data.base[idx], self._ivs[idx], eff)
+                v = calc_hp(
+                    self._level, self.data.base[idx], self._ivs[idx], eff)
             else:
-                v = calc_stat(self._level, self.data.base[idx], self._ivs[idx], eff, nc[idx])
+                v = calc_stat(
+                    self._level, self.data.base[idx], self._ivs[idx], eff, nc[idx])
 
             if v == value:
                 self._evs[idx] = chmp
