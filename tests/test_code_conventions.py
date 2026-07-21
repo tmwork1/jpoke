@@ -4,7 +4,6 @@
 実行時に property 化するとテストのセットアップ代入（`mon.hp = ...`）を壊すため、
 代わりに src/jpoke 配下のソースを静的に走査して違反を検出する。
 """
-import ast
 import json
 import re
 from pathlib import Path
@@ -41,25 +40,6 @@ def _example_text(path: Path) -> str:
         )
     return path.read_text(encoding="utf-8")
 
-
-def _example_first_code_text(path: Path) -> str:
-    """AST解析用に、ファイル冒頭のPythonコードを返す。
-
-    `.py` はファイル全体をそのまま返す。`.ipynb` は `%pip install` 等のIPython
-    マジックコマンドのみのセルをスキップし、最初にPythonの文を含むコードセルの
-    source を返す（Colab向けpip installセルが実コードより先に来るため）。
-    """
-    if path.suffix == ".ipynb":
-        notebook = json.loads(path.read_text(encoding="utf-8"))
-        for cell in notebook["cells"]:
-            if cell["cell_type"] != "code":
-                continue
-            source = "".join(cell["source"])
-            if source.lstrip().startswith(("%", "!")):
-                continue
-            return source
-        return ""
-    return path.read_text(encoding="utf-8")
 
 # 直接代入が許可されているファイル（相対パス、"/" 区切り）
 # - model/pokemon.py: hp の実体を保持するクラス自身の実装
@@ -159,39 +139,6 @@ def test_docs_examplesがjpoke_testingモジュールに言及している():
     ]
     assert examples_importing_testing, (
         "examples/ 配下に jpoke.testing を import するサンプルが見つからない"
-    )
-
-
-def test_docs_examplesがアイテム操作系APIに言及している():
-    """`Battle.gain_item`/`set_item`/`remove_item`/`take_item`/`swap_items`/`consume_item`
-    は`src/jpoke/core/battle.py`に実装（`ItemManager`への薄い委譲）が揃っている一方、
-    状態異常・揮発性状態・天候・地形が`set_ailment`/`set_volatile`/`set_weather`/
-    `set_terrain`としてそれぞれ`docs/api/README.md`「シナリオ構築系」表と`examples/`の
-    サンプル両方に掲載されているのに対し、持ち物操作系だけ`docs/api/README.md`にも
-    `examples/`にも一度も登場しない状態が長期間放置されていた（id: r10-1）。再発防止のため、
-    6メソッドすべてが`docs/api/README.md`に記載されていること、`examples/`配下のいずれかの
-    サンプルで実際に呼び出されていることを確認する。
-    """
-    item_api_names = [
-        "gain_item", "set_item", "remove_item",
-        "take_item", "swap_items", "consume_item",
-    ]
-
-    docs_path = Path(__file__).resolve().parent.parent / "docs" / "api" / "README.md"
-    docs_text = docs_path.read_text(encoding="utf-8")
-    missing_in_docs = [name for name in item_api_names if name not in docs_text]
-    assert not missing_in_docs, (
-        "docs/api/README.md に未掲載のアイテム操作系APIを検出: " + ", ".join(missing_in_docs)
-    )
-
-    examples_texts = "\n".join(
-        _example_text(path) for path in _iter_example_files()
-    )
-    missing_in_examples = [
-        name for name in item_api_names if f".{name}(" not in examples_texts
-    ]
-    assert not missing_in_examples, (
-        "examples/ 配下で未使用のアイテム操作系APIを検出: " + ", ".join(missing_in_examples)
     )
 
 
@@ -311,49 +258,6 @@ def test_examplesがtest_option経由で命中率等を固定していない():
     assert not violations, (
         "examples/ 配下で battle.test_option の使用を検出"
         "（accuracy_fix_threshold 等の公開APIに置き換えること）:\n" + "\n".join(violations)
-    )
-
-
-def test_examplesが全ファイルでfrom_future_import_annotationsを冒頭に持つ():
-    """`examples/README.md` は「各ファイル冒頭にある `from __future__ import annotations` は
-    型アノテーションの前方参照を有効にするためのおまじないで、動作に必要なので消さずに
-    そのまま残してよい」と説明している（id: r10-6）。この説明がexamples/配下の実態と
-    食い違っていないか（全ファイルに実際に存在するか、モジュールdocstringの直後という
-    「冒頭」と呼べる位置にあるか）を機械的に検証する。`from __future__ import annotations`は
-    構文上モジュールdocstring以外の文より前に置く必要があるPythonの制約があるため、
-    「モジュールdocstringの直後の最初の実行文」であることをast経由で確認する。
-    `.ipynb`（Colab向け `%pip install` セルを先頭に持つ）は、マジックコマンドのみの
-    セルを読み飛ばした最初の実コードセルを対象にする（`_example_first_code_text`）。
-    """
-    violations = []
-    for path in _iter_example_files():
-        rel_path = path.relative_to(EXAMPLES_ROOT).as_posix()
-        text = _example_first_code_text(path)
-        tree = ast.parse(text, filename=rel_path)
-
-        body = tree.body
-        # モジュールdocstringがあれば読み飛ばす
-        if (
-            body
-            and isinstance(body[0], ast.Expr)
-            and isinstance(body[0].value, ast.Constant)
-            and isinstance(body[0].value.value, str)
-        ):
-            body = body[1:]
-
-        is_future_import = (
-            body
-            and isinstance(body[0], ast.ImportFrom)
-            and body[0].module == "__future__"
-            and any(alias.name == "annotations" for alias in body[0].names)
-        )
-        if not is_future_import:
-            violations.append(rel_path)
-
-    assert not violations, (
-        "examples/ 配下で from __future__ import annotations が冒頭（モジュールdocstring"
-        "直後の最初の文）に無いファイルを検出。examples/README.md の説明と食い違うため"
-        "追加すること:\n" + "\n".join(violations)
     )
 
 

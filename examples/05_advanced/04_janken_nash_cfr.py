@@ -81,8 +81,6 @@ outcome-sampling MCCFR等）ではなく、`battle.copy()` によるロールア
 01_bulk_simulation.py や 02_replay.py よりも重く、手元では数十秒程度かかる。
 `N_EPISODES` / `HP_BUCKETS` を増やすと学習は安定するが実行時間も増える。
 """
-from __future__ import annotations
-
 from collections import defaultdict
 
 from jpoke import Battle, Player, Pokemon

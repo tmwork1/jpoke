@@ -9,8 +9,6 @@ README の「計算速度」節に載せる数値（mean ± σ）はこのスク
 の1〜10技はバグ出し用に状態空間を広く浅く掘るための設定であり、ここでは
 実戦に近い負荷を計測したいため踏襲しない。
 """
-from __future__ import annotations
-
 import argparse
 import statistics
 import time

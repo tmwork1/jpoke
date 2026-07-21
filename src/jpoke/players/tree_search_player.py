@@ -26,7 +26,7 @@ class TreeSearchPlayer(Player):
 
     - `evaluate(battle)`: 葉ノードの盤面評価。既定は残りHP割合差。
     - `fallback(battle)`: 探索できない・再入時の代替方策。既定はランダム。
-    - `estimate_opponent(battle)`: 相手の合法手が未公開で空のときに呼ばれる推定フック。既定は何もしない（fallback に委譲される）。
+    - `estimate_opponent(battle, opponent)`: 相手の合法手が未公開で空のときに呼ばれる推定フック。既定は何もしない（fallback に委譲される）。
     - `configure_sim(sim)`: 各分岐の `sim.step()` 実行前に呼ばれるフック。既定は何もしない。
 
     相手の情報が未公開の局面では、相手の合法手が空リストになり探索できない。
@@ -77,10 +77,14 @@ class TreeSearchPlayer(Player):
         commands = self._available_commands_with_recovery(battle, self)
         return battle.decision_random.choice(commands)
 
-    def estimate_opponent(self, battle: Battle) -> None:
+    def estimate_opponent(self, battle: Battle, opponent: Player) -> None:
         """相手の合法手が未公開で空のときに呼ばれる推定フック。
 
         既定では何もせず fallback に委譲される。
+
+        Args:
+            battle: 探索中のシミュレーション用 Battle
+            opponent: 推定対象の相手プレイヤー
         """
         # TODO: 相手チームのポケモンの情報(特性・アイテム・技など)と相手の選出番号では補完方法は異なる。estimate_opponentに集約するより、項目ごとにフックを分けたほうがエラーを防止できるかもしれない
         pass
@@ -166,7 +170,7 @@ class TreeSearchPlayer(Player):
         return my_commands, opponent_commands
 
     def _available_commands_with_recovery(self, battle: Battle, player: Player) -> list[Command]:
-        """`battle.get_available_commands(player)` を呼び、switch フェーズで
+        """`battle.available_commands(player)` を呼び、switch フェーズで
         結果が空になった場合のみ `state.team`（選出制限を無視したチーム全体）
         から交代先候補を復元するフォールバック付きの合法手取得。
 
@@ -177,7 +181,7 @@ class TreeSearchPlayer(Player):
         `state.selected_indexes` を「相手から見て公開済みの控えのみ」に
         絞り込んでいる（`state.bench`/`state.selection` はこの値を使う）。
         PIVOT/EMERGENCY等の割り込みは本来「有効な交代先が実在する」ことが
-        前提で発火するため、この局面で `get_available_commands()` が空を
+        前提で発火するため、この局面で `available_commands()` が空を
         返すのは情報隠蔽による見かけ上の欠落であり、実際に交代先が
         存在しないわけではない（fuzz seed=4698 で発見: `_best_command()` が
         `my_commands[0]` で `IndexError` になっていた）。
