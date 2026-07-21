@@ -172,69 +172,14 @@ t.run_move(battle, player_idx=0, move_idx=0)
 薄い再エクスポート層）で使っている。詳細な使い方は
 [tests/CLAUDE.md](https://github.com/tmwork1/jpoke/blob/main/tests/CLAUDE.md) も参照。
 
-## 開発（clone 前提）
+## 開発に貢献する
 
-ソースを直接編集する場合はリポジトリを clone してセットアップする。
-
-```bash
-git clone https://github.com/tmwork1/jpoke.git
-cd jpoke
-pip install -e .
-
-# 開発（テスト・lint・型チェック）に必要な依存を含める場合
-pip install -e . pytest pytest-cov ruff mypy
-# または uv を使う場合
-uv sync
-```
-
-## テストの実行
-
-```bash
-# 全テスト
-python -m pytest tests/ -v
-
-# カテゴリ別
-python -m pytest tests/abilities/ -v
-python -m pytest tests/items/ -v
-python -m pytest tests/moves_attack/ -v
-python -m pytest tests/moves_status/ -v
-python -m pytest tests/volatiles/ -v
-
-# 特定ファイル
-python -m pytest tests/abilities/test_ability_ka.py -v
-
-# 特定テスト関数（日本語関数名も可）
-python -m pytest tests/abilities/ -k "ARシステム" -v
-
-# カバレッジ付き
-python -m pytest tests/ -q --cov=jpoke --cov-report=term
-```
-
-テストは `tests/` 直下（`test_ailment.py`, `test_copy.py`, `test_damage.py`, `test_field.py`,
-`test_lethal.py` など）とサブディレクトリ（`abilities/`, `items/`, `moves_attack/`,
-`moves_status/`, `volatiles/`）に分かれている。`tests/test_utils.py` はテストヘルパー（テスト対象外）。
-
-## 開発ツール
-
-```bash
-# lint
-python -m ruff check src/ tests/ scripts/ examples/
-
-# 型チェック（src/jpoke/core のみを対象に段階導入中）
-python -m mypy
-
-# 五十音順の維持・データ整合性チェック（--check は変更せず確認のみ）
-python scripts/sort_handlers.py --check
-python scripts/sort_data/sort_abilities.py --check
-python scripts/sort_data/sort_items.py --check
-python scripts/sort_data/sort_moves.py --check
-python scripts/sort_tests.py --check tests/**/test_*.py
-```
-
-CI（`.github/workflows/test.yml`）で push/PR ごとに Windows + Linux × Python 3.11/3.12 のマトリクスで
-テスト・lint・型チェックを実行する。`.github/workflows/nightly-fuzz.yml` が毎日 `scripts/fuzz/fuzz_battle.py`
-を random / tree_search の両プレイヤーモデル（`--player`）で実行し、回帰シードを検出する。`.pre-commit-config.yaml` を使うと
-コミット前にこれらのチェック（の一部）をローカルで実行できる。
+ソースを直接編集する場合の環境セットアップ・テストの実行・lintや型チェックなどの
+コード規約は [CONTRIBUTING.md](https://github.com/tmwork1/jpoke/blob/main/CONTRIBUTING.md)
+にまとめている。CI（`.github/workflows/test.yml`）が push/PR ごとに Windows + Linux ×
+Python 3.11/3.12 のマトリクスでテスト・lint・型チェックを実行し、
+`.github/workflows/nightly-fuzz.yml` が毎日 `scripts/fuzz/fuzz_battle.py` を
+random / tree_search の両プレイヤーモデルで実行して回帰シードを検出している。
 
 ## ライセンス
 

@@ -12,7 +12,8 @@
 このドキュメントは **よく使う公開APIの見取り図**であり、全メソッド・全引数を網羅する
 ものではない。詳細な挙動・戻り値・例外条件は各クラスのdocstring（ソースコード:
 `src/jpoke/core/battle.py`, `src/jpoke/core/player.py`, `src/jpoke/model/pokemon.py`）を
-直接参照すること。
+直接参照すること。全シグネチャ・全メソッド・全属性を網羅した自動生成リファレンスは
+[リファレンス（自動生成）](../reference/index.md)を参照。
 
 対象範囲・アーキテクチャの全体像は [README.md](https://github.com/tmwork1/jpoke/blob/main/README.md)
 を参照。
