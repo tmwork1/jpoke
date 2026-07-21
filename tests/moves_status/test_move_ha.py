@@ -2266,6 +2266,42 @@ def test_へんしん_交代すると変身前の状態に戻る():
     assert not mon.has_volatile("へんしん")
 
 
+def test_へんしん_変身先と特性名が同じ場合は場に出た時特性が再発動しない():
+    """へんしん: 変身前後で特性名が変わらない場合（例: 双方いかく）、
+    battle.transform()はON_ABILITY_DISABLED/ON_ABILITY_ENABLEDを発火しないため、
+    いかく等の「場に出た時に発動する特性」が変身のたびに二重発動することはない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("グラエナ", ability_name="いかく", move_names=["へんしん"])],
+        team1=[Pokemon("グラエナ", ability_name="いかく", move_names=["はねる"])],
+    )
+    mon, target = battle.actives
+    # 場に出た瞬間に互いのいかくで既に-1段階ずつ下がっている
+    assert target.boosts["atk"] == -1
+    t.run_move(battle, 0)  # へんしん
+    # いかくが再発動していればtarget（=mon視点でのfoe）のatkはさらに-1され-2になってしまう
+    assert target.boosts["atk"] == -1
+    assert mon.boosts == target.boosts
+
+
+def test_へんしん_変身先の特性がかわりものでも無限再帰せず変身できる():
+    """へんしん: 変身先（対象）の特性がかわりものであっても、battle.transform()内で
+    ON_ABILITY_ENABLEDが発火した際にかわりもの自身が再度発動して無限再帰
+    （スタックオーバーフロー）することなく正常に変身できる。
+    かわりものはEvent.ON_SWITCH_INにのみ登録され、Event.ON_ABILITY_ENABLEDには
+    登録されていないため、変身によるON_ABILITY_ENABLED発火はかわりものを
+    再トリガーしない（本レビューで発見・修正した回帰）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["へんしん"])],
+        team1=[Pokemon("フシギダネ", ability_name="しんりょく", move_names=["はねる"])],
+    )
+    mon, target = battle.actives
+    battle.change_ability(target, "かわりもの")
+    t.run_move(battle, 0)
+    assert mon.ability.name == "かわりもの"
+    assert mon.types == target.types
+    assert mon.has_volatile("へんしん")
+
+
 def test_へんしん_相手がへんしん状態なら失敗する():
     """へんしん: 対象が既にへんしん状態の場合は失敗する"""
     battle = t.start_battle(

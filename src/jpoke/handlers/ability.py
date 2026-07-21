@@ -1169,6 +1169,14 @@ def かわりもの_transform_to_opponent(battle: Battle, ctx: EventContext, val
     ポケモンデータに未収録の専用フォルム）・かがくへんかガスによる特性無効化は、
     それぞれ発生し得ない、または本ハンドラの登録自体が抑止される（Ability.enabled が
     Falseの間はGameEffect.register_handlersがハンドラを登録しない）ため個別の判定は不要。
+
+    本ハンドラは Event.ON_SWITCH_IN にのみ登録する（`data/ability.py` 参照）。他の
+    「場に出た時に発動する特性」（いかく等）とは異なり、スキルスワップ/さまようたましいで
+    この特性を得た場合や、へんしん/かわりもの自身の変身先の特性としてこの特性を得た場合には
+    効果が発動しない仕様（`.internal/spec/abilities/かわりもの.md`）のため、Event.ON_ABILITY_ENABLED
+    には登録しない。特にへんしん/かわりものの変身先がかわりもの持ちだった場合、
+    Event.ON_ABILITY_ENABLEDに登録すると battle.transform() を再帰的に呼び出し無限再帰
+    （スタックオーバーフロー）を起こすため、クラッシュ防止の意味でも登録しないことが必須。
     """
     mon = ctx.source
     if not battle.is_active(mon):
