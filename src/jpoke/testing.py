@@ -4,9 +4,10 @@
 `pip install jpoke` だけで（`jpoke` リポジトリを clone せずに）任意ターンでの
 ピンポイントな状態検証・技の実行・行動順の確認などができる。
 
-外部から使う関数の多くは `Battle` / `Pokemon` の公開メソッドのみに依存している。
-ただし `fix_damage` / `fix_random` は対戦オブジェクトの内部属性を直接差し替える
-デバッグ用のモンキーパッチであり、本番の対戦進行（bot 運用等）では使わないこと。
+ここに含まれる関数は全て `Battle` / `Pokemon` の公開メソッドのみに依存している。
+対戦オブジェクトの内部属性を直接差し替えるモンキーパッチ（ダメージ・乱数固定など）
+は本体パッケージのAPI安定性の対象外とするため含めていない。リポジトリ内のテストで
+使う `fix_damage` / `fix_random` は `tests/test_utils.py` を参照。
 """
 from jpoke.core import Battle, Player, AttackContext
 from jpoke.core.lethal import LethalHitResult
@@ -27,8 +28,6 @@ __all__ = [
     "end_turn",
     "apply_ailment",
     "get_action_order",
-    "fix_damage",
-    "fix_random",
     "calc_lethal",
     "calc_move_priority",
 ]
@@ -317,35 +316,6 @@ def get_action_order(battle: Battle,
     """
     reserve_command(battle, command0, command1)
     return battle.resolve_action_order()
-
-
-def fix_damage(battle: Battle, damage: int):
-    """ダメージ計算のダイスロールを固定値にする。
-
-    テスト・デバッグ専用のユーティリティであり、本番の対戦進行では使わないこと。
-    `Battle.roll_damage` を差し替えるモンキーパッチのため、以降そのBattleインスタンスの
-    ダメージ計算は全て固定値になる。
-
-    Args:
-        battle: Battleインスタンス
-        damage: 固定するダメージ値
-    """
-    battle.roll_damage = lambda *args, **kwargs: damage
-
-
-def fix_random(battle: Battle, value: float):
-    """乱数を固定する。
-
-    テスト・デバッグ専用のユーティリティであり、本番の対戦進行では使わないこと。
-    `Battle.random.random` を差し替えるモンキーパッチのため、以降そのBattleインスタンスの
-    `random()` 呼び出しは全て固定値になる（`choice`/`randint`/`shuffle`等の他のメソッドには
-    効果がない点に注意）。
-
-    Args:
-        battle: Battleインスタンス
-        value: 固定する乱数の値（0.0以上1.0未満）
-    """
-    battle.random.random = lambda: value
 
 
 def calc_lethal(battle: Battle,
