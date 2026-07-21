@@ -56,13 +56,12 @@ class Player:
                     gender: Gender = "",
                     nature: Nature = "まじめ",
                     level: int = 50,
-                    ability_name: AbilityName = "",
-                    item_name: ItemName = "",
-                    move_names: list[MoveName] | None = None,
+                    ability: AbilityName = "",
+                    item: ItemName = "",
+                    moves: list[MoveName] | None = None,
                     tera_type: Type | None = None,
                     evs: dict[Stat, int] | None = None,
                     ivs: dict[Stat, int] | None = None) -> Pokemon:
-        # TODO: ability_name -> ability, item_name -> item, move_names -> moves に短縮したい
         """ポケモンを1体作成し、チームに追加する。
 
         `from jpoke import Pokemon` を使わずにチームを組める、`team` への
@@ -87,9 +86,9 @@ class Player:
             gender=gender,
             nature=nature,
             level=level,
-            ability_name=ability_name,
-            item_name=item_name,
-            move_names=move_names,
+            ability_name=ability,
+            item_name=item,
+            move_names=moves,
             tera_type=tera_type,
         )
         if evs is not None:
