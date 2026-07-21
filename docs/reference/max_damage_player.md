@@ -1,0 +1,3 @@
+# MaxDamagePlayer
+
+::: jpoke.players.MaxDamagePlayer
