@@ -153,6 +153,14 @@ class AttackContext(BaseContext):
     ひんしになる必要がある（`.internal/spec/moves/だいばくはつ.md`）。この違いを
     区別するため、move_executor はこのフラグを見て、まもるブロックの場合のみ
     ON_TRY_MOVE_1失敗後もEvent.ON_PAY_HPを発火させる。"""
+    missed_hidden_target: bool = False
+    """そらをとぶ・あなをほる等で姿を隠している相手に対して、対応していない技で
+    命中させられず外れたかどうか。`handlers/volatile.py` の `can_hit_hidden_target`
+    が回避成立時に True を設定する。このケースは通常の命中率判定による「外れ」と
+    同様に扱う必要があり（.internal/spec/moves/とびひざげり.md「姿を隠している
+    相手（そらをとぶ等）に使用して外れた場合も、通常の『外れ』と同様に反動ダメージを
+    受ける」）、Event.ON_TRY_MOVE_1 失敗時にこのフラグを見て move_executor が
+    通常のミス処理（Event.ON_MISS発火等）を行う。"""
 
     def is_foe_target(self) -> bool:
         """attacker と defender が異なるポケモンかを返す。"""

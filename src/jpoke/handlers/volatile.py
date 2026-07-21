@@ -132,6 +132,7 @@ def can_hit_hidden_target(battle: Battle,
             ctx.attacker, LogCode.MOVE_MISSED,
             payload=FailureLogPayload(move=ctx.move.name)
         )
+        ctx.missed_hidden_target = True
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
