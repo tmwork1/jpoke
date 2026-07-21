@@ -40,6 +40,10 @@ RLを始めるための一貫したAPIは未整備。
 - `Battle.play_out(max_turns)` / `Player.battle_against(*opponents, n_battles, on_battle_end, **battle_kwargs)`
   （実装済み。一括対戦・戦績集計）
 - `Pokemon.hp_fraction` / `fainted` / `ailment.name`（状態異常の有無判定に使用）
+- `total_hp_ratio(battle, target) -> float`（`players/tree_search_player.py` のモジュール関数）—
+  対象プレイヤーの生存ポケモンのHP割合合計を返す既存関数。`TreeSearchPlayer.evaluate()`
+  （既定の葉ノード評価）が `total_hp_ratio(self) - total_hp_ratio(opponent)` として使っており、
+  下記 `calc_state_value()` のHP項はこれをそのまま再利用する（詳細は論点4）。
 
 ## 設計上の論点（要ユーザー判断 or 実装時に確定させる）
 
@@ -83,6 +87,23 @@ RLでは「学習対象1体 vs 固定/ランダムな対戦相手」という単
 （`RandomPlayer` / `MaxDamagePlayer` / `TreeSearchPlayer` 等）をそのまま使う
 （新規クラスを作らない）。自己対戦（マルチエージェント、PettingZoo相当）は本計画のスコープ外。
 
+### 論点4: `TreeSearchPlayer` の既存評価ロジックとの重複を避ける
+
+`players/tree_search_player.py` には既に「盤面を数値評価する」関数が2つ存在する:
+
+- `total_hp_ratio(battle, target) -> float`（モジュール関数）: 対象プレイヤーの生存ポケモンの
+  HP割合合計
+- `TreeSearchPlayer.evaluate(battle) -> float`（既定の葉ノード評価）: 勝敗確定時は ±inf、
+  それ以外は `total_hp_ratio(self) - total_hp_ratio(opponent)`
+
+これは目的（ミニマックス探索の葉ノード評価。終端を±infで確実に選ばせる必要がある）が
+`calc_state_value()`（RL報酬シェーピング用の有限重み付き差分値。poke-envの
+`reward_computing_helper` 相当）と異なるため、**関数自体は分けて残す**。ただし
+「自チームの残りHP割合合計」という共通部分まで独自に再実装すると、片方だけ挙動を
+調整した際に評価基準が静かに食い違う恐れがある。そのため `calc_state_value()` の
+hp項は `total_hp_ratio()` を import して再利用し、fainted/status 項のみ独自にループする
+（実装は下記モジュール設計を参照）。
+
 ## モジュール設計: `src/jpoke/rl.py`
 
 ```python
@@ -99,6 +120,7 @@ from dataclasses import dataclass
 from jpoke.core.battle import Battle
 from jpoke.core.player import Player
 from jpoke.enums.command import Command
+from jpoke.players.tree_search_player import total_hp_ratio
 
 # 実際の行動として選ばれることのない特殊コマンドは行動空間から除外する
 _EXCLUDED = (Command.STRUGGLE, Command.FORCED)
@@ -132,17 +154,19 @@ class RewardWeights:
 
 
 def calc_state_value(battle: Battle, player: Player, weights: RewardWeights) -> float:
-    """現在の対戦状態の評価値を計算する（差分報酬の元になる値。poke-envのreward_computing_helperと同じ考え方）。"""
+    """現在の対戦状態の評価値を計算する（差分報酬の元になる値。poke-envのreward_computing_helperと同じ考え方）。
+
+    HP項は `TreeSearchPlayer.evaluate()` と同じ `total_hp_ratio()` を再利用する
+    （論点4: 「自チームの残りHP割合合計」を独自に再実装して評価基準が食い違うのを防ぐ）。
+    """
     opponent = battle.opponent(player)
-    value = 0.0
+    value = (total_hp_ratio(battle, player) - total_hp_ratio(battle, opponent)) * weights.hp
     for mon in battle.get_team(player):
-        value += mon.hp_fraction * weights.hp
         if mon.fainted:
             value -= weights.fainted
         elif mon.ailment.name:
             value -= weights.status
     for mon in battle.get_team(opponent):
-        value -= mon.hp_fraction * weights.hp
         if mon.fainted:
             value += weights.fainted
         elif mon.ailment.name:
@@ -220,7 +244,8 @@ class RLBattleEnv:
 
 1. `src/jpoke/rl.py` を新規作成し、`ACTION_COMMANDS` / `command_to_action` /
    `action_to_command` / `get_action_mask` を実装する
-2. `RewardWeights` / `calc_state_value` を実装する
+2. `RewardWeights` / `calc_state_value` を実装する（HP項は `players/tree_search_player.py` の
+   `total_hp_ratio()` を import して再利用し、独自に再実装しない。論点4参照）
 3. `embed_battle_basic` の最小参考実装を実装する（対象は要検討: 自分の場のポケモンの
    HP割合・状態異常有無・相手の場のポケモンの同項目、程度に留める）
 4. `RLBattleEnv` を実装する（論点1のA案で、まず「学習対象が瀕死交代を要求されない対戦
