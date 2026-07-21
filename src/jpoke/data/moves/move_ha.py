@@ -463,6 +463,15 @@ MOVES_HA: dict[MoveName, MoveData] = {
             ),
         }
     ),
+    "パワーシフト": MoveData(
+        # パワートリックと完全に同一効果（自分のこうげき・ぼうぎょの実数値を入れ替える）のため
+        # ハンドラ関数を共有する。
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.パワートリック_swap_stats,
+            ),
+        }
+    ),
     "パワージェム": MoveData(
         handlers={},  # 追加効果なし
     ),
