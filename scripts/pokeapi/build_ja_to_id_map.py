@@ -44,6 +44,8 @@ def load_json(path: Path) -> dict:
 def normalize_item_english_name(english_name: str) -> str:
     normalized = unicodedata.normalize("NFKD", english_name)
     ascii_text = normalized.encode("ascii", "ignore").decode("ascii")
+    # 所有格アポストロフィ（King's Rock -> kings-rock）はダッシュを挟まず除去する。
+    ascii_text = ascii_text.replace("'", "")
     ascii_text = ascii_text.lower().replace("&", " and ").replace("+", " plus ")
     slug = NON_ALNUM.sub("-", ascii_text).strip("-")
     return slug

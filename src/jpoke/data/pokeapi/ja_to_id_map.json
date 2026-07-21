@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-21T15:01:13.074688+00:00",
+  "generated_at": "2026-07-21T15:10:00.322305+00:00",
   "sources": {
     "id_map": "src/jpoke/data/pokeapi/id_map.json",
     "pokedex": "src/jpoke/data/ps-champ-ja/pokedex.json",
@@ -1889,7 +1889,7 @@
       ]
     },
     "item": {
-      "count": 785,
+      "count": 789,
       "by_ja_name": {
         "HPかいふくポン": 1002,
         "PPかいふくポン": 1003,
@@ -1940,6 +1940,7 @@
         "おいしいみず": 30,
         "おいわいはなびピック": 2086,
         "おうえんポン": 1004,
+        "おうじゃのしるし": 198,
         "おおきいマラサダ": 888,
         "おおきなしんじゅ": 89,
         "おおきなねっこ": 273,
@@ -1966,6 +1967,7 @@
         "かくとうジュエル": 596,
         "かくれポン": 1001,
         "かけたポット": 1312,
+        "かしらのしるし": 2046,
         "かたいいし": 215,
         "かたっぽピアス": 1027,
         "かなめいし": 111,
@@ -2495,6 +2497,7 @@
         "バシャーモナイト": 703,
         "バジル": 1761,
         "バター": 1707,
+        "バックのかんづめ": 1146,
         "バナナスライス": 1751,
         "バンギラスナイト": 708,
         "バンジのみ": 139,
@@ -2581,6 +2584,7 @@
         "ホズのみ": 177,
         "ホースラディッシュ": 1757,
         "ボスゴドラナイト": 706,
+        "ボブのかんづめ": 1145,
         "ボンサクのちゃわん": 2110,
         "ボーマンダナイト": 810,
         "ポイズンメモリ": 904,
@@ -2678,12 +2682,6 @@
         "ワサビソース": 1759
       },
       "unresolved": [
-        {
-          "ja_name": "おうじゃのしるし",
-          "en_name": "King's Rock",
-          "normalized_slug": "king-s-rock",
-          "reason": "pokeapi_name_not_found"
-        },
         {
           "ja_name": "ピンクのリボン",
           "en_name": "Pink Bow",
@@ -3105,18 +3103,6 @@
           "reason": "pokeapi_name_not_found"
         },
         {
-          "ja_name": "ボブのかんづめ",
-          "en_name": "Bob's Food Tin",
-          "normalized_slug": "bob-s-food-tin",
-          "reason": "pokeapi_name_not_found"
-        },
-        {
-          "ja_name": "バックのかんづめ",
-          "en_name": "Bach's Food Tin",
-          "normalized_slug": "bach-s-food-tin",
-          "reason": "pokeapi_name_not_found"
-        },
-        {
           "ja_name": "きのはこ",
           "en_name": "Normal Box",
           "normalized_slug": "normal-box",
@@ -3419,7 +3405,7 @@
         {
           "ja_name": "キングリーフ",
           "en_name": "King's Leaf",
-          "normalized_slug": "king-s-leaf",
+          "normalized_slug": "kings-leaf",
           "reason": "pokeapi_name_not_found"
         },
         {
@@ -3621,12 +3607,6 @@
           "reason": "pokeapi_name_not_found"
         },
         {
-          "ja_name": "かしらのしるし",
-          "en_name": "Leader's Crest",
-          "normalized_slug": "leader-s-crest",
-          "reason": "pokeapi_name_not_found"
-        },
-        {
           "ja_name": "テラピースステラ",
           "en_name": "Stellar Tera Shard",
           "normalized_slug": "stellar-tera-shard",
@@ -3713,7 +3693,7 @@
       ]
     },
     "item_jpoke": {
-      "count": 181,
+      "count": 182,
       "by_ja_name": {
         "あおぞらプレート": 283,
         "あかいいと": 257,
@@ -3724,6 +3704,7 @@
         "いしずえのめん": 2108,
         "いどのめん": 2106,
         "いのちのたま": 247,
+        "おうじゃのしるし": 198,
         "おおきなねっこ": 273,
         "おんみつマント": 1701,
         "かいがらのすず": 230,
@@ -3901,12 +3882,6 @@
         {
           "ja_name": "ウォーターメモリ",
           "reason": "langmap_not_found"
-        },
-        {
-          "ja_name": "おうじゃのしるし",
-          "en_name": "King's Rock",
-          "normalized_slug": "king-s-rock",
-          "reason": "pokeapi_name_not_found"
         },
         {
           "ja_name": "こうてつのプレート",
