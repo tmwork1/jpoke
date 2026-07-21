@@ -31,8 +31,8 @@ class Matchup:
         インスタンスに対して追加で設定する。
         """
         mon = player.add_pokemon(
-            name=self.species_name, ability_name=self.ability_name,
-            nature=self.nature, move_names=self.moves,
+            name=self.species_name, ability=self.ability_name,
+            nature=self.nature, moves=self.moves,
         )
         mon.set_evs(self.evs)
         mon.set_ivs(self.ivs, hp_policy="reset")  # 新規構築なので満タンにする
