@@ -463,9 +463,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
             ),
         }
     ),
-    "パワージェム": MoveData(
-        handlers={},  # 追加効果なし
-    ),
     "パワーシフト": MoveData(
         # パワートリックと完全に同一効果（自分のこうげき・ぼうぎょの実数値を入れ替える）のため
         # ハンドラ関数を共有する。
@@ -474,6 +471,9 @@ MOVES_HA: dict[MoveName, MoveData] = {
                 hs.パワートリック_swap_stats,
             ),
         }
+    ),
+    "パワージェム": MoveData(
+        handlers={},  # 追加効果なし
     ),
     "パワースワップ": MoveData(
         accuracy=None,  # 必中
