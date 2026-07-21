@@ -514,11 +514,11 @@ ITEMS: dict[ItemName, ItemData] = {
             )
         }
     ),
-    "きせきのたね": ItemData(
+    "きせきのタネ": ItemData(
         fling_power=30,
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
-                h.きせきのたね_modify_power_by_type,
+                h.きせきのタネ_modify_power_by_type,
                 subject_spec="attacker:self",
             )
         }
