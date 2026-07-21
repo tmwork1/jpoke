@@ -680,7 +680,8 @@ MOVES_HA: dict[MoveName, MoveData] = {
     ),
     "ふくろだたき": MoveData(
         power=1,
-        multi_hit={"min": 1, "max": 6, "check_hit_each_time": False, "power_sequence": ()},
+        multi_hit={"min": 1, "max": 6,
+                   "check_hit_each_time": False, "power_sequence": ()},
         handlers={
             Event.ON_MODIFY_HIT_COUNT: h.MoveHandler(
                 ha.ふくろだたき_hit_count,
@@ -782,7 +783,8 @@ MOVES_HA: dict[MoveName, MoveData] = {
                 lambda b, c, v: h.charge_into_volatile(b, c, v, "フリーズボルト"),
             ),
             Event.ON_MODIFY_PP_CONSUMED: h.MoveHandler(
-                lambda b, c, v: h.suppress_pp_on_charge_continuation(b, c, v, "フリーズボルト"),
+                lambda b, c, v: h.suppress_pp_on_charge_continuation(
+                    b, c, v, "フリーズボルト"),
             ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.フリーズボルト_apply_paralysis_to_defender,
@@ -1073,7 +1075,8 @@ MOVES_HA: dict[MoveName, MoveData] = {
             )
         },
         lethal_handlers={
-            LethalEvent.ON_HIT: LethalHandler(l.ホイールスピン_sharply_lower_attacker_spe)
+            LethalEvent.ON_HIT: LethalHandler(
+                l.ホイールスピン_sharply_lower_attacker_spe)
         }
     ),
     "ほうでん": MoveData(
