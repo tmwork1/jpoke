@@ -271,7 +271,7 @@ def test_木探索用の観測でswitchフェーズ中の相手コマンドがre
     "move" の間は観測される相手の合法手に SWITCH コマンドが混入しないことを確認する。
 
     修正前は公開状況（revealed）のみでフィルタしており、木探索が
-    battle.get_available_commands(opponent) をそのまま itertools.product() 等に
+    battle.available_commands(opponent) をそのまま itertools.product() 等に
     渡すと sim.step() の validate_command() に弾かれて ValueError になっていた
     （.internal/review/code/tree_search.md CRIT-1）。
     """
@@ -301,7 +301,7 @@ def test_木探索用の観測でswitchフェーズ中の相手コマンドがre
     def spy_choose(b):
         if b.phase == "switch":
             opponent = b.opponent(player0)
-            captured["commands"] = b.get_available_commands(opponent)
+            captured["commands"] = b.available_commands(opponent)
             captured["required_command_type"] = b.player_states[opponent].required_command_type
         return original_choose(b)
 

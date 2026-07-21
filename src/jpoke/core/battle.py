@@ -672,9 +672,9 @@ class Battle:
         """指定プレイヤーが現在、わるあがきしか選べない状態かどうかを判定する。
 
         通常技のPPが尽きている等で技コマンドが1つも無い場合、
-        `get_available_commands()` には `Command.STRUGGLE` が追加される。ただし
+        `available_commands()` には `Command.STRUGGLE` が追加される。ただし
         交代可能な場合は交代コマンドも同時に含まれるため、
-        `get_available_commands(player)[0]` のようにインデックスでわるあがきを
+        `available_commands(player)[0]` のようにインデックスでわるあがきを
         代用しようとすると、交代コマンドを誤って取得することがある。わるあがきが
         選択可能かどうかは本メソッドで判定し、実際に選択する際は `Command.STRUGGLE`
         をそのまま使う（`SWITCH_i`/`MOVE_i` と異なりインデックス解決が不要な
@@ -1701,7 +1701,7 @@ class Battle:
     def available_moves(self) -> list[Move]:
         """poke-env 互換: observer が選択可能な技のリスト。
 
-        `get_available_commands` の通常技コマンド（MOVE_i）を `command_to_move` で
+        `available_commands` の通常技コマンド（MOVE_i）を `command_to_move` で
         Move に変換する。テラスタル・メガシンカ等、同じ技のバリアントコマンドは
         重複を避けるため含めない。技コマンドが1つもない場合（わるあがきのみ）は
         わるあがきを1件返す。
@@ -1722,7 +1722,7 @@ class Battle:
     def available_switches(self) -> list[Pokemon]:
         """poke-env 互換: observer が交代可能なポケモンのリスト。
 
-        `get_available_commands` の交代コマンド（SWITCH_i）からチームの該当ポケモンを抽出する。
+        `available_commands` の交代コマンド（SWITCH_i）からチームの該当ポケモンを抽出する。
         """
         if self.observer is None:
             return []
