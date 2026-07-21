@@ -10,7 +10,7 @@ from jpoke.core.handler import HandlerReturn
 from jpoke.utils.math import apply_fixed_modifier
 from jpoke.types import BoostSource, Stat
 
-from .ability import _announce_ability_triggered
+from .ability import _announce_ability_triggered, _announce_ability_effect_ended
 
 
 def _select_paradox_boost_stat(battle: Battle, mon: Pokemon) -> Stat:
@@ -47,6 +47,16 @@ def _deactivate_paradox_boost(mon: Pokemon) -> None:
     """パラドックス補正状態を解除する。"""
     mon.paradox_boost_stat = None
     mon.paradox_boost_source = ""
+
+
+def _announce_paradox_boost_ended(battle: Battle, mon: Pokemon) -> None:
+    """こだいかっせい/クォークチャージの補正終了アナウンスを記録する。
+
+    「<ポケモンは> <特性>の 効果が 切れた!」という特性共通の言い回しのため、
+    特性名から動的に組み立てる
+    （.internal/spec/abilities/こだいかっせい.md 25行目、クォークチャージ.md 25行目）。
+    """
+    _announce_ability_effect_ended(battle, mon, f"{mon.ability.base_name}の効果が切れた")
 
 
 def _activate_paradox_boost(battle: Battle,
@@ -95,6 +105,7 @@ def refresh_paradox_charge_state(battle: Battle, ctx: EventContext, value: Any) 
             return HandlerReturn(value=value)
 
         _deactivate_paradox_boost(mon)
+        _announce_paradox_boost_ended(battle, mon)
         if can_consume_item:
             _activate_paradox_boost(battle, mon, "item")
         return HandlerReturn(value=value)

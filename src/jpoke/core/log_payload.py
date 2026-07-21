@@ -32,6 +32,7 @@ LogCode ごとに必要な詳細情報を dataclass として定義する。
 | HP_CHANGED | `HPChangePayload` | `value`=増減量（符号付き）, `hp`/`max_hp`=変化後, `source`=攻撃者名, `internal_reason`=内部判定コード（表示しない）。対象ポケモン名は `EventLog.pokemon` |
 | STAT_CHANGED | `StatChangePayload` | `stats`=`{Stat: 増減段階}`, `source`=原因となったポケモン名。対象ポケモン名は `EventLog.pokemon` |
 | ABILITY_TRIGGERED | `AbilityPayload` | `ability`=発動した特性名。発動したポケモン名は `EventLog.pokemon` |
+| ABILITY_EFFECT_ENDED | `AbilityPayload` | `ability`=効果が終了した特性名, `message`=終了時の固有台詞（末尾の「！」は含まない）。対象ポケモン名は `EventLog.pokemon` |
 | ITEM_TRIGGERED / ITEM_GAINED / ITEM_LOST | `ItemPayload` | `item`=対象アイテム名。対象ポケモン名は `EventLog.pokemon` |
 | ITEM_REVEALED | `ItemRevealPayload` | `target`=持ち物を公開された相手のポケモン名, `item`=公開されたアイテム名（おみとおし等） |
 | AILMENT_APPLIED / AILMENT_REMOVED / AILMENT_PREVENTED | `AilmentPayload` | `ailment`=状態異常名, `source`=原因ポケモン名（あれば）。PREVENTEDは`display_reason`に理由 |
@@ -115,7 +116,11 @@ class VolatilePayload(LogPayload):
 
 @dataclass(frozen=True)
 class AbilityPayload(LogPayload):
+    """ABILITY_TRIGGERED は message 未使用。
+    ABILITY_EFFECT_ENDED は message に終了時の固有台詞（末尾の「！」は含まない）を入れる。
+    """
     ability: str = ""
+    message: str = ""
 
 
 @dataclass(frozen=True)
