@@ -68,9 +68,9 @@ Battle(
 from jpoke import Battle, Player
 
 player1 = Player("Player 1")
-player1.add_pokemon("ピカチュウ", move_names=["でんこうせっか"])
+player1.add_pokemon("ピカチュウ", moves=["でんこうせっか"])
 player2 = Player("Player 2")
-player2.add_pokemon("フシギダネ", move_names=["たいあたり"])
+player2.add_pokemon("フシギダネ", moves=["たいあたり"])
 
 battle = Battle(player1, player2, seed=1, damage_roll="max", critical_mode="always")
 battle.start()
@@ -345,9 +345,9 @@ add_pokemon(
     gender: Gender = "",
     nature: Nature = "まじめ",
     level: int = 50,
-    ability_name: AbilityName = "",
-    item_name: ItemName = "",
-    move_names: list[MoveName] | None = None,
+    ability: AbilityName = "",
+    item: ItemName = "",
+    moves: list[MoveName] | None = None,
     tera_type: Type | None = None,
     evs: dict[Stat, int] | None = None,
     ivs: dict[Stat, int] | None = None,
@@ -367,8 +367,8 @@ from jpoke import Player
 
 player = Player("Player 1")
 attacker = player.add_pokemon(
-    "ガブリアス", nature="いじっぱり", ability_name="さめはだ",
-    item_name="こだわりスカーフ", move_names=["じしん", "げきりん"],
+    "ガブリアス", nature="いじっぱり", ability="さめはだ",
+    item="こだわりスカーフ", moves=["じしん", "げきりん"],
     evs={"atk": 32, "spe": 32}, ivs={"spa": 0},
 )
 ```

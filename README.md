@@ -45,9 +45,9 @@ minor バージョンの更新（例: 0.1.0 → 0.2.0）でも破壊的変更が
 from jpoke import Battle, Player
 
 player1 = Player("Player 1")
-player1.add_pokemon("ピカチュウ", move_names=["でんこうせっか"])
+player1.add_pokemon("ピカチュウ", moves=["でんこうせっか"])
 player2 = Player("Player 2")
-player2.add_pokemon("フシギダネ", move_names=["たいあたり"])
+player2.add_pokemon("フシギダネ", moves=["たいあたり"])
 
 # n_selected: 省略時は min(3, チームの手持ち数) が自動設定される（ここでは1）
 battle = Battle(player1, player2)
