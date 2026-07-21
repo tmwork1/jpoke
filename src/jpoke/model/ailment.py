@@ -20,7 +20,9 @@ class Ailment(GameEffect):
         count: 状態異常の継続ターン数などを記録するカウンター
 
     Notes:
-        状態異常は相手に常に公開されるため、初期化時に revealed=True とする。
+        状態異常は相手に常に公開されるため、`GameEffect` の既定（revealed=True）を
+        そのまま使う（Ability/Item と異なり PlayerState._hide_initial_effects() の
+        対象外）。
     """
 
     def __init__(self, name: AilmentName = "", count: int | None = None) -> None:
@@ -32,7 +34,6 @@ class Ailment(GameEffect):
         super().__init__(AILMENTS[name])
         self.count: int | None = count
         self.elapsed_turns: int = 0
-        self.revealed = True
 
         self.data: AilmentData  # type hint
 

@@ -16,6 +16,7 @@ class PlayerState:
 
     def __init__(self, player: Player):
         self.team: list[Pokemon] = deepcopy(player.team)
+        self._hide_initial_effects()
         self.selected_indexes: list[int] = []
         self.active_index: int | None = None
         self.reserved_commands: list[Command] = []
@@ -35,6 +36,20 @@ class PlayerState:
         memo[id(self)] = new
         fast_copy(self, new, keys_to_deepcopy=["team"])
         return new
+
+    def _hide_initial_effects(self):
+        """バトル開始時点で特性・アイテム・技を未公開状態にする。
+
+        `GameEffect.revealed` は「作られた時点では真の情報として既知」を
+        既定とするため（テスト用に直接 `Ability(name)` 等を組み立てる場合も
+        既知の値として扱える）、相手に対して未公開にする処理はバトル専用の
+        状態としてここで明示的に行う。
+        """
+        for mon in self.team:
+            mon.ability.revealed = False
+            mon.item.revealed = False
+            for move in mon.moves:
+                move.revealed = False
 
     def reset_turn_state(self):
         """ターン状態を初期化する。"""
