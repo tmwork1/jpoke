@@ -204,11 +204,11 @@ def _pokemon_states(hp_dist: StateDist) -> tuple[LethalPokemonState, LethalPokem
     """hp_dist の代表枝（同期済みなら全枝で共通）から攻撃側・防御側のスナップショットを復元する。"""
     state = next(iter(hp_dist))
     attacker_state = LethalPokemonState(
-        boosts=dict(state.attacker_boosts or ()),
+        boosts=cast("dict[Stat, int]", dict(state.attacker_boosts or ())),
         ailment=cast(AilmentName, state.attacker_ailment or ""),
     )
     defender_state = LethalPokemonState(
-        boosts=dict(state.defender_boosts or ()),
+        boosts=cast("dict[Stat, int]", dict(state.defender_boosts or ())),
         ailment=cast(AilmentName, state.defender_ailment or ""),
     )
     return attacker_state, defender_state

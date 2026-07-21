@@ -1,5 +1,5 @@
 """
-自分が先攻でとんぼがえりを使う場合の木探索の例（framework.TreeSearchPlayer の利用例）
+自分が先攻でとんぼがえりを使う場合の木探索の例（framework.MinimaxPlayer の利用例）
 
 CRIT-1（相手のベンチが公開済みの状態で switch フェーズに入ると、修正前は
 required_command_type でフィルタされない SWITCH コマンドが混入し sim.step() が
@@ -11,7 +11,7 @@ import random
 
 from jpoke import Battle, Player, Pokemon
 from jpoke.enums import Command
-from jpoke.players import TreeSearchPlayer
+from jpoke.players import MinimaxPlayer
 
 
 class RandomPlayer(Player):
@@ -32,7 +32,7 @@ def play_game(seed: int | None = None,
         (勝者のPlayerインスタンス または None（引き分け）, ターン数)
     """
     # Player 1（1手先の総当たり探索）
-    player1 = TreeSearchPlayer(username="SearchPlayer")
+    player1 = MinimaxPlayer(username="SearchPlayer")
     player1.team = [
         Pokemon("ヒトカゲ", item_name="", move_names=["とんぼがえり"]),
         Pokemon("リザードン", item_name="", move_names=["たいあたり"]),

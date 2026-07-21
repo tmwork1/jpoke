@@ -1,0 +1,3 @@
+# MinimaxPlayer
+
+::: jpoke.players.MinimaxPlayer

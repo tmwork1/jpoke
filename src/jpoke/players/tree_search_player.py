@@ -1,7 +1,12 @@
 """木探索プレイヤーの共通フレームワーク。
 
-利用者は `TreeSearchPlayer` を継承し、`evaluate`（葉ノード評価）など
-必要なフックだけをオーバーライドすれば木探索プレイヤーを作れる。
+`TreeSearchPlayer` 自体は合法手の列挙・ノード数管理・再帰などの探索インフラのみを
+提供する抽象度の高い基底クラスで、自分の合法手をどう評価するか（`_score_command`）は
+サブクラスが実装する。相手が最悪の手を選ぶと仮定して評価する具体的な実装は
+`jpoke.players.minimax_player.MinimaxPlayer` を参照。
+
+利用者は `MinimaxPlayer`（または他の `_score_command` 実装を持つサブクラス）を継承し、
+`evaluate`（葉ノード評価）など必要なフックだけをオーバーライドすれば木探索プレイヤーを作れる。
 """
 from __future__ import annotations
 
@@ -18,10 +23,13 @@ def total_hp_ratio(battle: Battle, target: Player) -> float:
 class TreeSearchPlayer(Player):
     """合法手を総当たりで評価する木探索プレイヤーの基底クラス。
 
-    自分の各合法手について、相手が最善（自分にとって最悪）の手を選ぶと仮定したミニマックスで評価する。
+    自分の各合法手をどう評価するか（`_score_command`）は具体的な評価アルゴリズムを
+    実装するサブクラス（`jpoke.players.minimax_player.MinimaxPlayer` 等）に委ねる。
+    本クラス単体はインスタンス化できるが、`choose_command()` 実行時に `_score_command`
+    が呼ばれると `NotImplementedError` になる。
     max_plies を2以上にすると、相手の応手も含めた複数ターン先までを直接の関数再帰で評価する。
 
-    利用者は本クラスを継承し、以下のフックメソッドを必要な分だけオーバーライドする。
+    利用者は `MinimaxPlayer` 等を継承し、以下のフックメソッドを必要な分だけオーバーライドする。
     いずれも既定実装があり、オーバーライド不要ならそのまま使える。
 
     - `evaluate(battle)`: 葉ノードの盤面評価。既定は残りHP割合差。
@@ -56,7 +64,7 @@ class TreeSearchPlayer(Player):
 
     def evaluate(self, battle: Battle) -> float:
         """葉ノード（盤面）の評価値を返す。
-        
+
         値が大きいほど自分に有利。
         既定は自分と相手の残りHP割合の差。決着がついている場合は勝敗を最優先する（±inf）。
         """
@@ -111,8 +119,8 @@ class TreeSearchPlayer(Player):
             self._searching = False
 
     def _best_command(self, battle: Battle, plies: int) -> tuple[Command, float]:
-        """自分の各合法手について、相手が最善に対抗した場合の評価値を求め、
-        その中で最大の評価値を持つ手を返す（ミニマックス）。
+        """自分の各合法手について `_score_command()` でスコアを求め、
+        その中で最大のスコアを持つ手を返す。
         """
         opponent = battle.opponent(self)
 
@@ -131,21 +139,54 @@ class TreeSearchPlayer(Player):
             battle.player_states[self].required_command_type = "any"
             battle.player_states[opponent].required_command_type = "any"
 
+        scores = self._score_commands(
+            battle, my_commands, opponent, opp_commands, plies, respect_node_limit=True
+        )
         best_command = my_commands[0]
         best_score = float("-inf")
-
-        # 自分の各合法手について、相手が最善に対抗した場合の評価値を求める。
-        for my_cmd in my_commands:
-            # ノード上限に達したら即座に探索を打ち切る。
-            if self._node_limit_reached():
-                break
-            # スコアを計算・更新する。
-            score = self._worst_case_over_opponent(
-                battle, my_cmd, opponent, opp_commands, plies
-            )
+        for my_cmd, score in scores.items():
             if score > best_score:
                 best_command, best_score = my_cmd, score
         return best_command, best_score
+
+    def _score_commands(self,
+                         battle: Battle,
+                         my_commands: list[Command],
+                         opponent: Player,
+                         opp_commands: list[Command],
+                         plies: int,
+                         *,
+                         respect_node_limit: bool) -> dict[Command, float]:
+        """自分の各合法手について、`_score_command()` で評価値を求める。
+
+        `respect_node_limit=True` の場合、ノード上限に達した時点でそれ以降の
+        合法手の評価を打ち切る（`_best_command` の探索用）。`False` の場合は
+        `max_nodes` を無視して全ての合法手を評価する（`evaluate_commands` の
+        デバッグ用）。
+        """
+        scores: dict[Command, float] = {}
+        for my_cmd in my_commands:
+            if respect_node_limit and self._node_limit_reached():
+                break
+            scores[my_cmd] = self._score_command(
+                battle, my_cmd, opponent, opp_commands, plies
+            )
+        return scores
+
+    def _score_command(self,
+                        battle: Battle,
+                        my_cmd: Command,
+                        opponent: Player,
+                        opp_commands: list[Command],
+                        plies: int) -> float:
+        """自分の合法手 `my_cmd` を、相手の候補手 `opp_commands` を踏まえてスコア化する。
+
+        具体的な評価アルゴリズム（相手が最悪の手を選ぶミニマックスか、期待値か等）は
+        サブクラスが実装する拡張ポイント。`TreeSearchPlayer` 単体はインスタンス化
+        できるが、`choose_command()` 実行時にこのメソッドが呼ばれると
+        `NotImplementedError` になる。既定実装は `MinimaxPlayer` を参照。
+        """
+        raise NotImplementedError
 
     def _node_limit_reached(self) -> bool:
         return self.max_nodes is not None and self.nodes_expanded >= self.max_nodes
@@ -208,38 +249,6 @@ class TreeSearchPlayer(Player):
             if mon is not active and mon.alive
         ]
 
-    def _worst_case_over_opponent(self,
-                                   battle: Battle,
-                                   my_cmd: Command,
-                                   opponent: Player,
-                                   opp_commands: list[Command],
-                                   plies: int) -> float:
-        # TODO: 自分のコマンドのスコアを計算する汎用関数として実装したほうが、コマンドの評価方法を変更するときにオーバーライドするだけで済むので便利になる。
-        """相手が自分にとって最も不利な手を選ぶと仮定し、その評価値を返す。"""
-        worst = float("inf")
-
-        # 相手の各合法手について、相手が最善に対抗した場合の評価値を求める
-        for opp_cmd in opp_commands:
-            # ノード上限に達したら即座に探索を打ち切る
-            if self._node_limit_reached():
-                break
-
-            sim = battle.copy(reseed=True, copy_logs=False, omniscient=True)
-
-            # 探索専用の決定論化オプション（例: 命中固定・平均ダメージ）を
-            # sim にだけ設定する。実盤面（battle）には影響しない。
-            # 分岐（sim）ごとに新規オブジェクトのため、choose_command()側で
-            # 1度だけ呼んでも各simには伝播しない。分岐ごとの呼び出しが必須
-            # （test_configure_simが各分岐でsim_step実行前に呼ばれる で担保）。
-            self.configure_sim(sim)
-
-            # コマンドを指定して盤面を進める。
-            sim.step({self: my_cmd, opponent: opp_cmd})
-            self.nodes_expanded += 1
-            score = self._evaluate_node(sim, plies)
-            worst = min(worst, score)
-        return worst
-
     def _evaluate_node(self, sim: Battle, plies: int) -> float:
         """探索木の葉ノード（盤面）を評価する。"""
         if sim.judge_winner() is not None or plies <= 1:
@@ -273,7 +282,6 @@ class TreeSearchPlayer(Player):
         return battle.command_manager.available_action_commands(opponent)
 
     def evaluate_commands(self, battle: Battle) -> dict[Command, float]:
-        # TODO: このメソッドを残したまま、主機能である _best_command() の探索と共通化できないか。
         """現在の盤面での自分の各合法手の評価値一覧を返す（デバッグ・読み筋確認用）。
 
         `_searching` やノードカウンタなど、探索本体（choose_command）の状態を
@@ -297,12 +305,10 @@ class TreeSearchPlayer(Player):
         saved_nodes, saved_max_nodes = self.nodes_expanded, self.max_nodes
         self.nodes_expanded, self.max_nodes = 0, None
         try:
-            return {
-                my_cmd: self._worst_case_over_opponent(
-                    battle, my_cmd, opponent, opponent_commands, self.max_plies
-                )
-                for my_cmd in my_commands
-            }
+            return self._score_commands(
+                battle, my_commands, opponent, opponent_commands, self.max_plies,
+                respect_node_limit=False,
+            )
         finally:
             self.nodes_expanded, self.max_nodes = saved_nodes, saved_max_nodes
 

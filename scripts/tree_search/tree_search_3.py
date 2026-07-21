@@ -1,5 +1,5 @@
 """
-同時に死に出しする場合の木探索の例（framework.TreeSearchPlayer の利用例）
+同時に死に出しする場合の木探索の例（framework.MinimaxPlayer の利用例）
 
 両者の先頭が同時に瀕死になるシナリオ。この場合 required_command_type は
 どちらの側も None（自分は switch、相手は「後攻」ではないため絞り込みが働かない）
@@ -7,7 +7,7 @@
 """
 
 from jpoke import Battle, Player, Pokemon
-from jpoke.players import TreeSearchPlayer
+from jpoke.players import MinimaxPlayer
 
 
 def play_game(seed: int | None = None,
@@ -22,7 +22,7 @@ def play_game(seed: int | None = None,
         (勝者のPlayerインスタンス または None（引き分け）, ターン数)
     """
     # Player 1（1手先の総当たり探索）
-    player1 = TreeSearchPlayer(username="SearchPlayer")
+    player1 = MinimaxPlayer(username="SearchPlayer")
     player1.team = [
         Pokemon("ヒトカゲ", item_name="いのちのたま", move_names=["たいあたり"]),
         Pokemon("リザード", item_name="", move_names=["たいあたり"]),

@@ -35,7 +35,7 @@ from random import Random
 
 from jpoke import Battle, Player
 from jpoke.enums import Command
-from jpoke.players import TreeSearchPlayer
+from jpoke.players import MinimaxPlayer
 
 from fuzz_common import (
     FuzzResult,
@@ -79,8 +79,8 @@ class RandomPlayer(Player):
         return self.rng.choice(commands)
 
 
-class TreeSearchFuzzPlayer(TreeSearchPlayer):
-    """fuzzテスト用の TreeSearchPlayer。
+class TreeSearchFuzzPlayer(MinimaxPlayer):
+    """fuzzテスト用の MinimaxPlayer。
 
     選出と、探索中の割り込み交代（フォールバック）に、master シードから
     独立に派生させた専用の Random インスタンスを使うことで、選出・木探索の

@@ -39,6 +39,7 @@ nav:
       - Player: reference/player.md
       - RandomPlayer: reference/random_player.md
       - TreeSearchPlayer: reference/tree_search_player.md
+      - MinimaxPlayer: reference/minimax_player.md
       - Pokemon: reference/pokemon.md
       - Move: reference/move.md
       - jpoke.testing: reference/testing.md

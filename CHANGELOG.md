@@ -9,6 +9,10 @@
 
 ### Added
 
+- `jpoke.players.MinimaxPlayer` — 自分の各合法手について、相手が最善（自分に
+  とって最悪）の手を選ぶと仮定したミニマックスで評価する木探索プレイヤー。
+  `TreeSearchPlayer` の全フック（`evaluate`/`fallback`/`estimate_opponent`/
+  `configure_sim`）をそのまま継承する
 - `Battle.swap_items()` に `source: Pokemon | None = None` 引数を追加。従来は
   `ItemManager.swap_items()` が持つ `source`（交換の発生源となるポケモン。`source`
   自身が持つねんちゃくのみ無効化する判定に使う）を `Battle` ファサードから渡す
@@ -130,6 +134,15 @@
 
 ### Changed
 
+- **破壊的変更**: `TreeSearchPlayer` を、具体的な評価アルゴリズムを持たない抽象度の
+  高い探索フレームワーク基底クラスに変更した。自分の合法手をどう評価するか
+  （`_score_command`、新設）は具体的なアルゴリズムを実装するサブクラスに委ねる
+  ようになり、`TreeSearchPlayer` 単体をインスタンス化して `choose_command()` を
+  呼ぶと `NotImplementedError` になる。従来の「相手が最悪の手を選ぶと仮定する」
+  ミニマックス評価は新設の `jpoke.players.MinimaxPlayer` に移設したため、
+  `TreeSearchPlayer` を直接使っていたコードは `MinimaxPlayer` に置き換える必要が
+  ある（`evaluate`/`fallback`/`estimate_opponent`/`configure_sim` の4フックは
+  従来通り `MinimaxPlayer` でも利用できる）
 - **破壊的変更**: `Battle.__init__` が `players: tuple[Player, ...]` ではなく
   `*players: Player` の可変長引数を受け取るようになった。
   `Battle((player1, player2), ...)` ではなく `Battle(player1, player2, ...)`
@@ -221,6 +234,21 @@
 
 ### Fixed
 
+- `pyproject.toml` の `package-data` に `jpoke.data` の `regulation/*.csv`
+  （`src/jpoke/data/regulation/item.csv` / `pokemon.csv`）が未登録だったため、
+  ビルドした wheel から `pip install` すると `pokedex.py` が
+  `regulation/pokemon.csv` を読めず `FileNotFoundError` になっていた
+  （`import jpoke` が失敗する状態だった）。登録を追加して解消した
+- `src/jpoke/core/lethal.py` の `_pokemon_states()` で、`LethalPokemonState.boosts`
+  （`dict[Stat, int]`）に `dict(state.attacker_boosts or ())` / `dict(state.
+  defender_boosts or ())`（`dict[str, int]` 相当）をそのまま代入しており mypy の
+  型チェックが通っていなかった。既存の `ailment` フィールドと同様に `cast` で
+  明示するよう修正した（実行時の挙動に変更なし）
+- `src/jpoke/utils/__init__.py` の `__all__` リストがタブインデントになっており
+  ruff（W191）が警告していたため、スペースインデントに統一した
+- `examples/01_getting_started/03_custom_player.ipynb` /
+  `examples/03_lethal/02_multi_move.ipynb` の末尾・行末の余分な空白を除去し、
+  ruff（W291/W293）の警告を解消した
 - `docs/api/README.md` の `Command` 章「インスタンスプロパティ・メソッド」表に
   `is_type(command_type)`（`examples/02_ai/01_custom_player.py` で使用している、
   `"any"` / `"move"` / `"switch"` を指定できる汎用の種別判定メソッド）が掲載されて
