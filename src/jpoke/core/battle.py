@@ -1148,13 +1148,23 @@ class Battle:
             `Pokemon.reset_on_switch_out()` が変身前の技・性別・タイプ/体重上書きを復元する。
             特性・実数値ステータス・能力ランクは同メソッドの既存リセット処理
             （交代時に必ず素の特性・種族値ベースの実数値・ランク0へ戻す処理）がそのまま兼ねる。
+
+            特性が実際に変化する場合のみ ON_ABILITY_DISABLED/ON_ABILITY_ENABLED を発火する
+            （`AbilityManager.change_ability` の「特性名が変わらないなら何もしない」という
+            既存の規約と揃える）。この省略は、変身先の特性がかわりものであった場合に
+            source側でもかわりものが即座に発動して再度 transform() を呼び出し、その内部の
+            ON_ABILITY_ENABLED が再びかわりものを呼ぶ…という無限再帰（スタックオーバーフロー）
+            を防ぐためにも必須。
         """
+        new_ability_name = cast(AbilityName, target.ability.name)
+        ability_changed = source.ability.base_name != new_ability_name
         is_active = self.is_active(source)
-        if is_active:
+        if ability_changed and is_active:
             self.events.emit(Event.ON_ABILITY_DISABLED, EventContext(source=source))
             source.ability.unregister_handlers(self.events, source)
-        source.ability = Ability(cast(AbilityName, target.ability.name))
-        if is_active:
+        if ability_changed:
+            source.ability = Ability(new_ability_name)
+        if ability_changed and is_active:
             source.ability.register_handlers(self.events, source)
             self.events.emit(Event.ON_ABILITY_ENABLED, EventContext(source=source))
 
