@@ -53,6 +53,37 @@ def test_Gのちから_ぼうぎょダウン_secondary無し():
     assert results[1].min_damage == results[0].min_damage
 
 
+def test_LethalHitResult加算_hp_dist合成ロジックが直接計算と一致する():
+    """LethalHitResult.__add__ のhp_dist合成ロジックを検証する。
+
+    たいあたりを2発直接計算した累積結果（1発目→2発目）と、1発目の結果に
+    「フルHPから1発だけ独立に計算した結果」を__add__で合成した結果は一致するはずである。
+    たいあたりはランク変化を伴わないため、2発目のダメージ分布は1発目と同一であり、
+    直接計算（2発とも同じ乱数範囲を畳み込む）と合成計算（__add__によるhp_dist差し引き）は
+    数学的に同じ結果になる。
+    """
+    battle_direct = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    results_direct = t.calc_lethal(battle_direct, player_idx=0, moves=Move("たいあたり"), max_attack=2)
+
+    battle_second_hit = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    results_second_hit = t.calc_lethal(battle_second_hit, player_idx=0, moves=Move("たいあたり"), max_attack=1)
+
+    combined = results_direct[0] + results_second_hit[0]
+
+    assert combined.attack_count == 2
+    assert combined.hit_count == 1
+    assert combined.hp_dist == results_direct[1].hp_dist
+    # damage_distは両ヒット分の合算（20~24 + 20~24）
+    assert combined.min_damage == 40
+    assert combined.max_damage == 48
+
+
 def test_Vジェネレート_ランクダウン_secondary有り():
     """Vジェネレート: secondary=Trueのとき、命中後に攻撃側のぼうぎょ・とくぼう・すばやさが1段階下がる"""
     battle = t.start_battle(
