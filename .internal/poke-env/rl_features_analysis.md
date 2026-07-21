@@ -111,11 +111,11 @@ poke_env/environment/
    （poke-envも同様に「利用者が実装する」設計だが、参考実装や助言用のヘルパーは一切ない）。
 3. **報酬シェーピングのヘルパー**（`reward_computing_helper` 相当）— HP割合・瀕死・状態異常・勝敗を
    使った差分報酬というAPIとしての形はjpokeにない。`tod_score(alpha)`（分類D）はダメージレース評価用の
-   スコアで、エピソード単位の報酬シェーピングとは目的が異なる。ただし構成要素の一部は既にある:
-   `total_hp_ratio(battle, target)`（`players/tree_search_player.py`）が「チームの残りHP割合合計」を
-   既に提供しており、`TreeSearchPlayer.evaluate()`（ミニマックス葉ノード評価、勝敗確定時は±inf）が
-   これを使っている。RL用の報酬ヘルパー（`rl_support.md` の `calc_state_value`）はこの関数を
-   再利用し、HP項の計算ロジックを二重実装しない設計にする（詳細は `rl_support.md` 論点4）。
+   スコアで、エピソード単位の報酬シェーピングとは目的が異なる。`players/tree_search_player.py` の
+   `total_hp_ratio(battle, target)`（`TreeSearchPlayer.evaluate()` が使うミニマックス葉ノード評価用の
+   HP割合合計）と、RL用の報酬ヘルパー（`rl_support.md` の `calc_state_value`）は評価対象こそ似るが、
+   評価関数は利用者が重み・実装ごと差し替える前提のものなので、`calc_state_value` 側は
+   `total_hp_ratio` を import せず独立に実装する（詳細は `rl_support.md` 論点4）。
 4. **行動マスク配列としての出力**（`Command`自体は固定順Enumで実質int変換済みだが、
    `get_available_commands(player)` の結果を `Discrete(N)` 用の0/1マスク配列に変換する層は未整備）。
 5. **`gymnasium`/`pettingzoo` への依存自体**（jpokeの実行時依存には一切なし。追加するかどうかも論点）。
