@@ -201,7 +201,6 @@ def calc_lethal(battle: Battle,
     move_list = _generate_move_list(moves)
 
     return _lethal_loop(initial_hp, hp_dist, battle, attacker, defender, move_list, critical, move_secondary, max_attack)
-    return _lethal_loop(initial_hp, hp_dist, battle, attacker, defender, move_list, critical, move_secondary, max_attack)
 
 
 def _generate_move_list(
@@ -234,8 +233,6 @@ def _generate_move_list(
         return [(to_move(moves), 1)]
 
 
-def _lethal_loop(initial_hp: int,
-                 hp_dist: StateDist,
 def _lethal_loop(initial_hp: int,
                  hp_dist: StateDist,
                  battle: Battle,
@@ -445,7 +442,7 @@ def _get_move_handlers(event: LethalEvent, ctx: LethalContext) -> list[LethalHan
 
 def _get_global_field_handlers(event: LethalEvent, battle: Battle) -> list[LethalHandler]:
     """天候・地形・共通フィールドから該当ハンドラを取得する。"""
-    fields = [battle.weather, battle.terrain] +
+    fields = [battle.weather, battle.terrain] + \
         list(battle.global_manager.fields.values())
     candidates = [field.data.lethal_handlers.get(
         event) for field in fields if field.is_active]
