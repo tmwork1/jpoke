@@ -26,7 +26,7 @@ from collections import defaultdict
 
 from jpoke.types import Stat, AilmentName, LethalSubject
 from jpoke.enums import LethalEvent
-from jpoke.utils.lethal_dist import StateDist, to_dist, add_dist, subtract_dist
+from jpoke.utils.lethal_dist import State, StateDist, to_dist, add_dist, subtract_dist
 
 
 @dataclass(frozen=True)
@@ -65,8 +65,12 @@ class LethalContext:
 
 @dataclass
 class LethalPokemonState:
-    # TODO: 一般化という観点では、これらの情報はHitごとに一意に定まる確証はないため、State に持たせるべき。
     """致死率計算時点でのポケモン片側の状態スナップショット。
+
+    実体は hp_dist の各 State が枝ごとに保持する attacker_boosts/attacker_ailment/
+    defender_boosts/defender_ailment（utils/lethal_dist.State）であり、この
+    dataclass はそこから代表枝を読み出した表示用のビューにすぎない
+    （`_pokemon_states` 参照）。
 
     Attributes:
         boosts: 計算時のランク補正
@@ -109,10 +113,12 @@ class LethalHitResult:
         if not isinstance(other, LethalHitResult):
             return NotImplemented
 
-        # TODO: hp_distの合成ロジックを変更したのでテストで検証する
         hp_dist = subtract_dist(self.hp_dist, subtract_dist(
             other.initial_hp, other.hp_dist))
         damage_dist = add_dist(self.damage_dist, other.damage_dist)
+        # hp_dist の各枝には other 側の状態タグ（attacker_boosts 等）が引き継がれる
+        # （subtract_dist は同期済み=Noneでない側を優先するため。utils/lethal_dist._convolve 参照）。
+        attacker_state, defender_state = _pokemon_states(hp_dist)
         return LethalHitResult(
             initial_hp=self.initial_hp,
             move=other.move,
@@ -120,8 +126,8 @@ class LethalHitResult:
             hit_count=1,
             hp_dist=hp_dist,
             damage_dist=damage_dist,
-            attacker_state=other.attacker_state,
-            defender_state=other.defender_state,
+            attacker_state=attacker_state,
+            defender_state=defender_state,
         )
 
     def _counter(self, dist: StateDist) -> dict[int, int]:
@@ -161,6 +167,51 @@ class LethalHitResult:
 def fainted(dist: StateDist) -> bool:
     """分布内に HP=0 の状態が存在するか確認する。"""
     return any(state.value == 0 for state in dist)
+
+
+def _boosts_key(boosts: dict[Stat, int]) -> tuple[tuple[str, int], ...]:
+    """dict[Stat, int] を State のタグとして使えるハッシュ可能な形に変換する。"""
+    return tuple(sorted(boosts.items()))
+
+
+def _stamp_dist(hp_dist: StateDist, *,
+                attacker_boosts: tuple[tuple[str, int], ...],
+                attacker_ailment: str,
+                defender_boosts: tuple[tuple[str, int], ...],
+                defender_ailment: str) -> StateDist:
+    """hp_dist の全ての枝に、現在の攻撃側・防御側の状態タグを同期する。
+
+    ハンドラは ctx.attacker / ctx.defender という実体を分岐によらず一括で書き換えるため、
+    ここで全枝に同じタグを書き込むことで hp_dist と実体の状態を一致させる
+    （個々のハンドラが分岐ごとに異なる状態を作るようになった場合はこの一括同期は不要になる）。
+    """
+    result: StateDist = defaultdict(int)
+    for state, freq in hp_dist.items():
+        new_state = State(
+            value=state.value,
+            ability_enabled=state.ability_enabled,
+            item_enabled=state.item_enabled,
+            attacker_boosts=attacker_boosts,
+            attacker_ailment=attacker_ailment,
+            defender_boosts=defender_boosts,
+            defender_ailment=defender_ailment,
+        )
+        result[new_state] += freq
+    return dict(result)
+
+
+def _pokemon_states(hp_dist: StateDist) -> tuple[LethalPokemonState, LethalPokemonState]:
+    """hp_dist の代表枝（同期済みなら全枝で共通）から攻撃側・防御側のスナップショットを復元する。"""
+    state = next(iter(hp_dist))
+    attacker_state = LethalPokemonState(
+        boosts=dict(state.attacker_boosts or ()),
+        ailment=cast(AilmentName, state.attacker_ailment or ""),
+    )
+    defender_state = LethalPokemonState(
+        boosts=dict(state.defender_boosts or ()),
+        ailment=cast(AilmentName, state.defender_ailment or ""),
+    )
+    return attacker_state, defender_state
 
 
 def calc_lethal(battle: Battle,
@@ -269,6 +320,7 @@ def _lethal_loop(initial_hp: int,
                 # 技の適用
                 hp_dist = _run_move(battle, ctx, hp_dist, every_event_handlers)
 
+                attacker_state, defender_state = _pokemon_states(hp_dist)
                 result = LethalHitResult(
                     initial_hp=initial_hp,
                     move=ctx.move,
@@ -276,12 +328,8 @@ def _lethal_loop(initial_hp: int,
                     hit_count=ctx.hit_count,
                     hp_dist=hp_dist,
                     damage_dist=ctx.damage_dist,
-                    attacker_state=LethalPokemonState(
-                        boosts=ctx.attacker.boosts.copy(), ailment=cast(AilmentName, ctx.attacker.ailment.name)
-                    ),
-                    defender_state=LethalPokemonState(
-                        boosts=ctx.defender.boosts.copy(), ailment=cast(AilmentName, ctx.defender.ailment.name)
-                    ),
+                    attacker_state=attacker_state,
+                    defender_state=defender_state,
                 )
                 results.append(result)
 
@@ -291,6 +339,7 @@ def _lethal_loop(initial_hp: int,
             # ターン終了時のハンドラを適用（たべのこし回復など）
             hp_dist = _run_turn_end(battle, ctx, hp_dist, every_event_handlers)
             results[-1].hp_dist = hp_dist  # ターン終了後の HP 分布を反映
+            results[-1].attacker_state, results[-1].defender_state = _pokemon_states(hp_dist)
             if fainted(hp_dist):
                 return results
 
@@ -404,7 +453,7 @@ def _run_move(battle: Battle,
 
     # ダメージを適用する（満タン枝・非満タン枝を分けて処理する）
     hp_dist = _apply_damage(battle, ctx, hp_dist)
-    _update_hp(ctx.defender, hp_dist)
+    hp_dist = _update_hp(ctx, hp_dist)
 
     # ヒット時のハンドラを適用（きのみ回復など）
     hp_dist = _emit(LethalEvent.ON_HIT, battle, ctx,
@@ -491,9 +540,18 @@ def _apply_handlers(battle: Battle,
     return hp_dist
 
 
-def _update_hp(mon: Pokemon, hp_dist: StateDist):
-    """分布内の最小 HP を mon.hp にセットする（後続ハンドラが参照するため）。"""
-    mon.hp = min(state.value for state in hp_dist)
+def _update_hp(ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """分布内の最小 HP を防御側の hp にセットし（後続ハンドラが参照するため）、
+    hp_dist の全枝に現在の攻撃側・防御側の状態タグ（ランク補正・状態異常）を同期する。
+    """
+    ctx.defender.hp = min(state.value for state in hp_dist)
+    return _stamp_dist(
+        hp_dist,
+        attacker_boosts=_boosts_key(ctx.attacker.boosts),
+        attacker_ailment=ctx.attacker.ailment.name,
+        defender_boosts=_boosts_key(ctx.defender.boosts),
+        defender_ailment=ctx.defender.ailment.name,
+    )
 
 
 def _emit(event: LethalEvent,
@@ -511,9 +569,9 @@ def _emit(event: LethalEvent,
 
     handlers = _get_handlers(event, battle, ctx)
     hp_dist = _apply_handlers(battle, handlers, ctx, hp_dist)
-    _update_hp(ctx.defender, hp_dist)
+    hp_dist = _update_hp(ctx, hp_dist)
 
     hp_dist = _apply_handlers(battle, every_event_handlers, ctx, hp_dist)
-    _update_hp(ctx.defender, hp_dist)
+    hp_dist = _update_hp(ctx, hp_dist)
 
     return hp_dist
