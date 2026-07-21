@@ -122,6 +122,10 @@ class EventLog:
                 ability = payload.ability if isinstance(payload, AbilityPayload) else "特性"
                 return f"{ability}が発動した"
 
+            case LogCode.ABILITY_EFFECT_ENDED:
+                message = payload.message if isinstance(payload, AbilityPayload) and payload.message else "効果が切れた"
+                return f"{message}！"
+
             case LogCode.ITEM_TRIGGERED:
                 item = payload.item if isinstance(payload, ItemPayload) else "道具"
                 return f"{item}が発動した"

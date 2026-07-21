@@ -1758,6 +1758,38 @@ def test_スロースタート_特攻には補正がかからない():
     assert 4096 == battle.damage_calculator.atk_modifier
 
 
+def test_スロースタート_登場5ターン後は専用の終了アナウンスが記録される():
+    """スロースタート: 登場から5ターン経過すると効果が切れ、登場時の
+    ABILITY_TRIGGERED（「スロースタートが発動した」）とは別の終了専用ログ
+    （ABILITY_EFFECT_ENDED、「調子を取り戻した」）が1回だけ記録される。
+    修正前は終了時にも登場時と同じ_announce_ability_triggeredが誤って
+    呼ばれ、交代を挟まず同一文言のABILITY_TRIGGEREDが2回記録されていた
+    （fuzzログ回帰: seed=3987, LogInconsistency@ability.py:スロースタート_tick:2269）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="スロースタート", move_names=["たいあたり"])],
+        team1=[Pokemon("ハガネール", move_names=["なきごえ"])],
+    )
+    for _ in range(5):
+        battle.step()
+
+    triggered = [
+        log for log in battle.event_logger.logs
+        if log.log == LogCode.ABILITY_TRIGGERED
+        and log.payload is not None
+        and getattr(log.payload, "ability", None) == "スロースタート"
+    ]
+    ended = [
+        log for log in battle.event_logger.logs
+        if log.log == LogCode.ABILITY_EFFECT_ENDED
+        and log.payload is not None
+        and getattr(log.payload, "ability", None) == "スロースタート"
+    ]
+    assert len(triggered) == 1
+    assert len(ended) == 1
+    assert getattr(ended[0].payload, "message", None) == "調子を取り戻した"
+
+
 def test_スロースタート_登場5ターン未満はすばやさが半分になる():
     """スロースタート: 場に出てから5ターンの間、実効すばやさが半分になる。
 

@@ -32,6 +32,7 @@ class LogCode(Enum):
 
     # 特性関連
     ABILITY_TRIGGERED = auto()  # 特性発動
+    ABILITY_EFFECT_ENDED = auto()  # 特性の時限効果終了（スロースタート・こだいかっせい等）
 
     # アイテム関連
     ITEM_TRIGGERED = auto()  # アイテム発動

@@ -139,6 +139,20 @@ def _announce_ability_triggered(battle: Battle, mon: Pokemon) -> None:
         payload=AbilityPayload(ability=mon.ability.base_name)
     )
 
+def _announce_ability_effect_ended(battle: Battle, mon: Pokemon, message: str) -> None:
+    """特性の時限効果終了ログを記録する（スロースタート・こだいかっせい/クォークチャージ等）。
+
+    ABILITY_TRIGGERED（「{ability}が発動した」固定文言）とは異なり、効果終了時の
+    アナウンスは特性ごとに固有の台詞（例: 「調子を取り戻した」「こだいかっせいの
+    効果が切れた」）になるため、呼び出し元が組み立てた文言（末尾の「！」は含まない）
+    を message として受け取る。
+    """
+    battle.add_event_log(
+        mon,
+        LogCode.ABILITY_EFFECT_ENDED,
+        payload=AbilityPayload(ability=mon.ability.base_name, message=message)
+    )
+
 def _crossed_half_hp(hp_before: int, hp_after: int, max_hp: int) -> bool:
     """HPが最大HPの50%を跨いだかどうかを判定する。
 
@@ -2262,11 +2276,16 @@ def スロースタート_start(battle: Battle, ctx: EventContext, value: Any) -
 
 
 def スロースタート_tick(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """スロースタート特性: 登場からのターン数をカウントする。"""
+    """スロースタート特性: 登場からのターン数をカウントする。
+
+    登場ターンを含めて5ターン経過すると効果が切れ、発動時とは異なる終了専用の
+    アナウンス「調子を取り戻した！」が流れる
+    （.internal/spec/abilities/スロースタート.md 11行目）。
+    """
     mon = ctx.source
     mon.ability.count += 1
     if mon.ability.count == 5:
-        _announce_ability_triggered(battle, mon)
+        _announce_ability_effect_ended(battle, mon, "調子を取り戻した")
     return HandlerReturn(value=value)
 
 
