@@ -98,6 +98,22 @@ class MoveExecutor:
     def _events(self) -> EventManager:
         return self.battle.events
 
+    @property
+    def is_nested_move_execution(self) -> bool:
+        """まねっこ・ねごと・ゆびをふる・さいはい等のサブ技実行として
+        ネストされたrun_move呼び出しの内側かどうかを判定する。
+
+        トップレベルのrun_move呼び出しがEvent.ON_MODIFY_MOVEを発火する時点
+        （_run_move_depthの加算前）では、この判定は「外側に既に進行中の
+        run_move呼び出しが存在するか」を表す。値がTrueの場合、この
+        run_move呼び出しは他の技の効果によって内部的に起動されたサブ技実行
+        であることを意味する（アンコール等、使用者自身の技選択を強制的に
+        固定する効果を、サブ技実行には適用しないよう判定するために使う。
+        適用してしまうと、まねっこ等がコピーした技が固定技と異なる場合に
+        強制的に固定技へ差し戻され、battle.run_moveが際限なく再帰する）。
+        """
+        return self._run_move_depth > 0
+
     def _resolve_hit_count(self, ctx: AttackContext) -> int:
         """連続技の実ヒット回数を決定する。
 

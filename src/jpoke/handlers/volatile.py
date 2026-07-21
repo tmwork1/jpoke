@@ -228,6 +228,15 @@ def あめまみれ_turn_end(battle: Battle, ctx: EventContext, value: Any) -> H
 def アンコール_modify_move(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """アンコールによる技の固定
 
+    まねっこ・ねごと・ゆびをふる・さいはい等のサブ技実行としてネストされた
+    run_move呼び出し中は固定技への強制差し替えを行わない。差し替えてしまうと、
+    まねっこ等がコピー・選択した技が固定技（アンコールされた技自身）と異なる
+    場合に、その技の実行中に再度このハンドラが発火して固定技へ差し戻され、
+    battle.run_moveが際限なく再帰してRecursionErrorになる
+    （使用者自身が新たに技を選択し直したわけではなく、既に選択済みの技の
+    効果としてサブ技実行が行われているだけなので、アンコールによる固定を
+    適用すべきでない）。
+
     Args:
         battle: バトルインスタンス
         ctx: コンテキスト
@@ -236,6 +245,8 @@ def アンコール_modify_move(battle: Battle, ctx: EventContext, value: Any) -
     Returns:
         HandlerReturn: 固定技以外の場合は差し替える
     """
+    if battle.move_executor.is_nested_move_execution:
+        return HandlerReturn(value=value)
     mon = ctx.attacker
     volatile = mon.volatiles["アンコール"]
     move = mon.get_move(volatile.move_name)

@@ -150,6 +150,62 @@ def test_まねっこ_pp_consumed_moveはまねっこ自身になりアンコー
     assert mon.volatiles["アンコール"].move_name == "まねっこ"
 
 
+def test_まねっこ_アンコールで固定中に強制発動してもRecursionErrorにならない():
+    """まねっこ: アンコールで「まねっこ」自身に技が固定された状態で再度まねっこが
+    強制発動し、固定時点とは別の技をコピーする際、RecursionError等を起こさず
+    正常に終了することを確認する回帰テスト（fuzz_log seed=3956）。
+
+    アンコールのON_MODIFY_MOVEハンドラが、まねっこのコピー先技を実行する
+    ネストしたrun_move呼び出しに対しても無条件に固定技（まねっこ自身）へ
+    差し替えてしまうと、まねっこ_execute → run_move → ON_MODIFY_MOVE → 差し替え
+    → まねっこ_execute … と無限再帰する不具合があった。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まねっこ"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり", "アンコール", "みずでっぽう"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+
+    t.run_move(battle, 1, 0)  # カビゴン: たいあたり（コピー対象を用意）
+    t.run_move(battle, 0, 0)  # ピカチュウ: まねっこ（たいあたりをコピー）
+
+    t.run_move(battle, 1, 1)  # カビゴン: アンコール → ピカチュウを「まねっこ」自身にロック
+    assert attacker.has_volatile("アンコール")
+    assert attacker.volatiles["アンコール"].move_name == "まねっこ"
+
+    t.run_move(battle, 1, 2)  # カビゴン: みずでっぽう（コピー対象を固定技と異なる技に更新）
+    hp_before = defender.hp
+
+    # ピカチュウ: アンコールで固定された「まねっこ」が強制発動し、みずでっぽうをコピーする。
+    # 修正前はサブ技実行中にもアンコールの強制差し替えが働き、ここでRecursionErrorが発生していた。
+    t.run_move(battle, 0, 0)
+
+    assert battle.move_executor.move_applied
+    assert defender.hp < hp_before  # コピーしたみずでっぽうがカビゴンにダメージを与える
+
+
+def test_まねっこ_アンコール固定中でもサブ技実行でない技選択は固定技へ差し替えられる():
+    """まねっこ・アンコールの再帰対策として追加したis_nested_move_executionの判定は
+    トップレベルのrun_move呼び出し（サブ技実行でない通常の技選択）では
+    Falseのままであり、アンコールによる固定技への強制差し替えが引き続き機能する
+    ことを確認する回帰テスト。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり", "でんこうせっか"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    assert not battle.move_executor.is_nested_move_execution
+
+    battle.volatile_manager.apply(attacker, "アンコール", move_name="たいあたり")
+    t.run_move(battle, 0, move_idx=1)  # でんこうせっかを選択してもたいあたりへ強制差し替え
+
+    assert attacker.last_move.name == "たいあたり"
+    assert not battle.move_executor.is_nested_move_execution
+
+
 def test_まねっこ_おいわいはコピーできない():
     """まねっこ: 直前の技がおいわい（non_copycatフラグ持ち）の場合は失敗する"""
     battle = t.start_battle(
