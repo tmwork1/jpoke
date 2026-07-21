@@ -5,7 +5,9 @@ from __future__ import annotations
 import json
 from functools import lru_cache
 from importlib import resources
+from pathlib import Path
 from typing import Literal, overload
+from urllib.request import Request, urlopen
 
 from jpoke.exceptions import PokeApiResolveError
 from jpoke.types import PokemonName, ItemName
@@ -92,6 +94,32 @@ def get_item_image_url(name_ja: ItemName) -> str:
     entity_id = _resolve_pokeapi_id(name_ja=name_ja, category="item")
     item_name = _resolve_item_pokeapi_name(entity_id)
     return f"{SPRITES_BASE}/items/{item_name}.png"
+
+
+def download_pokemon_image(
+    name_ja: PokemonName,
+    dest: str | Path,
+    image_type: PokemonImageType = "official-artwork",
+) -> Path:
+    """和名からポケモン画像をダウンロードし、指定パスに保存して返す。"""
+    url = get_pokemon_image_url(name_ja, image_type=image_type)
+    return _download_binary(url, Path(dest))
+
+
+def download_item_image(name_ja: ItemName, dest: str | Path) -> Path:
+    """和名からアイテム画像をダウンロードし、指定パスに保存して返す。"""
+    url = get_item_image_url(name_ja)
+    return _download_binary(url, Path(dest))
+
+
+def _download_binary(url: str, dest: Path) -> Path:
+    request = Request(url, headers={"User-Agent": "jpoke-pokeapi-image-downloader"})
+    with urlopen(request, timeout=20) as response:  # noqa: S310
+        data = response.read()
+
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_bytes(data)
+    return dest
 
 
 @lru_cache(maxsize=1)
