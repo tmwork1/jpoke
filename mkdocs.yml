@@ -38,6 +38,7 @@ nav:
       - Battle: reference/battle.md
       - Player: reference/player.md
       - RandomPlayer: reference/random_player.md
+      - MaxDamagePlayer: reference/max_damage_player.md
       - TreeSearchPlayer: reference/tree_search_player.md
       - MinimaxPlayer: reference/minimax_player.md
       - Pokemon: reference/pokemon.md
