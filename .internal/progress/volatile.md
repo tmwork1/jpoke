@@ -43,7 +43,7 @@
 バインド	x	x	x	x	x	x	x	?
 ひるみ	x	x	x	x	n/a	n/a	x	?
 ふういん	x	x	x	x	n/a	n/a	x	?
-へんしん	保留	保留	保留	保留	n/a	n/a	保留	?
+へんしん	x	x	x	x	n/a	n/a	x	?
 ほろびのうた	x	x	x	x	n/a	n/a	x	?
 マジックコート	x	x	x	x	n/a	n/a	x	?
 まもる	x	x	x	x	n/a	n/a	x	?
