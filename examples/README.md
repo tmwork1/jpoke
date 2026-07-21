@@ -14,7 +14,7 @@
 | [`02_step.ipynb`](https://colab.research.google.com/github/tmwork1/jpoke/blob/main/examples/01_getting_started/02_step.ipynb) | `battle.step()` によるターン進行、3vs3バトル |
 | [`03_custom_player.ipynb`](https://colab.research.google.com/github/tmwork1/jpoke/blob/main/examples/01_getting_started/03_custom_player.ipynb) | `Player` を継承した最小のカスタム方策（`choose_command()` / `choose_selection()` のオーバーライド） |
 | [`04_lethal.ipynb`](https://colab.research.google.com/github/tmwork1/jpoke/blob/main/examples/01_getting_started/04_lethal.ipynb) | `battle.calc_lethal()` による致死率計算（攻撃回数・致死確率）の基本 |
-| [`05_cli_vs_custom_ai.py`](https://github.com/tmwork1/jpoke/blob/main/examples/01_getting_started/05_cli_vs_custom_ai.py) | `jpoke.players.CLIPlayer` を使い、標準入力でコマンドを入力しながら自作AI（`03_custom_player.ipynb`と同じ方策）と対戦する。対話入力のためColab非対応（`.py`） |
+| [`05_cli_vs_ai.py`](https://github.com/tmwork1/jpoke/blob/main/examples/01_getting_started/05_cli_vs_ai.py) | `jpoke.players.CLIPlayer` を使い、標準入力でコマンドを入力しながら `jpoke.players.MaxDamagePlayer` と対戦する。対話入力のためColab非対応（`.py`） |
 
 ## 02_tree_search/
 
