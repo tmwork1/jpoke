@@ -9,47 +9,32 @@ from typing import get_args
 
 import pytest
 
-from jpoke.data import ABILITIES, MOVES, POKEDEX
+from jpoke.data import ABILITIES, MOVES, POKEDEX, get_items_by_regulation, get_pokemon_by_regulation
 from jpoke.data.item import ITEMS
 from jpoke.model.pokemon import Pokemon
-from jpoke.types import AbilityFlag, MoveFlag
+from jpoke.types import AbilityFlag, MoveFlag, Regulation
 
 
-def test_技データ_flagsが全てMoveFlagに定義されている():
-    """MOVES の flags に MoveFlag（types/literals.py）未定義の文字列がないことを確認する。"""
-    valid = set(get_args(MoveFlag))
-    errors = []
-    for name, data in MOVES.items():
-        unknown = set(data.flags) - valid
-        if unknown:
-            errors.append(f"{name}: {sorted(unknown)}")
-    assert not errors, "MoveFlag に未定義のフラグ:\n" + "\n".join(errors)
-
-
-def test_技データ_no_effect_in_singlesの技はPokemonのlearnsetから除外される():
-    """no_effect_in_singlesフラグを持つ技（味方専用で対象不在・公式無効果技等）が、
-    Pokemon.learnset（実戦で使う覚えられる技の集合）に一切含まれないことを確認する。
+def test_get_items_by_regulation_がITEMSのregulationsと一致する():
+    """get_items_by_regulation() が ITEMS を regulations でフィルタした結果と一致し、
+    五十音順にソートされていることを確認する。
     """
-    no_effect_moves = {name for name, data in MOVES.items() if "no_effect_in_singles" in data.flags}
-    assert no_effect_moves, "no_effect_in_singlesフラグを持つ技が1件も無い（フラグ定義の確認漏れ）"
-
-    errors = []
-    for name in POKEDEX:
-        leaked = Pokemon(name).learnset & no_effect_moves
-        if leaked:
-            errors.append(f"{name}: {sorted(leaked)}")
-    assert not errors, "learnsetから除外されていない技:\n" + "\n".join(errors)
+    for regulation in get_args(Regulation):
+        expected = sorted(name for name, data in ITEMS.items() if regulation in data.regulations)
+        actual = get_items_by_regulation(regulation)
+        assert actual == expected, f"{regulation}: actual={actual}, expected={expected}"
+        assert actual, f"{regulation} に該当するアイテムが1件も無い"
 
 
-def test_特性データ_flagsが全てAbilityFlagに定義されている():
-    """ABILITIES の flags に AbilityFlag（types/literals.py）未定義の文字列がないことを確認する。"""
-    valid = set(get_args(AbilityFlag))
-    errors = []
-    for name, data in ABILITIES.items():
-        unknown = set(data.flags) - valid
-        if unknown:
-            errors.append(f"{name}: {sorted(unknown)}")
-    assert not errors, "AbilityFlag に未定義のフラグ:\n" + "\n".join(errors)
+def test_get_pokemon_by_regulation_がPOKEDEXのregulationsと一致する():
+    """get_pokemon_by_regulation() が POKEDEX を regulations でフィルタした結果と一致し、
+    五十音順にソートされていることを確認する。
+    """
+    for regulation in get_args(Regulation):
+        expected = sorted(name for name, data in POKEDEX.items() if regulation in data.regulations)
+        actual = get_pokemon_by_regulation(regulation)
+        assert actual == expected, f"{regulation}: actual={actual}, expected={expected}"
+        assert actual, f"{regulation} に該当するポケモンが1件も無い"
 
 
 def test_アイテムのレギュレーションCSVがITEMSへ反映される():
@@ -124,6 +109,43 @@ def test_ポケモンのレギュレーションCSVがPOKEDEXへ反映される(
             errors.append(f"{name}: actual={sorted(actual)}, expected={sorted(expected_regulations)}")
 
     assert not errors, "PokemonData.regulations と regulation/pokemon.csv が一致しません:\n" + "\n".join(errors)
+
+
+def test_技データ_flagsが全てMoveFlagに定義されている():
+    """MOVES の flags に MoveFlag（types/literals.py）未定義の文字列がないことを確認する。"""
+    valid = set(get_args(MoveFlag))
+    errors = []
+    for name, data in MOVES.items():
+        unknown = set(data.flags) - valid
+        if unknown:
+            errors.append(f"{name}: {sorted(unknown)}")
+    assert not errors, "MoveFlag に未定義のフラグ:\n" + "\n".join(errors)
+
+
+def test_技データ_no_effect_in_singlesの技はPokemonのlearnsetから除外される():
+    """no_effect_in_singlesフラグを持つ技（味方専用で対象不在・公式無効果技等）が、
+    Pokemon.learnset（実戦で使う覚えられる技の集合）に一切含まれないことを確認する。
+    """
+    no_effect_moves = {name for name, data in MOVES.items() if "no_effect_in_singles" in data.flags}
+    assert no_effect_moves, "no_effect_in_singlesフラグを持つ技が1件も無い（フラグ定義の確認漏れ）"
+
+    errors = []
+    for name in POKEDEX:
+        leaked = Pokemon(name).learnset & no_effect_moves
+        if leaked:
+            errors.append(f"{name}: {sorted(leaked)}")
+    assert not errors, "learnsetから除外されていない技:\n" + "\n".join(errors)
+
+
+def test_特性データ_flagsが全てAbilityFlagに定義されている():
+    """ABILITIES の flags に AbilityFlag（types/literals.py）未定義の文字列がないことを確認する。"""
+    valid = set(get_args(AbilityFlag))
+    errors = []
+    for name, data in ABILITIES.items():
+        unknown = set(data.flags) - valid
+        if unknown:
+            errors.append(f"{name}: {sorted(unknown)}")
+    assert not errors, "AbilityFlag に未定義のフラグ:\n" + "\n".join(errors)
 
 
 if __name__ == "__main__":

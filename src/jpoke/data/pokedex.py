@@ -56,3 +56,8 @@ for name in pokemon_regulations:
 
 for name in POKEDEX:
     POKEDEX[name].regulations = set(pokemon_regulations.get(name, set()))
+
+
+def get_pokemon_by_regulation(regulation: Regulation) -> list[PokemonName]:
+    """指定レギュレーションで使用可能なポケモン名の一覧を返す（五十音順）。"""
+    return sorted(name for name, data in POKEDEX.items() if regulation in data.regulations)

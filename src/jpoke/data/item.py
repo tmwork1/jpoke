@@ -2309,3 +2309,8 @@ ITEMS: dict[ItemName, ItemData] = {
 }
 
 common_setup()
+
+
+def get_items_by_regulation(regulation: Regulation) -> list[ItemName]:
+    """指定レギュレーションで使用可能なアイテム名の一覧を返す（五十音順）。"""
+    return sorted(name for name, data in ITEMS.items() if regulation in data.regulations)

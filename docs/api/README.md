@@ -655,12 +655,28 @@ print(mon.types, mon.stats)
 |---|---|
 | `POKEDEX[name].abilities` | そのポケモンが持てる特性のリスト（通常特性1・2・隠れ特性の順）。持てる特性が1つや2つしかないポケモンでは、存在しない枠は含まれず短いリストになる |
 | `POKEDEX[name].learnset` | そのポケモンが覚えられる技のリスト（`list[MoveName]`、五十音順にソート済み） |
+| `POKEDEX[name].regulations` | そのポケモンが使用可能なレギュレーションの集合（`set[Regulation]`） |
 
 ```python
 from jpoke.data import POKEDEX
 
 print(POKEDEX["ピカチュウ"].abilities)          # 持てる特性（通常特性1・2・隠れ特性の順）
 print(len(POKEDEX["ピカチュウ"].learnset))       # 覚えられる技の総数
+print(POKEDEX["ピカチュウ"].regulations)         # 使用可能なレギュレーション
+```
+
+### レギュレーション別の一覧取得
+
+`jpoke.get_pokemon_by_regulation()` / `jpoke.get_items_by_regulation()`。指定した
+レギュレーション（`Regulation`）で使用可能なポケモン名・アイテム名の一覧を、
+`POKEDEX` / `ITEMS` 全件から逆引きで取得する。戻り値はいずれも五十音順にソート済みの
+`list`。
+
+```python
+from jpoke import get_pokemon_by_regulation, get_items_by_regulation
+
+pokemon_list = get_pokemon_by_regulation("M-A")   # -> list[PokemonName]（五十音順）
+item_list = get_items_by_regulation("M-A")        # -> list[ItemName]（五十音順）
 ```
 
 ## Command
