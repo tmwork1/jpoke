@@ -172,14 +172,16 @@ t.run_move(battle, player_idx=0, move_idx=0)
 薄い再エクスポート層）で使っている。詳細な使い方は
 [tests/CLAUDE.md](https://github.com/tmwork1/jpoke/blob/main/tests/CLAUDE.md) も参照。
 
-## 開発に貢献する
+## 開発への貢献
 
-ソースを直接編集する場合の環境セットアップ・テストの実行・lintや型チェックなどの
-コード規約は [CONTRIBUTING.md](https://github.com/tmwork1/jpoke/blob/main/CONTRIBUTING.md)
-にまとめている。CI（`.github/workflows/test.yml`）が push/PR ごとに Windows + Linux ×
-Python 3.11/3.12 のマトリクスでテスト・lint・型チェックを実行し、
-`.github/workflows/nightly-fuzz.yml` が毎日 `scripts/fuzz/fuzz_battle.py` を
-random / tree_search の両プレイヤーモデルで実行して回帰シードを検出している。
+ソースを直接編集する場合の環境セットアップ・コード規約は
+[CONTRIBUTING.md](https://github.com/tmwork1/jpoke/blob/main/CONTRIBUTING.md) を参照。
+テストの実行方法もそちらにまとめている。
+
+CIがpush/PRごとに自動でテスト・lint・型チェックを実行している（マトリクス構成の詳細は
+CONTRIBUTING.md参照）。`.github/workflows/nightly-fuzz.yml` が毎日
+`scripts/fuzz/fuzz_battle.py` を random / tree_search の両プレイヤーモデルで実行し、
+回帰シードを検出している。
 
 ## ライセンス
 
