@@ -138,30 +138,39 @@ asyncioスレッド切り替えが発生する）。
 - リスク: poke-env ユーザーが「RL目的でjpokeに来たが最小限のGym Envもない」と離脱する可能性。
   `compat_plan.md`/`compat_analysis.md` を整備してpoke-env経験者の導線を作ってきた既存投資と矛盾する。
 
-### B案: 軽量 Gymnasium 互換ラッパーを新設（推奨候補）
-- `src/jpoke/gym_env.py`（または `interop/gym_env.py`）に、**単一プロセス・同期の**
-  `gymnasium.Env` サブクラスを追加する。poke-envのような2エージェント`ParallelEnv`ではなく、
-  まずは `SingleAgentWrapper` 相当（片方を固定オポーネントにした単一エージェント環境）から始めるのが
-  費用対効果が高い。
+### B案: 外部ライブラリ非依存のRL支援ヘルパーを新設（推奨候補・ユーザー方針: 外部ライブラリは追加しない）
+
+**ユーザー方針（2026-07-21確認）: `gymnasium`/`pettingzoo` 等の外部ライブラリは依存に追加しない。
+その代わり、強化学習を始めるのに便利な機能（行動の列挙・マスク・観測ベクトル化・報酬ヘルパー）は
+jpoke自身が素の Python（`dependencies = []` を維持）で提供する。**
+
+- `gymnasium.Env` を継承するクラスは作らない。代わりに `reset()`/`step(action)` という
+  gymnasium と同じ「形」のメソッドを持つが、返り値は `gymnasium.spaces.*` オブジェクトではなく
+  素の `list[int]`/`dict`/`float`/`bool` のみで構成する薄いクラス（例: `RLBattleEnv`）を用意する。
+  利用者が実際に `gymnasium.Env` を使いたい場合は、数行のアダプタ（`observation, reward,
+  terminated, truncated, info = rl_env.step(action)` をそのまま右辺に流すだけ）で被せられる
+  設計にする（＝gymnasium前提の学習コードとの互換性は保ちつつ、jpoke自体はimportしない）。
 - 最小構成案:
-  - `action_space`: `Discrete(N)`（`Command` の列挙順に対応）。**`enums/command.py` を確認したところ、
-    `Command` はすでに `SWITCH_0..9` / `MOVE_0..9` / `TERASTAL_0..9` / `MEGAEVOL_0..9` /
-    `GIGAMAX_0..9` / `ZMOVE_0..9`（+特殊コマンド `STRUGGLE`/`FORCED`）という固定順の Enum で、
-    `index` プロパティ・`get_*_command(index)` classmethod まで揃っている。poke-envの
-    `action_to_order`/`order_to_action` に相当する「int⇔行動」変換の**土台はほぼ完成済み**で、
-    新設が要るのは「合法手だけをmask/列挙する層」と「Gym Envとして`Discrete(N)`に詰め直す層」に
-    限られる（ゼロから設計する必要はない）**
-  - `observation_space`: 利用者が `embed_battle` 相当を実装する前提は poke-env と揃えるが、
-    `build_observation()` から素朴な数値ベクトルを組み立てる**参考実装**を1つ添える
-    （poke-envにもこの参考実装がなく独自色を出せる）
-  - `reward` : `reward_computing_helper` 相当のヘルパー関数を用意（HP割合・瀕死・状態異常・勝敗の
-    重み付け差分。既存の `Battle.won`/`lost`（`compat_plan.md` Phase3、`Player`引数版）と整合させる）
-  - `step`/`reset` : 既存の `Battle.step()` / `Player.battle_against()` の下地をそのまま流用できる
-    （サーバー・asyncio不要な分、poke-envの `_EnvPlayer`/`_AsyncQueue` に相当する複雑さが丸ごと不要）
-- 依存関係: `gymnasium` を実行時必須依存に追加するかはトレードオフ。`[project.optional-dependencies]`
-  （例: `pip install jpoke[gym]`）に切り出せば、通常利用者への影響をゼロにできる。
+  - **行動の列挙・マスク**: `enums/command.py` の `Command` はすでに `SWITCH_0..9` / `MOVE_0..9` /
+    `TERASTAL_0..9` / `MEGAEVOL_0..9` / `GIGAMAX_0..9` / `ZMOVE_0..9` という固定順のEnumで、
+    `index` プロパティ・`get_*_command(index)` classmethodまで揃っている。これに「固定サイズの
+    行動空間（`Command`一覧に対応する整数レンジ）」「`get_available_commands(player)` から
+    0/1マスク配列（`list[int]`、gymnasiumの`Box`は使わずただのlist）を作る関数」を追加すれば
+    ほぼ完成する（ゼロから設計する必要はない）
+  - **観測ベクトル化**: `build_observation()` から素朴な数値配列（`list[float]`）を組み立てる
+    参考実装を1つ用意する（poke-envの`embed_battle`は利用者に委ねる設計で参考実装自体がないため、
+    ここはjpoke独自の付加価値になる）
+  - **報酬ヘルパー**: `reward_computing_helper` 相当の**純粋関数**（クラスメソッドではなく、
+    `Battle`と前回の状態値を受け取り差分を返す関数）を用意する。HP割合・瀕死・状態異常・勝敗の
+    重み付けは poke-env と同じ発想を踏襲しつつ、`Battle.won(player)`/`lost(player)`（`Player`引数版、
+    実装済み）を使う
+  - `step`/`reset`: 既存の `Battle.step()` / `Battle.play_out()` / `Player.battle_against()` の下地を
+    そのまま流用できる（サーバー・asyncio・スレッドが一切不要な分、poke-envの
+    `_EnvPlayer`/`_AsyncQueue`相当の複雑さが丸ごと要らない）
+- 依存関係: **追加しない**（`pyproject.toml` の `dependencies = []` を維持）。これにより
+  `pip install jpoke` だけで動く既存の使い勝手を損なわない。
 - CLAUDE.md「対象はポケモンチャンピオンズのシングルバトルのみ」との整合: ダブルバトル相当の
-  `DoublesEnv` は最初から対象外でよい（poke-envとは違い、jpoke自体がダブル非対応のため自然に一致）。
+  対応は最初から対象外でよい（jpoke自体がダブル非対応のため自然に一致）。
 
 ### C案: 既存の `interop/poke_env.py` 計画（Battleコンバータ、未着手）にRL変換を統合
 - `.internal/plan/poke-env/poke_env_battle_converter.md` は「poke-env の進行中Battleをjpoke Battleに
@@ -171,20 +180,18 @@ asyncioスレッド切り替えが発生する）。
 
 ## 推奨
 
-B案（軽量 Gymnasium 互換ラッパーの新設）を推奨。理由:
+B案（外部ライブラリ非依存のRL支援ヘルパー新設）を推奨。理由:
 
 1. poke-env のRL機能は「サーバー接続込みのGym化」であり、jpokeが持つ「サーバー不要・高速・
-   完全情報」という強みと組み合わせると、素直に上位互換のRL環境になり得る。
-2. 既存の `.internal/poke-env/compat_*.md` 一連の投資（poke-env経験者の導線づくり）の延長として
-   自然。「poke-envのGymnasiumインターフェースを知っている人が次に触るもの」を用意する形になる。
-3. `players/` フレームワーク（`TreeSearchPlayer` 等）と共存可能（`Player`のサブクラスとしてではなく
-   別レイヤーの`gymnasium.Env`として追加するため、既存の設計を壊さない）。
+   完全情報」という強みと組み合わせると、素直に上位互換のRL環境になり得る。外部ライブラリの
+   `gymnasium`/`pettingzoo`自体を持ち込まなくても、その「形」だけ真似た薄いクラス・関数群で
+   十分に効果を再現できる。
+2. `dependencies = []` を維持したまま提供できるため、`pip install jpoke` だけで動く既存の
+   使い勝手を一切損なわない（`gymnasium`が使いたい利用者は自分の環境にだけ追加すればよい）。
+3. 既存の `.internal/poke-env/compat_*.md` 一連の投資（poke-env経験者の導線づくり）の延長として
+   自然。「poke-envのGymnasiumインターフェースを知っている人が次に触っても迷わないもの」を
+   用意する形になる。
+4. `players/` フレームワーク（`TreeSearchPlayer` 等）と共存可能（`Player`のサブクラスとしてではなく
+   別レイヤーのヘルパー群として追加するため、既存の設計を壊さない）。
 
-ただし実装着手前に、以下はユーザー判断が必要:
-
-- `gymnasium` を optional dependency として追加する方針でよいか
-- 行動空間の対象範囲（テラスタル・メガシンカを含めるか。Champions実際のルールでの対応状況を
-  `enums/command.py`・`.internal/spec/` で要確認）
-- 観測ベクトル化の参考実装をどこまで作り込むか（最小限の例に留めるか、実用的な特徴量セットまで
-  用意するか）
-- マルチエージェント（自己対戦、PettingZoo相当）まで見据えるか、まずは単一エージェントのみか
+実装計画は `.internal/plan/poke-env/rl_support.md` を参照。
