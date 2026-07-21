@@ -135,7 +135,10 @@ notebook移行に合わせ、examples全31本（nash系2本含む）の非コー
       二本立てに書き換え（検証venvで31件全passを確認）
 - [x] `.internal/tests/test_examples_smoke.md` を更新（`scripts/generate_test_list.py`
       実行時に無関係な `.internal/tests/items.md` の差分が出たため、そちらは破棄した）
-- [ ] `examples/README.md` にColabバッジ・実行導線を反映
+- [x] `examples/README.md` にColabバッジ・実行導線を反映（各 `.ipynb` 冒頭に個別のColabリンクを追加、
+      `9e1011ac8`（`example修正`）でのディレクトリ再編（01_basics→01_getting_started 等）に
+      追随できていなかった README を現行構成に合わせて全面更新。ルート `README.md` の
+      `examples/01_basics/...` `examples/05_benchmark/...` という古いパス記載も修正）
 
 ## フェーズ 5: 検証・PR
 
