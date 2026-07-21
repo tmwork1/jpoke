@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-22
+
 ### Added
 
 - `jpoke.players.MinimaxPlayer` — 自分の各合法手について、相手が最善（自分に
