@@ -839,8 +839,9 @@ move.modify_pp(-99)  # PPを0にする（わるあがきを誘発させたい場
 昇格したもので、`pip install jpoke` だけで（`jpoke` リポジトリを clone せずに）
 ピンポイントな状態検証・技の実行・行動順の確認などができる。
 
-`fix_damage()` / `fix_random()` は `Battle` の内部属性を直接差し替えるモンキーパッチの
-デバッグ用ユーティリティであり、本番の対戦進行（bot 運用等）では使わないこと。
+対戦オブジェクトの内部属性を直接差し替えるモンキーパッチ（ダメージ・乱数固定用の
+`fix_damage()` / `fix_random()` など）はAPI安定性の対象外とするため含めていない。
+リポジトリ内のテストで使う場合は `tests/test_utils.py` を参照。
 
 ```python
 from jpoke import Pokemon
@@ -878,8 +879,6 @@ print(results[-1].lethal_probability)
 | `calc_lethal(battle, player_idx, moves, critical=False, secondary=False, max_attack=10)` | `Battle.calc_lethal()` のインデックス指定版 |
 | `calc_move_priority(battle, player_idx, move_index=0)` | 指定インデックスの技を使ったときの優先度を返す。`Battle.calc_move_priority(pokemon, move)` のインデックス指定版 |
 | `end_turn(battle)` | `Battle.end_turn()` のラッパー |
-| `fix_damage(battle, damage)` | ダメージ計算を固定値にする（デバッグ専用モンキーパッチ） |
-| `fix_random(battle, value)` | `battle.random.random()` を固定値にする（デバッグ専用モンキーパッチ） |
 | `CustomPlayer` | 常に利用可能な最初のコマンドを選択する `Player` 実装。上記ヘルパーの内部で使われる |
 
 ## 関連リンク
