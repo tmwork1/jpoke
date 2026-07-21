@@ -25,7 +25,7 @@ pip install -e . pytest pytest-cov ruff mypy
 uv sync
 ```
 
-`requires-python = ">=3.10"`。型アノテーションは Python 3.10+ の構文
+`requires-python = ">=3.11"`。型アノテーションは Python 3.10+ の構文
 （`X | Y`, `list[X]`）を使用してください。
 
 ## テストの実行
