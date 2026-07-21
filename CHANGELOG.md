@@ -117,6 +117,16 @@
   でわるあがきを代用すると、交代コマンドが同時に存在する場合に誤ってそちらを
   返してしまう罠があった。実際にわるあがきを選ぶ際は `Command.STRUGGLE` を
   そのまま使えばよい（インデックス解決が不要な固定コマンドのため）
+- `Battle.copy(omniscient=True)` — 複製先の `observer` を `None` にするオプション
+  引数を追加。`choose_command()` が受け取る `battle` は情報隠蔽済みの観測
+  （`observer` が自分自身のコピー）であることがあり、木探索の内部シミュレーション
+  ではそのまま `copy()` した後に `sim.observer = None` を手動で設定する必要が
+  あった。`TreeSearchPlayer` をこのオプションを使う形に変更した。既定は `False`
+  で従来通りの挙動を維持する
+- `RandomPlayer.choose_selection()` — 選出番号を `battle.decision_random` で
+  ランダムに選ぶよう追加。従来は `Player.choose_selection()` の既定実装
+  （先頭から順に選出）を継承しており、`choose_command()` はランダムでも選出は
+  固定されたままだった
 
 ### Changed
 
