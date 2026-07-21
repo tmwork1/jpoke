@@ -22,6 +22,7 @@
 - [Battle](#battle)
 - [Player](#player)
 - [TreeSearchPlayer](#treesearchplayer)
+- [MinimaxPlayer](#minimaxplayer)
 - [Pokemon](#pokemon)
 - [Command](#command)
 - [Move](#move)
@@ -278,7 +279,7 @@ sim.step({player1: command1, player2: command2})
 `copy()` は盤面・ポケモンの状態を複製するが、`Player` インスタンス自体（`battle.players`
 が参照するオブジェクト）は複製せず元のオブジェクトと共有する。そのため複製後の盤面（`sim`）
 に対しても、元の `Battle` で使っていた `player1`/`player2` をそのまま `sim.step({player1: ...})`
-のキーに使える（`TreeSearchPlayer` の探索、`04_janken_nash_cfr.py` のロールアウト評価などが
+のキーに使える（`MinimaxPlayer` の探索、`04_janken_nash_cfr.py` のロールアウト評価などが
 この性質を利用している）。
 
 ### poke-env互換プロパティ
@@ -473,10 +474,15 @@ print(f"勝率: {player1.win_rate:.1%}")
 ## TreeSearchPlayer
 
 `src/jpoke/players/tree_search_player.py`。合法手を総当たりで評価する木探索プレイヤーの
-基底クラス（`Player` のサブクラス）。自分の各合法手について、相手が最善（自分にとって
-最悪）の手を選ぶと仮定したミニマックスで評価する。利用者は本クラスを継承し、下記のフック
-メソッドを必要な分だけオーバーライドする（いずれも既定実装があり、オーバーライド不要なら
-そのまま使える）。
+抽象度の高い基底クラス（`Player` のサブクラス）。合法手の列挙・ノード数管理・複数ターン先
+までの再帰などの探索インフラのみを提供し、自分の合法手をどう評価するか（`_score_command`）
+は具体的なアルゴリズムを実装するサブクラスに委ねる。`TreeSearchPlayer` 単体はインスタンス化
+できるが、`choose_command()` 実行時に `_score_command` が呼ばれると `NotImplementedError`
+になるため、実際に利用する際は具体的な評価アルゴリズムを持つ [MinimaxPlayer](#minimaxplayer)
+などのサブクラスを使う。
+
+利用者は `MinimaxPlayer` 等を継承し、下記のフックメソッドを必要な分だけオーバーライドする
+（いずれも既定実装があり、オーバーライド不要ならそのまま使える）。
 
 ### コンストラクタ
 
@@ -487,6 +493,8 @@ TreeSearchPlayer(
     max_nodes: int | None = None,
 )
 ```
+
+`MinimaxPlayer` 等のサブクラスもこのコンストラクタをそのまま継承する。
 
 - `max_plies`: 探索する手数（1以上）。2にすると相手の応手まで読むが、1手ごとに
   自分の合法手数×相手の合法手数倍に分岐が増えるため、2以上を指定する場合は
@@ -504,21 +512,6 @@ TreeSearchPlayer(
 | `estimate_opponent(battle, opponent)` | 相手の合法手が未公開で空のときに呼ばれる推定フック。既定は何もしない（推定を行わず `fallback` に委譲される）。オーバーライドし、相手ポケモンのモデル（`battle.get_active(opponent)` の moves/item 等）に推定値を書き込むと、そこから実際に選べるコマンドの列挙は `CommandManager` に任せられる。利用者は `Move`/`Item` など見慣れたドメインオブジェクトを推定するだけでよく、`Command` 自体を組み立てる必要はない |
 | `configure_sim(sim)` | `battle.copy()` 直後・`sim.step()` 実行前に呼ばれるフック。既定は何もしない。オーバーライドして、探索中だけ有効にしたい `BattleOption`（命中率固定・ダメージ平均値化など）を `sim` に設定する。実際の `battle` 本体には影響しない |
 
-```python
-from jpoke.players.tree_search_player import TreeSearchPlayer
-
-class KOFocusedPlayer(TreeSearchPlayer):
-    """相手を瀕死にできる手を優先する簡易AI（evaluate()の拡張例）。"""
-
-    def evaluate(self, battle: Battle) -> float:
-        base = super().evaluate(battle)
-        opponent_team = battle.get_team(battle.opponent(self))
-        n_fainted = sum(1 for mon in opponent_team if mon.fainted)
-        return base + n_fainted
-
-ai_player = KOFocusedPlayer("TreeSearchAI", max_plies=1, max_nodes=50)
-```
-
 ### デバッグ用メソッド
 
 | API | 概要 |
@@ -529,6 +522,30 @@ ai_player = KOFocusedPlayer("TreeSearchAI", max_plies=1, max_nodes=50)
 table = ai_player.evaluate_commands(battle)
 if table:
     print("評価値:", {str(cmd): round(v, 2) for cmd, v in table.items()})
+```
+
+## MinimaxPlayer
+
+`src/jpoke/players/minimax_player.py`。[TreeSearchPlayer](#treesearchplayer) を継承し、
+自分の各合法手について、相手が最善（自分にとって最悪）の手を選ぶと仮定したミニマックスで
+評価する具体的な実装。`TreeSearchPlayer` の全フック（`evaluate`/`fallback`/
+`estimate_opponent`/`configure_sim`）・コンストラクタ・デバッグ用メソッドをそのまま継承する。
+実際に木探索プレイヤーを使う場合は、`TreeSearchPlayer` ではなく本クラス（またはその
+サブクラス）をインスタンス化する。
+
+```python
+from jpoke.players import MinimaxPlayer
+
+class KOFocusedPlayer(MinimaxPlayer):
+    """相手を瀕死にできる手を優先する簡易AI（evaluate()の拡張例）。"""
+
+    def evaluate(self, battle: Battle) -> float:
+        base = super().evaluate(battle)
+        opponent_team = battle.get_team(battle.opponent(self))
+        n_fainted = sum(1 for mon in opponent_team if mon.fainted)
+        return base + n_fainted
+
+ai_player = KOFocusedPlayer("TreeSearchAI", max_plies=1, max_nodes=50)
 ```
 
 ## Pokemon

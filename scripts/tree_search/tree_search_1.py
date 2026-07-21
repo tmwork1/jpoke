@@ -1,9 +1,9 @@
 """
-行動選択の方策関数で木探索を行う例（framework.TreeSearchPlayer の最小利用例）
+行動選択の方策関数で木探索を行う例（framework.MinimaxPlayer の最小利用例）
 """
 
 from jpoke import Battle, Player, Pokemon
-from jpoke.players import TreeSearchPlayer
+from jpoke.players import MinimaxPlayer
 
 
 def play_game(seed: int | None = None,
@@ -18,7 +18,7 @@ def play_game(seed: int | None = None,
         (勝者のPlayerインスタンス または None（引き分け）, ターン数)
     """
     # Player 1（1手先の総当たり探索）
-    player1 = TreeSearchPlayer(username="SearchPlayer")
+    player1 = MinimaxPlayer(username="SearchPlayer")
     player1.team = [
         Pokemon("ヒトカゲ", item_name="", move_names=["たいあたり"]),
         Pokemon("リザードン", item_name="", move_names=["たいあたり"]),

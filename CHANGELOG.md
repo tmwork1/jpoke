@@ -9,6 +9,10 @@
 
 ### Added
 
+- `jpoke.players.MinimaxPlayer` — 自分の各合法手について、相手が最善（自分に
+  とって最悪）の手を選ぶと仮定したミニマックスで評価する木探索プレイヤー。
+  `TreeSearchPlayer` の全フック（`evaluate`/`fallback`/`estimate_opponent`/
+  `configure_sim`）をそのまま継承する
 - `Battle.swap_items()` に `source: Pokemon | None = None` 引数を追加。従来は
   `ItemManager.swap_items()` が持つ `source`（交換の発生源となるポケモン。`source`
   自身が持つねんちゃくのみ無効化する判定に使う）を `Battle` ファサードから渡す
@@ -130,6 +134,15 @@
 
 ### Changed
 
+- **破壊的変更**: `TreeSearchPlayer` を、具体的な評価アルゴリズムを持たない抽象度の
+  高い探索フレームワーク基底クラスに変更した。自分の合法手をどう評価するか
+  （`_score_command`、新設）は具体的なアルゴリズムを実装するサブクラスに委ねる
+  ようになり、`TreeSearchPlayer` 単体をインスタンス化して `choose_command()` を
+  呼ぶと `NotImplementedError` になる。従来の「相手が最悪の手を選ぶと仮定する」
+  ミニマックス評価は新設の `jpoke.players.MinimaxPlayer` に移設したため、
+  `TreeSearchPlayer` を直接使っていたコードは `MinimaxPlayer` に置き換える必要が
+  ある（`evaluate`/`fallback`/`estimate_opponent`/`configure_sim` の4フックは
+  従来通り `MinimaxPlayer` でも利用できる）
 - **破壊的変更**: `Battle.__init__` が `players: tuple[Player, ...]` ではなく
   `*players: Player` の可変長引数を受け取るようになった。
   `Battle((player1, player2), ...)` ではなく `Battle(player1, player2, ...)`
