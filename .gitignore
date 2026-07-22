@@ -147,3 +147,6 @@ dmypy.json
 # .loop はループのローカルスクラッチ（状態・ログ・完了印）。git 管理外にする
 # （統合ブランチ方式では main / jpoke/ にコミットしないため状態を git に載せる必要がない）
 .loop/
+
+# scripts/pokeapi/validate_urls.py の実行結果レポート（手動実行のたびにローカルへ出力）
+.internal/pokeapi/
