@@ -70,3 +70,8 @@ jobs:
       - name: Import from outside the repo
         # cwd の src/ を拾わないよう /tmp で実行し、wheel からのみ import できることを確認する
         run: cd /tmp && python -c "import jpoke; print(jpoke.__version__)"
+
+      - name: Verify all data files are packaged
+        # src/jpoke/data 配下のデータファイルが package-data のパターン漏れで
+        # wheel から欠落していないかを検証する
+        run: python scripts/check_package_data.py
