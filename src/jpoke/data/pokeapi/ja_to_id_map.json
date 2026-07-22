@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-21T15:10:00.322305+00:00",
+  "generated_at": "2026-07-22T16:01:23.203210+00:00",
   "sources": {
     "id_map": "src/jpoke/data/pokeapi/id_map.json",
     "pokedex": "src/jpoke/data/ps-champ-ja/pokedex.json",
@@ -7,7 +7,7 @@
   },
   "sections": {
     "pokemon": {
-      "count": 1225,
+      "count": 1286,
       "by_ja_name": {
         "アイアント": 632,
         "アオガラス": 822,
@@ -54,16 +54,26 @@
         "アーマーガア": 823,
         "アーマーガア(キョダイ)": 10212,
         "イイネイヌ": 1014,
+        "イエッサン(オス)": 876,
+        "イエッサン(メス)": 10186,
         "イオルブ": 826,
         "イオルブ(キョダイ)": 10213,
+        "イキリンコ(イエロー)": 10261,
+        "イキリンコ(グリーン)": 931,
+        "イキリンコ(ブルー)": 10260,
+        "イキリンコ(ホワイト)": 10262,
         "イシズマイ": 557,
         "イシツブテ": 74,
         "イシツブテ(アローラ)": 10109,
         "イシヘンジン": 874,
+        "イダイトウ(オス)": 902,
+        "イダイトウ(メス)": 10248,
         "イダイナキバ": 984,
+        "イッカネズミ": 925,
         "イトマル": 167,
         "イノムー": 221,
         "イベルタル": 717,
+        "イルカマン(ナイーブ)": 964,
         "イルカマン(マイティ)": 10256,
         "イルミーゼ": 314,
         "イワパレス": 558,
@@ -100,6 +110,8 @@
         "ウミトリオ": 961,
         "ウリムー": 220,
         "ウルガモス": 637,
+        "ウーラオス(いちげき)": 892,
+        "ウーラオス(いちげき,キョダイ)": 10226,
         "ウーラオス(れんげき)": 10191,
         "ウーラオス(れんげき,キョダイ)": 10227,
         "ウールー": 831,
@@ -139,7 +151,9 @@
         "オトスパス": 853,
         "オドシシ": 234,
         "オドリドリ(ぱちぱち)": 10123,
+        "オドリドリ(ふらふら)": 10124,
         "オドリドリ(まいまい)": 10125,
+        "オドリドリ(めらめら)": 741,
         "オニゴーリ": 362,
         "オニシズクモ": 752,
         "オニスズメ": 21,
@@ -153,7 +167,14 @@
         "オリーヴァ": 930,
         "オンバット": 714,
         "オンバーン": 715,
+        "オーガポン(いしずえ)": 10275,
+        "オーガポン(いしずえ,テラスタル)": 10275,
+        "オーガポン(いど)": 10273,
+        "オーガポン(いど,テラスタル)": 10273,
+        "オーガポン(かまど)": 10274,
+        "オーガポン(かまど,テラスタル)": 10274,
         "オーガポン(みどり)": 1017,
+        "オーガポン(みどり,テラスタル)": 1017,
         "オーダイル": 160,
         "オーベム": 606,
         "オーロット": 709,
@@ -166,6 +187,7 @@
         "カイリキー(キョダイ)": 10201,
         "カイリュー": 149,
         "カイロス": 127,
+        "カエンジシ": 668,
         "カクレオン": 352,
         "カゲボウズ": 353,
         "カジッチュ": 840,
@@ -253,7 +275,9 @@
         "ギャラドス": 130,
         "ギャロップ": 78,
         "ギャロップ(ガラル)": 10163,
+        "ギラティナ(アナザー)": 487,
         "ギラティナ(オリジン)": 10007,
+        "ギルガルド(シールド)": 681,
         "ギルガルド(ブレード)": 10026,
         "クイタラン": 631,
         "クエスパトラ": 956,
@@ -290,9 +314,13 @@
         "ケッキング": 289,
         "ケムッソ": 265,
         "ケララッパ": 732,
+        "ケルディオ": 647,
         "ケルディオ(かくご)": 10024,
         "ケロマツ": 656,
         "ケンタロス": 128,
+        "ケンタロス(パルデア水)": 10252,
+        "ケンタロス(パルデア炎)": 10251,
+        "ケンタロス(パルデア闘)": 10250,
         "ケンホロウ": 521,
         "ケーシィ": 63,
         "ゲコガシラ": 657,
@@ -303,6 +331,7 @@
         "コアルヒー": 580,
         "コイキング": 129,
         "コイル": 81,
+        "コオリッポ(アイス)": 875,
         "コオリッポ(ナイス)": 10185,
         "コクーン": 14,
         "ココガラ": 821,
@@ -392,6 +421,7 @@
         "ザルード(ダディ)": 10192,
         "ザングース": 335,
         "シェイミ(スカイ)": 10006,
+        "シェイミ(ランド)": 492,
         "シェルダー": 90,
         "シガロコ": 953,
         "シキジカ": 585,
@@ -402,6 +432,7 @@
         "シビビール": 603,
         "シビルドン": 604,
         "シママ": 522,
+        "シャリタツ(そった)": 978,
         "シャリタツ(たれた)": 10258,
         "シャリタツ(のびた)": 10259,
         "シャワーズ": 134,
@@ -415,6 +446,7 @@
         "シードラ": 117,
         "ジオヅム": 933,
         "ジガルデ(10%)": 10181,
+        "ジガルデ(50%)": 718,
         "ジガルデ(パーフェクト)": 10120,
         "ジグザグマ": 263,
         "ジグザグマ(ガラル)": 10174,
@@ -444,6 +476,8 @@
         "スコヴィラン": 952,
         "スターミー": 121,
         "ストライク": 123,
+        "ストリンダー(ハイ)": 849,
+        "ストリンダー(ハイ,キョダイ)": 10219,
         "ストリンダー(ロー)": 10184,
         "ストリンダー(ロー,キョダイ)": 10228,
         "スナノケガワ": 989,
@@ -575,6 +609,7 @@
         "デオキシス(アタック)": 10001,
         "デオキシス(スピード)": 10003,
         "デオキシス(ディフェンス)": 10002,
+        "デオキシス(ノーマル)": 386,
         "デカグース": 735,
         "デカヌチャン": 959,
         "デスカーン": 563,
@@ -600,6 +635,7 @@
         "トリデプス": 411,
         "トリトドン": 423,
         "トリミアン": 676,
+        "トルネロス(けしん)": 641,
         "トルネロス(れいじゅう)": 10019,
         "トロッゴン": 838,
         "トロピウス": 357,
@@ -655,6 +691,8 @@
         "ニドリーナ": 30,
         "ニドリーノ": 33,
         "ニャイキング": 863,
+        "ニャオニクス(オス)": 678,
+        "ニャオニクス(メス)": 10025,
         "ニャオハ": 906,
         "ニャスパー": 677,
         "ニャヒート": 726,
@@ -686,11 +724,14 @@
         "ネオラント": 457,
         "ネギガナイト": 865,
         "ネクロズマ": 800,
+        "ネクロズマ(あかつき)": 10156,
+        "ネクロズマ(たそがれ)": 10155,
         "ネクロズマ(ウルトラネクロズマ)": 10157,
         "ネッコアラ": 775,
         "ネマシュ": 755,
         "ネンドール": 344,
         "ノクタス": 332,
+        "ノココッチ": 982,
         "ノココッチ(みつくびがた)": 10255,
         "ノコッチ": 206,
         "ノズパス": 299,
@@ -732,9 +773,11 @@
         "バケッチャ(おおきい)": 10028,
         "バケッチャ(ちいさい)": 10027,
         "バケッチャ(とくだい)": 10029,
+        "バケッチャ(ふつう)": 710,
         "バサギリ": 900,
         "バシャーモ": 257,
         "バスラオ(あお)": 10016,
+        "バスラオ(あか)": 550,
         "バスラオ(しろ)": 10247,
         "バタフリー": 12,
         "バタフリー(キョダイ)": 10198,
@@ -764,6 +807,8 @@
         "パッチルドン": 881,
         "パッチール": 327,
         "パピモッチ": 926,
+        "パフュートン(オス)": 916,
+        "パフュートン(メス)": 10254,
         "パモ": 921,
         "パモット": 922,
         "パラス": 46,
@@ -775,6 +820,7 @@
         "パンプジン(おおきい)": 10031,
         "パンプジン(ちいさい)": 10030,
         "パンプジン(とくだい)": 10032,
+        "パンプジン(ふつう)": 711,
         "パーモット": 923,
         "パールル": 366,
         "ヒコザル": 390,
@@ -786,6 +832,8 @@
         "ヒノアラシ": 155,
         "ヒノヤコマ": 662,
         "ヒバニー": 813,
+        "ヒヒダルマ": 555,
+        "ヒヒダルマ(ガラル)": 10177,
         "ヒヒダルマ(ガラル,ダルマ)": 10178,
         "ヒヒダルマ(ダルマ)": 10017,
         "ヒポポタス": 449,
@@ -859,6 +907,7 @@
         "ブリジュラス": 1018,
         "ブリムオン": 858,
         "ブリムオン(キョダイ)": 10221,
+        "ブルンゲル": 593,
         "ブルー": 209,
         "ブロスター": 693,
         "ブロロローム": 966,
@@ -872,6 +921,7 @@
         "ププリン": 174,
         "プラスル": 311,
         "プリン": 39,
+        "プルリル": 592,
         "プロトーガ": 564,
         "ヘイガニ": 341,
         "ヘイラッシャ": 977,
@@ -908,6 +958,7 @@
         "ボスゴドラ": 306,
         "ボチ": 971,
         "ボルケニオン": 721,
+        "ボルトロス(けしん)": 642,
         "ボルトロス(れいじゅう)": 10020,
         "ボーマンダ": 373,
         "ポカブ": 498,
@@ -978,11 +1029,13 @@
         "ミニリュウ": 147,
         "ミニーブ": 928,
         "ミネズミ": 504,
+        "ミノマダム(くさき)": 413,
         "ミノマダム(すなち)": 10004,
         "ミノマダム(ゴミ)": 10005,
         "ミノムッチ(くさき)": 412,
         "ミブリム": 856,
         "ミミズズ": 968,
+        "ミミッキュ": 778,
         "ミミロップ": 428,
         "ミミロル": 427,
         "ミュウ": 151,
@@ -1094,6 +1147,8 @@
         "メタモン": 132,
         "メタング": 375,
         "メッソン": 816,
+        "メテノ(りゅうせい)": 774,
+        "メテノ(コア)": 10136,
         "メノクラゲ": 72,
         "メブキジカ": 586,
         "メラルバ": 636,
@@ -1103,6 +1158,7 @@
         "メルメタル(キョダイ)": 10208,
         "メレシー": 703,
         "メロエッタ(ステップ)": 10018,
+        "メロエッタ(ボイス)": 648,
         "モウカザル": 391,
         "モクロー": 722,
         "モグリュー": 529,
@@ -1114,6 +1170,7 @@
         "モモワロウ": 1025,
         "モルフォン": 49,
         "モルペコ(はらぺこ)": 10187,
+        "モルペコ(まんぷく)": 877,
         "モロバレル": 591,
         "モンジャラ": 114,
         "モンメン": 546,
@@ -1152,6 +1209,7 @@
         "ヨノワール": 477,
         "ヨマワル": 355,
         "ヨルノズク": 164,
+        "ヨワシ(たんどく)": 746,
         "ヨワシ(むれ)": 10127,
         "ヨーギラス": 246,
         "ヨーテリー": 506,
@@ -1170,6 +1228,7 @@
         "ラビフット": 814,
         "ラフレシア": 45,
         "ラブカス": 370,
+        "ラブトロス(けしん)": 905,
         "ラブトロス(れいじゅう)": 10249,
         "ラプラス": 131,
         "ラプラス(キョダイ)": 10204,
@@ -1178,6 +1237,7 @@
         "ラルトス": 280,
         "ランクルス": 579,
         "ランターン": 171,
+        "ランドロス(けしん)": 645,
         "ランドロス(れいじゅう)": 10021,
         "ランプラー": 608,
         "リオル": 447,
@@ -1193,6 +1253,7 @@
         "リーフィア": 470,
         "ルカリオ": 448,
         "ルガルガン(たそがれ)": 10152,
+        "ルガルガン(まひる)": 745,
         "ルガルガン(まよなか)": 10126,
         "ルギア": 249,
         "ルクシオ": 404,
@@ -1237,53 +1298,14 @@
       },
       "unresolved": [
         {
-          "ja_name": "ケンタロス(パルデア闘)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "taurospaldeacombat",
-          "showdown_name": "Tauros-Paldea-Combat",
-          "candidates": [
-            "taurospaldeacombat",
-            "tauros-paldea-combat"
-          ]
-        },
-        {
-          "ja_name": "ケンタロス(パルデア炎)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "taurospaldeablaze",
-          "showdown_name": "Tauros-Paldea-Blaze",
-          "candidates": [
-            "taurospaldeablaze",
-            "tauros-paldea-blaze"
-          ]
-        },
-        {
-          "ja_name": "ケンタロス(パルデア水)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "taurospaldeaaqua",
-          "showdown_name": "Tauros-Paldea-Aqua",
-          "candidates": [
-            "taurospaldeaaqua",
-            "tauros-paldea-aqua"
-          ]
-        },
-        {
-          "ja_name": "デオキシス(ノーマル)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "deoxys",
-          "showdown_name": "Deoxys",
-          "candidates": [
-            "deoxys",
-            "deoxys"
-          ]
-        },
-        {
           "ja_name": "ミノムッチ(すなち)",
           "reason": "pokeapi_name_not_found",
           "showdown_id": "burmysandy",
           "showdown_name": "Burmy-Sandy",
           "candidates": [
             "burmysandy",
-            "burmy-sandy"
+            "burmy-sandy",
+            "burmysandy-male"
           ]
         },
         {
@@ -1293,167 +1315,8 @@
           "showdown_name": "Burmy-Trash",
           "candidates": [
             "burmytrash",
-            "burmy-trash"
-          ]
-        },
-        {
-          "ja_name": "ミノマダム(くさき)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "wormadam",
-          "showdown_name": "Wormadam",
-          "candidates": [
-            "wormadam",
-            "wormadam"
-          ]
-        },
-        {
-          "ja_name": "ギラティナ(アナザー)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "giratina",
-          "showdown_name": "Giratina",
-          "candidates": [
-            "giratina",
-            "giratina"
-          ]
-        },
-        {
-          "ja_name": "シェイミ(ランド)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "shaymin",
-          "showdown_name": "Shaymin",
-          "candidates": [
-            "shaymin",
-            "shaymin"
-          ]
-        },
-        {
-          "ja_name": "バスラオ(あか)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "basculin",
-          "showdown_name": "Basculin",
-          "candidates": [
-            "basculin",
-            "basculin"
-          ]
-        },
-        {
-          "ja_name": "ヒヒダルマ",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "darmanitan",
-          "showdown_name": "Darmanitan",
-          "candidates": [
-            "darmanitan",
-            "darmanitan"
-          ]
-        },
-        {
-          "ja_name": "ヒヒダルマ(ガラル)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "darmanitangalar",
-          "showdown_name": "Darmanitan-Galar",
-          "candidates": [
-            "darmanitangalar",
-            "darmanitan-galar"
-          ]
-        },
-        {
-          "ja_name": "プルリル",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "frillish",
-          "showdown_name": "Frillish",
-          "candidates": [
-            "frillish",
-            "frillish"
-          ]
-        },
-        {
-          "ja_name": "ブルンゲル",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "jellicent",
-          "showdown_name": "Jellicent",
-          "candidates": [
-            "jellicent",
-            "jellicent"
-          ]
-        },
-        {
-          "ja_name": "トルネロス(けしん)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "tornadus",
-          "showdown_name": "Tornadus",
-          "candidates": [
-            "tornadus",
-            "tornadus"
-          ]
-        },
-        {
-          "ja_name": "ボルトロス(けしん)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "thundurus",
-          "showdown_name": "Thundurus",
-          "candidates": [
-            "thundurus",
-            "thundurus"
-          ]
-        },
-        {
-          "ja_name": "ランドロス(けしん)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "landorus",
-          "showdown_name": "Landorus",
-          "candidates": [
-            "landorus",
-            "landorus"
-          ]
-        },
-        {
-          "ja_name": "ケルディオ",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "keldeo",
-          "showdown_name": "Keldeo",
-          "candidates": [
-            "keldeo",
-            "keldeo"
-          ]
-        },
-        {
-          "ja_name": "メロエッタ(ボイス)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "meloetta",
-          "showdown_name": "Meloetta",
-          "candidates": [
-            "meloetta",
-            "meloetta"
-          ]
-        },
-        {
-          "ja_name": "カエンジシ",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "pyroar",
-          "showdown_name": "Pyroar",
-          "candidates": [
-            "pyroar",
-            "pyroar"
-          ]
-        },
-        {
-          "ja_name": "ニャオニクス(オス)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "meowstic",
-          "showdown_name": "Meowstic",
-          "candidates": [
-            "meowstic",
-            "meowstic"
-          ]
-        },
-        {
-          "ja_name": "ニャオニクス(メス)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "meowsticf",
-          "showdown_name": "Meowstic-F",
-          "candidates": [
-            "meowsticf",
-            "meowstic-f"
+            "burmy-trash",
+            "burmytrash-male"
           ]
         },
         {
@@ -1463,7 +1326,8 @@
           "showdown_name": "Meowstic-M-Mega",
           "candidates": [
             "meowsticmmega",
-            "meowstic-m-mega"
+            "meowstic-m-mega",
+            "meowsticmmega-male"
           ]
         },
         {
@@ -1473,417 +1337,8 @@
           "showdown_name": "Meowstic-F-Mega",
           "candidates": [
             "meowsticfmega",
-            "meowstic-f-mega"
-          ]
-        },
-        {
-          "ja_name": "ギルガルド(シールド)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "aegislash",
-          "showdown_name": "Aegislash",
-          "candidates": [
-            "aegislash",
-            "aegislash"
-          ]
-        },
-        {
-          "ja_name": "バケッチャ(ふつう)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "pumpkaboo",
-          "showdown_name": "Pumpkaboo",
-          "candidates": [
-            "pumpkaboo",
-            "pumpkaboo"
-          ]
-        },
-        {
-          "ja_name": "パンプジン(ふつう)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "gourgeist",
-          "showdown_name": "Gourgeist",
-          "candidates": [
-            "gourgeist",
-            "gourgeist"
-          ]
-        },
-        {
-          "ja_name": "ジガルデ(50%)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "zygarde",
-          "showdown_name": "Zygarde",
-          "candidates": [
-            "zygarde",
-            "zygarde"
-          ]
-        },
-        {
-          "ja_name": "オドリドリ(めらめら)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "oricorio",
-          "showdown_name": "Oricorio",
-          "candidates": [
-            "oricorio",
-            "oricorio"
-          ]
-        },
-        {
-          "ja_name": "オドリドリ(ふらふら)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "oricoriopau",
-          "showdown_name": "Oricorio-Pa'u",
-          "candidates": [
-            "oricoriopau",
-            "oricorio-pa-u"
-          ]
-        },
-        {
-          "ja_name": "ルガルガン(まひる)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "lycanroc",
-          "showdown_name": "Lycanroc",
-          "candidates": [
-            "lycanroc",
-            "lycanroc"
-          ]
-        },
-        {
-          "ja_name": "ヨワシ(たんどく)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "wishiwashi",
-          "showdown_name": "Wishiwashi",
-          "candidates": [
-            "wishiwashi",
-            "wishiwashi"
-          ]
-        },
-        {
-          "ja_name": "メテノ(コア)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "minior",
-          "showdown_name": "Minior",
-          "candidates": [
-            "minior",
-            "minior"
-          ]
-        },
-        {
-          "ja_name": "メテノ(りゅうせい)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "miniormeteor",
-          "showdown_name": "Minior-Meteor",
-          "candidates": [
-            "miniormeteor",
-            "minior-meteor"
-          ]
-        },
-        {
-          "ja_name": "ミミッキュ",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "mimikyu",
-          "showdown_name": "Mimikyu",
-          "candidates": [
-            "mimikyu",
-            "mimikyu"
-          ]
-        },
-        {
-          "ja_name": "ネクロズマ(たそがれ)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "necrozmaduskmane",
-          "showdown_name": "Necrozma-Dusk-Mane",
-          "candidates": [
-            "necrozmaduskmane",
-            "necrozma-dusk-mane"
-          ]
-        },
-        {
-          "ja_name": "ネクロズマ(あかつき)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "necrozmadawnwings",
-          "showdown_name": "Necrozma-Dawn-Wings",
-          "candidates": [
-            "necrozmadawnwings",
-            "necrozma-dawn-wings"
-          ]
-        },
-        {
-          "ja_name": "ストリンダー(ハイ)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "toxtricity",
-          "showdown_name": "Toxtricity",
-          "candidates": [
-            "toxtricity",
-            "toxtricity"
-          ]
-        },
-        {
-          "ja_name": "ストリンダー(ハイ,キョダイ)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "toxtricitygmax",
-          "showdown_name": "Toxtricity-Gmax",
-          "candidates": [
-            "toxtricitygmax",
-            "toxtricity-gmax"
-          ]
-        },
-        {
-          "ja_name": "コオリッポ(アイス)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "eiscue",
-          "showdown_name": "Eiscue",
-          "candidates": [
-            "eiscue",
-            "eiscue"
-          ]
-        },
-        {
-          "ja_name": "イエッサン(オス)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "indeedee",
-          "showdown_name": "Indeedee",
-          "candidates": [
-            "indeedee",
-            "indeedee"
-          ]
-        },
-        {
-          "ja_name": "イエッサン(メス)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "indeedeef",
-          "showdown_name": "Indeedee-F",
-          "candidates": [
-            "indeedeef",
-            "indeedee-f"
-          ]
-        },
-        {
-          "ja_name": "モルペコ(まんぷく)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "morpeko",
-          "showdown_name": "Morpeko",
-          "candidates": [
-            "morpeko",
-            "morpeko"
-          ]
-        },
-        {
-          "ja_name": "ウーラオス(いちげき)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "urshifu",
-          "showdown_name": "Urshifu",
-          "candidates": [
-            "urshifu",
-            "urshifu"
-          ]
-        },
-        {
-          "ja_name": "ウーラオス(いちげき,キョダイ)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "urshifugmax",
-          "showdown_name": "Urshifu-Gmax",
-          "candidates": [
-            "urshifugmax",
-            "urshifu-gmax"
-          ]
-        },
-        {
-          "ja_name": "イダイトウ(オス)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "basculegion",
-          "showdown_name": "Basculegion",
-          "candidates": [
-            "basculegion",
-            "basculegion"
-          ]
-        },
-        {
-          "ja_name": "イダイトウ(メス)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "basculegionf",
-          "showdown_name": "Basculegion-F",
-          "candidates": [
-            "basculegionf",
-            "basculegion-f"
-          ]
-        },
-        {
-          "ja_name": "ラブトロス(けしん)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "enamorus",
-          "showdown_name": "Enamorus",
-          "candidates": [
-            "enamorus",
-            "enamorus"
-          ]
-        },
-        {
-          "ja_name": "パフュートン(オス)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "oinkologne",
-          "showdown_name": "Oinkologne",
-          "candidates": [
-            "oinkologne",
-            "oinkologne"
-          ]
-        },
-        {
-          "ja_name": "パフュートン(メス)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "oinkolognef",
-          "showdown_name": "Oinkologne-F",
-          "candidates": [
-            "oinkolognef",
-            "oinkologne-f"
-          ]
-        },
-        {
-          "ja_name": "イッカネズミ",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "maushold",
-          "showdown_name": "Maushold",
-          "candidates": [
-            "maushold",
-            "maushold"
-          ]
-        },
-        {
-          "ja_name": "イキリンコ(グリーン)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "squawkabilly",
-          "showdown_name": "Squawkabilly",
-          "candidates": [
-            "squawkabilly",
-            "squawkabilly"
-          ]
-        },
-        {
-          "ja_name": "イキリンコ(ブルー)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "squawkabillyblue",
-          "showdown_name": "Squawkabilly-Blue",
-          "candidates": [
-            "squawkabillyblue",
-            "squawkabilly-blue"
-          ]
-        },
-        {
-          "ja_name": "イキリンコ(イエロー)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "squawkabillyyellow",
-          "showdown_name": "Squawkabilly-Yellow",
-          "candidates": [
-            "squawkabillyyellow",
-            "squawkabilly-yellow"
-          ]
-        },
-        {
-          "ja_name": "イキリンコ(ホワイト)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "squawkabillywhite",
-          "showdown_name": "Squawkabilly-White",
-          "candidates": [
-            "squawkabillywhite",
-            "squawkabilly-white"
-          ]
-        },
-        {
-          "ja_name": "イルカマン(ナイーブ)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "palafin",
-          "showdown_name": "Palafin",
-          "candidates": [
-            "palafin",
-            "palafin"
-          ]
-        },
-        {
-          "ja_name": "シャリタツ(そった)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "tatsugiri",
-          "showdown_name": "Tatsugiri",
-          "candidates": [
-            "tatsugiri",
-            "tatsugiri"
-          ]
-        },
-        {
-          "ja_name": "ノココッチ",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "dudunsparce",
-          "showdown_name": "Dudunsparce",
-          "candidates": [
-            "dudunsparce",
-            "dudunsparce"
-          ]
-        },
-        {
-          "ja_name": "オーガポン(いど)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "ogerponwellspring",
-          "showdown_name": "Ogerpon-Wellspring",
-          "candidates": [
-            "ogerponwellspring",
-            "ogerpon-wellspring"
-          ]
-        },
-        {
-          "ja_name": "オーガポン(かまど)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "ogerponhearthflame",
-          "showdown_name": "Ogerpon-Hearthflame",
-          "candidates": [
-            "ogerponhearthflame",
-            "ogerpon-hearthflame"
-          ]
-        },
-        {
-          "ja_name": "オーガポン(いしずえ)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "ogerponcornerstone",
-          "showdown_name": "Ogerpon-Cornerstone",
-          "candidates": [
-            "ogerponcornerstone",
-            "ogerpon-cornerstone"
-          ]
-        },
-        {
-          "ja_name": "オーガポン(みどり,テラスタル)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "ogerpontealtera",
-          "showdown_name": "Ogerpon-Teal-Tera",
-          "candidates": [
-            "ogerpontealtera",
-            "ogerpon-teal-tera"
-          ]
-        },
-        {
-          "ja_name": "オーガポン(いど,テラスタル)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "ogerponwellspringtera",
-          "showdown_name": "Ogerpon-Wellspring-Tera",
-          "candidates": [
-            "ogerponwellspringtera",
-            "ogerpon-wellspring-tera"
-          ]
-        },
-        {
-          "ja_name": "オーガポン(かまど,テラスタル)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "ogerponhearthflametera",
-          "showdown_name": "Ogerpon-Hearthflame-Tera",
-          "candidates": [
-            "ogerponhearthflametera",
-            "ogerpon-hearthflame-tera"
-          ]
-        },
-        {
-          "ja_name": "オーガポン(いしずえ,テラスタル)",
-          "reason": "pokeapi_name_not_found",
-          "showdown_id": "ogerponcornerstonetera",
-          "showdown_name": "Ogerpon-Cornerstone-Tera",
-          "candidates": [
-            "ogerponcornerstonetera",
-            "ogerpon-cornerstone-tera"
+            "meowstic-f-mega",
+            "meowsticfmega-male"
           ]
         }
       ]
