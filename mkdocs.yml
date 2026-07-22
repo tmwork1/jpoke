@@ -32,7 +32,7 @@ theme:
 
 nav:
   - ホーム: index.md
-  - はじめに: getting_started.md
+  - チュートリアル: getting_started.md
   - 早見表: quick_reference.md
   - APIリファレンス:
       - reference/index.md
