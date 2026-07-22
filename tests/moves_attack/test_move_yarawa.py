@@ -258,7 +258,7 @@ def test_ゆきなだれ_特殊ダメージを受けた場合も威力が2倍():
     """ゆきなだれ: そのターン相手から特殊ダメージを受けた場合も、威力が2倍（power_modifier=8192）。"""
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", move_names=["ゆきなだれ"])],
-        team1=[Pokemon("カビゴン", move_names=["かえんほうしゃ"])],
+        team1=[Pokemon("カビゴン", move_names=["みずでっぽう"])],
         accuracy=100,
     )
     attacker = battle.actives[0]

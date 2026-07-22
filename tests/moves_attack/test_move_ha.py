@@ -1008,7 +1008,7 @@ def test_はやてがえし_通常攻撃技には失敗():
     """はやてがえし: 優先度0の攻撃技を選んだ相手には失敗する。"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["はやてがえし"])],
-        team1=[Pokemon("ピカチュウ", move_names=["10まんボルト"])],
+        team1=[Pokemon("ピカチュウ", move_names=["みずでっぽう"])],
     )
     before_foe_hp = battle.actives[1].hp
     before_ally_hp = battle.actives[0].hp
@@ -3063,7 +3063,7 @@ def test_ほうふく_特殊ダメージを受けた後も発動する():
     """ほうふく: 特殊ダメージを受けた場合でも発動する（物理・特殊問わず）。"""
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", move_names=["ほうふく"])],
-        team1=[Pokemon("カビゴン", move_names=["かえんほうしゃ"])],
+        team1=[Pokemon("カビゴン", move_names=["みずでっぽう"])],
         accuracy=100,
     )
     attacker = battle.actives[0]
