@@ -9,7 +9,6 @@ PokeAPI/GitHubへの大量アクセスが発生するため、pytestのテスト
 
 使い方:
     python scripts/pokeapi/validate_urls.py
-    python scripts/pokeapi/validate_urls.py --output path/to/report.md
 
 想定される出力:
     - 名前解決に失敗した件数（`src/jpoke/data/pokeapi/ja_to_id_map.json` の unresolved
@@ -18,9 +17,9 @@ PokeAPI/GitHubへの大量アクセスが発生するため、pytestのテスト
       名前解決失敗とは明確に区別して報告する）
     - 両方ともOKだった件数
 
-上記は標準出力に表示すると同時に、実行のたびにMarkdownレポートとしてファイルにも
-書き出す。`--output` を省略した場合、既定の出力先は
-`.internal/pokeapi/validate_urls_<実行日>.md`（同日に複数回実行すると上書きされる）。
+上記は標準出力に表示すると同時に、実行のたびにMarkdownレポートとして
+`.internal/pokeapi/validate_urls_<実行日>.md` に必ず書き出す（出力先はオプションでは
+なく固定。同日に複数回実行すると上書きされる）。
 
 レート制限への配慮として、HTTPチェックは少数の並列ワーカー（既定5）+リクエスト間の
 小休止、タイムアウト・リトライ設定を入れている。対象件数が多いため、実行には数分〜
@@ -29,7 +28,6 @@ PokeAPI/GitHubへの大量アクセスが発生するため、pytestのテスト
 
 from __future__ import annotations
 
-import argparse
 import sys
 import time
 from collections.abc import Callable
@@ -197,18 +195,7 @@ def build_report(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--output",
-        type=Path,
-        default=None,
-        help=(
-            "レポートの出力先パス。省略時は "
-            f"{DEFAULT_OUTPUT_DIR / 'validate_urls_<実行日>.md'} に書き出す"
-        ),
-    )
-    args = parser.parse_args()
-    output_path: Path = args.output or (DEFAULT_OUTPUT_DIR / f"validate_urls_{date.today().isoformat()}.md")
+    output_path = DEFAULT_OUTPUT_DIR / f"validate_urls_{date.today().isoformat()}.md"
 
     print("対象名を収集中...")
     targets, unresolved = collect_targets()
