@@ -427,6 +427,9 @@ def test_サイドフィールド_急所では軽減されない(side_field: Sid
         team0=[Pokemon("ピカチュウ", move_names=[move_name])],
         side1={side_field: 5},
         accuracy=100,
+        # でんきショックの追加効果（まひ）は本テストの検証対象外のため確定で発動させない。
+        # 急所判定用の fix_random(0.0) と無関係な効果まで確定発動させてしまうのを避ける。
+        secondary_chance=0.0,
     )
     # 乱数を 0.0 に固定して急所を確実に発生させる
     t.fix_random(battle, 0.0)
