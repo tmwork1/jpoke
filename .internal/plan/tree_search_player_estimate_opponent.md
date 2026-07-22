@@ -1,6 +1,6 @@
 # 計画: TreeSearchPlayer の相手推定まわり TODO（TODO1〜3）の検討
 
-更新日: 2026-07-21
+更新日: 2026-07-23（TODO1・TODO2 の確定設計を追記し着手）
 
 ## 背景
 
@@ -239,15 +239,73 @@ class MinimaxPlayer(TreeSearchPlayer):
 - 新規テストとして、`TreeSearchPlayer` を直接使うと `_score_command` 未実装で
   `NotImplementedError` になることを確認するテストを1件追加する。
 
+## 確定設計（2026-07-23、TODO1・TODO2 同時着手）
+
+事前調査で確認した事実:
+
+- `Move` は `revealed` 属性を持ち、観測（`observation_builder._mask_moves`）では
+  未公開の技が相手ポケモンの `moves` リストから **除去** される。つまり観測上の
+  `len(active.moves)` が「公開済み技数」であり、推定側は追加の引数なしで
+  未公開スロットの有無を判定できる（TODO2 推奨節ステップ1・2は解決）。
+- `state.selected_indexes` も観測では公開済み（`revealed`）の個体のみに絞り込まれる。
+  選出推定はここに未公開個体のインデックスを補うことに相当する。
+- 選出フェーズの自分の選出決定は `choose_selection()` という別フックであり、
+  `choose_command()`（探索）は選出フェーズでは呼ばれない。TODO1 の「選出番号の推定」は
+  探索中の相手の交代候補（ベンチ）復元のためのものであり、発火点は
+  `_toplevel_commands` のままでよい（選出フェーズ専用の発火点は不要）。
+- `battle.available_commands(opponent)` は観測の `last_available_commands`
+  （リスト実体）をそのまま返すため、探索側で候補を足す場合はコピーが必須。
+
+### TODO1: テンプレートメソッド方式の項目別フック分割
+
+`estimate_opponent(battle)` はフレームワークからの呼び出し入口として維持し、
+既定実装を「項目別フック2つを順に呼ぶ」テンプレートメソッドに変更する:
+
+- `estimate_opponent_team(battle) -> None` — 相手ポケモンのモデル
+  （`battle.get_active(battle.opponent(self))` 等）に技・特性・アイテムの推定値を
+  書き込む。既定は何もしない。従来の `estimate_opponent` の使い方はこちらに対応する。
+- `estimate_opponent_selection(battle) -> list[int] | None` — 相手の
+  選出インデックス（`state.team` 基準）の推定を **返り値** で返す。`None` なら
+  推定しない。書き込み先（`player_states[opponent].selected_indexes`）は内部状態の
+  ため利用者に直接触らせず、フレームワーク側がマージ（公開済みインデックスは維持し、
+  未包含の推定分のみ追加）する。既定は `None`。
+- `_has_estimate_opponent()` は3フックのいずれかがオーバーライドされているかを判定する。
+- 既存の `estimate_opponent` 直接オーバーライド（example・テスト）は後方互換で動き続ける。
+- ユーザーレビューにより `opponent` 引数は削除（`battle.opponent(self)` で取得する
+  `evaluate`/`fallback` 等の他フックとの規約統一）。相手は3フックいずれも
+  `battle.opponent(self)` で取得する。
+
+### TODO2: 相手候補が部分公開でも毎回推定を呼ぶ（型推定）
+
+`_toplevel_commands` を変更し、`_has_estimate_opponent()` が真なら相手の合法手の
+有無に関わらず毎回 `estimate_opponent` を呼ぶ。相手候補は「観測スナップショット由来の
+コマンド（コピー） ∪ `_resolve_estimated_commands` の列挙結果」の和集合
+（`Command` 同一性で重複排除）とする:
+
+- スナップショットが空のとき（従来の発火条件）の挙動は完全に従来と同一。
+- 部分公開のときは、公開済み候補を失うことなく推定由来の候補だけが追加される
+  （モデル列挙がスナップショットと万一食い違っても公開済み情報が消えない安全策）。
+- docstring の契約を「探索の最上位（`choose_command` / `evaluate_commands`）のたびに
+  呼ばれる」に書き換え、べき等性のガイドライン（観測は毎ターン再構築されるため
+  公開済みスロットを上書きせず未公開分のみ補うこと）を明記する。
+
+### 影響範囲
+
+- `src/jpoke/players/tree_search_player.py` — 上記本体。TODO1・TODO2 のコメントは削除
+- `tests/test_tree_search_framework.py` — 新規テスト（部分公開時の推定呼び出し・
+  候補和集合、`estimate_opponent_team`、`estimate_opponent_selection` の選出マージ、
+  既存の umbrella オーバーライド後方互換）
+- `examples/02_tree_search/03_estimate_opponent.ipynb` — `estimate_opponent_team` を
+  使った毎ターン型推定の例に更新
+- `docs/quick_reference.md`（フック表）、`examples/README.md`、`CHANGELOG.md`（Unreleased）
+
 ## まとめ
 
 | TODO | 対応 |
 |---|---|
 | TODO4（`evaluate_commands`/`_best_command`共通化） | 実装済み（`feature/tree-search-player-todo-cleanup`） |
-| TODO1（フック分割） | 保留。選出推定の具体的ニーズが出るまで着手しない |
-| TODO2（常時estimate_opponent呼び出し） | 保留。着手する場合は本書「推奨」節の4ステップから開始 |
-| TODO3（スコア計算の汎用化） | **方針転換：`MinimaxPlayer` 分離として着手** |
+| TODO1（フック分割） | **実装済み（2026-07-23）**: テンプレートメソッド方式で `estimate_opponent_team` / `estimate_opponent_selection` に分割 |
+| TODO2（常時estimate_opponent呼び出し） | **実装済み（2026-07-23）**: 部分公開でも毎回推定を呼び、候補は和集合で拡張 |
+| TODO3（スコア計算の汎用化） | 実装済み：`MinimaxPlayer` 分離 |
 
-TODO1・TODO2のコードコメントは、上記の論点整理を踏まえてもなお「将来の検討候補」
-としての価値があるため、コード上には残す。TODO3のコメントは `MinimaxPlayer` 分離の
-実装完了時に削除する。
+TODO1〜4 の全コードコメントは解消済みで、コード上には残っていない。

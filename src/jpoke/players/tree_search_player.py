@@ -34,12 +34,16 @@ class TreeSearchPlayer(Player):
 
     - `evaluate(battle)`: 葉ノードの盤面評価。既定は残りHP割合差。
     - `fallback(battle)`: 探索できない・再入時の代替方策。既定はランダム。
-    - `estimate_opponent(battle, opponent)`: 相手の合法手が未公開で空のときに呼ばれる推定フック。既定は何もしない（fallback に委譲される）。
+    - `estimate_opponent(battle)`: 探索の最上位（`choose_command`/`evaluate_commands`）のたびに呼ばれる推定フック。既定は項目別フック `estimate_opponent_team` / `estimate_opponent_selection` に委譲するテンプレートメソッド。
+    - `estimate_opponent_team(battle)`: 相手ポケモンのモデル（技・特性・アイテム）に推定値を書き込むフック。既定は何もしない。
+    - `estimate_opponent_selection(battle)`: 相手の選出インデックスの推定を返すフック。既定は `None`（推定しない）。
     - `configure_sim(sim)`: 各分岐の `sim.step()` 実行前に呼ばれるフック。既定は何もしない。
 
     相手の情報が未公開の局面では、相手の合法手が空リストになり探索できない。
     この場合、既定では探索を行わず即座に `fallback` に委譲する。
-    `estimate_opponent` をオーバーライドすると、相手ポケモンの技やアイテムなどを書きこむことができる。
+    `estimate_opponent_team` / `estimate_opponent_selection` をオーバーライドすると、
+    相手ポケモンの技やアイテム・選出候補などを推定して補うことができる
+    （`estimate_opponent` はこれらを呼び出す入口として毎回呼ばれる）。
 
     Attributes:
         max_plies:
@@ -85,17 +89,73 @@ class TreeSearchPlayer(Player):
         commands = self._available_commands_with_recovery(battle, self)
         return battle.decision_random.choice(commands)
 
-    def estimate_opponent(self, battle: Battle, opponent: Player) -> None:
-        """相手の合法手が未公開で空のときに呼ばれる推定フック。
+    def estimate_opponent(self, battle: Battle) -> None:
+        """探索の最上位（`choose_command`/`evaluate_commands`）のたびに呼ばれる推定フック。
 
-        既定では何もせず fallback に委譲される。
+        推定対象の相手は `battle.opponent(self)` で取得する
+        （他のフック `evaluate`/`fallback`/`configure_sim` と同様、フレームワークの
+        フックは `battle` のみを受け取る規約に合わせている）。
+
+        既定実装は項目別フック `estimate_opponent_team` を呼んだ後、
+        `estimate_opponent_selection` の返り値を取得し、`None` でなければ
+        `battle.player_states[opponent].selected_indexes` へ未包含のインデックスのみ
+        追記してマージする（公開済みインデックスは維持・削除しない）。
+
+        項目を横断する推定を書きたい場合はこのメソッド自体をオーバーライドしてもよい
+        （その場合は項目別フックは呼ばれなくなるので、必要なら `super()` を呼ぶこと）。
+
+        観測（battle）は毎ターン再構築されるため、推定は毎回書き込む必要がある。
+        ただし公開済みの情報（revealed な技・選出）を上書きせず、未公開分のみ
+        補うこと（べき等性ガイドライン）。
 
         Args:
             battle: 探索中のシミュレーション用 Battle
-            opponent: 推定対象の相手プレイヤー
         """
-        # TODO: 相手チームのポケモンの情報(特性・アイテム・技など)と相手の選出番号では補完方法は異なる。estimate_opponentに集約するより、項目ごとにフックを分けたほうがエラーを防止できるかもしれない
+        opponent = battle.opponent(self)
+        self.estimate_opponent_team(battle)
+        estimated_selection = self.estimate_opponent_selection(battle)
+        if estimated_selection is not None:
+            state = battle.player_states[opponent]
+            for i in estimated_selection:
+                if i not in state.selected_indexes:
+                    state.selected_indexes.append(i)
+
+    def estimate_opponent_team(self, battle: Battle) -> None:
+        """相手ポケモンのモデルに技・特性・アイテムの推定値を書き込むフック。
+
+        推定対象の相手は `battle.opponent(self)` で取得する。取得した
+        `battle.get_active(opponent)` や `battle.get_team(opponent)` が返す
+        Pokemon インスタンスへ直接書き込む。既定では何もしない。
+
+        観測（battle）は毎ターン再構築されるため、推定は毎回書き込む必要がある。
+        ただし公開済みの情報（revealed な技等）を上書きせず、未公開分のみ
+        補うこと（べき等性ガイドライン）。
+
+        Args:
+            battle: 探索中のシミュレーション用 Battle
+        """
         pass
+
+    def estimate_opponent_selection(self, battle: Battle) -> list[int] | None:
+        """相手の選出インデックス（`state.team` 基準、0始まり）の推定を返すフック。
+
+        推定対象の相手は `battle.opponent(self)` で取得する。返したリストは
+        公開済みの選出とマージされる（書き込み先の
+        `player_states[opponent].selected_indexes` はフレームワーク側が扱うため、
+        利用者が直接書き込む必要はない）。`n_selected` を超える個数を返しても
+        検証はされない。既定は `None`（推定しない）。
+
+        観測（battle）は毎ターン再構築されるため、推定は毎回返す必要がある。
+        ただし公開済みの選出インデックスは呼び出し元でマージされるため、
+        未公開分のみ返せばよい（べき等性ガイドライン）。
+
+        Args:
+            battle: 探索中のシミュレーション用 Battle
+
+        Returns:
+            推定した選出インデックスのリスト。推定しないなら `None`。
+        """
+        return None
 
     def configure_sim(self, sim: Battle) -> None:
         """`battle.copy()` 直後・`sim.step()` 実行前に呼ばれるフック。
@@ -192,24 +252,32 @@ class TreeSearchPlayer(Player):
         return self.max_nodes is not None and self.nodes_expanded >= self.max_nodes
 
     def _toplevel_commands(self, battle: Battle) -> tuple[list[Command], list[Command]]:
-        # TODO: 相手のコマンド候補がある場合でもestimate_opponentを呼び、相手の推定値を更新させるようにする(実対戦における型推定に相当する)。
         """探索の最上位（実際のゲームエンジンから呼ばれた局面）で使う
         自分・相手の合法手を返す。
 
         battle はエンジンが用意した観測用コピーで、相手の合法手は情報隠蔽済みの
         スナップショット（last_available_commands）を尊重する。相手の技・控えが
         1つも公開されていない盤面（実対戦の初手など）では相手の合法手が空になる。
-        その場合 estimate_opponent に相手ポケモンのモデル（moves/item 等）へ
-        推定値を書き込ませた上で、実際のコマンド列挙を CommandManager に
-        やり直させて補う。それでも空なら空リストのまま返し、
-        呼び出し元でフォールバック判定に使わせる。
+
+        `estimate_opponent` がオーバーライドされている場合、相手の合法手の有無に
+        関わらず毎回 estimate_opponent を呼ぶ（実対戦の型推定に相当）。相手候補は
+        「観測スナップショット由来のコマンド（コピー）」と「推定情報を CommandManager に
+        列挙させたコマンド」の和集合（Command 同一性で重複排除）とする。
+        スナップショットが空のとき（従来の発火条件）の挙動は完全に従来と同一になり、
+        部分公開のときは公開済み候補を失うことなく推定由来の候補だけが追加される
+        （モデル列挙がスナップショットと万一食い違っても公開済み情報が消えない安全策）。
+        estimate_opponent がオーバーライドされておらず、かつ相手の合法手が空の場合は
+        空リストのまま返し、呼び出し元でフォールバック判定に使わせる。
         """
         opponent = battle.opponent(self)
         my_commands = self._available_commands_with_recovery(battle, self)
-        opponent_commands = battle.available_commands(opponent)
-        if not opponent_commands and self._has_estimate_opponent():
-            self.estimate_opponent(battle, opponent)
-            opponent_commands = self._resolve_estimated_commands(battle, opponent)
+        # last_available_commands の実体そのものを拡張しないよう必ずコピーする。
+        opponent_commands = list(battle.available_commands(opponent))
+        if self._has_estimate_opponent():
+            self.estimate_opponent(battle)
+            for cmd in self._resolve_estimated_commands(battle, opponent):
+                if cmd not in opponent_commands:
+                    opponent_commands.append(cmd)
         return my_commands, opponent_commands
 
     def _available_commands_with_recovery(self, battle: Battle, player: Player) -> list[Command]:
@@ -258,7 +326,9 @@ class TreeSearchPlayer(Player):
         return score
 
     def _has_estimate_opponent(self) -> bool:
-        """estimate_opponent がサブクラスでオーバーライドされているか判定する。
+        """estimate_opponent 系フック（`estimate_opponent` / `estimate_opponent_team` /
+        `estimate_opponent_selection`）のいずれかがサブクラスでオーバーライドされて
+        いるか判定する。
 
         既定実装（何もしない）のまま `_resolve_estimated_commands` を呼ぶと、
         `CommandManager.get_available_action_commands()` は技候補が0件でも
@@ -266,15 +336,23 @@ class TreeSearchPlayer(Player):
         opponent_commands が非空になり fallback への委譲が起きなくなる
         （オーバーライドの有無で呼び出し自体を分岐する必要がある）。
         """
-        return type(self).estimate_opponent is not TreeSearchPlayer.estimate_opponent
+        cls = type(self)
+        return (
+            cls.estimate_opponent is not TreeSearchPlayer.estimate_opponent
+            or cls.estimate_opponent_team is not TreeSearchPlayer.estimate_opponent_team
+            or cls.estimate_opponent_selection is not TreeSearchPlayer.estimate_opponent_selection
+        )
 
     def _resolve_estimated_commands(self, battle: Battle, opponent: Player) -> list[Command]:
         """estimate_opponent が相手ポケモンのモデルに書き込んだ推定情報から、
         実際に選べるコマンドを CommandManager に列挙させる。
 
         利用者は Command の組み立て（インデックス対応・テラスタル/メガシンカ
-        変種・交代コマンドの併記など）を意識する必要がなく、推定した
-        moves/item だけを書けばよい。
+        変種・交代コマンドの併記など）を意識する必要がなく、
+        `estimate_opponent_team` で moves/item 等を書き込み、
+        `estimate_opponent_selection` で選出インデックスを返すだけでよい
+        （選出インデックスは `estimate_opponent` がマージ済みの
+        `selected_indexes` を通じて反映される）。
         """
         required = battle.player_states[opponent].required_command_type
         if required == "switch":
