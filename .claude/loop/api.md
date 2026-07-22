@@ -17,7 +17,7 @@
 - **開発者エージェント**: `src/jpoke/` の実装を自由に読める設定。内部実装を読んだからこそ
   気づく未紹介の公開API、公開APIの設計上の問題、実装を読んで気づいたバグを指摘する。
 - **初心者エージェント**: **`src/jpoke/` は一切読まない**設定。poke-env 等の類似ライブラリ
-  経験者・jpoke初見という立場で、`README.md`・`examples/`・`docs/api/` のみを読み、
+  経験者・jpoke初見という立場で、`README.md`・`examples/`・`docs/quick_reference.md` のみを読み、
   ドキュメント／教材としての分かりやすさ、公開APIの使い勝手を指摘する。
 - **AI開発者エージェント**: `src/jpoke/` の実装を自由に読める設定（開発者エージェントと同じ
   アクセス権）。README「対象範囲・ユースケース」が掲げる3ユースケースのうち、開発者・初心者
@@ -134,7 +134,7 @@ jpoke API改善レビュー（第{round}ラウンド、開発者視点）
 
 あなたは jpoke（ポケモンバトルシミュレーションPythonライブラリ）の開発者です。
 src/jpoke/ 配下の実装を自由に読んでよい。examples/ ディレクトリ（examples/README.md含む）・
-docs/api/・公開API（jpoke トップレベルおよび jpoke.model / jpoke.players 等からimportできる
+docs/quick_reference.md・公開API（jpoke トップレベルおよび jpoke.model / jpoke.players 等からimportできる
 クラス・関数）を対象に、以下の観点でレビューしてほしい:
 
 - src/jpoke/ 内部を読んだからこそ気づく、examples で一度も実演されていない有用な公開API
@@ -159,7 +159,7 @@ jpoke API改善レビュー（第{round}ラウンド、初心者視点）
 
 あなたは poke-env 等の類似ライブラリの経験はあるが jpoke は初めて使う開発者です。
 **src/jpoke/ 配下のソースコードは絶対に読まないこと**。README.md・examples/ 配下・
-docs/api/ のみを読んでレビューしてほしい。
+docs/quick_reference.md のみを読んでレビューしてほしい。
 
 観点:
 - ドキュメント・examples だけでは分からない、または誤解しやすい挙動
@@ -248,7 +248,7 @@ src/jpoke/ を読む代わりにこれを参照してよい）。
 - 状態ファイルの `dismissed`（impl が対応不要と判定した過去の指摘）と重複していないか
 - 状態ファイルの `failed` に同内容（正規化した `summary` が一致）で `attempts >= 2` の
   エントリが無いか（あれば§共通8と同様スキップし、キューに積まない）
-- 関連する実装コード・`.internal/spec/`・`docs/api/` を見て、実際に妥当な指摘か（誤検知でないか）
+- 関連する実装コード・`.internal/spec/`・`docs/quick_reference.md` を見て、実際に妥当な指摘か（誤検知でないか）
 
 を判断する。誤検知・重複・見送り確定済み・`dismissed`済み・`failed` 2回以上のものは読み捨てる。
 妥当と判断したものだけ、`id = "r{round}-{連番}"` を付けて `pending_findings` に
@@ -295,7 +295,7 @@ jpoke API改善タスク: {finding.summary}（id: {finding.id}）
 手順:
 1. 指摘対象に応じて関連コードを確認する（src/jpoke/ の実装に関わる場合は CLAUDE.md の
    実装時参照順に従う。examples/ やドキュメントのみに関わる指摘の場合は README.md・
-   examples/・docs/api/ を中心に確認すればよい）
+   examples/・docs/quick_reference.md を中心に確認すればよい）
 2. 妥当性を再確認する。既に対応済み、または指摘が事実誤認と判明した場合は実装を行わず
    「対応不要: <理由>」とだけ報告して終了する
 3. 必要な実装・修正を行う（src/jpoke/ の公開API変更、examples/ への追加・修正を含みうる）。
@@ -303,7 +303,7 @@ jpoke API改善タスク: {finding.summary}（id: {finding.id}）
    他の並行 loop の進行中ブランチと衝突しうるため、examples/ 側の書き換えだけで済む
    代替手段が無いか優先的に検討する。実装する場合は CHANGELOG.md への明記を忘れない
 4. **公開APIを新設・変更した場合（新規メソッド・クラス、シグネチャ変更、デフォルト値変更、
-   docstring追加を含む）は、`docs/api/README.md` を同じコミットで必ず更新する**（見取り図
+   docstring追加を含む）は、`docs/quick_reference.md` を同じコミットで必ず更新する**（見取り図
    として掲載範囲内のクラス（`Battle`/`Player`/`Pokemon` 等）が対象。掲載対象外の内部APIのみ
    の変更なら不要）。過去に手動レビューでこの追記漏れが実際に発生した既知の見落としポイント
    のため、examples/ の更新だけで終わらせないこと
@@ -338,8 +338,8 @@ impl エージェントが jpoke API改善指摘（第{round}ラウンド、{fin
 
 手順:
 1. 修正内容を対象ファイルで確認し、問題があれば修正する
-2. **impl の変更が公開API（`Battle`/`Player`/`Pokemon` 等、`docs/api/README.md` の掲載範囲内の
-   クラス）の新設・シグネチャ変更・デフォルト値変更に該当するのに `docs/api/README.md` が
+2. **impl の変更が公開API（`Battle`/`Player`/`Pokemon` 等、`docs/quick_reference.md` の掲載範囲内の
+   クラス）の新設・シグネチャ変更・デフォルト値変更に該当するのに `docs/quick_reference.md` が
    未更新の場合、ここで追記・修正する**（impl が見落とした場合の最終チェックとして必ず確認する。
    過去に手動レビューでこの追記漏れが実際に発生している既知の見落としポイント）
 3. 必要なテストを追加・修正する（tests/test_utils.py のヘルパーを再利用する）

@@ -55,8 +55,29 @@ while battle.can_continue(max_turns=100):
 battle.print_logs("all")
 ```
 
-戦術研究・AI開発・ダメージ計算ツール開発それぞれのユースケース別に動かして学べるサンプルを [examples/](https://github.com/tmwork1/jpoke/blob/main/examples/README.md) に用意している。
-各 `.ipynb` は Google Colab でそのまま開いて実行できる。
+ステップごとに学びたい場合は、ターン進行を手動で覗く・自分の `Player` を実装するところまで
+順を追う [はじめに（チュートリアル）](https://tmwork1.github.io/jpoke/getting_started/) を参照。
+戦術研究・AI開発・ダメージ計算ツール開発それぞれのユースケース別に動かして学べるサンプルは
+[examples/](https://github.com/tmwork1/jpoke/blob/main/examples/README.md) に用意している
+（各 `.ipynb` は Google Colab でそのまま開いて実行できる）。
+
+## ドキュメント
+
+利用者向けドキュメントは <https://tmwork1.github.io/jpoke/> にまとめている
+（この README・はじめに（チュートリアル）・早見表・APIリファレンス（自動生成）・
+サンプル・変更履歴・貢献ガイド）。
+
+| ディレクトリ | 役割 |
+|---|---|
+| `docs/getting_started.md` | 導入チュートリアル（インストール〜最初の対戦〜自作Player） |
+| `docs/quick_reference.md` | `Battle` / `Player` / `Pokemon` 等クラス別の公開API早見表 |
+| `.internal/spec/` | 技・アイテム・特性・場の効果の挙動仕様 |
+| `.internal/plan/` | 実行計画と優先順位 |
+| `.internal/progress/` | カテゴリ別の実装追跡（`ability.md`, `item.md`, `move.md` 等） |
+| `.internal/tests/logs/` | `.loop` 系フローが保存するテスト実行ログ |
+
+開発への貢献方法は [CONTRIBUTING.md](https://github.com/tmwork1/jpoke/blob/main/CONTRIBUTING.md)、
+脆弱性の報告方法は [SECURITY.md](https://github.com/tmwork1/jpoke/blob/main/SECURITY.md) を参照。
 
 ## アーキテクチャ
 
@@ -77,27 +98,12 @@ battle.print_logs("all")
 | `model/` | `Pokemon`, `Move`, `Field` などのモデル |
 | `data/` | `ability.py`, `move.py`, `item.py` など — 各エンティティのデータ定義とハンドラ登録 |
 | `handlers/` | `ability.py`, `ability_paradox.py`, `ailment.py`, `field.py`, `item.py`, `lethal.py`, `move.py`, `move_attack.py`, `move_status.py`, `volatile.py` など — ハンドラ実装 |
+| `players/` | `Player` の派生方策実装（`RandomPlayer`, `MaxDamagePlayer`, `CLIPlayer`, 木探索の基底 `TreeSearchPlayer` とその実装 `MinimaxPlayer` など） |
 | `enums/` | `Event`, `Command`, `Interrupt`, `LogCode` |
 | `types/` | `Stat`, `Type`, `AilmentName`, `VolatileName` など Literal 型の定義 |
 
 技データ（`data/move.py`）は五十音の行ごとに `data/moves/move_<行>.py` へ分割されている
 （`data/move.py` はそれらを統合する薄いファイル）。
-
-## ドキュメント
-
-利用者向けドキュメントは <https://tmwork1.github.io/jpoke/> にまとめている
-（この README・APIリファレンス・自動生成のクラスリファレンス・サンプル・変更履歴・貢献ガイド）。
-
-| ディレクトリ | 役割 |
-|---|---|
-| `docs/api/` | 利用者向け公開APIリファレンス（`Battle` / `Player` / `Pokemon`） |
-| `.internal/spec/` | 技・アイテム・特性・場の効果の挙動仕様 |
-| `.internal/plan/` | 実行計画と優先順位 |
-| `.internal/progress/` | カテゴリ別の実装追跡（`ability.md`, `item.md`, `move.md` 等） |
-| `.internal/tests/logs/` | `.loop` 系フローが保存するテスト実行ログ |
-
-開発への貢献方法は [CONTRIBUTING.md](https://github.com/tmwork1/jpoke/blob/main/CONTRIBUTING.md)、
-脆弱性の報告方法は [SECURITY.md](https://github.com/tmwork1/jpoke/blob/main/SECURITY.md) を参照。
 
 ## 実装状況
 

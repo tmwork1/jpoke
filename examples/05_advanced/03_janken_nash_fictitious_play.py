@@ -139,7 +139,7 @@ class MixedMovePlayer(Player):
     """毎ターン、指定確率で3つの技のどれかを選ぶプレイヤー。
 
     `battle.decision_random`（既存プレイヤーの行動選択にも使われる乱数源）の詳細は
-    docs/api/README.md の Player「choose_command()のオーバーライド」節を参照。
+    docs/quick_reference.md の Player「choose_command()のオーバーライド」節を参照。
     """
 
     def __init__(self, probs: tuple[float, float, float], username: str = ""):

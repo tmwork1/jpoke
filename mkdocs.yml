@@ -32,8 +32,9 @@ theme:
 
 nav:
   - ホーム: index.md
-  - APIリファレンス: api/README.md
-  - リファレンス（自動生成）:
+  - はじめに: getting_started.md
+  - 早見表: quick_reference.md
+  - APIリファレンス:
       - reference/index.md
       - Battle: reference/battle.md
       - Player: reference/player.md

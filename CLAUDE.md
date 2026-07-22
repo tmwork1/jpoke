@@ -98,12 +98,16 @@ data/ability.py  →  handlers/ability.py に実装  →  data/ability.py に登
 
 ## 仕様書・ドキュメント
 
-`docs/` は外部公開向け（`docs/api/` のAPIリファレンスのみ）。開発の実行計画・進捗・
-レビュー履歴など内部専用のドキュメントは `.internal/` に置く。
+`docs/` は外部公開向け（`docs/getting_started.md` の導入チュートリアルと
+`docs/quick_reference.md` の早見表のみが手書き。全メソッド網羅の自動生成
+APIリファレンスは `mkdocs.yml` の `mkdocstrings` プラグインが `docs/reference/` から
+ビルド時に生成する）。開発の実行計画・進捗・レビュー履歴など内部専用のドキュメントは
+`.internal/` に置く。
 
 | ディレクトリ | 役割 |
 |---|---|
-| `docs/api/` | 外部公開用のAPIリファレンス |
+| `docs/getting_started.md` | 外部公開用の導入チュートリアル |
+| `docs/quick_reference.md` | 外部公開用の公開API早見表 |
 | `.internal/spec/` | 技・アイテム・特性・場の効果の挙動仕様（実装前に読む） |
 | `.internal/plan/` | 現在の実行計画と優先順位 |
 | `.internal/progress/` | カテゴリ別の実装追跡（`ability.md`, `item.md`, `move.md`） |
