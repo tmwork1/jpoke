@@ -9,6 +9,7 @@ PokeAPI/GitHubへの大量アクセスが発生するため、pytestのテスト
 
 使い方:
     python scripts/pokeapi/validate_urls.py
+    python scripts/pokeapi/validate_urls.py --output path/to/report.md
 
 想定される出力:
     - 名前解決に失敗した件数（`src/jpoke/data/pokeapi/ja_to_id_map.json` の unresolved
@@ -17,6 +18,10 @@ PokeAPI/GitHubへの大量アクセスが発生するため、pytestのテスト
       名前解決失敗とは明確に区別して報告する）
     - 両方ともOKだった件数
 
+上記は標準出力に表示すると同時に、実行のたびにMarkdownレポートとしてファイルにも
+書き出す。`--output` を省略した場合、既定の出力先は
+`.internal/pokeapi/validate_urls_<実行日>.md`（同日に複数回実行すると上書きされる）。
+
 レート制限への配慮として、HTTPチェックは少数の並列ワーカー（既定5）+リクエスト間の
 小休止、タイムアウト・リトライ設定を入れている。対象件数が多いため、実行には数分〜
 十数分程度かかることがある。
@@ -24,11 +29,13 @@ PokeAPI/GitHubへの大量アクセスが発生するため、pytestのテスト
 
 from __future__ import annotations
 
+import argparse
 import sys
 import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 from typing import get_args
 from urllib.error import HTTPError, URLError
@@ -38,6 +45,8 @@ ROOT = Path(__file__).resolve().parents[2]
 SRC_PATH = ROOT / "src"
 if str(SRC_PATH) not in sys.path:
     sys.path.insert(0, str(SRC_PATH))
+
+DEFAULT_OUTPUT_DIR = ROOT / ".internal" / "pokeapi"
 
 from jpoke.exceptions import PokeApiResolveError  # noqa: E402
 from jpoke.types import ItemName, PokemonName, Type  # noqa: E402
@@ -154,7 +163,53 @@ def check_url(url: str) -> tuple[bool, str]:
     return False, last_error or "unknown error"
 
 
+def build_report(
+    targets: list[CheckTarget],
+    unresolved: list[UnresolvedEntry],
+    url_results: dict[str, tuple[bool, str]],
+) -> str:
+    """検証結果サマリをMarkdown文字列として組み立てる（ファイル保存・標準出力の両方で使う）。"""
+    http_failures = [t for t in targets if not url_results[t.url][0]]
+    ok_count = len(targets) - len(http_failures)
+
+    unresolved_names_by_category: dict[str, set[str]] = {}
+    for u in unresolved:
+        unresolved_names_by_category.setdefault(u.category, set()).add(u.name_ja)
+
+    lines: list[str] = []
+    lines.append(f"# PokeAPI URL 検証レポート ({date.today().isoformat()})")
+    lines.append("")
+    lines.append("## サマリ")
+    lines.append("")
+    lines.append("名前解決NG（対象名ベース。カテゴリ別内訳）:")
+    for category in ("pokemon", "item", "type"):
+        names = unresolved_names_by_category.get(category, set())
+        lines.append(f"- {category}: {len(names)} 件")
+    lines.append("")
+    lines.append(f"名前解決OKだがHTTPアクセス失敗: {len(http_failures)} 件")
+    for t in http_failures:
+        status = url_results[t.url][1]
+        lines.append(f"- [{t.category}] {t.name_ja} ({t.check_name}): {t.url} -> {status}")
+    lines.append("")
+    lines.append(f"名前解決・HTTPアクセスともにOK: {ok_count} 件")
+
+    return "\n".join(lines) + "\n"
+
+
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=None,
+        help=(
+            "レポートの出力先パス。省略時は "
+            f"{DEFAULT_OUTPUT_DIR / 'validate_urls_<実行日>.md'} に書き出す"
+        ),
+    )
+    args = parser.parse_args()
+    output_path: Path = args.output or (DEFAULT_OUTPUT_DIR / f"validate_urls_{date.today().isoformat()}.md")
+
     print("対象名を収集中...")
     targets, unresolved = collect_targets()
 
@@ -176,27 +231,15 @@ def main() -> None:
                 print(f"  ... {done}/{len(unique_urls)} 件チェック済み")
             time.sleep(REQUEST_SLEEP)
 
-    http_failures = [t for t in targets if not url_results[t.url][0]]
+    report = build_report(targets, unresolved, url_results)
 
     print()
     print("===== 検証結果サマリ =====")
+    print(report)
 
-    unresolved_names_by_category: dict[str, set[str]] = {}
-    for u in unresolved:
-        unresolved_names_by_category.setdefault(u.category, set()).add(u.name_ja)
-
-    print("名前解決NG（対象名ベース。カテゴリ別内訳）:")
-    for category in ("pokemon", "item", "type"):
-        names = unresolved_names_by_category.get(category, set())
-        print(f"  - {category}: {len(names)} 件")
-
-    print(f"名前解決OKだがHTTPアクセス失敗: {len(http_failures)} 件")
-    for t in http_failures:
-        status = url_results[t.url][1]
-        print(f"  - [{t.category}] {t.name_ja} ({t.check_name}): {t.url} -> {status}")
-
-    ok_count = len(targets) - len(http_failures)
-    print(f"名前解決・HTTPアクセスともにOK: {ok_count} 件")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(report, encoding="utf-8")
+    print(f"レポートを書き出しました: {output_path}")
 
 
 if __name__ == "__main__":
