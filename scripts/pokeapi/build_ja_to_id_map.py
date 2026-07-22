@@ -35,6 +35,40 @@ ITEM_SLUG_OVERRIDES: dict[str, str] = {
     "ながねぎ": "leek",
 }
 
+# showdown_id / showdown_name の正規化候補だけでは解決できないポケモンの例外。
+# キーは showdown_id。PokeAPI側が「Showdownではデフォルトフォルムのため無印」の種族にも
+# 個別のフォルム名スラッグを要求するケース（性別限定フォルム・ギガンタマックス・仮面替えなど）で、
+# 汎用の候補生成ロジック（baseForme/forme からの推測）でも導出できない語形の変則例外のみを列挙する。
+POKEMON_SLUG_OVERRIDES: dict[str, str] = {
+    # ガラルヒヒダルマ: showdown_nameのハイフン位置がPokeAPIのスラッグと異なる。
+    "darmanitangalar": "darmanitan-galar-standard",
+    # メテノ(りゅうせい): 色違いがあるが、メテノ(コア)と同じ「あか」をデフォルト色として扱う。
+    "miniormeteor": "minior-red-meteor",
+    # ネクロズマ: PokeAPI側のフォルム名はshowdownより短い（dusk-mane -> dusk, dawn-wings -> dawn）。
+    "necrozmaduskmane": "necrozma-dusk",
+    "necrozmadawnwings": "necrozma-dawn",
+    # ストリンダー(ハイ,キョダイ)・ウーラオス(いちげき,キョダイ): 通常フォルム名(amped/single-strike)を挟む。
+    "toxtricitygmax": "toxtricity-amped-gmax",
+    "urshifugmax": "urshifu-single-strike-gmax",
+    # イッカネズミ: 4匹(family-of-four)をデフォルトとして扱う。
+    "maushold": "maushold-family-of-four",
+    # イキリンコ: PokeAPI側は色名に "-plumage" が付く。
+    "squawkabilly": "squawkabilly-green-plumage",
+    "squawkabillyblue": "squawkabilly-blue-plumage",
+    "squawkabillyyellow": "squawkabilly-yellow-plumage",
+    "squawkabillywhite": "squawkabilly-white-plumage",
+    # オーガポン: PokeAPI側は仮面名に "-mask" が付く。
+    "ogerponwellspring": "ogerpon-wellspring-mask",
+    "ogerponhearthflame": "ogerpon-hearthflame-mask",
+    "ogerponcornerstone": "ogerpon-cornerstone-mask",
+    # オーガポン(テラスタル): PokeAPIはテラスタル後の見た目を別スプライトとして持たないため、
+    # 同じ仮面の通常時スプライトにフォールバックする。
+    "ogerpontealtera": "ogerpon",
+    "ogerponwellspringtera": "ogerpon-wellspring-mask",
+    "ogerponhearthflametera": "ogerpon-hearthflame-mask",
+    "ogerponcornerstonetera": "ogerpon-cornerstone-mask",
+}
+
 
 def load_json(path: Path) -> dict:
     with path.open(encoding="utf-8") as f:
@@ -54,6 +88,8 @@ def normalize_item_english_name(english_name: str) -> str:
 def normalize_showdown_name(showdown_name: str) -> str:
     normalized = unicodedata.normalize("NFKD", showdown_name)
     ascii_text = normalized.encode("ascii", "ignore").decode("ascii")
+    # 所有格・省略のアポストロフィ（Oricorio-Pa'u -> oricorio-pau）はダッシュを挟まず除去する。
+    ascii_text = ascii_text.replace("'", "")
     ascii_text = ascii_text.lower().replace("&", " and ").replace("+", " plus ")
     slug = NON_ALNUM.sub("-", ascii_text).strip("-")
     return slug
@@ -66,13 +102,35 @@ def build_pokemon_map(pokedex: dict, pokemon_name_to_id: dict[str, int]) -> tupl
     for ja_name, entry in pokedex.items():
         showdown_id = entry.get("showdown_id")
         showdown_name = entry.get("showdown_name")
+        base_forme = entry.get("baseForme") or ""
+        forme = entry.get("forme") or ""
         if not showdown_id:
             unresolved.append({"ja_name": ja_name, "reason": "showdown_id_missing"})
             continue
 
-        candidates = [showdown_id]
+        candidates = []
+        if showdown_id in POKEMON_SLUG_OVERRIDES:
+            candidates.append(POKEMON_SLUG_OVERRIDES[showdown_id])
+        candidates.append(showdown_id)
         if showdown_name:
             candidates.append(normalize_showdown_name(showdown_name))
+
+        # Showdownでは無印（サフィックスなし）のデフォルトフォルムでも、PokeAPI側は
+        # フォルム名付きスラッグしか持たないケースがあるための追加候補。
+        if base_forme:
+            candidates.append(f"{showdown_id}-{normalize_showdown_name(base_forme)}")
+        if forme == "F":
+            # 性別限定フォルムの女性形（例: meowsticf -> meowstic-female）。
+            stem = showdown_id[:-1] if showdown_id.endswith("f") else showdown_id
+            candidates.append(f"{stem}-female")
+        if base_forme == "M":
+            candidates.append(f"{showdown_id}-male")
+        if "paldea" in showdown_id and showdown_name:
+            # ケンタロス(パルデア各種): PokeAPI側は "-breed" が付く。
+            candidates.append(f"{normalize_showdown_name(showdown_name)}-breed")
+        # 最終フォールバック: 見た目上は性別差がないだけの種族（プルリル等）でも、
+        # PokeAPIでは「デフォルトバラエティ = -male」として別立てされている場合がある。
+        candidates.append(f"{showdown_id}-male")
 
         pokeapi_id = None
         resolved_key = None
