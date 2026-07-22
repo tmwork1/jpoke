@@ -121,7 +121,9 @@ def get_item_image_url(name_ja: ItemName) -> str:
     """和名からアイテム画像URLを返す。"""
     entity_id = _resolve_pokeapi_id(name_ja=name_ja, category="item")
     item_name = _resolve_item_pokeapi_name(entity_id)
-    return f"{SPRITES_BASE}/items/{item_name}.png"
+    subdir = _load_item_sprite_subdir_map().get(item_name)
+    path = f"{subdir}/{item_name}.png" if subdir else f"{item_name}.png"
+    return f"{SPRITES_BASE}/items/{path}"
 
 
 def get_type_image_url(type_name: Type) -> str:
@@ -172,6 +174,13 @@ def _load_ja_to_id_map() -> dict:
 def _load_id_map() -> dict:
     with resources.files("jpoke").joinpath("data", "pokeapi", "id_map.json").open(encoding="utf-8") as f:
         return json.load(f)
+
+
+@lru_cache(maxsize=1)
+def _load_item_sprite_subdir_map() -> dict[str, str]:
+    path = resources.files("jpoke").joinpath("data", "pokeapi", "item_sprite_subdir_map.json")
+    with path.open(encoding="utf-8") as f:
+        return json.load(f)["slug_to_subdir"]
 
 
 def _resolve_pokeapi_id(name_ja: PokemonName | ItemName, category: PokeApiCategory) -> int:
