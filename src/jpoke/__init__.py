@@ -7,7 +7,13 @@ from .core import Battle, Player
 from .enums import Command
 from .model import Pokemon, Ability, Item, Move
 from .data import POKEDEX, get_pokemon_by_regulation, get_items_by_regulation
-from .utils import get_pokeapi_url, get_pokemon_image_url, get_item_image_url
+from .utils import (
+    get_pokeapi_url,
+    get_pokemon_image_url,
+    get_item_image_url,
+    get_type_image_url,
+    get_tera_type_image_url,
+)
 
 # pyproject.toml の version と手動で一致させること（tests/test_version.py で検証）
 __version__ = "0.1.0"
@@ -26,4 +32,6 @@ __all__ = [
     "get_pokeapi_url",
     "get_pokemon_image_url",
     "get_item_image_url",
+    "get_type_image_url",
+    "get_tera_type_image_url",
 ]

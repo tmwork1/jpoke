@@ -8,7 +8,7 @@ from importlib import resources
 from typing import Literal, overload
 
 from jpoke.exceptions import PokeApiResolveError
-from jpoke.types import PokemonName, ItemName
+from jpoke.types import PokemonName, ItemName, Type
 
 PokeApiCategory = Literal["pokemon", "item"]
 PokemonImageType = Literal[
@@ -36,6 +36,34 @@ PokemonImageType = Literal[
 
 POKEAPI_BASE = "https://pokeapi.co/api/v2"
 SPRITES_BASE = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites"
+
+# タイプ画像は世代・作品ごとにディレクトリが分かれており、Gen9（スカーレット・バイオレット）配下に
+# 通常タイプバッジ（*.png）とテラスタルタイプアイコン（Tera/*.png）が両方存在する。
+TYPE_SPRITES_DIR = "types/generation-ix/scarlet-violet"
+
+# 和名タイプ -> PokeAPI type ID。19種類のみのため、専用のマップファイルは持たずコード内に直接持たせる。
+# "" (タイプなし) は対応する画像が存在しないため含めない。
+TYPE_NAME_TO_ID: dict[str, int] = {
+    "ノーマル": 1,
+    "かくとう": 2,
+    "ひこう": 3,
+    "どく": 4,
+    "じめん": 5,
+    "いわ": 6,
+    "むし": 7,
+    "ゴースト": 8,
+    "はがね": 9,
+    "ほのお": 10,
+    "みず": 11,
+    "くさ": 12,
+    "でんき": 13,
+    "エスパー": 14,
+    "こおり": 15,
+    "ドラゴン": 16,
+    "あく": 17,
+    "フェアリー": 18,
+    "ステラ": 19,
+}
 
 
 @overload
@@ -94,6 +122,18 @@ def get_item_image_url(name_ja: ItemName) -> str:
     return f"{SPRITES_BASE}/items/{item_name}.png"
 
 
+def get_type_image_url(type_name: Type) -> str:
+    """和名タイプ名から通常タイプバッジ画像URLを返す。"""
+    entity_id = _resolve_type_id(type_name)
+    return f"{SPRITES_BASE}/{TYPE_SPRITES_DIR}/{entity_id}.png"
+
+
+def get_tera_type_image_url(type_name: Type) -> str:
+    """和名タイプ名からテラスタルタイプアイコン画像URLを返す。"""
+    entity_id = _resolve_type_id(type_name)
+    return f"{SPRITES_BASE}/{TYPE_SPRITES_DIR}/Tera/{entity_id}.png"
+
+
 @lru_cache(maxsize=1)
 def _load_ja_to_id_map() -> dict:
     with resources.files("jpoke").joinpath("data", "pokeapi", "ja_to_id_map.json").open(encoding="utf-8") as f:
@@ -136,3 +176,10 @@ def _resolve_item_pokeapi_name(item_id: int) -> str:
     if item_name is None:
         raise PokeApiResolveError(f"PokeAPI item 名を解決できません: id={item_id}")
     return item_name
+
+
+def _resolve_type_id(type_name: Type) -> int:
+    entity_id = TYPE_NAME_TO_ID.get(type_name)
+    if entity_id is None:
+        raise PokeApiResolveError(f"PokeAPI type のIDを解決できません: {type_name}")
+    return entity_id
