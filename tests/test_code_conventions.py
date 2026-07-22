@@ -129,7 +129,7 @@ def test_docs_examplesがjpoke_testingモジュールに言及している():
     への言及があること、`examples/` 配下に `jpoke.testing` を import するサンプルが
     存在することを確認する。
     """
-    docs_root = Path(__file__).resolve().parent.parent / "docs" / "api" / "README.md"
+    docs_root = Path(__file__).resolve().parent.parent / "docs" / "quick_reference.md"
     readme_text = docs_root.read_text(encoding="utf-8")
     assert "jpoke.testing" in readme_text
 

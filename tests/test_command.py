@@ -1,11 +1,11 @@
 """Command enum・コマンド解決の回帰テスト。
 
 対象範囲外（ダイマックス・Zワザ）に対応する GIGAMAX_*/ZMOVE_* コマンドが、
-`docs/api/README.md` の注記通り「候補として提示されず、明示的に渡してもわるあがき
+`docs/quick_reference.md` の注記通り「候補として提示されず、明示的に渡してもわるあがき
 扱いになる」ことを検証する。将来この挙動が変わった場合にドキュメントの追従漏れに
 気づけるようにするための軽量な回帰テスト。
 
-また `Command.is_type()` が `docs/api/README.md` の Command 章「インスタンス
+また `Command.is_type()` が `docs/quick_reference.md` の Command 章「インスタンス
 プロパティ・メソッド」表の記載通りに動作することも検証する。
 
 さらに `Battle.is_struggle_only()` が、`get_available_commands(player)[0]` による
@@ -222,7 +222,7 @@ def test_is_type_Noneを渡すと偽を返す():
 
 
 def test_is_type_anyを指定すると全てのコマンドが真になる():
-    """docs/api/README.mdのCommand章の記載通り、"any"は種別を問わず真を返す。"""
+    """docs/quick_reference.mdのCommand章の記載通り、"any"は種別を問わず真を返す。"""
     assert Command.MOVE_0.is_type("any")
     assert Command.SWITCH_0.is_type("any")
     assert Command.TERASTAL_0.is_type("any")

@@ -183,7 +183,7 @@ def rollout_value(battle: Battle,
     戦略テーブル（choose_command）に従って決着まで進め、p0視点のポイントを返す。
 
     `Battle.copy()` がPlayerインスタンスを複製せず共有する性質（`MinimaxPlayer`の
-    探索と同じ仕組み）は docs/api/README.md の Battle「複製系」節を参照。そのため
+    探索と同じ仕組み）は docs/quick_reference.md の Battle「複製系」節を参照。そのため
     複製後の盤面（fork）に対しても `fork.step({p0: cmd0, p1: cmd1})` のように元の
     p0/p1 をそのままキーに使える。
     """
