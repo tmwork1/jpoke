@@ -13,10 +13,12 @@ from .utils import (
     get_item_image_url,
     get_type_image_url,
     get_tera_type_image_url,
+    download_pokemon_image,
+    download_item_image,
 )
 
 # pyproject.toml の version と手動で一致させること（tests/test_version.py で検証）
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "Battle",
@@ -34,4 +36,6 @@ __all__ = [
     "get_item_image_url",
     "get_type_image_url",
     "get_tera_type_image_url",
+    "download_pokemon_image",
+    "download_item_image",
 ]

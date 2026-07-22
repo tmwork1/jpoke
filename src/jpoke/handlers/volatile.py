@@ -132,6 +132,7 @@ def can_hit_hidden_target(battle: Battle,
             ctx.attacker, LogCode.MOVE_MISSED,
             payload=FailureLogPayload(move=ctx.move.name)
         )
+        ctx.missed_hidden_target = True
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -698,6 +699,8 @@ def さわぐ_start(battle: Battle, ctx: EventContext, value: Any) -> HandlerRet
 
     # 場のポケモンのねむり状態を解除（ねむけは解除しない）
     for mon in battle.actives:
+        if mon.fainted:
+            continue
         if mon.has_ailment("ねむり"):
             battle.ailment_manager.remove(mon)
 

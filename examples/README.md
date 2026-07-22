@@ -14,6 +14,7 @@
 | [`02_step.ipynb`](https://colab.research.google.com/github/tmwork1/jpoke/blob/main/examples/01_getting_started/02_step.ipynb) | `battle.step()` によるターン進行、3vs3バトル |
 | [`03_custom_player.ipynb`](https://colab.research.google.com/github/tmwork1/jpoke/blob/main/examples/01_getting_started/03_custom_player.ipynb) | `Player` を継承した最小のカスタム方策（`choose_command()` / `choose_selection()` のオーバーライド） |
 | [`04_lethal.ipynb`](https://colab.research.google.com/github/tmwork1/jpoke/blob/main/examples/01_getting_started/04_lethal.ipynb) | `battle.calc_lethal()` による致死率計算（攻撃回数・致死確率）の基本 |
+| [`05_cli_vs_ai.py`](https://github.com/tmwork1/jpoke/blob/main/examples/01_getting_started/05_cli_vs_ai.py) | `jpoke.players.CLIPlayer` を使い、標準入力でコマンドを入力しながら `jpoke.players.MaxDamagePlayer` と対戦する。対話入力のためColab非対応（`.py`） |
 
 ## 02_tree_search/
 
@@ -47,6 +48,7 @@ AI開発（`MinimaxPlayer` を継承した木探索AIのカスタマイズ）
 | [`logcode.ipynb`](https://colab.research.google.com/github/tmwork1/jpoke/blob/main/examples/04_others/logcode.ipynb) | `LogCode` の種類の確認方法（`battle.get_event_logs(turn)` によるログ種別の抽出） |
 | [`poke_env_style_player.ipynb`](https://colab.research.google.com/github/tmwork1/jpoke/blob/main/examples/04_others/poke_env_style_player.ipynb) | poke-env互換プロパティ（`battle.available_moves` 等）を使った `choose_command()` の実装 |
 | [`pokedex.ipynb`](https://colab.research.google.com/github/tmwork1/jpoke/blob/main/examples/04_others/pokedex.ipynb) | `Pokemon.data` を通した図鑑データ（持てる特性・覚えられる技など）の取得、ポケモン・アイテム・タイプの画像URL取得 |
+| [`pokeapi_utility.ipynb`](https://colab.research.google.com/github/tmwork1/jpoke/blob/main/examples/04_others/pokeapi_utility.ipynb) | `jpoke.utils.pokeapi` によるPokeAPIのURL取得（`get_pokeapi_url`等）・画像ダウンロード（`download_pokemon_image`等） |
 
 ## 05_advanced/
 

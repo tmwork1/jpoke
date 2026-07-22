@@ -1,6 +1,6 @@
 [project]
 name = "jpoke"
-version = "0.1.0"
+version = "0.2.0"
 description = "Event-driven Pokemon Champions single-battle simulation and damage calculation library (unofficial)"
 authors = [
     { name = "Tomoo Mari", email = "tmtm.holmes@gmail.com" }
@@ -8,7 +8,7 @@ authors = [
 license = "MIT"
 license-files = ["LICENSE"]
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = []
 keywords = ["pokemon", "battle", "simulator", "damage-calculator"]
 classifiers = [
@@ -16,7 +16,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "Topic :: Games/Entertainment :: Turn Based Strategy",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Operating System :: OS Independent",
@@ -67,7 +66,7 @@ pythonpath = ["src"]
 
 [tool.ruff]
 line-length = 200
-target-version = "py310"
+target-version = "py311"
 src = ["src"]
 
 [tool.ruff.lint]
@@ -90,7 +89,7 @@ ignore = [
 # 段階導入: まず core のみを対象にし、警告を解消しながら対象を広げる
 # follow_imports = "silent" で core が import する core 外モジュール（handlers/model 等）の
 # 型エラーは黙殺する（段階導入の対象外のため）。core 自身のエラーのみ報告させる。
-python_version = "3.10"
+python_version = "3.11"
 files = ["src/jpoke/core"]
 mypy_path = "src"
 ignore_missing_imports = true

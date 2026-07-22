@@ -466,6 +466,16 @@ class MoveExecutor:
                 finally:
                     self.battle.end_deferred_winner_log()
                 return
+            if ctx.missed_hidden_target:
+                # そらをとぶ・あなをほる等で姿を隠している相手に対応していない技で
+                # 外れた場合も、通常の命中率判定による「外れ」と同様に扱う
+                # （.internal/spec/moves/とびひざげり.md）。LogCode.MOVE_MISSEDは
+                # can_hit_hidden_target側で既に記録済みのためここでは記録せず、
+                # move_missedフラグの設定とEvent.ON_MISSの発火のみ行う。
+                self.move_missed = True
+                self._events.emit(Event.ON_MISS, ctx)
+                self._events.emit(Event.ON_MOVE_END, ctx)
+                return
             self._events.emit(Event.ON_MOVE_END, ctx)
             return
 

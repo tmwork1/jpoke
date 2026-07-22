@@ -10,6 +10,8 @@ from .pokeapi import (
     get_item_image_url,
     get_type_image_url,
     get_tera_type_image_url,
+    download_pokemon_image,
+    download_item_image,
 )
 
 __all__ = [
@@ -20,4 +22,6 @@ __all__ = [
     "get_item_image_url",
     "get_type_image_url",
     "get_tera_type_image_url",
+    "download_pokemon_image",
+    "download_item_image",
 ]

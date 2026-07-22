@@ -12,7 +12,8 @@
 このドキュメントは **よく使う公開APIの見取り図**であり、全メソッド・全引数を網羅する
 ものではない。詳細な挙動・戻り値・例外条件は各クラスのdocstring（ソースコード:
 `src/jpoke/core/battle.py`, `src/jpoke/core/player.py`, `src/jpoke/model/pokemon.py`）を
-直接参照すること。
+直接参照すること。全シグネチャ・全メソッド・全属性を網羅した自動生成リファレンスは
+[リファレンス（自動生成）](../reference/index.md)を参照。
 
 対象範囲・アーキテクチャの全体像は [README.md](https://github.com/tmwork1/jpoke/blob/main/README.md)
 を参照。
@@ -846,9 +847,12 @@ move.modify_pp(-99)  # PPを0にする（わるあがきを誘発させたい場
 | `get_item_image_url(name_ja)` | アイテムの和名から画像URLを返す |
 | `get_type_image_url(type_name)` | タイプの和名（`Type`、19種）から通常タイプバッジ画像URLを返す |
 | `get_tera_type_image_url(type_name)` | タイプの和名からテラスタルタイプアイコン画像URLを返す |
+| `download_pokemon_image(name_ja, dest, image_type="official-artwork")` | ポケモンの和名から画像を取得し `dest` に保存する（`Path` を返す） |
+| `download_item_image(name_ja, dest)` | アイテムの和名から画像を取得し `dest` に保存する（`Path` を返す） |
 
 いずれも和名が解決できない場合（対応表に存在しない、`Type` の `""`＝タイプなしを渡した場合など）
-`PokeApiResolveError`（`jpoke.exceptions`）を送出する。
+`PokeApiResolveError`（`jpoke.exceptions`）を送出する。`download_*` はこれに加えてネットワーク
+アクセスを伴うため、保存先ディレクトリが無ければ自動作成した上でファイルに書き込む。
 
 ```python
 from jpoke import get_pokemon_image_url, get_item_image_url, get_type_image_url, get_tera_type_image_url
@@ -872,8 +876,9 @@ print(get_tera_type_image_url("でんき"))
 昇格したもので、`pip install jpoke` だけで（`jpoke` リポジトリを clone せずに）
 ピンポイントな状態検証・技の実行・行動順の確認などができる。
 
-`fix_damage()` / `fix_random()` は `Battle` の内部属性を直接差し替えるモンキーパッチの
-デバッグ用ユーティリティであり、本番の対戦進行（bot 運用等）では使わないこと。
+対戦オブジェクトの内部属性を直接差し替えるモンキーパッチ（ダメージ・乱数固定用の
+`fix_damage()` / `fix_random()` など）はAPI安定性の対象外とするため含めていない。
+リポジトリ内のテストで使う場合は `tests/test_utils.py` を参照。
 
 ```python
 from jpoke import Pokemon
@@ -911,8 +916,6 @@ print(results[-1].lethal_probability)
 | `calc_lethal(battle, player_idx, moves, critical=False, secondary=False, max_attack=10)` | `Battle.calc_lethal()` のインデックス指定版 |
 | `calc_move_priority(battle, player_idx, move_index=0)` | 指定インデックスの技を使ったときの優先度を返す。`Battle.calc_move_priority(pokemon, move)` のインデックス指定版 |
 | `end_turn(battle)` | `Battle.end_turn()` のラッパー |
-| `fix_damage(battle, damage)` | ダメージ計算を固定値にする（デバッグ専用モンキーパッチ） |
-| `fix_random(battle, value)` | `battle.random.random()` を固定値にする（デバッグ専用モンキーパッチ） |
 | `CustomPlayer` | 常に利用可能な最初のコマンドを選択する `Player` 実装。上記ヘルパーの内部で使われる |
 
 ## 関連リンク

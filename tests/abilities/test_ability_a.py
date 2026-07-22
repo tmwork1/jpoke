@@ -1771,6 +1771,25 @@ def test_オーラブレイク_自分の攻撃を0_75倍(ability_name: str, move
     assert 3072 == battle.damage_calculator.power_modifier
 
 
+def test_かわりもの_スキルスワップで得ても変身しない():
+    """かわりもの: スキルスワップ/さまようたましいでこの特性を得ることはできるが、
+    特性の効果（変身）は発動しない（.internal/spec/abilities/かわりもの.md）。
+    かわりものはEvent.ON_ABILITY_ENABLEDに登録されていないため、
+    battle.ability_manager.swap_ability()経由のON_ABILITY_ENABLED発火では
+    かわりものが発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["スキルスワップ"])],
+        team1=[Pokemon("フシギダネ", ability_name="しんりょく", move_names=["はねる"])],
+    )
+    mon, target = battle.actives
+    battle.change_ability(target, "かわりもの")
+    t.run_move(battle, 0, 0)  # スキルスワップ
+    assert mon.ability.name == "かわりもの"
+    assert target.ability.name == "せいでんき"
+    assert mon.types == ["でんき"]  # 変身していない
+    assert not mon.has_volatile("へんしん")
+
+
 def test_かわりもの_場に出た瞬間に正面の相手に変身する():
     """かわりもの: 場に出た瞬間、正面の相手のタイプ・特性・技・実数値・ランク・性別・体重に変身する"""
     battle = t.start_battle(

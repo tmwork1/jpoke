@@ -786,7 +786,7 @@ def きあいのハチマキ_survive_by_chance(battle: Battle, ctx: AttackContex
     return HandlerReturn(value=value)
 
 
-def きせきのたね_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def きせきのタネ_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return _modify_power_by_type(ctx.move, value, type_="くさ", modifier=4915)
 
 

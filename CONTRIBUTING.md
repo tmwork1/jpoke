@@ -25,7 +25,7 @@ pip install -e . pytest pytest-cov ruff mypy
 uv sync
 ```
 
-`requires-python = ">=3.10"`。型アノテーションは Python 3.10+ の構文
+`requires-python = ">=3.11"`。型アノテーションは Python 3.10+ の構文
 （`X | Y`, `list[X]`）を使用してください。
 
 ## テストの実行
@@ -72,8 +72,20 @@ python -m pytest tests/ -q --cov=jpoke --cov-report=term
   python -m mypy
   ```
 
+- 五十音順の維持・データ整合性チェック（`--check` は変更せず確認のみ）:
+
+  ```bash
+  python scripts/sort_handlers.py --check
+  python scripts/sort_data/sort_abilities.py --check
+  python scripts/sort_data/sort_items.py --check
+  python scripts/sort_data/sort_moves.py --check
+  python scripts/sort_tests.py --check tests/**/test_*.py
+  ```
+
 `.pre-commit-config.yaml` を使うと、これらのチェック（の一部）をコミット前に
 ローカルで自動実行できます（`pip install pre-commit && pre-commit install`）。
+CI（`.github/workflows/test.yml`）でも push/PR ごとに同等のチェックを
+Windows + Linux × Python 3.11/3.12 のマトリクスで実行しています。
 
 ## バージョン管理
 

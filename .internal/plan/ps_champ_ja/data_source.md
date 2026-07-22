@@ -119,8 +119,10 @@ jpoke実装済み716技のうち500件がカバーされ、jpokeにあってps-c
 **結論は変わらず**：技データの単独基盤にはできず、既存実装済み技の**値の照合・差分検出用途**
 として使う。
 
-パワーシフト（ps-champ-jaにあってjpoke未実装の1件）は引き続き `src/jpoke/data/ps-champ-ja/moves.json` に
-未掲載で公式仕様として実在するか未確認（`.internal/progress/move.md` 参照）。
+パワーシフト（ps-champ-jaにあってjpoke未実装だった1件）は、2026-07-22の再レビューで
+`src/jpoke/data/ps-champ-ja/moves.json` に掲載済み（当時「未掲載」としていたのは調査時点の
+記述が古くなっていたもの）であることが判明し、ポケモンWikiでも実在・効果内容が確認できたため
+実装が完了した（`.internal/plan/moves/パワーシフト.md`、`.internal/progress/move.md` 参照）。
 
 [ユーザー方針・維持]
 - moves.jsonからmove.pyに値を転写するスクリプトを作成する
@@ -210,5 +212,5 @@ ps-champ-ja側の和名表記の変化（表記ゆれ修正・リネーム等）
 ## 関連
 
 - ダウンロードスクリプト: `scripts/ps_champ_ja/download.py`
-- `.internal/progress/move.md`: パワーシフトの行（未実装・要確認扱い、変更なし）
+- `.internal/progress/move.md`: パワーシフトの行（2026-07-22の再レビューで実装完了に更新）
 - [missing_forms.md](missing_forms.md): 名前不一致12件（真の欠落9件を除く）の内訳と、構造突合による解決状況の詳細

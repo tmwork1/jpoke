@@ -592,11 +592,14 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             "uncopyable"
         },
         handlers={
+            # ON_ABILITY_ENABLEDには登録しない: 他の「場に出た時に発動する特性」
+            # （いかく等）とは異なり、かわりものはスキルスワップ/さまようたましいで
+            # 得た場合や、へんしん/かわりもの自身の変身先の特性としてこの特性を得た
+            # 場合には効果が発動しない（.internal/spec/abilities/かわりもの.md）。
+            # 特にへんしん/かわりものの変身先がかわりもの持ちだった場合、
+            # ON_ABILITY_ENABLEDに登録すると battle.transform() を再帰的に呼び出し
+            # 無限再帰を起こすため、クラッシュ防止の意味でも必須。
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                h.かわりもの_transform_to_opponent,
-                subject_spec="source:self",
-            ),
-            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
                 h.かわりもの_transform_to_opponent,
                 subject_spec="source:self",
             ),
@@ -1623,6 +1626,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
         },
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
+                h.ぜったいねむり_switch_in,
+                subject_spec="source:self",
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
                 h.ぜったいねむり_switch_in,
                 subject_spec="source:self",
             ),
