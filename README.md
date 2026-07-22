@@ -56,7 +56,7 @@ battle.print_logs("all")
 ```
 
 ステップごとに学びたい場合は、ターン進行を手動で覗く・自分の `Player` を実装するところまで
-順を追う [はじめに（チュートリアル）](https://tmwork1.github.io/jpoke/getting_started/) を参照。
+順を追う [チュートリアル](https://tmwork1.github.io/jpoke/getting_started/) を参照。
 戦術研究・AI開発・ダメージ計算ツール開発それぞれのユースケース別に動かして学べるサンプルは
 [examples/](https://github.com/tmwork1/jpoke/blob/main/examples/README.md) に用意している
 （各 `.ipynb` は Google Colab でそのまま開いて実行できる）。
@@ -64,7 +64,7 @@ battle.print_logs("all")
 ## ドキュメント
 
 利用者向けドキュメントは <https://tmwork1.github.io/jpoke/> にまとめている
-（この README・はじめに（チュートリアル）・早見表・APIリファレンス（自動生成）・
+（この README・チュートリアル・早見表・APIリファレンス（自動生成）・
 サンプル・変更履歴・貢献ガイド）。
 
 | ディレクトリ | 役割 |

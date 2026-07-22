@@ -57,14 +57,14 @@ Battle(
   手持ち数がプレイヤー間で異なる場合も両者に同じ値が適用されるため、片方の手持ちが少ないと
   両者とも選出数が絞られる点に注意
 - `seed`: 乱数シード値。省略時はOSの乱数源から高エントロピーな値を生成する
-- `mega_evolution` / `terastal`: メガシンカ／テラスタルを許可するか（デフォルト両方 `True`）
-- `critical_mode`: 急所判定モード（デフォルト `"normal"`）
-- `damage_roll`: ダメージ乱数モード（デフォルト `"normal"`）
+- `mega_evolution` / `terastal`: メガシンカ／テラスタルを許可するか（既定は両方 `True`）
+- `critical_mode`: 急所判定モード（既定 `"normal"`）
+- `damage_roll`: ダメージ乱数モード（既定 `"normal"`）
 - `accuracy_fix_threshold`: この値以上の命中率を100%固定にする（`None` なら無効）
 - `effect_chance_threshold`: この値未満の追加効果確率を0%にする（`None` なら無効）。
   `accuracy_fix_threshold` と併用すると、命中判定・追加効果発動の両方を排除した
   完全に決定論的なシナリオを作れる（シナリオ検証・回帰テスト向け）
-- `double_battle`: ダブルバトル向けのダメージ計算補正を有効にするか（デフォルト `False`。
+- `double_battle`: ダブルバトル向けのダメージ計算補正を有効にするか（既定 `False`。
   **対戦進行自体はシングルバトル専用**であることに変わりはない）
 
 ```python
@@ -111,15 +111,15 @@ winner = battle.winner
 | API | 概要 |
 |---|---|
 | `get_active(player)` | 指定プレイヤーの現在場に出ているポケモンを取得（交代中などは `None`） |
-| `get_team(player)` | 指定プレイヤーの対戦中のチーム（選出漏れの控えも含む）を取得。`player.team` は開始前のスナップショットで対戦中は更新されないため、HP・瀕死・状態異常などバトル中の実際の状態を見るにはこちらを使う |
+| `get_team(player)` | 指定プレイヤーの対戦中のチーム（選出漏れの控えも含む）を取得。`player.team` は開始前のスナップショットで対戦中は更新されないため、HP・ひんし・状態異常などバトル中の実際の状態を見るにはこちらを使う |
 | `available_commands(player)` | 現在使用可能な `Command` のリストを取得。`battle.phase` が `"action"`/`"switch"` のときしか呼べず、それ以外の局面（例: 対戦開始前）で呼ぶと `InvalidPhaseError` を送出する。通常は `choose_command()`/`choose_selection()` の中（`battle.step()` 実行中）から呼ぶ形になり、明示的に `phase` を確認する必要はない |
 | `command_to_move(player, command)` | コマンドから `Move` オブジェクトを取得。`choose_command()` の実装で使う |
-| `create_order(player, order, *, terastal=False, megaevol=False)` | poke-env の `create_order()` 互換。`Move`/`Pokemon` オブジェクトから対応する `Command` を組み立てる（`command_to_move()` の逆方向）。`Move` なら技コマンド（`terastal`/`megaevol` 指定でテラスタル/メガシンカを伴う技コマンド）、`Pokemon` なら交代コマンドを返す。poke-envでは `Player.choose_move()` が `create_order(move)` で作った `BattleOrder` を返す仕様だが、jpokeの `Command` は技・交代等の選択肢を表す単純な `Enum` 値なので、`battle.create_order(self, move)` の戻り値をそのまま `choose_command()` の戻り値として使える |
+| `create_order(player, order, *, terastal=False, megaevol=False)` | poke-env の `create_order()` 互換。`Move`/`Pokemon` オブジェクトから対応する `Command` を組み立てる（`command_to_move()` の逆方向）。`Move` なら技コマンド（`terastal`/`megaevol` 指定でテラスタル/メガシンカを伴う技コマンド）、`Pokemon` なら交代コマンドを返す。poke-envでは `Player.choose_move()` が `create_order(move)` で作った `BattleOrder` を返す仕様である。一方jpokeの `Command` は技・交代等の選択肢を表す単純な `Enum` 値なので、`battle.create_order(self, move)` の戻り値をそのまま `choose_command()` の戻り値として使える |
 | `is_struggle_only(player)` | わるあがきしか選べない状態かどうかを判定する。`available_commands(player)[0]` で代用すると、交代コマンドが同時に存在する場合に誤ってそちらを返すことがあるため、判定にはこちらを使う。実際にわるあがきを選ぶ際は `Command.STRUGGLE` をそのまま使えばよい（`SWITCH_i`/`MOVE_i` と異なりインデックス解決が不要なため、取得専用メソッドは無い） |
 
 ```python
 active = battle.get_active(player1)
-team = battle.get_team(player1)  # 瀕死・HP変化などを反映した実体
+team = battle.get_team(player1)  # ひんし・HP変化などを反映した実体
 commands = battle.available_commands(player1)
 move = battle.command_to_move(player1, commands[0])
 command = battle.create_order(player1, move)  # command_to_move()の逆方向
@@ -138,7 +138,7 @@ if battle.is_struggle_only(player1):
 | API | 概要 |
 |---|---|
 | `can_switch(player)` | プレイヤーが交代可能かどうかを判定する（場のポケモンがとらわれ状態、または控えが全滅していれば不可） |
-| `has_available_bench(player)` | とらわれ状態を無視して、控えに瀕死でないポケモンが残っているかを判定する（だっしゅつパック等の強制交代判定用） |
+| `has_available_bench(player)` | とらわれ状態を無視して、控えにひんしでないポケモンが残っているかを判定する（だっしゅつパック等の強制交代判定用） |
 | `is_floating(pokemon)` | 浮いている状態か判定する（ひこうタイプ・特性・技の効果を考慮） |
 | `is_trapped(pokemon)` | 逃げられない状態か判定する（ゴーストタイプは逃げられる） |
 | `is_nervous(pokemon)` | きんちょうかん状態か判定する |
@@ -164,7 +164,7 @@ speed_order = battle.resolve_speed_order()
 
 | API | 概要 |
 |---|---|
-| `calc_lethal(attacker, moves, critical=False, move_secondary=False, max_attack=10)` | 指定した技（列）を最大 `max_attack` 回撃ち込んだ場合の致死率を計算する（確定数が出た時点で打ち切る）。`moves` には技名の文字列・`Move`・`(技, ヒット数)` のタプル、およびそれらのリストを渡せる。リストで複数の技を渡した場合はその順番通りに1ラウンドとして使用し（例: `["でんこうせっか", "かみなり"]` は1発目にでんこうせっか、2発目にかみなり）、`max_attack>1` にするとこのラウンド自体を繰り返す。防御側の状態異常・天候ダメージ（どく・やけど・すなあらし等）はダメージに自動的に合算される。`critical` は急所として計算するかどうか、`move_secondary` は追加効果ハンドラ（やけど付与等、致死率計算に組み込まれている技に限る）を適用するかどうかで、りゅうせいぐんの自傷効果のように攻撃側自身に必ず発生する効果は `move_secondary` の指定に関わらず常に加味される。`list[LethalHitResult]` を返す（各要素が1ヒットに対応し、最終的な致死率は `results[-1].lethal_probability`。`jpoke.testing.calc_lethal()` はこの引数を `secondary` という短縮名で受け取るインデックス指定版なので注意） |
+| `calc_lethal(attacker, moves, critical=False, move_secondary=False, max_attack=10)` | 指定した技（列）を最大 `max_attack` 回撃ち込んだ場合の致死率を計算する（確定数が出た時点で打ち切る）。`moves` には技名の文字列・`Move`・`(技, ヒット数)` のタプル、およびそれらのリストを渡せる。リストで複数の技を渡した場合はその順番通りに1ラウンドとして使用し（例: `["でんこうせっか", "かみなり"]` は1発目にでんこうせっか、2発目にかみなり）、`max_attack>1` にするとこのラウンド自体を繰り返す。防御側の状態異常・天候ダメージ（どく・やけど・すなあらし等）はダメージに自動的に合算される。`critical` は急所として計算するかどうか、`move_secondary` は追加効果ハンドラ（やけど付与等、致死率計算に組み込まれている技に限る）を適用するかどうかで、りゅうせいぐんの自傷効果のように攻撃側自身に必ず発生する効果は `move_secondary` の指定に関わらず常に加味される。`list[LethalHitResult]` を返す（各要素が1ヒットに対応し、最終的な致死率は `results[-1].lethal_probability`）。なお `jpoke.testing.calc_lethal()` はこの引数を `secondary` という短縮名で受け取るインデックス指定版なので注意 |
 | `calc_damages(attacker, defender, move, critical=False)` | 乱数によるダメージ幅を考慮した、可能な全ダメージ値のリスト（通常16通り）を返す |
 | `roll_damage(attacker, defender, move, critical=False)` | `calc_damages()` の結果から `option.damage_roll` に従って1つ選んで返す |
 
@@ -233,12 +233,14 @@ battle.remove_item(defender)                 # 取り外す
   別クラスの別メソッドになっている
 
 `set_weather`/`set_terrain` の `count` に既定値5があるのに対し `activate_global_field`/
-`activate_side_field` に既定値が無いのも同じ理由に由来する整備漏れではなく意図的な差である。
-天候・地形は通常の発動元（技・特性）が例外なく5ターンで発動するため単一の既定値が安全だが
+`activate_side_field` に既定値が無いのも整備漏れではなく、前述と同じ理由による意図的な差である。
+
+天候・地形は通常の発動元（技・特性）が例外なく5ターンで発動するため、単一の既定値が安全である。
 （強天候〔おおひでり・おおあめ・らんきりゅう〕を発動する特性は`count=1`で発動するものの、
 ターン経過による自然消滅の仕組み自体を持たず特性保持者が場を離れるまで持続するため、
-この既定値の判断に影響しない。詳細は`set_weather`のdocstringを参照）、
-グローバルフィールド効果はフェアリーロックのみ1ターン（他は5ターン）、サイドフィールド効果は
+この既定値の判断には影響しない。詳細は`set_weather`のdocstringを参照）
+
+一方、グローバルフィールド効果はフェアリーロックのみ1ターン（他は5ターン）、サイドフィールド効果は
 壁技（5ターン）・設置技（1層ずつ）・遅延効果（発動までのターン数）が同じ引数に混在するため、
 単一の既定値を設けるとかえって誤ったシナリオを組んでしまう恐れがある。そのため
 `activate_global_field`/`activate_side_field` では `count` を必須のまま維持している
@@ -363,7 +365,7 @@ add_pokemon(
 
 `evs`/`ivs` はステータス名をキーとする辞書で、指定したステータスのみ生成後に
 `set_evs()` / `set_ivs()` に委譲して設定する（未指定のステータスは `Pokemon` の既定値の
-まま）。`None`（デフォルト）の場合はどちらも呼ばれない。
+まま）。`None`（既定）の場合はどちらも呼ばれない。
 
 ```python
 from jpoke import Player
@@ -379,14 +381,14 @@ attacker = player.add_pokemon(
 ### `team` 属性の注意点
 
 `player.team` は **コンストラクタ〜対戦開始前のスナップショット**であり、`Battle` 開始後の
-対戦中はここに反映されるHP・瀕死・状態異常・ランク変化などは更新されない。対戦中の実際の
+対戦中はここに反映されるHP・ひんし・状態異常・ランク変化などは更新されない。対戦中の実際の
 状態を見たい場合は `battle.get_active(player)`（場に出ているポケモン）や
 `battle.get_team(player)`（チーム全体の実体）を使う。
 
 ### `choose_command()` のオーバーライド
 
 方策（AI）を実装するには `Player` を継承し `choose_command()` をオーバーライドする。
-デフォルト実装は「利用可能な行動コマンドの最初の1つを返す」だけの決定的な実装。
+既定実装は「利用可能な行動コマンドの最初の1つを返す」だけの決定的な実装。
 
 ```python
 from jpoke import Battle, Player
@@ -407,7 +409,7 @@ class StrongestMovePlayer(Player):
         return max(commands, key=move_power)
 ```
 
-選出番号を決める `choose_selection(battle)`（デフォルトは先頭から順に選出）も同様の要領で
+選出番号を決める `choose_selection(battle)`（既定は先頭から順に選出）も同様の要領で
 オーバーライドできる。
 
 `choose_command()`/`choose_selection()` の中で確率的な判断をしたい場合は `battle.decision_random`
@@ -470,8 +472,8 @@ print(f"勝率: {player1.win_rate:.1%}")
 
 `battle_against()` は対戦ごとに `Battle` を新規生成・破棄するループを内包するため、個々の
 `Battle` を（リストとして蓄積するのではなく）`on_battle_end` コールバックで都度受け取る設計に
-している。対戦数に比例して各対戦の `event_logger` の履歴等を保持するリストを返す設計は、
-対戦数が多いほどメモリ使用量が線形に増えるため採用していない。
+している。各対戦の `event_logger` の履歴等を保持し続けるリストを返す設計は、
+対戦数に比例してメモリ使用量が線形に増えるため採用していない。
 
 ## TreeSearchPlayer
 
@@ -499,7 +501,7 @@ TreeSearchPlayer(
 `MinimaxPlayer` 等のサブクラスもこのコンストラクタをそのまま継承する。
 
 - `max_plies`: 探索する手数（1以上）。2にすると相手の応手まで読むが、1手ごとに
-  自分の合法手数×相手の合法手数倍に分岐が増えるため、2以上を指定する場合は
+  分岐が「自分の合法手数×相手の合法手数」倍に増えるため、2以上を指定する場合は
   評価関数の呼び出し回数に注意する
 - `max_nodes`: 展開してよいノード数（`sim.step()` の呼び出し回数）の上限。`None`
   なら無制限。到達すると以降の展開を打ち切り、その時点で見つかっている最善手を返す
@@ -510,7 +512,7 @@ TreeSearchPlayer(
 | API | 概要 |
 |---|---|
 | `evaluate(battle)` | 葉ノードの盤面評価。値が大きいほど自分に有利。既定は自分と相手の残りHP割合の差（決着がついている場合は勝敗を最優先し ±inf を返す） |
-| `fallback(battle)` | (1) 相手の合法手が未公開で `estimate_opponent` でも推定できない局面（実対戦の初手など）、(2) 探索中に発生した割り込み交代（瀕死交代等）による `choose_command()` の再入時、の2箇所で使われる代替方策。既定は `battle.decision_random.choice()` による完全ランダム選択（`Battle(seed=...)` で固定した対戦全体の再現性を壊さないよう、行動選択専用の乱数系列を使う） |
+| `fallback(battle)` | (1) 相手の合法手が未公開で `estimate_opponent` でも推定できない局面（実対戦の初手など）、(2) 探索中に発生した割り込み交代（ひんし交代等）による `choose_command()` の再入時、の2箇所で使われる代替方策。既定は `battle.decision_random.choice()` による完全ランダム選択（`Battle(seed=...)` で固定した対戦全体の再現性を壊さないよう、行動選択専用の乱数系列を使う） |
 | `estimate_opponent(battle, opponent)` | 相手の合法手が未公開で空のときに呼ばれる推定フック。既定は何もしない（推定を行わず `fallback` に委譲される）。オーバーライドし、相手ポケモンのモデル（`battle.get_active(opponent)` の moves/item 等）に推定値を書き込むと、そこから実際に選べるコマンドの列挙は `CommandManager` に任せられる。利用者は `Move`/`Item` など見慣れたドメインオブジェクトを推定するだけでよく、`Command` 自体を組み立てる必要はない |
 | `configure_sim(sim)` | `battle.copy()` 直後・`sim.step()` 実行前に呼ばれるフック。既定は何もしない。オーバーライドして、探索中だけ有効にしたい `BattleOption`（命中率固定・ダメージ平均値化など）を `sim` に設定する。実際の `battle` 本体には影響しない |
 
@@ -518,7 +520,7 @@ TreeSearchPlayer(
 
 | API | 概要 |
 |---|---|
-| `evaluate_commands(battle)` | 現在の盤面での自分の各合法手の評価値一覧（`dict[Command, float]`）を返す（デバッグ・読み筋確認用）。`choose_command()` の状態を変更しない副作用なしのメソッド。相手の合法手が未公開で空（`estimate_opponent` で推定してもなお空）の場合は空の辞書を返す。呼び出し中は `max_nodes` によるノード数上限を一時的に無効化し、自分の全合法手×相手の全合法手を `max_plies` の深さまで打ち切りなく評価するため、`choose_command()` の探索とは異なりノード数では打ち切られない点に注意（毎ターンの `choose_command()` 呼び出しごとにこのメソッドも呼ぶデバッグ表示に組み込む場合、探索コストが `max_nodes` で抑えられない） |
+| `evaluate_commands(battle)` | 現在の盤面での自分の各合法手の評価値一覧（`dict[Command, float]`）を返す（デバッグ・読み筋確認用）。呼び出しても `choose_command()` の内部状態に影響しない、副作用のないメソッド。相手の合法手が未公開で空（`estimate_opponent` で推定してもなお空）の場合は空の辞書を返す。呼び出し中は `max_nodes` によるノード数上限を一時的に無効化し、自分の全合法手×相手の全合法手を `max_plies` の深さまで打ち切りなく評価するため、`choose_command()` の探索とは異なりノード数では打ち切られない点に注意（毎ターンの `choose_command()` 呼び出しごとにこのメソッドも呼ぶデバッグ表示に組み込む場合、探索コストが `max_nodes` で抑えられない） |
 
 ```python
 table = ai_player.evaluate_commands(battle)
@@ -539,7 +541,7 @@ if table:
 from jpoke.players import MinimaxPlayer
 
 class KOFocusedPlayer(MinimaxPlayer):
-    """相手を瀕死にできる手を優先する簡易AI（evaluate()の拡張例）。"""
+    """相手をひんしにできる手を優先する簡易AI（evaluate()の拡張例）。"""
 
     def evaluate(self, battle: Battle) -> float:
         base = super().evaluate(battle)
@@ -580,7 +582,7 @@ baseline.battle_against(challenger, n_battles=100, seed=1)
 Pokemon(
     name: PokemonName,
     gender: Gender = "",
-    nature: Nature = "まじめ",           # デフォルトはステータス補正なし
+    nature: Nature = "まじめ",           # 既定はステータス補正なし
     level: int = 50,
     ability_name: AbilityName = "",     # 省略時は特性なし扱い
     item_name: ItemName = "",           # 省略時はアイテムなし
