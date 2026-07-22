@@ -7,6 +7,36 @@
 
 ## [Unreleased]
 
+### Added
+
+- `TreeSearchPlayer.estimate_opponent_team()` / `estimate_opponent_selection()` —
+  相手推定を項目別に分けた新フック。`estimate_opponent_team(battle)` は相手ポケモンの
+  モデル（技・特性・アイテム）に推定値を書き込み、`estimate_opponent_selection(battle)`
+  は相手の選出インデックスの推定を `list[int] | None` の返り値で返す。
+  `estimate_opponent(battle)` の既定実装はこの2つに順に委譲するテンプレートメソッドに
+  なった。選出推定の返り値はフレームワーク側（`estimate_opponent` の既定実装）が
+  公開済みの `selected_indexes` とマージする（未包含の推定分のみ追加し、公開済みの
+  インデックスは維持する）ため、利用者がマージ処理を書く必要はない
+
+### Changed
+
+- **破壊的変更**: `TreeSearchPlayer.estimate_opponent()` のシグネチャを
+  `(battle, opponent)` から `(battle)` に変更した。相手は `battle.opponent(self)` で
+  取得する（`evaluate`/`fallback` 等、他のフックが「`battle` のみを受け取り相手は
+  `battle.opponent(self)` で取得する」という規約に統一するための変更）。
+  `estimate_opponent` を直接オーバーライドしているコードは `opponent` 引数を削除し、
+  関数内で `battle.opponent(self)` を呼ぶよう修正する必要がある
+- **破壊的変更**: `estimate_opponent` の呼び出し契約を変更した。従来は「相手の合法手
+  （`battle.available_commands(opponent)`）が未公開で空のときのみ」呼ばれていたが、
+  estimate_opponent 系フック（`estimate_opponent`/`estimate_opponent_team`/
+  `estimate_opponent_selection`）のいずれかをオーバーライドしていれば、探索の最上位
+  （`choose_command`/`evaluate_commands`）のたびに毎回呼ばれるようになった。この結果、
+  相手候補は「観測スナップショット由来のコマンド」と「推定情報から `CommandManager`
+  が列挙したコマンド」の和集合になり、相手の技が一部だけ公開されている局面でも
+  未公開スロットの推定によって探索の相手候補が拡張される（実対戦の型推定に相当）。
+  観測（`battle`）は毎ターン再構築されるため推定は毎回書き込む必要があるが、
+  公開済みの情報（revealed な技・選出）を上書きしないよう未公開分のみ補うこと
+
 ## [0.2.0] - 2026-07-22
 
 ### Added

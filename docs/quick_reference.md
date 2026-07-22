@@ -513,8 +513,18 @@ TreeSearchPlayer(
 |---|---|
 | `evaluate(battle)` | 葉ノードの盤面評価。値が大きいほど自分に有利。既定は自分と相手の残りHP割合の差（決着がついている場合は勝敗を最優先し ±inf を返す） |
 | `fallback(battle)` | (1) 相手の合法手が未公開で `estimate_opponent` でも推定できない局面（実対戦の初手など）、(2) 探索中に発生した割り込み交代（ひんし交代等）による `choose_command()` の再入時、の2箇所で使われる代替方策。既定は `battle.decision_random.choice()` による完全ランダム選択（`Battle(seed=...)` で固定した対戦全体の再現性を壊さないよう、行動選択専用の乱数系列を使う） |
-| `estimate_opponent(battle, opponent)` | 相手の合法手が未公開で空のときに呼ばれる推定フック。既定は何もしない（推定を行わず `fallback` に委譲される）。オーバーライドし、相手ポケモンのモデル（`battle.get_active(opponent)` の moves/item 等）に推定値を書き込むと、そこから実際に選べるコマンドの列挙は `CommandManager` に任せられる。利用者は `Move`/`Item` など見慣れたドメインオブジェクトを推定するだけでよく、`Command` 自体を組み立てる必要はない |
+| `estimate_opponent(battle)` | 探索の最上位（`choose_command`/`evaluate_commands`）のたびに呼ばれる推定フック（相手は `battle.opponent(self)` で取得する。`evaluate`/`fallback` と同じ規約）。既定実装は項目別フック `estimate_opponent_team(battle)` を呼んだ後、`estimate_opponent_selection(battle)` の返り値（`None` でなければ）を公開済みの `selected_indexes` に未包含分だけマージするテンプレートメソッド。項目を横断する推定をしたい場合はこのメソッド自体をオーバーライドしてもよい |
+| `estimate_opponent_team(battle)` | 相手ポケモンのモデル（`battle.get_active(battle.opponent(self))` の moves/item 等）に技・特性・アイテムの推定値を書き込むフック。既定は何もしない。書き込んだ推定情報から実際に選べるコマンドの列挙は `CommandManager` に任せられ、利用者は `Move`/`Item` など見慣れたドメインオブジェクトを推定するだけでよく `Command` 自体を組み立てる必要はない |
+| `estimate_opponent_selection(battle) -> list[int] \| None` | 相手の選出インデックス（`state.team` 基準、0始まり）の推定を**返り値**で返すフック。`None` なら推定しない（既定）。返したリストは `estimate_opponent` の既定実装が公開済みの選出とマージするため、書き込み先を利用者が直接触る必要はない |
 | `configure_sim(sim)` | `battle.copy()` 直後・`sim.step()` 実行前に呼ばれるフック。既定は何もしない。オーバーライドして、探索中だけ有効にしたい `BattleOption`（命中率固定・ダメージ平均値化など）を `sim` に設定する。実際の `battle` 本体には影響しない |
+
+いずれのフックも、観測（`battle`）は毎ターン再構築されるため推定は毎回書き込む・返す
+必要があるが、公開済みの情報（revealed な技・選出）を上書きせず未公開分のみ補うこと
+（べき等性ガイドライン）。`estimate_opponent` 系フック（3つのいずれか）をオーバーライド
+すると、相手の合法手の有無に関わらず探索の最上位のたびに毎回呼ばれ、相手候補は
+「観測スナップショット由来のコマンド」と「推定情報を `CommandManager` に列挙させた
+コマンド」の和集合になる（公開済み候補が失われることはなく、推定由来の候補だけが
+追加される。実対戦の型推定に相当）。
 
 ### デバッグ用メソッド
 
@@ -533,7 +543,8 @@ if table:
 `src/jpoke/players/minimax_player.py`。[TreeSearchPlayer](#treesearchplayer) を継承し、
 自分の各合法手について、相手が最善（自分にとって最悪）の手を選ぶと仮定したミニマックスで
 評価する具体的な実装。`TreeSearchPlayer` の全フック（`evaluate`/`fallback`/
-`estimate_opponent`/`configure_sim`）・コンストラクタ・デバッグ用メソッドをそのまま継承する。
+`estimate_opponent`/`estimate_opponent_team`/`estimate_opponent_selection`/
+`configure_sim`）・コンストラクタ・デバッグ用メソッドをそのまま継承する。
 実際に木探索プレイヤーを使う場合は、`TreeSearchPlayer` ではなく本クラス（またはその
 サブクラス）をインスタンス化する。
 

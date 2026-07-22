@@ -24,7 +24,7 @@ AI開発（`MinimaxPlayer` を継承した木探索AIのカスタマイズ）
 |---|---|
 | [`01_evaluate.ipynb`](https://colab.research.google.com/github/tmwork1/jpoke/blob/main/examples/02_tree_search/01_evaluate.ipynb) | `evaluate()` のオーバーライドによる葉ノード（盤面）の評価方法のカスタマイズ |
 | [`02_fallback.ipynb`](https://colab.research.google.com/github/tmwork1/jpoke/blob/main/examples/02_tree_search/02_fallback.ipynb) | `fallback()` のオーバーライドによる、探索できない局面での代替方策のカスタマイズ |
-| [`03_estimate_opponent.ipynb`](https://colab.research.google.com/github/tmwork1/jpoke/blob/main/examples/02_tree_search/03_estimate_opponent.ipynb) | `estimate_opponent()` のオーバーライドによる、相手の未公開の技構成の推定と、それを踏まえた木探索 |
+| [`03_estimate_opponent.ipynb`](https://colab.research.google.com/github/tmwork1/jpoke/blob/main/examples/02_tree_search/03_estimate_opponent.ipynb) | `estimate_opponent_team()` のオーバーライドによる、相手の未公開の技構成の毎ターン推定（型推定）と、それを踏まえた木探索 |
 | [`04_configure_sim.ipynb`](https://colab.research.google.com/github/tmwork1/jpoke/blob/main/examples/02_tree_search/04_configure_sim.ipynb) | `configure_sim()` のオーバーライドによる、探索中だけ命中率・ダメージ乱数を固定する決定論化 |
 
 ## 03_lethal/
