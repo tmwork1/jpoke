@@ -27,8 +27,15 @@ PYTHON = resolve_subprocess_python("papermill", "jpoke")
 NOTEBOOK_EXAMPLES = sorted(
     p.relative_to(EXAMPLES_DIR).as_posix() for p in EXAMPLES_DIR.glob("**/*.ipynb")
 )
+# 標準入力からの対話操作を前提とするサンプルはCI上のsubprocessではEOFErrorになるため、
+# エラーなく終了することの確認（スモークテスト）の対象から除外する。
+INTERACTIVE_PY_EXAMPLES = {
+    "01_getting_started/05_cli_vs_ai.py",
+}
 PY_EXAMPLES = sorted(
-    p.relative_to(EXAMPLES_DIR).as_posix() for p in EXAMPLES_DIR.glob("**/*.py")
+    p.relative_to(EXAMPLES_DIR).as_posix()
+    for p in EXAMPLES_DIR.glob("**/*.py")
+    if p.relative_to(EXAMPLES_DIR).as_posix() not in INTERACTIVE_PY_EXAMPLES
 )
 
 # スモークテストの目的は「エラーなく終了すること」の確認のみであり、README掲載用の
