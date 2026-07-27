@@ -657,6 +657,9 @@ MOVES_SA: dict[MoveName, MoveData] = {
                 ha.ohko_damage,
                 priority=90,
             ),
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(l.ohko_damage, priority=15)
         }
     ),
     "じんつうりき": MoveData(
@@ -1003,6 +1006,9 @@ MOVES_SA: dict[MoveName, MoveData] = {
                 ha.ohko_damage,
                 priority=90,
             ),
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(l.ohko_damage, priority=15)
         }
     ),
     "そうでん": MoveData(

@@ -50,10 +50,15 @@ def _example_text(path: Path) -> str:
 #   ひんし判定を意図的に伴わない「仮定計算」のための一時的な hp 書き換え
 #   （計算後に元の値へ復元する、または hp_dist から参照用の値を反映するだけ）であり、
 #   実バトル進行のHP変化ではないため battle.modify_hp() を経由しない
+# - handlers/lethal.py: core/lethal.py と同じ致死率計算の「仮定計算」の一部。
+#   いのちがけ_modify_damage が、使用者が必ずひんしになる効果を再現するため
+#   deepcopy済みの攻撃側 Pokemon の hp を直接0にする（2回目以降の攻撃でダメージが
+#   自然に0になるようにするための計算専用の書き換えで、実バトル進行ではない）
 ALLOWED_FILES = {
     "model/pokemon.py",
     "core/status_manager.py",
     "core/lethal.py",
+    "handlers/lethal.py",
 }
 
 # `.hp = ` 形式の直接代入を検出する（`==` `!=` `<=` `>=` は除外する）

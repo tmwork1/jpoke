@@ -58,6 +58,9 @@ MOVES_KA: dict[MoveName, MoveData] = {
                 subject_spec="attacker:self",
             ),
         },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(l.カウンター_modify_damage, priority=15)
+        }
     ),
     "かえんぐるま": MoveData(
         type="ほのお",
@@ -214,6 +217,9 @@ MOVES_KA: dict[MoveName, MoveData] = {
                 subject_spec="attacker:self",
                 priority=15,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(l.half_damage, priority=15)
         }
     ),
     "かなしばり": MoveData(
@@ -360,6 +366,9 @@ MOVES_KA: dict[MoveName, MoveData] = {
                 subject_spec="attacker:self",
                 priority=15,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(l.がむしゃら_modify_damage, priority=15)
         }
     ),
     "ガリョウテンセイ": MoveData(

@@ -61,6 +61,10 @@ class LethalContext:
     # HP満タン枝専用のダメージ分布。defender が full_hp_damage_modifier を持ち、
     # 満タン時と非満タン時でダメージが異なる場合のみ設定される（それ以外は None）。
     damage_dist_full: StateDist | None = None
+    # 枝ごとの防御側HPからダメージを決める関数。固定ダメージ技・割合ダメージ技・
+    # 一撃必殺技・みねうち等、枝のHP値に依存してダメージが変わる技で設定される。
+    # 設定されている間は damage_dist / damage_dist_full ではなくこの関数が使われる。
+    damage_from_hp: Callable[[int], int | list[int]] | None = None
 
 
 @dataclass
@@ -315,6 +319,7 @@ def _lethal_loop(initial_hp: int,
 
             hp_dist = _before_move(battle, ctx, hp_dist, every_event_handlers)
 
+            attacker_fainted_mid_round = False
             for hit in range(1, n_hits + 1):
                 ctx.hit_count = hit
                 # 技の適用
@@ -335,6 +340,23 @@ def _lethal_loop(initial_hp: int,
 
                 if fainted(hp_dist):
                     return results
+
+                # いのちがけ等、攻撃側自身がひんしになる技を使った場合はそこで打ち切る。
+                if ctx.attacker.fainted:
+                    attacker_fainted_mid_round = True
+                    break
+
+            if attacker_fainted_mid_round:
+                # ctx_list に後続の技（例: [("いのちがけ", 1), ("じしん", 1)] の
+                # じしん）が残っていても、ひんしになった攻撃側はもう使用できないため、
+                # 今ラウンドの残りの ctx_list 要素とターン終了処理をスキップする
+                # （防御側がひんしになった場合に turn_end をスキップするのと同じ扱い）。
+                # ただし calc_lethal 呼び出し自体は打ち切らない: 単体の技を
+                # 繰り返し指定するケース（例: moves=Move("いのちがけ") を
+                # max_attack=2 で呼ぶ）では、2回目以降は hp_cost=0 により
+                # 自然にダメージ0になるだけで、その結果を記録し続けるのが
+                # 既存の想定挙動のため、次の atk ラウンドへは進む。
+                break
 
             # ターン終了時のハンドラを適用（たべのこし回復など）
             hp_dist = _run_turn_end(battle, ctx, hp_dist, every_event_handlers)
@@ -363,6 +385,12 @@ def _calc_damage_dist(battle: Battle, ctx: LethalContext, hp_dist: StateDist) ->
     非満タン枝用は特性を一時的に無効化することで、defender.hp の値に関係なく
     確実に特性の効果を除いた値を得る。
     """
+    # 固定ダメージ技（ナイトヘッド・いかりのまえば・一撃必殺技・みねうち等）が
+    # ON_BEFORE_HIT で新たに設定するフィールドのため、他のヒットの値を引き継がない
+    # よう damage_dist_full と同様に毎ヒットリセットする（技ごとのハンドラが
+    # 設定しない限り None のまま＝通常のダメージ計算経路が使われる）。
+    ctx.damage_from_hp = None
+
     max_hp = ctx.defender.max_hp
     needs_full_hp_split = (
         ctx.defender.ability.has_flag("full_hp_damage_modifier")
@@ -394,10 +422,61 @@ def _calc_damage_dist(battle: Battle, ctx: LethalContext, hp_dist: StateDist) ->
         full_damages) if full_damages != damages else None
 
 
+def _apply_damage_by_branch(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """ctx.damage_from_hp が設定されている場合のダメージ適用（枝ごとのHPに依存するダメージ）。
+
+    いかりのまえば・がむしゃら・一撃必殺技・みねうち等は、そのヒットを受ける直前の
+    防御側HP自体によってダメージが変わるため、hp_dist 全体に一律の damage_dist を
+    適用できない。枝（State）ごとに damage_from_hp(state.value) を呼んでその枝専用の
+    ダメージ分布を求め、その枝だけに subtract_dist(..., minimum=0) を適用する。
+
+    HP満タンの枝は既存の full_hp 経路と同様に ON_APPLY_DAMAGE ハンドラ
+    （がんじょう・きあいのタスキ等のHP1耐え）を通す。一撃必殺技はダメージ＝満タンHP
+    そのものになるため、この経路を通ることで「がんじょう・きあいのタスキが一撃必殺技を
+    防ぐ」挙動が自然に再現される。
+
+    damage_dist_full（マルチスケイル等の満タン専用ダメージ補正）はこの経路では参照しない。
+    固定ダメージ技は base_power が None/0 のため _calc_damage_dist の
+    needs_full_hp_split 分岐（calc_damages を2回呼ぶ経路）に到達せず、
+    damage_dist_full は常に None のまま（＝両者は実質排他）。みねうちのように
+    base_power を持つ通常攻撃技であっても、_calc_damage_dist の時点で必要なダメージ補正
+    （マルチスケイル等）は既に damage_dist に反映済みであり、ここではその damage_dist
+    自体を枝ごとにHP-1でキャップする関数として使うだけなので問題ない。
+
+    処理後、LethalHitResult 等の記録用に ctx.damage_dist を「実際に適用されたダメージの
+    周辺分布」（各枝の出現頻度で重み付けして合算したもの）に更新する。
+    """
+    max_hp = ctx.defender.max_hp
+    full_handlers = _get_handlers(LethalEvent.ON_APPLY_DAMAGE, battle, ctx)
+
+    result: StateDist = defaultdict(int)
+    recorded: StateDist = defaultdict(int)
+
+    for state, freq in hp_dist.items():
+        branch_dmg = to_dist(ctx.damage_from_hp(state.value))
+        subtracted = subtract_dist({state: freq}, branch_dmg, minimum=0)
+
+        if state.value == max_hp:
+            for h in full_handlers:
+                subtracted = h.func(battle, ctx, subtracted)
+
+        for s, f in subtracted.items():
+            result[s] += f
+        for d, f in branch_dmg.items():
+            recorded[d] += f * freq
+
+    ctx.damage_dist = dict(recorded)
+    return dict(result)
+
+
 def _apply_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """満タン枝と非満タン枝でダメージ適用を分ける。
 
-    満タン枝には damage_dist_full（未設定なら damage_dist）を適用してから
+    ctx.damage_from_hp が設定されている場合（固定ダメージ技・割合ダメージ技・
+    一撃必殺技・みねうち等、枝のHP値に依存してダメージが変わる技）は
+    _apply_damage_by_branch に処理を委譲する。
+
+    それ以外は満タン枝には damage_dist_full（未設定なら damage_dist）を適用してから
     ON_APPLY_DAMAGE ハンドラ（がんじょう・きあいのタスキ等のHP1耐え）を通す。
     非満タン枝には damage_dist をそのまま適用する。
     該当ハンドラが無ければ通常の subtract_dist(hp_dist, ctx.damage_dist) と完全に同じ結果になる。
@@ -405,6 +484,9 @@ def _apply_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> Sta
     処理後、LethalHitResult 等の記録用に ctx.damage_dist を「実際に適用されたダメージ分布」
     に更新する（満タン枝のみなら damage_dist_full、両方混在するなら合算）。
     """
+    if ctx.damage_from_hp is not None:
+        return _apply_damage_by_branch(battle, ctx, hp_dist)
+
     max_hp = ctx.defender.max_hp
     full_states = {s: f for s, f in hp_dist.items() if s.value == max_hp}
     other_states={s: f for s, f in hp_dist.items() if s.value != max_hp}

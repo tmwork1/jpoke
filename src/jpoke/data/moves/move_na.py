@@ -45,6 +45,9 @@ MOVES_NA: dict[MoveName, MoveData] = {
                 subject_spec="attacker:self",
                 priority=15,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(l.level_fixed_damage, priority=15)
         }
     ),
     "なかまづくり": MoveData(
