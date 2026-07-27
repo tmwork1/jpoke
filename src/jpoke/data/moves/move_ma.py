@@ -354,6 +354,9 @@ MOVES_MA: dict[MoveName, MoveData] = {
                 priority=60,
             ),
         },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(l.みねうち_modify_damage, priority=15)
+        },
     ),
     "みらいよち": MoveData(
         flags={"unprotectable"},
@@ -378,6 +381,9 @@ MOVES_MA: dict[MoveName, MoveData] = {
                 ha.ミラーコート_modify_damage,
                 subject_spec="attacker:self",
             ),
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(l.ミラーコート_modify_damage, priority=15)
         },
     ),
     "ミラーショット": MoveData(
@@ -557,6 +563,9 @@ MOVES_MA: dict[MoveName, MoveData] = {
                 ha.メタルバースト_modify_damage,
                 subject_spec="attacker:self",
             ),
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(l.メタルバースト_modify_damage, priority=15)
         },
     ),
     "メテオドライブ": MoveData(

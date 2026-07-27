@@ -27,10 +27,14 @@ import pytest
 from jpoke import Pokemon, Move
 from jpoke.core import lethal as core_lethal
 from jpoke.core.lethal import LethalContext
+from jpoke.data.move import MOVES
+from jpoke.enums import LethalEvent
 from jpoke.handlers import lethal as l
 from jpoke.utils.lethal_dist import State, to_dist
 
 from . import test_utils as t
+
+# ── 固定ダメージ技・一撃必殺技（lethal計算対応） ──────────────────────────
 
 
 def test_Gのちから_ぼうぎょダウン_secondary有り():
@@ -300,6 +304,35 @@ def test_イアのみ_HP4分の1以下で回復():
     assert max(results_with[-1].hp_counter) - max(results_without[-1].hp_counter) == heal
 
 
+def test_いかりのまえば_残りHPの半分ずつ逓減する():
+    """いかりのまえば: ダメージ = 直前の防御側HP × 1/2（端数切り捨て、最低1）。
+    枝依存（damage_from_hp）のため、ヒットごとに直前HPを参照して逓減していくはずである。
+
+    手計算: A150ガブリアス → H166/B115カイリュー（max_hp=166、ドキュメント冒頭コメント参照）。
+    1発目 166//2=83 → 残166-83=83
+    2発目 83//2=41  → 残83-41=42
+    3発目 42//2=21  → 残42-21=21
+    4発目 21//2=10  → 残21-10=11（HPは0を下回らず1以上を維持）
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    max_hp = battle.actives[1].max_hp
+    results = t.calc_lethal(battle, player_idx=0, moves=Move("いかりのまえば"), max_attack=4)
+
+    hp = max_hp
+    assert len(results) == 4
+    for r in results:
+        expected_damage = max(1, hp // 2)
+        assert r.min_damage == expected_damage
+        assert r.max_damage == expected_damage
+        hp -= expected_damage
+        # 直前HPから計算した通りに残りHPが減っていく（一意に定まる＝乱数幅なし）
+        assert list(r.hp_counter.keys()) == [hp]
+        assert hp >= 1
+
+
 def test_いじげんラッシュ_ぼうぎょランクダウン():
     """いじげんラッシュ: 確定効果（ちからずくの対象外）のため、secondary指定に関わらず攻撃側のぼうぎょが1段階下がる"""
     battle = t.start_battle(
@@ -308,6 +341,60 @@ def test_いじげんラッシュ_ぼうぎょランクダウン():
     )
     results = t.calc_lethal(battle, player_idx=0, moves=Move("いじげんラッシュ"), max_attack=1, secondary=False)
     assert results[0].attacker_state.boosts["def"] == -1
+
+
+def test_いのちがけ_1発目は現在HP2発目は0():
+    """いのちがけ: ダメージ = 使用者の現在HP（一律）。命中時に使用者は必ずひんしになるため、
+    lethal計算では ctx.attacker.hp を0に直接代入することでこれを再現する。
+    同じ技を繰り返し指定した場合、2発目移行は使用者のHPが既に0のため hp_cost=0 となり、
+    自然にダメージ0になる（使用者が実際には行動できないはずという制約は
+    test_いのちがけ_後続の技は同じ攻撃機会内で発動しない でカバーする）。
+
+    防御側（カビゴン、非常に高HP）は使用者（ピカチュウ）のHPを1発受けても倒れない
+    ように、意図的にタフな防御側を選んでいる（そうしないと1発目で防御側も
+    倒れてしまい、2発目の結果自体が存在しなくなる）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", level=50)],
+        team1=[Pokemon("カビゴン", level=50)],
+    )
+    attacker_hp = battle.actives[0].hp
+
+    results = t.calc_lethal(battle, player_idx=0, moves=Move("いのちがけ"), max_attack=2)
+
+    assert results[0].min_damage == attacker_hp
+    assert results[0].max_damage == attacker_hp
+    assert results[1].min_damage == 0
+    assert results[1].max_damage == 0
+
+
+def test_いのちがけ_後続の技は同じ攻撃機会内で発動しない():
+    """いのちがけで使用者がひんしになった場合、moves にリストで渡した後続の技
+    （例: じしん）は同じ攻撃機会内でも、それ以降のどの攻撃回でも一切ダメージを
+    与えないことを確認する（ひんしになった攻撃側はもう技を使えないはず、という
+    レビューで見つかった問題への回帰テスト。core/lethal.py の _lethal_loop に
+    attacker.fainted チェックを追加して対応した）。
+
+    防御側（カビゴン）は1発目のいのちがけ（使用者の現在HP分のダメージ）を受けても
+    倒れない高HPのポケモンを選ぶ。これにより2発目・3発目のラウンドまで計算が
+    続き、「じしん が一度も実行されない」ことを実際に検証できる
+    （防御側が1発目で倒れてしまうと、じしん が実行されないのは単に計算が
+    打ち切られたからという別の理由になり、本来確認したい制約を検証できない）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", level=50)],
+        team1=[Pokemon("カビゴン", level=50)],
+    )
+    results = t.calc_lethal(
+        battle, player_idx=0,
+        moves=[(Move("いのちがけ"), 1), (Move("じしん"), 1)],
+        max_attack=3,
+    )
+
+    # じしん は一度も実行されない（いのちがけ による使用者の自滅が優先されるため）
+    assert all(r.move.name == "いのちがけ" for r in results)
+    # 防御側が生存し続け、3ラウンド分（いのちがけのみ）計算が続いたことを確認する
+    assert len(results) == 3
 
 
 def test_うずしお_バインド付与():
@@ -446,6 +533,52 @@ def test_オーバーヒート_とくこうダウン():
     assert results[1].min_damage < results[0].min_damage
 
 
+def test_カウンター_直近の物理被弾ダメージの2倍を与える():
+    """カウンター: 直近に受けた物理ダメージ×2を固定ダメージとして与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    attacker = battle.actives[0]
+    attacker.last_damage_taken = {"damage": 50, "category": "physical"}
+
+    results = t.calc_lethal(battle, player_idx=0, moves=Move("カウンター"), max_attack=1)
+
+    assert results[0].min_damage == 100
+    assert results[0].max_damage == 100
+
+
+def test_カウンター_被弾記録が無ければダメージ0():
+    """カウンター: 直近の物理被弾記録が無い（0以下の）場合は実戦の使用可否チェックに
+    相当する形でダメージ0になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    results = t.calc_lethal(battle, player_idx=0, moves=Move("カウンター"), max_attack=1)
+
+    assert results[0].min_damage == 0
+    assert results[0].max_damage == 0
+
+
+def test_カタストロフィ_残りHPの半分ずつ逓減する():
+    """カタストロフィはいかりのまえばと同じ式（防御側の現在HP×1/2、最低1、枝依存）を
+    使う（handlers/lethal.py の half_damage を共用）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    max_hp = battle.actives[1].max_hp
+    results = t.calc_lethal(battle, player_idx=0, moves=Move("カタストロフィ"), max_attack=4)
+
+    hp = max_hp
+    for r in results:
+        expected_damage = max(1, hp // 2)
+        assert r.min_damage == expected_damage
+        assert r.max_damage == expected_damage
+        hp -= expected_damage
+
+
 def test_かんそうはだ_あめで回復():
     """かんそうはだ: あめ天気のターン終了時に最大HPの1/8を回復する"""
     with_ability = t.start_battle(
@@ -484,6 +617,31 @@ def test_かんそうはだ_はれでダメージ():
     max_hp = with_ability.actives[1].max_hp
     damage = max(1, max_hp // 8)
     assert max(results_without[1].hp_counter) - max(results_with[1].hp_counter) == damage * 2
+
+
+def test_がむしゃら_防御側HPと攻撃側HPの差分ダメージ():
+    """がむしゃら: ダメージ = 防御側の現在HP − 攻撃側の現在HP（最低0）。
+
+    手計算: 攻撃側HPを30に固定し、防御側は満タン（カビゴンlevel50、max_hp=235）のまま
+    1発目を撃つと、ダメージ = 235-30 = 205、防御側の残りHPは30（攻撃側と同値）になる。
+    2発目は差分が0になるため、ダメージ0のまま防御側は倒れない。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", level=50)],
+        team1=[Pokemon("カビゴン", level=50)],
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 30  # テストのセットアップ専用の直接代入（本番の対戦進行では使わない）
+    defender_hp = battle.actives[1].hp
+
+    results = t.calc_lethal(battle, player_idx=0, moves=Move("がむしゃら"), max_attack=2)
+
+    assert results[0].min_damage == defender_hp - 30
+    assert results[0].max_damage == defender_hp - 30
+    assert list(results[0].hp_counter.keys()) == [30]
+    # 2発目: 防御側HP(30) - 攻撃側HP(30) = 0 のためダメージが発生しない
+    assert results[1].min_damage == 0
+    assert results[1].max_damage == 0
 
 
 def test_がんじょう_リーサル計算全体で正しく発動する():
@@ -884,6 +1042,18 @@ def test_じきゅうりょく_物理技受けるとぼうぎょ上昇():
     assert results[1].max_damage == 74
 
 
+def test_じわれ_ひこうタイプに無効でダメージ0():
+    """じわれ（じめんタイプ技）はひこうタイプに無効（0倍）のため、
+    一撃必殺技であってもlethal計算でダメージ0になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", level=50)],
+        team1=[Pokemon("ピジョット")],  # ノーマル/ひこう
+    )
+    results = t.calc_lethal(battle, player_idx=0, moves=Move("じわれ"), max_attack=3)
+
+    assert all(r.min_damage == 0 and r.max_damage == 0 for r in results)
+
+
 def test_すなあらし_非いわじめんはがねタイプにダメージ():
     """すなあらし天気中、いわ・じめん・はがね以外のポケモンはターン終了時に最大HPの1/16ダメージを受ける"""
     with_weather = t.start_battle(
@@ -918,6 +1088,20 @@ def test_すなじごく_バインド付与():
     results_move = t.calc_lethal(battle_move, player_idx=0, moves=Move("すなじごく"), max_attack=2)
     results_pre = t.calc_lethal(battle_pre, player_idx=0, moves=Move("すなじごく"), max_attack=2)
     assert max(results_move[1].hp_counter) == max(results_pre[1].hp_counter)
+
+
+def test_ぜったいれいど_こおりタイプに無効でダメージ0():
+    """ぜったいれいど: 通常のタイプ相性表ではこおりタイプへの一致技は0.5倍でしかなく
+    無効化されないが、本技はこおりタイプの相手には専用ルールで必ず無効化される
+    （ぜったいれいど_check_ice_immunity, Event.ON_TRY_MOVE_2 相当）。
+    lethal側の ohko_damage にも同じ個別分岐が実装されている。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", level=50)],
+        team1=[Pokemon("ジュゴン")],  # こおり/みず
+    )
+    results = t.calc_lethal(battle, player_idx=0, moves=Move("ぜったいれいど"), max_attack=3)
+
+    assert all(r.min_damage == 0 and r.max_damage == 0 for r in results)
 
 
 @pytest.mark.parametrize("item_name, move_name, defender_name, dmg1_min, dmg1_max, dmg2_min, dmg2_max", [
@@ -1015,6 +1199,45 @@ def test_タラプのみ_特殊技受けた後とくぼう上昇():
     assert results[1].max_damage == 66
 
 
+def test_ちきゅうなげ_ゴーストタイプに無効でダメージ0():
+    """ちきゅうなげ（ノーマルタイプ技）はゴーストタイプに無効（0倍）のため、
+    lethal計算でもダメージ0・致死率0%が最大攻撃回数まで維持される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", level=50)],
+        team1=[Pokemon("ゲンガー")],  # ゴースト/どく
+    )
+    results = t.calc_lethal(battle, player_idx=0, moves=Move("ちきゅうなげ"), max_attack=10)
+
+    assert all(r.min_damage == 0 and r.max_damage == 0 for r in results)
+    assert len(results) == 10
+    assert results[-1].lethal_probability == 0.0
+
+
+def test_ちきゅうなげ_レベル固定ダメージで確定数がceil_max_hp_levelになる():
+    """ちきゅうなげ: ダメージは使用者のレベルに固定される（防御・威力・タイプ相性の
+    倍率・急所・乱数を一切使用しない）。よって確定数は ceil(防御側max_hp / 使用者level)
+    になるはずである（最終手前のヒットまでは致死率0%、最終ヒットで100%に切り替わる）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", level=50)],
+        team1=[Pokemon("カビゴン", level=50)],
+    )
+    level = battle.actives[0].level
+    max_hp = battle.actives[1].max_hp
+    # 手計算: ceil(max_hp / level) = -(-max_hp // level)（Python算術での天井除算）
+    expected_hits = -(-max_hp // level)
+
+    results = t.calc_lethal(battle, player_idx=0, moves=Move("ちきゅうなげ"), max_attack=30)
+
+    # 毎ヒットのダメージは常に使用者のレベルと一致する（乱数幅が無い＝min=max）
+    assert all(r.min_damage == level and r.max_damage == level for r in results)
+    assert len(results) == expected_hits
+    assert results[-1].attack_count == expected_hits
+    assert results[-1].lethal_probability == 1.0
+    if expected_hits > 1:
+        assert results[-2].lethal_probability == 0.0
+
+
 def test_チャージビーム_とくこうアップ_secondary有り():
     """チャージビーム: secondary=True のとき命中後にとくこうが1段階上がり、2発目のダメージが増加する"""
     battle = t.start_battle(
@@ -1033,6 +1256,18 @@ def test_チャージビーム_とくこうアップ_secondary無し():
     )
     results = t.calc_lethal(battle, player_idx=0, moves=Move("チャージビーム"), max_attack=2, secondary=False)
     assert results[1].min_damage == results[0].min_damage
+
+
+def test_つのドリル_1発で致死率が100パーセントになる():
+    """一撃必殺技（つのドリル）: 命中すれば相手の残りHPそのものがダメージになるため、
+    タイプ相性・特性等による免除が無ければ1発で致死率100%になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    results = t.calc_lethal(battle, player_idx=0, moves=Move("つのドリル"), max_attack=1)
+
+    assert results[0].lethal_probability == 1.0
 
 
 def test_テラスシェル_満タン時タイプ相性を等倍に丸める():
@@ -1108,6 +1343,18 @@ def test_どく_ターン終了時ダメージ():
     max_hp = with_ailment.actives[1].max_hp
     damage = max(1, max_hp // 8)
     assert max(results_without[1].hp_counter) - max(results_with[1].hp_counter) == damage * 2
+
+
+def test_ナイトヘッド_ノーマルタイプに無効でダメージ0():
+    """ナイトヘッド（ゴーストタイプ技）はノーマルタイプに無効（0倍）のため、
+    lethal計算でもダメージ0になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", level=50)],
+        team1=[Pokemon("カビゴン")],  # ノーマル
+    )
+    results = t.calc_lethal(battle, player_idx=0, moves=Move("ナイトヘッド"), max_attack=3)
+
+    assert all(r.min_damage == 0 and r.max_damage == 0 for r in results)
 
 
 def test_なげつける_オボンのみ_相手のHP回復():
@@ -1406,6 +1653,21 @@ def test_ホイールスピン_すばやさランクダウン():
     assert results[0].attacker_state.boosts["spe"] == -2
 
 
+def test_ほうふく_直近の被弾ダメージの1_5倍を与える():
+    """ほうふく: メタルバーストと同じ式（直近の被弾ダメージ×1.5、切り捨て）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    attacker = battle.actives[0]
+    attacker.last_damage_taken = {"damage": 51, "category": "special"}
+
+    results = t.calc_lethal(battle, player_idx=0, moves=Move("ほうふく"), max_attack=1)
+
+    assert results[0].min_damage == 76
+    assert results[0].max_damage == 76
+
+
 def test_ホズのみ_ノーマル技ダメージ半減():
     """ホズのみ: ノーマルタイプ技のダメージが半減され（抜群不要）、2発目は通常ダメージになる"""
     with_item = t.start_battle(
@@ -1592,6 +1854,46 @@ def test_マルチスケイル_満タン非満タン混在時も枝ごとに正�
     assert result_values == expected_full | expected_other
 
 
+def test_みねうち_HPが1で止まり致死率が常に0になる():
+    """みねうち: 通常のダメージ計算結果を「直前の防御側HP-1」でキャップするため、
+    相手をひんしにさせることは無い。防御側のHPをあらかじめ低い値（5）にしておき、
+    通常ダメージなら確実に上回る状況を作って、キャップが効いてHP1で止まり続ける
+    ことを確認する（2発目以降、HPが1のときはキャップにより実ダメージも0になる）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    defender = battle.actives[1]
+    defender.hp = 5  # テストのセットアップ専用の直接代入
+
+    results = t.calc_lethal(battle, player_idx=0, moves=Move("みねうち"), max_attack=3)
+
+    for r in results:
+        assert r.lethal_probability == 0.0
+        assert list(r.hp_counter.keys()) == [1]
+    # 1発目: 5-1=4 に確定でキャップされる（通常ダメージはこれを上回るため）
+    assert results[0].min_damage == 4
+    assert results[0].max_damage == 4
+    # 2発目以降: 直前HPが既に1のため、キャップの結果ダメージは常に0
+    assert results[1].min_damage == 0
+    assert results[1].max_damage == 0
+
+
+def test_ミラーコート_直近の特殊被弾ダメージの2倍を与える():
+    """ミラーコート: 直近に受けた特殊ダメージ×2を固定ダメージとして与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    attacker = battle.actives[0]
+    attacker.last_damage_taken = {"damage": 50, "category": "special"}
+
+    results = t.calc_lethal(battle, player_idx=0, moves=Move("ミラーコート"), max_attack=1)
+
+    assert results[0].min_damage == 100
+    assert results[0].max_damage == 100
+
+
 def test_みわくのボイス_こんらん付与_ランク上昇時_secondary有り():
     """みわくのボイス: 相手がそのターンにランクが上がっていれば、secondary=Trueでこんらん状態にする"""
     battle = t.start_battle(
@@ -1615,6 +1917,22 @@ def test_みわくのボイス_ランク上昇なしなら発動しない():
     ctx = LethalContext(battle.actives[0], defender, Move("みわくのボイス"), move_secondary=True)
     l.みわくのボイス_apply_confusion_to_defender(battle, ctx, to_dist(defender.hp))
     assert "こんらん" not in defender.volatiles
+
+
+def test_メタルバースト_直近の被弾ダメージの1_5倍を与える():
+    """メタルバースト: 直近に受けたダメージ（種別問わず）×1.5（切り捨て）を固定ダメージ
+    として与える。手計算: 51 × 1.5 = 76.5 → 切り捨てで76。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    attacker = battle.actives[0]
+    attacker.last_damage_taken = {"damage": 51, "category": "physical"}
+
+    results = t.calc_lethal(battle, player_idx=0, moves=Move("メタルバースト"), max_attack=1)
+
+    assert results[0].min_damage == 76
+    assert results[0].max_damage == 76
 
 
 def test_メテオビーム_とくこうアップ_secondary有り():
@@ -1793,6 +2111,60 @@ def test_れんごく_やけど付与_secondary有り():
     max_hp = battle_secondary.actives[1].max_hp
     burn_damage = max(1, max_hp // 16)
     assert max(results_without[1].hp_counter) - max(results_with[1].hp_counter) == burn_damage * 2
+
+
+def test_一撃必殺技_がんじょう所持で1発目は耐えて2発目で倒れる():
+    """がんじょうは満タンHPから瀕死になる攻撃をHP1で耐える。一撃必殺技のダメージは
+    満タンHPそのものになるため、この防御が自然に働き1発目はHP1で生存
+    （致死率0%）、2発目（残りHP1へのダメージ1）で確定的に倒れる（致死率100%）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", level=50)],
+        team1=[Pokemon("カビゴン", ability_name="がんじょう")],
+    )
+    results = t.calc_lethal(battle, player_idx=0, moves=Move("じわれ"), max_attack=2)
+
+    assert results[0].lethal_probability == 0.0
+    assert list(results[0].hp_counter.keys()) == [1]
+    assert results[1].lethal_probability == 1.0
+
+
+def test_一撃必殺技_きあいのタスキ所持で1発目はHP1で耐える():
+    """きあいのタスキも満タンHPからの瀕死をHP1で耐える（1回のみ消費）。
+    一撃必殺技の1発目でもこの効果が発動することを確認する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", level=50)],
+        team1=[Pokemon("カビゴン", item_name="きあいのタスキ")],
+    )
+    results = t.calc_lethal(battle, player_idx=0, moves=Move("じわれ"), max_attack=1)
+
+    assert results[0].lethal_probability == 0.0
+    assert list(results[0].hp_counter.keys()) == [1]
+
+
+def test_固定ダメージ技と一撃必殺技のlethal_handlers登録漏れが無い():
+    """回帰防止テスト: `flags` に fixed_damage または ohko を持つ実装済み技すべてが
+    lethal_handlers に LethalEvent.ON_BEFORE_HIT のエントリを持つことを機械的に検証する。
+    将来これらのフラグを持つ新しい技が実装された際、lethal_handlers の登録漏れ
+    （＝lethal計算で常にダメージ0になるバグ、本PRの根本原因）を検知する。
+
+    カウンター・ミラーコート・メタルバースト・ほうふくは fixed_damage/ohko フラグを
+    持たない（実戦でも通常のダメージ計算経路を通らず ON_MODIFY_MOVE_DAMAGE で
+    直接上書きする方式のため）ため、対象技名を明示リストで別途検証する。
+    """
+    missing_by_flag = [
+        name for name, data in MOVES.items()
+        if data.exist
+        and (data.flags & {"fixed_damage", "ohko"})
+        and LethalEvent.ON_BEFORE_HIT not in data.lethal_handlers
+    ]
+    assert missing_by_flag == []
+
+    reflect_moves = ["カウンター", "ミラーコート", "メタルバースト", "ほうふく"]
+    missing_reflect = [
+        name for name in reflect_moves
+        if LethalEvent.ON_BEFORE_HIT not in MOVES[name].lethal_handlers
+    ]
+    assert missing_reflect == []
 
 
 def test_多段技_ヒットごとに分布を記録():

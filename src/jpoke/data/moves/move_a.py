@@ -414,6 +414,9 @@ MOVES_A: dict[MoveName, MoveData] = {
                 subject_spec="attacker:self",
                 priority=15,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(l.half_damage, priority=15)
         }
     ),
     "いじげんホール": MoveData(
@@ -527,6 +530,9 @@ MOVES_A: dict[MoveName, MoveData] = {
                 subject_spec="attacker:self",
                 priority=15,
             ),
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(l.いのちがけ_modify_damage, priority=15)
         }
     ),
     "いのちのしずく": MoveData(

@@ -317,6 +317,9 @@ MOVES_TA: dict[MoveName, MoveData] = {
                 subject_spec="attacker:self",
                 priority=15,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(l.level_fixed_damage, priority=15)
         }
     ),
     "チャージビーム": MoveData(
@@ -465,6 +468,9 @@ MOVES_TA: dict[MoveName, MoveData] = {
                 ha.ohko_damage,
                 priority=90,
             ),
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(l.ohko_damage, priority=15)
         }
     ),
     "つばさでうつ": MoveData(

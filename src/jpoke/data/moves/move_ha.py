@@ -121,6 +121,9 @@ MOVES_HA: dict[MoveName, MoveData] = {
                 ha.ohko_damage,
                 priority=90,
             ),
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(l.ohko_damage, priority=15)
         }
     ),
     "はさむ": MoveData(
@@ -1112,6 +1115,9 @@ MOVES_HA: dict[MoveName, MoveData] = {
                 subject_spec="attacker:self",
             ),
         },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(l.ほうふく_modify_damage, priority=15)
+        }
     ),
     "ほえる": MoveData(
         flags={"sound", "unprotectable", "non_copycat"},

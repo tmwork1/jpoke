@@ -141,6 +141,101 @@ def _survive_at_full_hp(hp_dist: StateDist, consume: Literal["ability", "item"])
         new_dist[state] += freq
     return dict(new_dist)
 
+def _is_immune(battle: Battle, ctx: LethalContext) -> bool:
+    """タイプ相性・特性等によってダメージが必ず0になるか判定する（固定ダメージ技用）。
+
+    通常のダメージ計算経路（core/move_executor.py の _check_hit_by_type、
+    実戦の Event.ON_TRY_MOVE_1 相当）と同じ battle.damage_calculator.calc_def_type_modifier
+    を使う。この関数が発火する Event.ON_CALC_DEF_TYPE_MODIFIER ハンドラ（きもったま・
+    しんがん・テラスシェル・らんきりゅう・ねらいのまと・フライングプレス・フリーズドライ）は
+    いずれも読み取り専用で副作用が無いことを確認済みのため、lethal計算中
+    （deepcopy済みのbattle）で呼んでも安全。
+
+    タイプ相性が0倍（無効）の場合に加え、ふしぎなまもり特性（効果抜群でない攻撃技を
+    無効化する。実戦: ふしぎなまもり_block_non_effective, Event.ON_TRY_MOVE_1）が
+    有効な場合も無効と判定する（.internal/spec/moves/_fixed_damage.md §7.2
+    「無効化（0倍）は適用」にふしぎなまもり等の無効化を含める実装方針）。
+
+    ちょすい・よびみず・そうしょく・どしょく・ひらいしん等の「技を吸収して行動自体を
+    ブロックする」系や、かたやぶり等の相手特性を無視する効果は、lethal計算では
+    Event.ON_BEFORE_APPLY_MOVE / Event.ON_BEGIN_MOVE 相当が一切モデル化されていない
+    （lethal_handlers 未登録）既存の制約のため、本関数でも考慮しない。
+    """
+    from jpoke.core.context import AttackContext
+
+    move = ctx.move
+    if not move.is_attack or not move.type:
+        return False
+
+    atk_ctx = AttackContext(
+        attacker=ctx.attacker, defender=ctx.defender, move=move, critical=ctx.critical)
+    type_modifier = battle.damage_calculator.calc_def_type_modifier(atk_ctx)
+    if type_modifier == 0:
+        return True
+    if (
+        ctx.defender.ability.name == "ふしぎなまもり"
+        and ctx.defender.ability.enabled
+        and type_modifier <= 4096
+    ):
+        return True
+    return False
+
+def _zero_damage(ctx: LethalContext) -> None:
+    """damage_dist・damage_dist_full・damage_from_hp をまとめてダメージ0にリセットする。
+
+    ばけのかわ等、攻撃を完全に無効化するハンドラで使う共通処理。damage_from_hp が
+    設定されたまま残っていると、後続の _apply_damage が damage_from_hp を優先して
+    しまい、せっかくの無効化が効かなくなるため必ずクリアする。
+    """
+    ctx.damage_dist = to_dist(0)
+    ctx.damage_dist_full = to_dist(0)
+    ctx.damage_from_hp = None
+
+def level_fixed_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """ナイトヘッド・ちきゅうなげ: 使用者レベル固定ダメージ（一律、防御側HPに依存しない）。
+
+    実戦: level_fixed_damage（handlers/move_attack.py）。
+    タイプ無効（ちきゅうなげ⇔ゴースト、ナイトヘッド⇔ノーマル等）の場合はダメージ0にする。
+    """
+    if _is_immune(battle, ctx):
+        ctx.damage_dist = to_dist(0)
+    else:
+        ctx.damage_dist = to_dist(ctx.attacker.level)
+    return hp_dist
+
+def half_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """いかりのまえば・カタストロフィ: 防御側の現在HP×1/2（切り捨て、最低1）。枝依存。
+
+    実戦: half_damage（handlers/move_attack.py）。タイプ無効の場合はダメージ0にする。
+    """
+    if _is_immune(battle, ctx):
+        ctx.damage_from_hp = lambda hp: 0
+    else:
+        ctx.damage_from_hp = lambda hp: max(1, hp // 2)
+    return hp_dist
+
+def ohko_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """一撃必殺技（つのドリル・ハサミギロチン・じわれ・ぜったいれいど）: 防御側の現在HP
+    そのものを与える（＝命中すれば必ずHP0にする）。枝依存。
+
+    実戦: ohko_damage（handlers/move_attack.py）。lethal計算では命中率は考慮しない
+    （他の技と同じ扱い）。タイプ無効（じわれ⇔ひこう/ふゆう等）の場合はダメージ0にする。
+
+    ぜったいれいど⇔こおりタイプは通常のタイプ相性表では0.5倍でしかなく
+    calc_def_type_modifier（_is_immune）では検出できないため、実戦の
+    ぜったいれいど_check_ice_immunity（handlers/move_attack.py, Event.ON_TRY_MOVE_2）と
+    同じ「対象がこおりタイプなら本技専用に無効化する」ロジックを個別に追加する。
+    """
+    ice_blocked = (
+        ctx.move.name == "ぜったいれいど"
+        and ctx.defender.has_type("こおり")
+    )
+    if ice_blocked or _is_immune(battle, ctx):
+        ctx.damage_from_hp = lambda hp: 0
+    else:
+        ctx.damage_from_hp = lambda hp: hp
+    return hp_dist
+
 
 def アイスボディ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """アイスボディ: ゆき天気のとき、ターン終了時に最大HPの1/16を回復する。"""
@@ -284,6 +379,28 @@ def イトケのみ_resist_water(battle: Battle, ctx: LethalContext, hp_dist: St
     return _type_resist_berry(battle, ctx, hp_dist, "みず")
 
 
+def いのちがけ_modify_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """いのちがけ: 使用者の現在HPを固定ダメージとして与える（一律、防御側HPに依存しない）。
+
+    実戦: いのちがけ_modify_damage（handlers/move_attack.py）。使用者は必ずひんしに
+    なるため、lethal.py の既存慣行（_update_hp が ctx.defender.hp を直接代入している
+    のと同様）に倣い、ここでも ctx.attacker.hp を直接0に代入する
+    （battle.modify_hp を経由すると実戦の副作用付きイベントが発火してしまうため、
+    lethal計算専用のこの代入で十分）。これにより2回目以降の攻撃では hp_cost が0になり、
+    自然にダメージ0になる。タイプ無効の場合もダメージは0にするが、使用者のHPは
+    どのみち0にする（実戦でも命中・まもる等を通過した後のHPコストのため、
+    タイプ無効時点で技自体が届いていない場合は本来HPコストも発生しないが、
+    lethal計算は命中前提で進むため区別しない）。
+    """
+    hp_cost = ctx.attacker.hp
+    ctx.attacker.hp = 0
+    if _is_immune(battle, ctx):
+        ctx.damage_dist = to_dist(0)
+    else:
+        ctx.damage_dist = to_dist(hp_cost)
+    return hp_dist
+
+
 def ウイのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """ウイのみ: HP が 1/4 以下になると max_hp の 1/3 回復し、消費する。"""
     return _heal_at_pinch(hp_dist, ctx.defender, r=1/3, threshold_rate=1/4, heal_with="item", consume=True)
@@ -338,9 +455,45 @@ def _add_second_hit(dist: StateDist) -> StateDist:
 
 
 def おやこあい_boost_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
-    """おやこあい: 単発攻撃技のダメージに2ヒット目（1/4ダメージ、最低1）を加算する。"""
+    """おやこあい: 単発攻撃技のダメージに2ヒット目（1/4ダメージ、最低1）を加算する。
+
+    実戦の おやこあい_modify_hit_count（handlers/ability.py）はがむしゃら・ころがる・
+    アイスボールを2ヒット化の対象外としているため、lethal側でも同じ技名で除外する。
+    加えて いのちがけ も除外する: いのちがけは1ヒット目で使用者が必ずひんしになるため、
+    実戦では2ヒット目のループ自体が「攻撃側が瀕死になったら打ち切る」チェックで
+    実行されず、おやこあいの2ヒット目は発生しない。
+
+    ctx.damage_from_hp が設定されている技（固定ダメージ技・割合ダメージ技・一撃必殺技・
+    みねうち等）は、その関数をラップして「1ヒット目と同じ式で得たダメージ値の1/4
+    （最低1、0以下ならそのまま0）」を加算する。通常攻撃技向けの _add_second_hit と
+    同じ近似方針（2ヒット目をHP変化後に独立再計算するのではなく、1ヒット目の値を
+    基準に減衰させる）を、枝依存のダメージにもそのまま適用する。
+    ただし みねうち は「このわざで相手を瀕死にさせない」という絶対制約があるため、
+    合成後のダメージをさらに hp-1 でキャップし直す（キャップし直さないと2ヒット分の
+    合計がHP1のガードを超えてしまう）。一撃必殺技は合成後もどのみち0にクランプされる
+    （core/lethal.py の subtract_dist(..., minimum=0)）ため、追加のガードは不要
+    （数値的に無害）。
+    """
+    if ctx.move.name in ("がむしゃら", "いのちがけ", "ころがる", "アイスボール"):
+        return hp_dist
     if not (ctx.move.is_attack and ctx.move.max_hits == 1):
         return hp_dist
+
+    if ctx.damage_from_hp is not None:
+        original = ctx.damage_from_hp
+        never_kills = ctx.move.name == "みねうち"
+
+        def _with_second_hit(hp: int, _original=original, _never_kills=never_kills) -> list[int]:
+            base = _original(hp)
+            values = base if isinstance(base, list) else [base]
+            boosted = [v + (max(1, v // 4) if v > 0 else 0) for v in values]
+            if _never_kills:
+                cap = hp - 1 if hp > 1 else 0
+                boosted = [min(v, cap) for v in boosted]
+            return boosted
+        ctx.damage_from_hp = _with_second_hit
+        return hp_dist
+
     ctx.damage_dist = _add_second_hit(ctx.damage_dist)
     if ctx.damage_dist_full is not None:
         ctx.damage_dist_full = _add_second_hit(ctx.damage_dist_full)
@@ -358,6 +511,24 @@ def オーバーヒート_lower_attacker_spa(battle: Battle, ctx: LethalContext,
     return hp_dist
 
 
+def カウンター_modify_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """カウンター: 直近に受けた物理ダメージ×2を固定ダメージとして与える（一律）。
+
+    実戦: カウンター_modify_damage（handlers/move_attack.py）。
+    ctx.attacker.last_physical_damage_received は calc_lethal 呼び出し時点
+    （バトルのdeepcopy時点）の記録であり、lethal計算は相手の攻撃をシミュレートしない
+    ため、複数回の攻撃回数（attack_count）を通じて動的には変化しない
+    （＝「計算時点の被弾記録に基づく」固定値として扱う）。
+    被弾記録が無い場合（0以下）は実戦のカウンター_can_use相当のガードにより技が
+    失敗するため、ダメージ0にする。タイプ無効の場合もダメージ0にする。
+    """
+    if ctx.attacker.last_physical_damage_received <= 0 or _is_immune(battle, ctx):
+        ctx.damage_dist = to_dist(0)
+    else:
+        ctx.damage_dist = to_dist(ctx.attacker.last_physical_damage_received * 2)
+    return hp_dist
+
+
 def カシブのみ_resist_ghost(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """カシブのみ: ゴーストタイプの効果バツグン技のダメージを1/2にして消費する。"""
     return _type_resist_berry(battle, ctx, hp_dist, "ゴースト")
@@ -370,6 +541,22 @@ def かんそうはだ_weather_hp(battle: Battle, ctx: LethalContext, hp_dist: S
         return _heal(hp_dist, ctx.defender, r=1/8)
     if weather.sunny:
         return _damage(hp_dist, max(1, ctx.defender.max_hp // 8))
+    return hp_dist
+
+
+def がむしゃら_modify_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """がむしゃら: 防御側HP−攻撃側HP（最低0）を与える。枝依存。
+
+    実戦: がむしゃら_modify_damage（handlers/move_attack.py）。lethal計算では
+    がむしゃら_can_use（使用可否: 相手の残りHPが自分以下だと失敗）に相当するチェックは
+    行わない（他の使用可否ハンドラと同様、lethal計算は命中・成否を考慮しない）ため、
+    式の max(0, ...) がその代わりに下限を保証する。タイプ無効の場合はダメージ0にする。
+    """
+    if _is_immune(battle, ctx):
+        ctx.damage_from_hp = lambda hp: 0
+    else:
+        attacker_hp = ctx.attacker.hp
+        ctx.damage_from_hp = lambda hp, _atk=attacker_hp: max(0, hp - _atk)
     return hp_dist
 
 
@@ -751,10 +938,10 @@ def ばけのかわ_block_damage(battle: Battle, ctx: LethalContext, hp_dist: St
     if not any(state.ability_enabled for state in hp_dist):
         return hp_dist
 
-    # 攻撃ダメージをゼロにして無効化する（subtract_dist が何も引かないようにする）
-    ctx.damage_dist = to_dist(0)
-    if ctx.damage_dist_full is not None:
-        ctx.damage_dist_full = to_dist(0)
+    # 攻撃ダメージをゼロにして無効化する（subtract_dist が何も引かないようにする）。
+    # damage_from_hp（固定ダメージ技等）が設定されている場合も併せてクリアしないと、
+    # 後続の _apply_damage が damage_from_hp を優先してしまい無効化が効かなくなる。
+    _zero_damage(ctx)
 
     # 変身解除ダメージを与えて ability_enabled を False にする
     damage = max(1, int(ctx.defender.max_hp / 8))
@@ -815,6 +1002,22 @@ def ホイールスピン_sharply_lower_attacker_spe(battle: Battle, ctx: Lethal
     return hp_dist
 
 
+def ほうふく_modify_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """ほうふく: 直近に受けたダメージ×1.5（切り捨て）を固定ダメージとして与える（一律）。
+
+    実戦: ほうふく_modify_damage（handlers/move_attack.py）。
+    ctx.attacker.last_damage_received は calc_lethal 呼び出し時点（バトルのdeepcopy
+    時点）の記録に基づく固定値として扱う（カウンター同様、lethal計算中は動的に変化しない）。
+    被弾記録が無い場合（0以下）は実戦のほうふく_check_can_use相当のガードにより技が
+    失敗するため、ダメージ0にする。タイプ無効の場合もダメージ0にする。
+    """
+    if ctx.attacker.last_damage_received <= 0 or _is_immune(battle, ctx):
+        ctx.damage_dist = to_dist(0)
+    else:
+        ctx.damage_dist = to_dist(int(ctx.attacker.last_damage_received * 1.5))
+    return hp_dist
+
+
 def ホズのみ_resist_normal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """ホズのみ: ノーマルタイプの技のダメージを1/2にして消費する（抜群不要）。"""
     return _type_resist_berry(battle, ctx, hp_dist, "ノーマル", super_effective_only=False)
@@ -846,6 +1049,51 @@ def マゴのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) ->
     return _heal_at_pinch(hp_dist, ctx.defender, r=1/3, threshold_rate=1/4, heal_with="item", consume=True)
 
 
+def みねうち_modify_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """みねうち: 通常ダメージ計算の結果を「HP-1」でキャップする（相手を瀕死にしない）。枝依存。
+
+    実戦: みねうち_modify_damage（handlers/move_attack.py）。みねうちは実際の base_power
+    を持つ通常攻撃技のため、_calc_damage_dist が通常どおり calc_damages を使って
+    ctx.damage_dist（16通りのダメージロールに対応する分布）を計算済み。ここではその
+    ctx.damage_dist をそのまま使い、枝ごとのHPに応じてキャップする関数に閉じ込めて
+    damage_from_hp として設定する。hp<=1 のときは実際のダメージは必ず0になる
+    （攻撃自体は命中しているため「無効化」ではなく、きあいパンチ不発の対象にはならない
+    ——この区別はダメージ量にのみ関わるためlethal計算上は考慮不要）。
+
+    ctx.damage_dist はこの時点の値をクロージャに束縛せず、呼び出し時（_apply_damage_by_branch
+    が ON_BEFORE_HIT の全ハンドラ実行後に damage_from_hp を呼ぶタイミング）に都度 ctx.damage_dist
+    を読みに行く（遅延参照）。priority=15 より後に走る他のハンドラが ctx.damage_dist を
+    直接書き換えるケースは現状存在しないが、将来そのようなハンドラが追加された場合でも
+    取りこぼさないための保険。
+    """
+    def _capped(hp: int, _ctx: LethalContext = ctx) -> list[int]:
+        if hp <= 1:
+            return [0]
+        cap = hp - 1
+        result: list[int] = []
+        for state, freq in _ctx.damage_dist.items():
+            result.extend([min(state.value, cap)] * freq)
+        return result
+    ctx.damage_from_hp = _capped
+    return hp_dist
+
+
+def ミラーコート_modify_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """ミラーコート: 直近に受けた特殊ダメージ×2を固定ダメージとして与える（一律）。
+
+    実戦: ミラーコート_modify_damage（handlers/move_attack.py）。
+    ctx.attacker.last_special_damage_received は calc_lethal 呼び出し時点
+    （バトルのdeepcopy時点）の記録に基づく固定値として扱う（カウンター同様）。
+    被弾記録が無い場合（0以下）は実戦のミラーコート_check_can_use相当のガードにより
+    技が失敗するため、ダメージ0にする。タイプ無効の場合もダメージ0にする。
+    """
+    if ctx.attacker.last_special_damage_received <= 0 or _is_immune(battle, ctx):
+        ctx.damage_dist = to_dist(0)
+    else:
+        ctx.damage_dist = to_dist(ctx.attacker.last_special_damage_received * 2)
+    return hp_dist
+
+
 def みわくのボイス_apply_confusion_to_defender(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """みわくのボイス: 追加効果有効時、そのターンにランクが上がった相手をこんらん状態にする。"""
     if (
@@ -855,6 +1103,20 @@ def みわくのボイス_apply_confusion_to_defender(battle: Battle, ctx: Letha
     ):
         from jpoke.model.volatile import Volatile
         ctx.defender.volatiles["こんらん"] = Volatile("こんらん", count=2)
+    return hp_dist
+
+
+def メタルバースト_modify_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """メタルバースト: 直近に受けたダメージ×1.5（切り捨て）を固定ダメージとして与える（一律）。
+
+    実戦: メタルバースト_modify_damage（handlers/move_attack.py）。式はほうふくと同じ
+    （ctx.attacker.last_damage_received × 1.5、切り捨て）。ほうふく_modify_damage の
+    docstring を参照。
+    """
+    if ctx.attacker.last_damage_received <= 0 or _is_immune(battle, ctx):
+        ctx.damage_dist = to_dist(0)
+    else:
+        ctx.damage_dist = to_dist(int(ctx.attacker.last_damage_received * 1.5))
     return hp_dist
 
 
