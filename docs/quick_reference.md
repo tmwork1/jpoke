@@ -164,7 +164,7 @@ speed_order = battle.resolve_speed_order()
 
 | API | 概要 |
 |---|---|
-| `calc_lethal(attacker, moves, critical=False, move_secondary=False, max_attack=10)` | 指定した技（列）を最大 `max_attack` 回撃ち込んだ場合の致死率を計算する（確定数が出た時点で打ち切る）。`moves` には技名の文字列・`Move`・`(技, ヒット数)` のタプル、およびそれらのリストを渡せる。リストで複数の技を渡した場合はその順番通りに1ラウンドとして使用し（例: `["でんこうせっか", "かみなり"]` は1発目にでんこうせっか、2発目にかみなり）、`max_attack>1` にするとこのラウンド自体を繰り返す。防御側の状態異常・天候ダメージ（どく・やけど・すなあらし等）はダメージに自動的に合算される。`critical` は急所として計算するかどうか、`move_secondary` は追加効果ハンドラ（やけど付与等、致死率計算に組み込まれている技に限る）を適用するかどうかで、りゅうせいぐんの自傷効果のように攻撃側自身に必ず発生する効果は `move_secondary` の指定に関わらず常に加味される。`list[LethalHitResult]` を返す（各要素が1ヒットに対応し、最終的な致死率は `results[-1].lethal_probability`）。なお `jpoke.testing.calc_lethal()` はこの引数を `secondary` という短縮名で受け取るインデックス指定版なので注意 |
+| `calc_lethal(attacker, moves, critical=False, move_secondary=False, max_attack=10, resume_from=None)` | 指定した技（列）を最大 `max_attack` 回撃ち込んだ場合の致死率を計算する（確定数が出た時点で打ち切る）。`moves` には技名の文字列・`Move`・`(技, ヒット数)` のタプル、およびそれらのリストを渡せる。リストで複数の技を渡した場合はその順番通りに1ラウンドとして使用し（例: `["でんこうせっか", "かみなり"]` は1発目にでんこうせっか、2発目にかみなり）、`max_attack>1` にするとこのラウンド自体を繰り返す。防御側の状態異常・天候ダメージ（どく・やけど・すなあらし等）はダメージに自動的に合算される。`critical` は急所として計算するかどうか、`move_secondary` は追加効果ハンドラ（やけど付与等、致死率計算に組み込まれている技に限る）を適用するかどうかで、りゅうせいぐんの自傷効果のように攻撃側自身に必ず発生する効果は `move_secondary` の指定に関わらず常に加味される。`resume_from` に直前の `calc_lethal()` 呼び出しの結果（通常は `results[-1]`）を渡すと、フルHPからの新規計算ではなくその状態（起点HP・HP分布・攻撃回数）から再開できる（引き継がれるのは `initial_hp`・`hp_dist`・`attack_count` のみで、ランク補正・状態異常・揮発性状態は引き継がれない既知の制約）。`list[LethalHitResult]` を返す（各要素が1ヒットに対応し、最終的な致死率は `results[-1].lethal_probability`）。なお `jpoke.testing.calc_lethal()` はこの引数を `secondary` という短縮名で受け取るインデックス指定版なので注意 |
 | `calc_damages(attacker, defender, move, critical=False)` | 乱数によるダメージ幅を考慮した、可能な全ダメージ値のリスト（通常16通り）を返す |
 | `roll_damage(attacker, defender, move, critical=False)` | `calc_damages()` の結果から `option.damage_roll` に従って1つ選んで返す |
 
@@ -945,7 +945,7 @@ print(results[-1].lethal_probability)
 | `get_action_order(battle, command0=None, command1=None)` | コマンドを予約し、そのターンの行動順を取得する |
 | `reserve_command(battle, command0=None, command1=None)` | `step()` を介さずコマンド予約状態だけを作る（行動順・優先度だけを検証したい場合） |
 | `build_context(battle, player_idx, move_idx=0)` | `AttackContext` を組み立てる |
-| `calc_lethal(battle, player_idx, moves, critical=False, secondary=False, max_attack=10)` | `Battle.calc_lethal()` のインデックス指定版 |
+| `calc_lethal(battle, player_idx, moves, critical=False, secondary=False, max_attack=10, resume_from=None)` | `Battle.calc_lethal()` のインデックス指定版 |
 | `calc_move_priority(battle, player_idx, move_index=0)` | 指定インデックスの技を使ったときの優先度を返す。`Battle.calc_move_priority(pokemon, move)` のインデックス指定版 |
 | `end_turn(battle)` | `Battle.end_turn()` のラッパー |
 | `CustomPlayer` | 常に利用可能な最初のコマンドを選択する `Player` 実装。上記ヘルパーの内部で使われる |
