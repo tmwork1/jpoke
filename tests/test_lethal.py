@@ -34,6 +34,8 @@ from jpoke.utils.lethal_dist import State, to_dist
 
 from . import test_utils as t
 
+# ── resume_from（前回計算結果からの再開）────────────────────────────────
+
 # ── 固定ダメージ技・一撃必殺技（lethal計算対応） ──────────────────────────
 
 
@@ -110,6 +112,128 @@ def test_Vジェネレート_ランクダウン_secondary無し():
     assert results[0].attacker_state.boosts.get("def", 0) == 0
     assert results[0].attacker_state.boosts.get("spd", 0) == 0
     assert results[0].attacker_state.boosts.get("spe", 0) == 0
+
+
+def test_resume_from_HP分布が1発目終了時点から連続する():
+    """1発目終了時点のHP分布の各枝から、resume_from した2発目でさらにダメージが
+    差し引かれていることを確認する（たいあたりは20~24固定のダメージ幅を持つ）。"""
+    battle1 = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    first = t.calc_lethal(battle1, player_idx=0, moves=Move("たいあたり"), max_attack=1)
+
+    battle2 = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    second = t.calc_lethal(
+        battle2, player_idx=0, moves=Move("たいあたり"), max_attack=1, resume_from=first[-1],
+    )
+
+    assert second[0].min_damage == 20
+    assert second[0].max_damage == 24
+    # 2発目のHP分布は「1発目終了時点の各枝」からさらにダメージが引かれた範囲になる
+    assert max(second[0].hp_counter) == max(first[0].hp_counter) - 20
+    assert min(second[0].hp_counter) == min(first[0].hp_counter) - 24
+
+
+def test_resume_from_attack_countが連番になる():
+    """max_attack=1 で計算した結果を resume_from に渡して再度 max_attack=1 で計算すると、
+    新しい結果の attack_count が2になる（1回目は1、2回目の呼び出しは2から始まる）。"""
+    battle1 = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    first = t.calc_lethal(battle1, player_idx=0, moves=Move("たいあたり"), max_attack=1)
+    assert first[0].attack_count == 1
+
+    battle2 = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    second = t.calc_lethal(
+        battle2, player_idx=0, moves=Move("たいあたり"), max_attack=1, resume_from=first[-1],
+    )
+    assert second[0].attack_count == 2
+
+
+def test_resume_from_ランク補正の引き継ぎがGのちからの2発目ダメージに反映される():
+    """Gのちから: 1発目の実際の分岐状態（ぼうぎょランクダウン）を resume_from で
+    引き継ぐと、2発目のダメージはフルHP・無補正から独立計算した場合より大きくなる
+    （ランクダウンが正しく反映されるため）。また、resume_from による正確な2発合計後の
+    HP分布は、直接 max_attack=2 で計算した場合と一致し、__add__ による近似結果
+    （フルHPからの独立計算を差分合成したもの、ランクダウンを反映しないため
+    ダメージを過小評価する）とは異なることも確認する。"""
+    battle_direct = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    results_direct = t.calc_lethal(
+        battle_direct, player_idx=0, moves=Move("Gのちから"), max_attack=2, secondary=True,
+    )
+
+    battle_first = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    first_hit = t.calc_lethal(
+        battle_first, player_idx=0, moves=Move("Gのちから"), max_attack=1, secondary=True,
+    )
+
+    battle_resume = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    resumed = t.calc_lethal(
+        battle_resume, player_idx=0, moves=Move("Gのちから"), max_attack=1,
+        secondary=True, resume_from=first_hit[-1],
+    )
+
+    battle_independent = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    independent = t.calc_lethal(
+        battle_independent, player_idx=0, moves=Move("Gのちから"), max_attack=1, secondary=True,
+    )
+
+    # resume_fromは1発目のランクダウンを引き継ぐため、独立計算より2発目のダメージが大きい
+    assert resumed[0].attack_count == 2
+    assert resumed[0].min_damage > independent[0].min_damage
+
+    # 直接 max_attack=2 で計算した2発目と厳密に一致する（正確な再計算になっている）
+    assert resumed[0].hp_dist == results_direct[1].hp_dist
+    assert resumed[0].min_damage == results_direct[1].min_damage
+    assert resumed[0].max_damage == results_direct[1].max_damage
+
+    # __add__ による近似（フルHPからの独立計算を差分合成）は、ランクダウンを
+    # 反映していないため、実際（resume_from）よりダメージを過小評価する
+    combined = first_hit[-1] + independent[0]
+    assert min(resumed[0].hp_counter) < min(combined.hp_counter)
+
+
+def test_resume_from_状態異常が引き継がれる():
+    """キラースピン（secondary=True）で1発目に付与したどく状態が、resume_from した
+    2発目呼び出しでも defender_state.ailment に引き継がれたままであることを確認する。"""
+    battle1 = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    first = t.calc_lethal(
+        battle1, player_idx=0, moves=Move("キラースピン"), max_attack=1, secondary=True,
+    )
+    assert first[0].defender_state.ailment == "どく"
+
+    battle2 = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    second = t.calc_lethal(
+        battle2, player_idx=0, moves=Move("キラースピン"), max_attack=1,
+        resume_from=first[-1],
+    )
+    assert second[0].defender_state.ailment == "どく"
 
 
 def test_set_ailmentでどくを付与すると確定数が短縮される():

@@ -473,7 +473,8 @@ class Battle:
                         | list[MoveName | Move | tuple[MoveName | Move, int]],
                     critical: bool = False,
                     move_secondary: bool = False,
-                    max_attack: int = 10) -> list[LethalHitResult]:
+                    max_attack: int = 10,
+                    resume_from: LethalHitResult | None = None) -> list[LethalHitResult]:
         """指定した技（列）を最大 max_attack 回撃ち込んだ場合の致死率を計算する（LethalCalculatorへの委譲）。
 
         `moves` には技名の文字列（`MoveName`）・`Move` インスタンス・
@@ -488,6 +489,15 @@ class Battle:
             critical: 急所として計算するか
             move_secondary: 追加効果ハンドラ（火傷・怯みなど）を適用するか
             max_attack: 最大攻撃回数（確定数が出た時点で打ち切り）
+            resume_from: 指定した場合、フルHPからの新規計算ではなく、この
+                `LethalHitResult`（通常は直前の `calc_lethal()` 呼び出しの
+                `results[-1]`）が表す状態（HP分布・ランク補正・状態異常・
+                アイテム/特性消費フラグ）から計算を再開する。異なる技を
+                連続で撃った場合の正確な合成結果が必要なとき、`__add__`
+                （フルHPからの独立計算による近似）より正確な代替手段になる。
+                **揮発性状態（バインド・しおづけ・かいふくふうじ・こんらん・
+                たくわえる等）は引き継がれない**（既知の制約）。`None`
+                （デフォルト）の場合は従来通りフルHPから新規に計算する
 
         Returns:
             list[LethalHitResult]: 各ヒット後の致死率計算結果のリスト。
@@ -495,11 +505,14 @@ class Battle:
                 適用した後の防御側HP分布を表す。多段技はヒットごとに
                 要素が分かれる。最終的な致死率（max_attack回、または
                 多段技も含め全ヒット終了時点のもの）は `results[-1].lethal_probability`
-                で読み取れる
+                で読み取れる。`resume_from` を指定した場合でも、返るのは
+                新規に計算したヒット分のみ（`resume_from` 自体やそれ以前の
+                履歴は含まない）
         """
         return lethal.calc_lethal(
             self, attacker, moves, critical=critical,
-            move_secondary=move_secondary, max_attack=max_attack
+            move_secondary=move_secondary, max_attack=max_attack,
+            resume_from=resume_from,
         )
 
     @property

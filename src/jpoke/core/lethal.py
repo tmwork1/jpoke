@@ -224,7 +224,8 @@ def calc_lethal(battle: Battle,
                 | list[MoveName | Move | tuple[MoveName | Move, int]],
                 critical: bool,
                 move_secondary: bool,
-                max_attack: int) -> list[LethalHitResult]:
+                max_attack: int,
+                resume_from: LethalHitResult | None = None) -> list[LethalHitResult]:
     """致死率計算のエントリーポイント。
 
     Args:
@@ -235,9 +236,23 @@ def calc_lethal(battle: Battle,
         critical: 急所計算をするか
         move_secondary: 追加効果ハンドラを適用するか
         max_attack: 最大攻撃回数
+        resume_from: 指定した場合、フルHPからの新規計算ではなく、この
+            `LethalHitResult`（通常は直前の `calc_lethal()` 呼び出しの
+            `results[-1]`）が表す状態から計算を再開する。引き継がれるのは
+            チェーン全体の起点HP（`initial_hp`）、`resume_from` 終了時点の
+            HP分布（`hp_dist`）、`attack_count`（後続の攻撃回数に加算される
+            オフセットとして使う）、攻撃側・防御側のランク補正（`boosts`）、
+            および状態異常（`ailment`）。**揮発性状態（バインド・しおづけ・
+            かいふくふうじ・こんらん・たくわえる等）は引き継がれない**
+            （`LethalHitResult`/`LethalPokemonState` が現状ランク補正と
+            状態異常のみをスナップショットしているための既知の制約）。
+            `None`（デフォルト）の場合は従来通りフルHPから新規に計算する。
 
     Returns:
-        各ヒット後の LethalHitResult のリスト（確定数が出た時点で打ち切り）
+        各ヒット後の LethalHitResult のリスト（確定数が出た時点で打ち切り）。
+        `resume_from` を指定した場合でも、返るのは新規に計算したヒット分のみ
+        （`resume_from` 自体やそれ以前の履歴は含まない）。呼び出し側で必要なら
+        `resume_from` の元リストと連結すればよい。
     """
     # 攻撃側のインデックスを取得
     attacker_index = battle._get_player_index(attacker)
@@ -246,16 +261,41 @@ def calc_lethal(battle: Battle,
     battle = deepcopy(battle)
     attacker = battle.actives[attacker_index]
     defender = battle.foe(attacker)
-    initial_hp = defender.hp
 
-    hp_dist = to_dist(
-        defender.hp,
-        ability_enabled=defender.ability.enabled,
-        item_enabled=defender.item.enabled
-    )
+    if resume_from is not None:
+        # jpoke.model はモジュールトップレベルでは import しない（循環import回避）。
+        from jpoke.model.ailment import Ailment
+
+        initial_hp = resume_from.initial_hp
+        hp_dist = resume_from.hp_dist
+        attack_offset = resume_from.attack_count
+
+        attacker.boosts = dict(resume_from.attacker_state.boosts)
+        defender.boosts = dict(resume_from.defender_state.boosts)
+
+        attacker_ailment_name = resume_from.attacker_state.ailment
+        attacker.ailment = Ailment(attacker_ailment_name) if attacker_ailment_name else Ailment()
+        defender_ailment_name = resume_from.defender_state.ailment
+        defender.ailment = Ailment(defender_ailment_name) if defender_ailment_name else Ailment()
+
+        # _update_hp が通常行っている同期をループ開始前に前倒しで行う
+        # （ループ内の最初のイベントで ctx.defender.hp を参照するハンドラのために必要）。
+        defender.hp = min(state.value for state in hp_dist)
+    else:
+        initial_hp = defender.hp
+        hp_dist = to_dist(
+            defender.hp,
+            ability_enabled=defender.ability.enabled,
+            item_enabled=defender.item.enabled
+        )
+        attack_offset = 0
+
     move_list = _generate_move_list(moves)
 
-    return _lethal_loop(initial_hp, hp_dist, battle, attacker, defender, move_list, critical, move_secondary, max_attack)
+    return _lethal_loop(
+        initial_hp, hp_dist, battle, attacker, defender, move_list,
+        critical, move_secondary, max_attack, attack_offset=attack_offset,
+    )
 
 
 def _generate_move_list(
@@ -296,11 +336,17 @@ def _lethal_loop(initial_hp: int,
                  move_list: list[tuple[Move, int]],
                  critical: bool,
                  move_secondary: bool,
-                 max_attack: int) -> list[LethalHitResult]:
+                 max_attack: int,
+                 attack_offset: int = 0) -> list[LethalHitResult]:
     """致死率計算のメインループ。
 
     max_attack 回分、move_list の技を順に使用し、各ヒット後の LethalHitResult を返す。
     いずれかの時点で HP=0 の状態が現れたら途中で打ち切る。
+
+    Args:
+        attack_offset: `resume_from` 指定時、`ctx.attack_count` に加算するオフセット
+            （`resume_from.attack_count`）。`hit_count` には影響しない
+            （各ラウンドで1から数え直す既存の挙動のまま）。
     """
     # move ごとに LethalContext を作成しておく（ループ内で毎回作る必要がないため）
     ctx_list: list[tuple[int, LethalContext]] = [
@@ -312,7 +358,7 @@ def _lethal_loop(initial_hp: int,
     results = []
     for atk in range(1, max_attack + 1):
         for n_hits, ctx in ctx_list:
-            ctx.attack_count = atk
+            ctx.attack_count = atk + attack_offset
             # ON_EVERY_EVENT ハンドラは同じ ctx では変化しないため、1回だけ取得する
             every_event_handlers = _get_handlers(
                 LethalEvent.ON_EVERY_EVENT, battle, ctx)
