@@ -26,7 +26,7 @@ import pytest
 
 from jpoke import Pokemon, Move
 from jpoke.core import lethal as core_lethal
-from jpoke.core.lethal import LethalContext
+from jpoke.core.lethal import LethalContext, LethalMonitor
 from jpoke.data.move import MOVES
 from jpoke.enums import LethalEvent
 from jpoke.handlers import lethal as l
@@ -96,10 +96,11 @@ def test_Vジェネレート_ランクダウン_secondary有り():
         team0=[Pokemon("リザードン")],
         team1=[Pokemon("カビゴン")],
     )
-    results = t.calc_lethal(battle, player_idx=0, moves=Move("Vジェネレート"), max_attack=1, secondary=True)
-    assert results[0].attacker_state.boosts["def"] == -1
-    assert results[0].attacker_state.boosts["spd"] == -1
-    assert results[0].attacker_state.boosts["spe"] == -1
+    monitor = LethalMonitor()
+    t.calc_lethal(battle, player_idx=0, moves=Move("Vジェネレート"), max_attack=1, secondary=True, monitor=monitor)
+    assert monitor.attacker.boosts["def"] == -1
+    assert monitor.attacker.boosts["spd"] == -1
+    assert monitor.attacker.boosts["spe"] == -1
 
 
 def test_Vジェネレート_ランクダウン_secondary無し():
@@ -108,10 +109,11 @@ def test_Vジェネレート_ランクダウン_secondary無し():
         team0=[Pokemon("リザードン")],
         team1=[Pokemon("カビゴン")],
     )
-    results = t.calc_lethal(battle, player_idx=0, moves=Move("Vジェネレート"), max_attack=1, secondary=False)
-    assert results[0].attacker_state.boosts.get("def", 0) == 0
-    assert results[0].attacker_state.boosts.get("spd", 0) == 0
-    assert results[0].attacker_state.boosts.get("spe", 0) == 0
+    monitor = LethalMonitor()
+    t.calc_lethal(battle, player_idx=0, moves=Move("Vジェネレート"), max_attack=1, secondary=False, monitor=monitor)
+    assert monitor.attacker.boosts.get("def", 0) == 0
+    assert monitor.attacker.boosts.get("spd", 0) == 0
+    assert monitor.attacker.boosts.get("spe", 0) == 0
 
 
 def test_resume_from_HP分布が1発目終了時点から連続する():
@@ -158,13 +160,11 @@ def test_resume_from_attack_countが連番になる():
     assert second[0].attack_count == 2
 
 
-def test_resume_from_ランク補正の引き継ぎがGのちからの2発目ダメージに反映される():
-    """Gのちから: 1発目の実際の分岐状態（ぼうぎょランクダウン）を resume_from で
-    引き継ぐと、2発目のダメージはフルHP・無補正から独立計算した場合より大きくなる
-    （ランクダウンが正しく反映されるため）。また、resume_from による正確な2発合計後の
-    HP分布は、直接 max_attack=2 で計算した場合と一致し、__add__ による近似結果
-    （フルHPからの独立計算を差分合成したもの、ランクダウンを反映しないため
-    ダメージを過小評価する）とは異なることも確認する。"""
+def test_resume_from_ランク補正は引き継がれない():
+    """Gのちから: resume_from はランク補正を引き継がない既知の制約を確認する。
+    1発目でぼうぎょランクを下げた状態から resume_from して2発目を計算しても、
+    ランクダウンは反映されず、フルHP・無補正から独立計算した場合と同じダメージに
+    なる（同一 calc_lethal 呼び出し内で連続攻撃した場合の実際の値より小さい）。"""
     battle_direct = t.start_battle(
         team0=[Pokemon("ガブリアス")],
         team1=[Pokemon("カイリュー")],
@@ -185,9 +185,10 @@ def test_resume_from_ランク補正の引き継ぎがGのちからの2発目ダ
         team0=[Pokemon("ガブリアス")],
         team1=[Pokemon("カイリュー")],
     )
+    monitor = LethalMonitor()
     resumed = t.calc_lethal(
         battle_resume, player_idx=0, moves=Move("Gのちから"), max_attack=1,
-        secondary=True, resume_from=first_hit[-1],
+        secondary=True, resume_from=first_hit[-1], monitor=monitor,
     )
 
     battle_independent = t.start_battle(
@@ -198,24 +199,24 @@ def test_resume_from_ランク補正の引き継ぎがGのちからの2発目ダ
         battle_independent, player_idx=0, moves=Move("Gのちから"), max_attack=1, secondary=True,
     )
 
-    # resume_fromは1発目のランクダウンを引き継ぐため、独立計算より2発目のダメージが大きい
+    # resume_fromはランク補正を引き継がないため、1発目のランクダウンが無い状態
+    # （＝独立計算と同じ）から2発目が計算される
     assert resumed[0].attack_count == 2
-    assert resumed[0].min_damage > independent[0].min_damage
+    assert resumed[0].min_damage == independent[0].min_damage
+    assert resumed[0].max_damage == independent[0].max_damage
 
-    # 直接 max_attack=2 で計算した2発目と厳密に一致する（正確な再計算になっている）
-    assert resumed[0].hp_dist == results_direct[1].hp_dist
-    assert resumed[0].min_damage == results_direct[1].min_damage
-    assert resumed[0].max_damage == results_direct[1].max_damage
+    # ランク補正が正しく引き継がれていれば一致するはずの「直接2発計算」の
+    # 2発目より、ダメージが小さい（引き継がれていないことの確認）
+    assert resumed[0].min_damage < results_direct[1].min_damage
 
-    # __add__ による近似（フルHPからの独立計算を差分合成）は、ランクダウンを
-    # 反映していないため、実際（resume_from）よりダメージを過小評価する
-    combined = first_hit[-1] + independent[0]
-    assert min(resumed[0].hp_counter) < min(combined.hp_counter)
+    # 呼び出し完了時点の防御側ぼうぎょランクは、resume呼び出し自身の1回分の
+    # ダウンのみを反映しており、1発目の分（-1）は引き継がれていない（-2にならない）
+    assert monitor.defender.boosts["def"] == -1
 
 
-def test_resume_from_状態異常が引き継がれる():
-    """キラースピン（secondary=True）で1発目に付与したどく状態が、resume_from した
-    2発目呼び出しでも defender_state.ailment に引き継がれたままであることを確認する。"""
+def test_resume_from_状態異常は引き継がれない():
+    """キラースピン（secondary=True）で1発目に付与したどく状態は、resume_from した
+    2発目呼び出しには引き継がれない（防御側の状態異常は空に戻る、既知の制約）。"""
     battle1 = t.start_battle(
         team0=[Pokemon("ガブリアス")],
         team1=[Pokemon("カイリュー")],
@@ -223,17 +224,17 @@ def test_resume_from_状態異常が引き継がれる():
     first = t.calc_lethal(
         battle1, player_idx=0, moves=Move("キラースピン"), max_attack=1, secondary=True,
     )
-    assert first[0].defender_state.ailment == "どく"
 
     battle2 = t.start_battle(
         team0=[Pokemon("ガブリアス")],
         team1=[Pokemon("カイリュー")],
     )
-    second = t.calc_lethal(
+    monitor = LethalMonitor()
+    t.calc_lethal(
         battle2, player_idx=0, moves=Move("キラースピン"), max_attack=1,
-        resume_from=first[-1],
+        resume_from=first[-1], monitor=monitor,
     )
-    assert second[0].defender_state.ailment == "どく"
+    assert monitor.defender.ailment.name == ""
 
 
 def test_set_ailmentでどくを付与すると確定数が短縮される():
@@ -463,8 +464,9 @@ def test_いじげんラッシュ_ぼうぎょランクダウン():
         team0=[Pokemon("ガブリアス")],
         team1=[Pokemon("カビゴン")],
     )
-    results = t.calc_lethal(battle, player_idx=0, moves=Move("いじげんラッシュ"), max_attack=1, secondary=False)
-    assert results[0].attacker_state.boosts["def"] == -1
+    monitor = LethalMonitor()
+    t.calc_lethal(battle, player_idx=0, moves=Move("いじげんラッシュ"), max_attack=1, secondary=False, monitor=monitor)
+    assert monitor.attacker.boosts["def"] == -1
 
 
 def test_いのちがけ_1発目は現在HP2発目は0():
@@ -961,8 +963,9 @@ def test_グロウパンチ_secondary無しなら発動しない():
         team0=[Pokemon("カイリキー")],
         team1=[Pokemon("カビゴン")],
     )
-    results = t.calc_lethal(battle, player_idx=0, moves=Move("グロウパンチ"), max_attack=1, secondary=False)
-    assert results[0].attacker_state.boosts.get("atk", 0) == 0
+    monitor = LethalMonitor()
+    t.calc_lethal(battle, player_idx=0, moves=Move("グロウパンチ"), max_attack=1, secondary=False, monitor=monitor)
+    assert monitor.attacker.boosts.get("atk", 0) == 0
 
 
 def test_グロウパンチ_こうげきランクアップ_secondary有り():
@@ -971,8 +974,9 @@ def test_グロウパンチ_こうげきランクアップ_secondary有り():
         team0=[Pokemon("カイリキー")],
         team1=[Pokemon("カビゴン")],
     )
-    results = t.calc_lethal(battle, player_idx=0, moves=Move("グロウパンチ"), max_attack=1, secondary=True)
-    assert results[0].attacker_state.boosts["atk"] == 1
+    monitor = LethalMonitor()
+    t.calc_lethal(battle, player_idx=0, moves=Move("グロウパンチ"), max_attack=1, secondary=True, monitor=monitor)
+    assert monitor.attacker.boosts["atk"] == 1
 
 
 def test_ゴールドラッシュ_とくこうダウン():
@@ -1100,8 +1104,9 @@ def test_しっとのほのお_やけど付与_ランク上昇時_secondary有�
         team1=[Pokemon("カビゴン")],
     )
     battle.actives[1].stat_raised_this_turn = True
-    results = t.calc_lethal(battle, player_idx=0, moves=Move("しっとのほのお"), max_attack=1, secondary=True)
-    assert results[0].defender_state.ailment == "やけど"
+    monitor = LethalMonitor()
+    t.calc_lethal(battle, player_idx=0, moves=Move("しっとのほのお"), max_attack=1, secondary=True, monitor=monitor)
+    assert monitor.defender.ailment.name == "やけど"
 
 
 def test_しっとのほのお_ランク上昇なしなら発動しない():
@@ -1110,8 +1115,9 @@ def test_しっとのほのお_ランク上昇なしなら発動しない():
         team0=[Pokemon("リザードン")],
         team1=[Pokemon("カビゴン")],
     )
-    results = t.calc_lethal(battle, player_idx=0, moves=Move("しっとのほのお"), max_attack=1, secondary=True)
-    assert results[0].defender_state.ailment == ""
+    monitor = LethalMonitor()
+    t.calc_lethal(battle, player_idx=0, moves=Move("しっとのほのお"), max_attack=1, secondary=True, monitor=monitor)
+    assert monitor.defender.ailment.name == ""
 
 
 def test_しめつける_バインド付与():
@@ -1416,9 +1422,10 @@ def test_テラバースト_ステラでこうげきとくこうダウン():
         team1=[Pokemon("カビゴン")],
     )
     battle.actives[0].terastallize()
-    results = t.calc_lethal(battle, player_idx=0, moves=Move("テラバースト"), max_attack=1)
-    assert results[0].attacker_state.boosts["atk"] == -1
-    assert results[0].attacker_state.boosts["spa"] == -1
+    monitor = LethalMonitor()
+    t.calc_lethal(battle, player_idx=0, moves=Move("テラバースト"), max_attack=1, monitor=monitor)
+    assert monitor.attacker.boosts["atk"] == -1
+    assert monitor.attacker.boosts["spa"] == -1
 
 
 def test_テラバースト_ステラ以外はランクが下がらない():
@@ -1428,9 +1435,10 @@ def test_テラバースト_ステラ以外はランクが下がらない():
         team1=[Pokemon("カビゴン")],
     )
     battle.actives[0].terastallize()
-    results = t.calc_lethal(battle, player_idx=0, moves=Move("テラバースト"), max_attack=1)
-    assert results[0].attacker_state.boosts["atk"] == 0
-    assert results[0].attacker_state.boosts["spa"] == 0
+    monitor = LethalMonitor()
+    t.calc_lethal(battle, player_idx=0, moves=Move("テラバースト"), max_attack=1, monitor=monitor)
+    assert monitor.attacker.boosts["atk"] == 0
+    assert monitor.attacker.boosts["spa"] == 0
 
 
 def test_トラバサミ_バインド付与():
@@ -1513,8 +1521,9 @@ def test_なげつける_しろいハーブ_下がったランクをリセット
         team1=[Pokemon("カビゴン")],
     )
     battle.actives[1].boosts["atk"] = -2
-    results = t.calc_lethal(battle, player_idx=0, moves=Move("なげつける"), max_attack=1, secondary=True)
-    assert results[0].defender_state.boosts["atk"] == 0
+    monitor = LethalMonitor()
+    t.calc_lethal(battle, player_idx=0, moves=Move("なげつける"), max_attack=1, secondary=True, monitor=monitor)
+    assert monitor.defender.boosts["atk"] == 0
 
 
 def test_なげつける_チイラのみ_相手のこうげきランク上昇():
@@ -1523,8 +1532,9 @@ def test_なげつける_チイラのみ_相手のこうげきランク上昇():
         team0=[Pokemon("ピカチュウ", item_name="チイラのみ")],
         team1=[Pokemon("カビゴン")],
     )
-    results = t.calc_lethal(battle, player_idx=0, moves=Move("なげつける"), max_attack=1, secondary=True)
-    assert results[0].defender_state.boosts["atk"] == 1
+    monitor = LethalMonitor()
+    t.calc_lethal(battle, player_idx=0, moves=Move("なげつける"), max_attack=1, secondary=True, monitor=monitor)
+    assert monitor.defender.boosts["atk"] == 1
 
 
 def test_なげつける_でんきだま_secondary無しなら発動しない():
@@ -1533,8 +1543,9 @@ def test_なげつける_でんきだま_secondary無しなら発動しない():
         team0=[Pokemon("ピカチュウ", item_name="でんきだま")],
         team1=[Pokemon("カビゴン")],
     )
-    results = t.calc_lethal(battle, player_idx=0, moves=Move("なげつける"), max_attack=1, secondary=False)
-    assert results[0].defender_state.ailment == ""
+    monitor = LethalMonitor()
+    t.calc_lethal(battle, player_idx=0, moves=Move("なげつける"), max_attack=1, secondary=False, monitor=monitor)
+    assert monitor.defender.ailment.name == ""
 
 
 def test_なげつける_でんきだま_まひ付与_secondary有り():
@@ -1543,8 +1554,9 @@ def test_なげつける_でんきだま_まひ付与_secondary有り():
         team0=[Pokemon("ピカチュウ", item_name="でんきだま")],
         team1=[Pokemon("カビゴン")],
     )
-    results = t.calc_lethal(battle, player_idx=0, moves=Move("なげつける"), max_attack=1, secondary=True)
-    assert results[0].defender_state.ailment == "まひ"
+    monitor = LethalMonitor()
+    t.calc_lethal(battle, player_idx=0, moves=Move("なげつける"), max_attack=1, secondary=True, monitor=monitor)
+    assert monitor.defender.ailment.name == "まひ"
 
 
 def test_なげつける_ラムのみ_状態異常を治す():
@@ -1554,8 +1566,9 @@ def test_なげつける_ラムのみ_状態異常を治す():
         team1=[Pokemon("カビゴン")],
     )
     t.apply_ailment(battle, player_idx=1, ailment_name="まひ")
-    results = t.calc_lethal(battle, player_idx=0, moves=Move("なげつける"), max_attack=1, secondary=True)
-    assert results[0].defender_state.ailment == ""
+    monitor = LethalMonitor()
+    t.calc_lethal(battle, player_idx=0, moves=Move("なげつける"), max_attack=1, secondary=True, monitor=monitor)
+    assert monitor.defender.ailment.name == ""
 
 
 def test_ナモのみ_抜群ダメージ半減():
@@ -1638,9 +1651,10 @@ def test_はきだす_たくわえなしならランク変化なし():
     )
     move = Move("はきだす")
     move.base_power = 1
-    results = t.calc_lethal(battle, player_idx=0, moves=move, max_attack=1)
-    assert results[0].attacker_state.boosts.get("def", 0) == 0
-    assert results[0].attacker_state.boosts.get("spd", 0) == 0
+    monitor = LethalMonitor()
+    t.calc_lethal(battle, player_idx=0, moves=move, max_attack=1, monitor=monitor)
+    assert monitor.attacker.boosts.get("def", 0) == 0
+    assert monitor.attacker.boosts.get("spd", 0) == 0
 
 
 def test_はきだす_たくわえるぶんのランクダウン():
@@ -1652,9 +1666,10 @@ def test_はきだす_たくわえるぶんのランクダウン():
     )
     move = Move("はきだす")
     move.base_power = 200
-    results = t.calc_lethal(battle, player_idx=0, moves=move, max_attack=1)
-    assert results[0].attacker_state.boosts["def"] == -2
-    assert results[0].attacker_state.boosts["spd"] == -2
+    monitor = LethalMonitor()
+    t.calc_lethal(battle, player_idx=0, moves=move, max_attack=1, monitor=monitor)
+    assert monitor.attacker.boosts["def"] == -2
+    assert monitor.attacker.boosts["spd"] == -2
 
 
 def test_バインド_ターン終了時ダメージ():
@@ -1693,9 +1708,10 @@ def test_ばかぢから_こうげきとぼうぎょが両方ダウン():
         team0=[Pokemon("ガブリアス")],
         team1=[Pokemon("カイリュー")],
     )
-    results = t.calc_lethal(battle, player_idx=0, moves=Move("ばかぢから"), max_attack=1)
-    assert results[0].attacker_state.boosts["atk"] == -1
-    assert results[0].attacker_state.boosts["def"] == -1
+    monitor = LethalMonitor()
+    t.calc_lethal(battle, player_idx=0, moves=Move("ばかぢから"), max_attack=1, monitor=monitor)
+    assert monitor.attacker.boosts["atk"] == -1
+    assert monitor.attacker.boosts["def"] == -1
 
 
 def test_ばけのかわ_2発目は通常ダメージ():
@@ -1773,8 +1789,9 @@ def test_ホイールスピン_すばやさランクダウン():
         team0=[Pokemon("メタグロス")],
         team1=[Pokemon("カビゴン")],
     )
-    results = t.calc_lethal(battle, player_idx=0, moves=Move("ホイールスピン"), max_attack=1, secondary=False)
-    assert results[0].attacker_state.boosts["spe"] == -2
+    monitor = LethalMonitor()
+    t.calc_lethal(battle, player_idx=0, moves=Move("ホイールスピン"), max_attack=1, secondary=False, monitor=monitor)
+    assert monitor.attacker.boosts["spe"] == -2
 
 
 def test_ほうふく_直近の被弾ダメージの1_5倍を与える():

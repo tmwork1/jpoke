@@ -10,7 +10,7 @@
 使う `fix_damage` / `fix_random` は `tests/test_utils.py` を参照。
 """
 from jpoke.core import Battle, Player, AttackContext
-from jpoke.core.lethal import LethalHitResult
+from jpoke.core.lethal import LethalHitResult, LethalMonitor
 from jpoke.model import Pokemon, Move
 from jpoke.types import AilmentName, VolatileName, WeatherName, TerrainName, GlobalFieldName, SideFieldName, \
     CriticalMode, DamageRollMode, ItemName
@@ -324,7 +324,8 @@ def calc_lethal(battle: Battle,
                 critical: bool = False,
                 secondary: bool = False,
                 max_attack: int = 10,
-                resume_from: LethalHitResult | None = None) -> list[LethalHitResult]:
+                resume_from: LethalHitResult | None = None,
+                monitor: LethalMonitor | None = None) -> list[LethalHitResult]:
     """致死率計算を実行するヘルパー関数。
 
     Args:
@@ -336,8 +337,12 @@ def calc_lethal(battle: Battle,
         max_attack: 最大攻撃回数（デフォルト: 10）
         resume_from: 指定した場合、フルHPからの新規計算ではなく、この
             `LethalHitResult`（通常は直前の呼び出しの `results[-1]`）が
-            表す状態から計算を再開する。揮発性状態は引き継がれない
-            （既知の制約）。詳細は `Battle.calc_lethal` を参照
+            表す状態から計算を再開する。ランク補正・状態異常・揮発性状態は
+            いずれも引き継がれない（既知の制約）。詳細は `Battle.calc_lethal` を参照
+        monitor: テスト・デバッグ専用。通常の利用では指定しないこと。
+            指定すると計算に使う（deepcopyされた）攻撃側・防御側 Pokemon への
+            参照を `monitor.attacker` / `monitor.defender` に設定する。
+            詳細は `LethalMonitor` のdocstring参照
 
     Returns:
         各ヒット後の LethalHitResult のリスト（確定数が出た時点で打ち切り）
@@ -346,7 +351,7 @@ def calc_lethal(battle: Battle,
     return battle.calc_lethal(
         attacker=attacker, moves=moves, critical=critical,
         move_secondary=secondary, max_attack=max_attack,
-        resume_from=resume_from,
+        resume_from=resume_from, monitor=monitor,
     )
 
 

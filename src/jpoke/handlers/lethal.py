@@ -22,10 +22,6 @@ def _damage(hp_dist: StateDist, v: int) -> StateDist:
             max(0, state.value - v),
             ability_enabled=state.ability_enabled,
             item_enabled=state.item_enabled,
-            attacker_boosts=state.attacker_boosts,
-            attacker_ailment=state.attacker_ailment,
-            defender_boosts=state.defender_boosts,
-            defender_ailment=state.defender_ailment,
         )
         new_dist[new_state] += freq
     return dict(new_dist)
@@ -101,10 +97,6 @@ def _heal_at_pinch(hp_dist: StateDist,
             min(state.value + heal, max_hp),
             ability_enabled=state.ability_enabled and keep_ability_enabled,
             item_enabled=state.item_enabled and keep_item_enabled,
-            attacker_boosts=state.attacker_boosts,
-            attacker_ailment=state.attacker_ailment,
-            defender_boosts=state.defender_boosts,
-            defender_ailment=state.defender_ailment,
         )
         new_dist[new_state] += freq
 
@@ -133,10 +125,6 @@ def _survive_at_full_hp(hp_dist: StateDist, consume: Literal["ability", "item"])
                 1,
                 ability_enabled=state.ability_enabled,
                 item_enabled=False if consume == "item" else state.item_enabled,
-                attacker_boosts=state.attacker_boosts,
-                attacker_ailment=state.attacker_ailment,
-                defender_boosts=state.defender_boosts,
-                defender_ailment=state.defender_ailment,
             )
         new_dist[state] += freq
     return dict(new_dist)
@@ -296,10 +284,6 @@ def アッキのみ_boost_def(battle: Battle, ctx: LethalContext, hp_dist: State
                 value=state.value,
                 ability_enabled=state.ability_enabled,
                 item_enabled=False,
-                attacker_boosts=state.attacker_boosts,
-                attacker_ailment=state.attacker_ailment,
-                defender_boosts=state.defender_boosts,
-                defender_ailment=state.defender_ailment,
             )
             new_dist[new_state] += freq
         else:
@@ -363,11 +347,7 @@ def _type_resist_berry(battle: Battle, ctx: LethalContext, hp_dist: StateDist,
         if state.item_enabled:
             new_state = State(state.value,
                               ability_enabled=state.ability_enabled,
-                              item_enabled=False,
-                              attacker_boosts=state.attacker_boosts,
-                              attacker_ailment=state.attacker_ailment,
-                              defender_boosts=state.defender_boosts,
-                              defender_ailment=state.defender_ailment)
+                              item_enabled=False)
             new_dist[new_state] += freq
         else:
             new_dist[state] += freq
@@ -445,10 +425,6 @@ def _add_second_hit(dist: StateDist) -> StateDist:
             state.value + second_hit,
             ability_enabled=state.ability_enabled,
             item_enabled=state.item_enabled,
-            attacker_boosts=state.attacker_boosts,
-            attacker_ailment=state.attacker_ailment,
-            defender_boosts=state.defender_boosts,
-            defender_ailment=state.defender_ailment,
         )
         new_dist[new_state] += freq
     return dict(new_dist)
@@ -744,10 +720,6 @@ def タラプのみ_boost_spd(battle: Battle, ctx: LethalContext, hp_dist: State
                 value=state.value,
                 ability_enabled=state.ability_enabled,
                 item_enabled=False,
-                attacker_boosts=state.attacker_boosts,
-                attacker_ailment=state.attacker_ailment,
-                defender_boosts=state.defender_boosts,
-                defender_ailment=state.defender_ailment,
             )
             new_dist[new_state] += freq
         else:
@@ -952,10 +924,6 @@ def ばけのかわ_block_damage(battle: Battle, ctx: LethalContext, hp_dist: St
                 value=max(0, state.value - damage),
                 ability_enabled=False,
                 item_enabled=state.item_enabled,
-                attacker_boosts=state.attacker_boosts,
-                attacker_ailment=state.attacker_ailment,
-                defender_boosts=state.defender_boosts,
-                defender_ailment=state.defender_ailment,
             )
             new_dist[new_state] += freq
         else:
