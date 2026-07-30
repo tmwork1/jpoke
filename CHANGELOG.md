@@ -9,6 +9,13 @@
 
 ### Added
 
+- `Battle.calc_lethal()` / `core.lethal.calc_lethal()` に `resume_from: LethalHitResult | None`
+  引数を追加した。直前の `calc_lethal()` 呼び出しの結果（通常は `results[-1]`）を渡すと、
+  フルHPからの新規計算ではなく、その状態（起点HP・HP分布・攻撃回数・ランク補正・状態異常）
+  から計算を再開できる。異なる技を連続で撃った場合、`LethalHitResult.__add__`（フルHPからの
+  独立計算を差分合成する近似）よりランクダウン等を正確に反映した合成結果が得られる。
+  揮発性状態（バインド・しおづけ等）は引き継がれない（既知の制約）
+
 - `TreeSearchPlayer.estimate_opponent_team()` / `estimate_opponent_selection()` —
   相手推定を項目別に分けた新フック。`estimate_opponent_team(battle)` は相手ポケモンの
   モデル（技・特性・アイテム）に推定値を書き込み、`estimate_opponent_selection(battle)`
