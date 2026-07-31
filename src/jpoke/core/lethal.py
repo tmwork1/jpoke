@@ -434,11 +434,17 @@ def _apply_damage_by_branch(battle: Battle, ctx: LethalContext, hp_dist: StateDi
     max_hp = ctx.defender.max_hp
     full_handlers = _get_handlers(LethalEvent.ON_APPLY_DAMAGE, battle, ctx)
 
+    # 呼び出し元（_apply_damage）が ctx.damage_from_hp is not None を確認した
+    # 場合のみこの関数へ入る。ループ内で毎回属性参照すると型が
+    # `Callable | None` のままになるため、ローカルへ束縛して絞り込む。
+    damage_from_hp = ctx.damage_from_hp
+    assert damage_from_hp is not None
+
     result: StateDist = defaultdict(int)
     recorded: StateDist = defaultdict(int)
 
     for state, freq in hp_dist.items():
-        branch_dmg = to_dist(ctx.damage_from_hp(state.value))
+        branch_dmg = to_dist(damage_from_hp(state.value))
         subtracted = subtract_dist({state: freq}, branch_dmg, minimum=0)
 
         if state.value == max_hp:
