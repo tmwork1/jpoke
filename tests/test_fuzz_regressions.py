@@ -3,6 +3,9 @@
 再現性のあるランダムシードをそのまま固定するのではなく、原因箇所を特定した上で
 core/エンジン共通ロジックの最小ケースとして再現する。
 """
+import sys
+from pathlib import Path
+
 from jpoke import Battle, Player
 from jpoke.model import Pokemon
 from jpoke.enums import Command, Interrupt, LogCode
@@ -10,6 +13,11 @@ from jpoke.handlers.move import get_forced_switch_commands
 from jpoke.players import MinimaxPlayer
 
 from . import test_utils as t
+
+# scripts/fuzz/fuzz_battle.py の run_fuzz_battle をそのまま使う回帰テスト用
+# （tests/test_replay_fuzz.py と同じ sys.path 経由の import 手法）。
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts" / "fuzz"))
+from fuzz_battle import run_fuzz_battle  # noqa: E402
 
 
 def test_Vジェネレート_相手を撃破した場合でも自己ランク低下ログが勝敗確定ログより先に記録される():
@@ -2597,6 +2605,39 @@ def test_技反射_反射直後のハンドラ解除主体の食い違いによ�
     # 1回だけ適用されることを確認する。
     t.run_move(battle, 0, 0)
     assert other.boosts["atk"] == -1
+
+
+def test_木探索_内側plyへ引き継がれたswitch_phaseでも合法手が空にならずIndexErrorにならない():
+    """tsfuzz seed=25, 29, 32, 50, 51, 53, 56 (IndexError@tree_search_player.py:_best_command) の回帰テスト。
+
+    自己対戦（両者 TreeSearchPlayer、max_plies>=2）で、片方（A）の探索内の
+    sim.step() 中に瀕死交代が発生すると、command_manager.resolve_command
+    ("switch", ...) が `with battle.phase_context("switch")` の内側で
+    `battle.build_observation()` を呼ぶため、その中で作られる観測コピーに
+    phase="switch" が凍結される。この観測コピー上でもう一方（B）の
+    choose_command() が再帰的に起動され、Bの探索の内側ply
+    （`_best_command` の `plies != max_plies` ブランチ）にまでこの
+    凍結された phase="switch" が sim.copy() を経て伝播し続ける。
+
+    修正前はこの内側plyで継承した battle.phase（"switch"）のまま
+    available_commands() を呼んでいたため、両プレイヤーのアクティブは
+    生存しているにもかかわらず available_switch_commands が呼ばれ、
+    双方の控えが全滅している局面では両者とも空リストになり、
+    `my_commands[0]`/`opp_commands[0]` で IndexError になっていた
+    （最小ケースの再現は tests/test_tree_search_framework.py の
+    `test_内側plyへ引き継がれたswitch_phaseでも合法手が空にならずIndexErrorにならない`
+    を参照）。
+
+    修正後は `_best_command` が `phase_context("action")` で明示的に
+    action フェーズを宣言してから合法手を取得するため、継承した phase に
+    関わらず正しく合法手が取得でき、既知の失敗シードすべてで例外なく
+    対戦が最後まで進行することを確認する。
+    """
+    for seed in (25, 29, 32, 50, 51, 53, 56):
+        result = run_fuzz_battle(
+            seed, player_kind="tree_search", max_turns=20, n_pokemon=3, max_plies=2,
+        )
+        assert result.ok is True, f"seed={seed}: {result.error}\n{result.traceback_text}"
 
 
 def test_木探索_探索中に相手自身の割り込み交代が起きても観測マスクで交代先が消えずIndexErrorにならない():

@@ -190,14 +190,42 @@ class TreeSearchPlayer(Player):
             if not my_commands or not opp_commands:
                 return self.fallback(battle), float("nan")
         else:
-            # 2手目以降。sim.step()完了直後の全知シミュレーションかつ新規ターン開始
-            # 直後（中断的な交代は再入した choose_command 側のfallbackで既に解決済み）
-            # であるため、phaseは必ず"action"であり、battle.available_commands()の
-            # phase分岐に委ねてよい。
-            my_commands = battle.available_commands(self)
-            opp_commands = battle.available_commands(opponent)
-            battle.player_states[self].required_command_type = "any"
-            battle.player_states[opponent].required_command_type = "any"
+            # 2手目以降。ここに到達するのは `_evaluate_node` が非終端を確認した
+            # 後、`sim.step()` が完了した直後の局面のみ。`TurnController.step()`
+            # は瀕死交代・ききかいひ・だっしゅつパック等の割り込み交代を全て
+            # 解決してから return する（`_run_end_phase` 末尾の
+            # `run_faint_switch` が最後の交代解決）ため、内側plyで次に選ぶべき
+            # コマンドは常に action フェーズのものである。
+            #
+            # 一方、継承した `battle.phase` は "action" とは限らない。瀕死交代の
+            # 解決は `resolve_command("switch", ...)` が `phase_context("switch")`
+            # の内側で `build_observation()` を呼ぶため、そこで作られる観測コピー
+            # には phase="switch" が凍結される。`phase_context` の `finally` は
+            # 元の battle 側しか復元しないので、この凍結値は以降 `sim.copy()` →
+            # `sim.step()` を何段重ねても引き継がれ続ける。結果、両者のアクティブ
+            # が生存しているのに `available_switch_commands` が呼ばれ、双方の控えが
+            # 全滅した局面では両者とも空リストになり IndexError になっていた。
+            #
+            # そのため継承した phase には依存せず、`phase_context("action")` で
+            # 明示的に action フェーズを宣言してから合法手を取得する（action に
+            # 固定するため switch 復元用の `_available_commands_with_recovery`
+            # は経由しない）。
+            with battle.phase_context("action"):
+                my_commands = battle.available_commands(self)
+                opp_commands = battle.available_commands(opponent)
+                battle.player_states[self].required_command_type = "any"
+                battle.player_states[opponent].required_command_type = "any"
+            if not my_commands or not opp_commands:
+                # action フェーズでは active が生存していれば
+                # `available_action_commands` が最低でも「わるあがき」を
+                # 返す（command_manager.py 参照）ため、通常この分岐には
+                # 到達しない想定。前提が崩れた場合に備えた防御的なガードとして
+                # 残す。このブランチ plies < max_plies の返り値コマンドは
+                # `_evaluate_node` がスコアのみ使い破棄するため、常に非空な
+                # 定数（わるあがき）をプレースホルダとして返す。合法手から
+                # 選ぼうとすると「両者とも空」の場合に IndexError になり、
+                # ガードとして機能しなくなる。
+                return Command.STRUGGLE, self.evaluate(battle)
 
         scores = self._score_commands(
             battle, my_commands, opponent, opp_commands, plies, respect_node_limit=True

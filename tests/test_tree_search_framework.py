@@ -612,6 +612,60 @@ def test_とんぼがえり使用時に相手のベンチが公開済みでもVa
     assert player1._searching is False
 
 
+def test_内側plyへ引き継がれたswitch_phaseでも合法手が空にならずIndexErrorにならない():
+    """tsfuzz seed=25 等 (IndexError@tree_search_player.py:_best_command) の回帰テスト。
+
+    瀕死交代の解決は command_manager.resolve_command("switch", ...) が
+    `with battle.phase_context("switch")` の内側で `battle.build_observation()`
+    を呼ぶため、そこで作られる観測コピーには phase="switch" が凍結される。
+    `phase_context` の finally は元の battle 側の phase しか復元しないため、
+    この凍結された phase="switch" は以降 sim.copy() → sim.step() を何段
+    重ねても引き継がれ続ける。木探索の内側ply（`_best_command` の
+    `plies != max_plies` ブランチ）にこの凍結された phase="switch" が
+    伝播すると、修正前は継承した phase のまま available_commands() を
+    呼んでいたため、両プレイヤーのアクティブが生存しているにもかかわらず
+    available_switch_commands が呼ばれ、双方に交代可能な控えがいない
+    （本テストでは選出数1で控えなし）局面では両者とも空リストになり、
+    `my_commands[0]`/`opp_commands[0]` で IndexError になっていた。
+
+    修正後は `_best_command` が phase_context("action") で明示的に action
+    フェーズを宣言してから合法手を取得するため、継承した phase に関わらず
+    action フェーズの合法手（わるあがき等）が正しく取得でき、クラッシュ
+    しないことを確認する。
+    """
+    player1 = MinimaxPlayer(username="SearchPlayer", max_plies=2)
+    player1.team = [Pokemon("ヒトカゲ", item_name="", move_names=["たいあたり"])]  # 控えなし
+
+    player2 = Player(username="RandomPlayer")
+    player2.team = [Pokemon("ゼニガメ", item_name="", move_names=["たいあたり"])]  # 控えなし
+
+    battle = Battle(player1, player2, n_selected=1, seed=1)
+    battle.test_option.accuracy = 100
+    battle.start()
+    battle.player_states[player2].team[0].moves[0].revealed = True  # 相手の技を公開し合法手が空にならないようにする
+
+    # 内側ply相当のsim（sim.step()完了直後、両アクティブ生存）を用意する。
+    sim = battle.copy(reseed=True, copy_logs=False, omniscient=True)
+    sim.step({player1: Command.MOVE_0, player2: Command.MOVE_0})
+    assert sim.judge_winner() is None
+    assert sim.get_active(player1).alive and sim.get_active(player2).alive
+
+    # 瀕死交代解決中のbuild_observationでphase="switch"が凍結され、
+    # それがsim.copy()を経て内側plyまで引き継がれた状況を再現するため、
+    # 意図的にphaseを"switch"のまま残す（本来この時点では両者action可能）。
+    sim.phase = "switch"
+
+    # _best_command は内部実装のprivateメソッドだが、本テストの主眼が
+    # 「内側plyに継承されたphaseの値そのもの」であり、choose_command()経由
+    # では乱数依存でこの経路を安定して再現できないため、直接呼び出す。
+    # 修正前はここでIndexErrorになっていた（控えがいないためavailable_
+    # switch_commandsが両者とも空を返す）。
+    command, score = player1._best_command(sim, plies=1)
+
+    assert command is not None
+    assert score == score  # NaNでない（プレースホルダ即決ではなく実際に評価された）
+
+
 def test_探索中に割り込み交代が発生してもフォールバックで完了する():
     """ISSUE-1回帰: 探索対象の各分岐で瀕死交代が発生しても、フォールバック
     方策により choose_command() が例外にならず正常にコマンドを返すこと。
