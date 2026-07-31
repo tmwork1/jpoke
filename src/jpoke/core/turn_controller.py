@@ -398,6 +398,37 @@ class TurnController:
             finally:
                 move.unregister_handlers(self._events, mon)
 
+    def _resolve_action_interrupts(self, player: Player):
+        """1つの行動枠に付随する割り込み交代（だっしゅつボタン・ききかいひ・交代技・
+        だっしゅつパック）を解決する。
+
+        `_run_move_phase()` の行動枠ループから、本来の技実行後と
+        `Event.ON_AFTER_ACTION_RESOLVED`（おどりこ等）発火後の2箇所から呼ばれる。
+        後者はおどりこのコピー技が新たにこれらの割り込み条件を満たした場合に、
+        同じ解決シーケンスをもう一度通すためのもの。
+
+        Args:
+            player: 今の行動枠のプレイヤー（だっしゅつパックの割り込みフラグを
+                フェーズ・プレイヤーに合わせて設定するために使う）
+        """
+        # だっしゅつボタンによる交代
+        self._switch.run_interrupt_switch(Interrupt.EJECTBUTTON)
+
+        # ききかいひによる交代
+        self._switch.run_interrupt_switch(Interrupt.EMERGENCY)
+
+        # 交代技による交代
+        self._switch.run_interrupt_switch(Interrupt.PIVOT)
+
+        # だっしゅつパックによる割り込みフラグをフェーズに合わせて設定
+        interrupt = Interrupt.ejectpack_on_after_move(
+            self.battle.players.index(player)
+        )
+        self._switch.override_ejectpack_interrupt(interrupt)
+
+        # だっしゅつパックによる交代
+        self._switch.run_interrupt_switch(interrupt)
+
     def _run_move_phase(self):
         """技発動フェーズを実行する。"""
         for index in self.action_order:
@@ -437,23 +468,7 @@ class TurnController:
                 if self.battle.winner is not None:
                     break
 
-            # だっしゅつボタンによる交代
-            self._switch.run_interrupt_switch(Interrupt.EJECTBUTTON)
-
-            # ききかいひによる交代
-            self._switch.run_interrupt_switch(Interrupt.EMERGENCY)
-
-            # 交代技による交代
-            self._switch.run_interrupt_switch(Interrupt.PIVOT)
-
-            # だっしゅつパックによる割り込みフラグをフェーズに合わせて設定
-            interrupt = Interrupt.ejectpack_on_after_move(
-                self.battle.players.index(player)
-            )
-            self._switch.override_ejectpack_interrupt(interrupt)
-
-            # だっしゅつパックによる交代
-            self._switch.run_interrupt_switch(interrupt)
+            self._resolve_action_interrupts(player)
 
             # 今の行動枠で実際に技を実行した場合のみ、その行動（技実行 +
             # 上記一連の割り込み交代）が完全に終わった直後のフックを発火する
@@ -462,6 +477,20 @@ class TurnController:
             # 「交代先のポケモンが出てきてからおどりこが発動する」）。
             if acted_this_slot and self.battle.winner is None:
                 self._events.emit(Event.ON_AFTER_ACTION_RESOLVED, EventContext(source=attacker))
+
+                # おどりこ等が上記フックの中で battle.run_move() により実行した
+                # コピー技（例: だっしゅつボタン持ちを攻撃するほのおのまい）が、
+                # 新たにだっしゅつボタン／ききかいひ・にげごし／交代技／だっしゅつ
+                # パックの発動条件を満たすことがある。おどりこのコピー行動自体は
+                # Event.ON_AFTER_ACTION_RESOLVED の発火点（このループ）を経由しない
+                # 同期呼び出しのため、コピー技が生んだ割り込みはこの行動枠の中で
+                # 誰にも解決されないまま残ってしまう。この行動枠が最終行動枠だった
+                # 場合、_run_end_phase() はEMERGENCY／EJECTPACK_ON_TURN_END／瀕死交代
+                # しか解決しないためEJECTBUTTON等が解決されず、step()が
+                # has_interrupt()==Trueのままreturnしてしまう不具合があったため、
+                # 同じ割り込み解決シーケンスをもう一度通す。
+                if self.battle.winner is None:
+                    self._resolve_action_interrupts(player)
 
             # 相手のメガシンカに伴う いかく の発動などにより、この行動枠へ
             # 到達する前から自分自身に既に Interrupt.EJECTPACK_REQUESTED が

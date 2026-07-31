@@ -18,7 +18,7 @@ from .utils import (
 )
 
 # pyproject.toml の version と手動で一致させること（tests/test_version.py で検証）
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 __all__ = [
     "Battle",

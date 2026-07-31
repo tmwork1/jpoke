@@ -1451,6 +1451,57 @@ def test_おうごんのからだ_自分対象の変化技は無効化しない(
     assert battle.move_executor.move_applied
 
 
+def test_おどりこ_コピー技が発生させただっしゅつパックの割り込みも解決してから行動が終わる():
+    """おどりこ: コピー技（フェザーダンス）による能力低下が新たにだっしゅつパックの
+    発動条件を満たした場合も、その割り込み交代が解決されてから行動枠が終わる。
+
+    だっしゅつボタン版（`test_おどりこ_コピー技が発生させた割り込み交代も解決してから行動が終わる`）
+    と発生する割り込み種別が異なる（EJECTBUTTON ではなく EJECTPACK_REQUESTED）ため、
+    別ケースとして固定する。"""
+    odoriko = Pokemon("オドリドリ(めらめら)", ability_name="おどりこ", move_names=["つるぎのまい"])
+    dancer = Pokemon("ハガネール", item_name="だっしゅつパック", move_names=["フェザーダンス"])
+    bench = Pokemon("ゼニガメ", move_names=["たいあたり"])
+    # フェザーダンスの能力低下は secondary 機構で実装されているため、
+    # secondary_chance を 0 にすると低下自体が起きずパックが発動しない。
+    # 両者とも変化技のみでダメージ乱数は絡まないため fix_damage は不要。
+    battle = t.start_battle(
+        team0=[odoriko],
+        team1=[dancer, bench],
+        accuracy=100,
+    )
+    player0, player1 = battle.players
+    battle.step({player0: Command.get_move_command(0), player1: Command.get_move_command(0)})
+    assert not battle.has_interrupt()
+    assert battle.actives[1].name == "ゼニガメ"
+
+
+def test_おどりこ_コピー技が発生させた割り込み交代も解決してから行動が終わる():
+    """おどりこ: コピー技（ほのおのまい）が新たにだっしゅつボタンの発動条件を満たした場合、
+    通常の技実行後と同様にその割り込み交代も解決されてから行動枠が終わる。
+    交代先の控えポケモンが実際に場に出ていることまで確認する
+    （TurnController._run_move_phase の割り込み解決がON_AFTER_ACTION_RESOLVED発火より前
+    にしかなく、おどりこのコピー技が生んだ割り込みが誰にも解決されないままstep()が
+    return してしまう不具合の回帰テスト）。"""
+    odoriko = Pokemon("オドリドリ(めらめら)", ability_name="おどりこ",
+                      item_name="たべのこし", move_names=["つるぎのまい"])
+    dancer = Pokemon("ハガネール", item_name="だっしゅつボタン", move_names=["ほのおのまい"])
+    bench = Pokemon("ゼニガメ", move_names=["たいあたり"])
+    battle = t.start_battle(
+        team0=[odoriko],
+        team1=[dancer, bench],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    t.fix_damage(battle, 10)
+    player0, player1 = battle.players
+    battle.step({player0: Command.get_move_command(0), player1: Command.get_move_command(0)})
+    assert not battle.has_interrupt()
+    assert battle.actives[1].name == "ゼニガメ"
+    # 割り込みが残ると is_new_turn() が偽になりターン終了時処理ごとスキップされる
+    # ため、たべのこしの回復が行われたことでON_TURN_ENDの実行も確認する。
+    assert odoriko.hp > odoriko.max_hp - 10
+
+
 def test_おどりこ_まもるで防がれた場合は発動しない():
     """おどりこ: 相手の踊り技がまもるで防がれた場合は発動しない"""
     dancer = Pokemon("コラッタ", move_names=["アクアステップ"], nature="ようき")

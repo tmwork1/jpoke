@@ -7,6 +7,24 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-31
+
+### Fixed
+
+- 木探索（`TreeSearchPlayer`）の2手目以降で、`Battle.phase` に "switch" が
+  引き継がれたまま合法手を問い合わせて `IndexError` になる不具合を修正した。
+  瀕死交代の解決中に作られた観測コピーには `phase="switch"` が凍結されるため、
+  そのコピーを起点に `copy()` / `step()` を重ねた探索ノードでも "switch" が
+  伝播し続け、両者のアクティブが生存しているのに交代コマンドを列挙して
+  合法手が空になっていた。内側plyでは継承した phase に依存せず
+  action フェーズとして合法手を取得するようにした。
+- おどりこのコピー技が新たに発生させた割り込み交代（だっしゅつボタン・
+  だっしゅつパック等）が解決されないまま `Battle.step()` が終了する不具合を
+  修正した。割り込み解決が `Event.ON_AFTER_ACTION_RESOLVED` の発火より前に
+  しかなかったため、おどり技の使用者がそのターンの最終行動枠だった場合に
+  割り込みが取り残され、交代が1ターン遅れるうえ `is_new_turn()` が偽になって
+  そのターンの `Event.ON_TURN_END`（どく・天候ダメージ等）ごとスキップされていた。
+
 ### Added
 
 - `Battle.calc_lethal()` / `core.lethal.calc_lethal()` に `resume_from: LethalHitResult | None`
