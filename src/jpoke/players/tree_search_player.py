@@ -34,7 +34,9 @@ class TreeSearchPlayer(Player):
 
     - `evaluate(battle)`: 葉ノードの盤面評価。既定は残りHP割合差。
     - `fallback(battle)`: 探索できない・再入時の代替方策。既定はランダム。
-    - `estimate_opponent(battle)`: 探索の最上位（`choose_command`/`evaluate_commands`）のたびに呼ばれる推定フック。既定は項目別フック `estimate_opponent_team` / `estimate_opponent_selection` に委譲するテンプレートメソッド。
+    - `estimate_opponent(battle)`: 探索の最上位（`choose_command`/`evaluate_commands`）の
+      たびに呼ばれる推定フック。既定は項目別フック `estimate_opponent_team` /
+      `estimate_opponent_selection` に委譲するテンプレートメソッド。
     - `estimate_opponent_team(battle)`: 相手ポケモンのモデル（技・特性・アイテム）に推定値を書き込むフック。既定は何もしない。
     - `estimate_opponent_selection(battle)`: 相手の選出インデックスの推定を返すフック。既定は `None`（推定しない）。
     - `configure_sim(sim)`: 各分岐の `sim.step()` 実行前に呼ばれるフック。既定は何もしない。
