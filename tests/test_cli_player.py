@@ -1,5 +1,5 @@
 """jpoke.players.CLIPlayer の単体テスト。"""
-from jpoke import Battle, Pokemon, Player
+from jpoke import Battle, Pokemon, Player, describe_command
 from jpoke.enums import Command
 from jpoke.players import CLIPlayer
 
@@ -31,39 +31,6 @@ def _scripted_input(monkeypatch, *responses):
             raise AssertionError("想定以上にinput()が呼ばれました") from None
 
     monkeypatch.setattr("builtins.input", _input)
-
-
-def test__describe_commandが交代コマンドの内容を整形する(monkeypatch):
-    player1 = CLIPlayer(username="CLIPlayer")
-    player1.team = _make_team()
-    player2 = Player(username="Player 2")
-    player2.team = _make_opponent_team()
-
-    battle = Battle(player1, player2, n_selected=2, seed=1)
-    _scripted_input(monkeypatch, "0 1")
-    battle.start()
-
-    with battle.phase_context("action"):
-        text = player1._describe_command(battle, Command.SWITCH_1)
-
-    assert "フシギダネ" in text
-
-
-def test__describe_commandが技コマンドの内容を整形する(monkeypatch):
-    player1 = CLIPlayer(username="CLIPlayer")
-    player1.team = [Pokemon("ピカチュウ", item_name="", move_names=["かみなり"])]
-    player2 = Player(username="Player 2")
-    player2.team = _make_opponent_team()
-
-    battle = Battle(player1, player2, n_selected=1, seed=1)
-    _scripted_input(monkeypatch, "0")
-    battle.start()
-
-    with battle.phase_context("action"):
-        text = player1._describe_command(battle, Command.MOVE_0)
-
-    assert "かみなり" in text
-    assert "PP" in text
 
 
 def test_choose_commandが不正な入力を再入力させる(monkeypatch):
@@ -139,3 +106,36 @@ def test_choose_selectionが有効な入力をパースする(monkeypatch):
     _scripted_input(monkeypatch, "1 0")
 
     assert player1.choose_selection(battle) == [1, 0]
+
+
+def test_describe_commandが交代コマンドの内容を整形する(monkeypatch):
+    player1 = CLIPlayer(username="CLIPlayer")
+    player1.team = _make_team()
+    player2 = Player(username="Player 2")
+    player2.team = _make_opponent_team()
+
+    battle = Battle(player1, player2, n_selected=2, seed=1)
+    _scripted_input(monkeypatch, "0 1")
+    battle.start()
+
+    with battle.phase_context("action"):
+        text = describe_command(battle, player1, Command.SWITCH_1)
+
+    assert "フシギダネ" in text
+
+
+def test_describe_commandが技コマンドの内容を整形する(monkeypatch):
+    player1 = CLIPlayer(username="CLIPlayer")
+    player1.team = [Pokemon("ピカチュウ", item_name="", move_names=["かみなり"])]
+    player2 = Player(username="Player 2")
+    player2.team = _make_opponent_team()
+
+    battle = Battle(player1, player2, n_selected=1, seed=1)
+    _scripted_input(monkeypatch, "0")
+    battle.start()
+
+    with battle.phase_context("action"):
+        text = describe_command(battle, player1, Command.MOVE_0)
+
+    assert "かみなり" in text
+    assert "PP" in text

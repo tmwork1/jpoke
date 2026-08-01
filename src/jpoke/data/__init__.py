@@ -1,4 +1,4 @@
-from .type_chart import TYPE_MODIFIER, TYPES
+from .type_chart import TYPE_MODIFIER, TYPES, get_type_effectiveness
 from .nature import NATURES, NATURE_MODIFIER
 from .ability import ABILITIES
 from .item import ITEMS, get_items_by_regulation

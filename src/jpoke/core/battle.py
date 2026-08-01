@@ -207,6 +207,7 @@ class Battle:
         self.fusion_flare_used_turn: int | None = None  # クロスフレイム: 直近に命中したターン番号（クロスサンダーとの威力2倍判定用）
 
         self._player_states: list[PlayerState] = [PlayerState(ply) for ply in players]
+        self._validate_players(players)
         self._player_states_map: dict[Player, PlayerState] = dict(zip(players, self._player_states))
 
         # リプレイ再現用の対戦開始前チームスナップショット（PlayerState 構築直後、
@@ -247,6 +248,54 @@ class Battle:
             double_battle=double_battle,
         )
         self.test_option: TestOption = TestOption()
+
+    @staticmethod
+    def _validate_players(players: tuple[Player, ...]) -> None:
+        """`_player_states_map` を dict のキーとして構築する前に Player の妥当性を検証する。
+
+        jpoke のエンジン全体は Player の同一性（identity）ベース比較を前提にしている
+        （`self.players.index(player)` 等が `__eq__` に依存する）。以下の2点を満たさない
+        Player を渡すと、Battle 内部の dict がキーとして正しく機能しなくなるため、
+        分かりやすいメッセージ付きの TypeError を早期に送出する。
+
+        1. 各 Player が hashable であること。`@dataclass` で Player を継承したサブクラスは
+           `eq=False` を指定しない限り `__hash__` が None になり、dict のキーに使えない。
+        2. players 同士が `==` で等しくならないこと（同一性ベースの `__eq__` を保つこと）。
+           値ベースの `__eq__` を持つ Player は、たとえ hashable であっても等値な2人が
+           渡されると `dict(zip(...))` が1エントリに潰れて静かに壊れる。
+
+        Notes:
+            衝突チェックに `set(players)` を使わないこと。unhashable な Player が
+            含まれる場合に `set()` 自体が TypeError を送出してしまい、検証1の
+            分かりやすいメッセージを出す前に落ちてしまう。そのため検証1（hash）を
+            先に行い、そのあと総当たりの `==` 比較で検証2を行う。
+
+        Args:
+            players: Battle に渡された Player インスタンスのタプル
+
+        Raises:
+            TypeError: Player が hashable でない場合、または players 同士が
+                値ベースの `__eq__` により等しくなってしまう場合
+        """
+        for ply in players:
+            try:
+                hash(ply)
+            except TypeError:
+                raise TypeError(
+                    f"Player はハッシュ可能である必要があります"
+                    f"（Battle が内部で dict のキーに使うため）: username={ply.username!r}。"
+                    f"@dataclass で Player を継承する場合は @dataclass(eq=False) を"
+                    f"指定するか、__hash__ を明示的に定義してください。"
+                ) from None
+
+        for i, ply_a in enumerate(players):
+            for ply_b in players[i + 1:]:
+                if ply_a == ply_b:
+                    raise TypeError(
+                        "Battle に渡す Player は互いに区別可能（同一性ベースの __eq__）で"
+                        "ある必要があります。値ベースの __eq__ を定義した Player は"
+                        "使用できません。"
+                    )
 
     # update_reference を持たないが deepcopy が必要な可変状態。
     # マネージャー類は _deepcopy_keys() が自動検出するため、ここに列挙するのは
@@ -619,6 +668,26 @@ class Battle:
         """
         index = self._get_player_index(source)
         return self.side_managers[index]
+
+    def active_side_fields(self, source: Player | Pokemon) -> list[Field]:
+        """プレイヤーまたはポケモンの、現在アクティブなサイドフィールドの一覧を取得。
+
+        `get_side(source).fields` は全 `SideFieldName` 分の `Field` が常時
+        インスタンス化された辞書（`core/field_manager.py` 参照）であり、非アクティブな
+        ものも含まれる。本メソッドはその中から `is_active` な `Field` のみを絞り込んで返す。
+
+        戻り値の順序は `SideFieldName`（`types/`）の宣言順で決定的。非アクティブな
+        `Field` は `name` が空文字列を返す（`model/field.py` 参照）ため、名前を集める
+        用途（例: 張られているサイドフィールド名の一覧化）では、辞書を直接 `is_active`
+        で絞り込むのではなく必ず本メソッドを使うこと。
+
+        Args:
+            source: Player または Pokemon インスタンス
+
+        Returns:
+            list[Field]: 現在アクティブなサイドフィールドのリスト
+        """
+        return [f for f in self.get_side(source).fields.values() if f.is_active]
 
     def get_player(self, mon: Pokemon) -> Player:
         """ポケモンが所属するプレイヤーを検索する。
