@@ -27,7 +27,9 @@
 - [Pokemon](#pokemon)
 - [Command](#command)
 - [Move](#move)
+- [タイプ相性ユーティリティ](#タイプ相性ユーティリティ)
 - [PokeAPIユーティリティ](#pokeapiユーティリティ)
+- [盤面テキスト整形（jpoke.text）](#盤面テキスト整形jpoketext)
 - [テストユーティリティ（jpoke.testing）](#テストユーティリティjpoketesting)
 
 ## Battle
@@ -112,6 +114,7 @@ winner = battle.winner
 |---|---|
 | `get_active(player)` | 指定プレイヤーの現在場に出ているポケモンを取得（交代中などは `None`） |
 | `get_team(player)` | 指定プレイヤーの対戦中のチーム（選出漏れの控えも含む）を取得。`player.team` は開始前のスナップショットで対戦中は更新されないため、HP・ひんし・状態異常などバトル中の実際の状態を見るにはこちらを使う |
+| `active_side_fields(source)` | `Player`/`Pokemon` を渡して、現在アクティブなサイドフィールド（`Field`）の一覧を取得。内部の `get_side(source).fields` は全 `SideFieldName` 分の `Field` が非アクティブなものも含め常時インスタンス化された辞書なので、張られている効果名だけを一覧化したい場合は辞書を直接絞り込むのではなく必ずこちらを使う。非アクティブな `Field` は `name` が空文字列を返すため取り違えると空文字列が混ざる |
 | `available_commands(player)` | 現在使用可能な `Command` のリストを取得。`battle.phase` が `"action"`/`"switch"` のときしか呼べず、それ以外の局面（例: 対戦開始前）で呼ぶと `InvalidPhaseError` を送出する。通常は `choose_command()`/`choose_selection()` の中（`battle.step()` 実行中）から呼ぶ形になり、明示的に `phase` を確認する必要はない |
 | `command_to_move(player, command)` | コマンドから `Move` オブジェクトを取得。`choose_command()` の実装で使う |
 | `create_order(player, order, *, terastal=False, megaevol=False)` | poke-env の `create_order()` 互換。`Move`/`Pokemon` オブジェクトから対応する `Command` を組み立てる（`command_to_move()` の逆方向）。`Move` なら技コマンド（`terastal`/`megaevol` 指定でテラスタル/メガシンカを伴う技コマンド）、`Pokemon` なら交代コマンドを返す。poke-envでは `Player.choose_move()` が `create_order(move)` で作った `BattleOrder` を返す仕様である。一方jpokeの `Command` は技・交代等の選択肢を表す単純な `Enum` 値なので、`battle.create_order(self, move)` の戻り値をそのまま `choose_command()` の戻り値として使える |
@@ -120,6 +123,7 @@ winner = battle.winner
 ```python
 active = battle.get_active(player1)
 team = battle.get_team(player1)  # ひんし・HP変化などを反映した実体
+fields = battle.active_side_fields(player1)  # 例: [Field("リフレクター"), ...]
 commands = battle.available_commands(player1)
 move = battle.command_to_move(player1, commands[0])
 command = battle.create_order(player1, move)  # command_to_move()の逆方向
@@ -404,7 +408,8 @@ class StrongestMovePlayer(Player):
             if not command.is_regular_move:
                 return -1
             move = battle.command_to_move(self, command)
-            return move.base_power if move.is_attack else 0
+            # 攻撃技でも base_power が None の技（ちきゅうなげ等の固定ダメージ技）がある
+            return move.base_power if move.is_attack and move.base_power is not None else 0
 
         return max(commands, key=move_power)
 ```
@@ -416,6 +421,42 @@ class StrongestMovePlayer(Player):
 （`RandomPlayer` 等の既存プレイヤーが行動選択に使っているのと同じ乱数源）を使う。ダメージ・
 命中判定など対戦進行そのものに使われる `battle.random` とは独立な系列なので、`Battle(seed=...)`
 で固定した対戦全体の再現性を壊さずに方策側の乱数だけを扱える。
+
+### Player の同一性（identity）に関する制約
+
+jpoke のエンジンは `Player` の**同一性（identity）ベース比較**を前提にしている
+（`Battle` が内部で `dict[Player, ...]` のキーに `Player` を使い、`players.index(player)`
+などが `__eq__` に依存する）。そのため `Battle.__init__` は以下の2点を検証し、違反すると
+原因を説明する `TypeError` を送出する。
+
+1. 渡された各 `Player` が hashable であること
+2. 渡された `Player` 同士が `==` で等しくならないこと（同一性ベースの `__eq__` を保っていること）
+
+値ベースの `__eq__` を定義した `Player`（たとえ hashable であっても）は使用できない。
+
+**`@dataclass` で `Player` を継承する場合は `@dataclass(eq=False)` を指定すること**。
+指定しないと `dataclass` が自動生成する値ベースの `__eq__` により `__hash__` が `None` に
+なり、`Battle(...)` の実行時に `TypeError: Player はハッシュ可能である必要があります` が
+発生する（外部のプレイヤー実装が実際に踏んだ罠）。
+
+```python
+from dataclasses import dataclass
+
+from jpoke import Player
+
+# 良い例: eq=False を指定し、Player 既定の同一性ベース __eq__/__hash__ を維持する
+@dataclass(eq=False)
+class MyPlayer(Player):
+    model_name: str = "gpt"
+
+# 悪い例: eq=False を指定していない
+# → dataclass が値ベースの __eq__ を自動生成し __hash__ が None になるため、
+#   Battle(player_a, player_b) が
+#   TypeError: Player はハッシュ可能である必要があります(...) を送出する
+@dataclass
+class BrokenPlayer(Player):
+    model_name: str = "gpt"
+```
 
 ### `battle_against()`
 
@@ -517,6 +558,7 @@ TreeSearchPlayer(
 | `estimate_opponent_team(battle)` | 相手ポケモンのモデル（`battle.get_active(battle.opponent(self))` の moves/item 等）に技・特性・アイテムの推定値を書き込むフック。既定は何もしない。書き込んだ推定情報から実際に選べるコマンドの列挙は `CommandManager` に任せられ、利用者は `Move`/`Item` など見慣れたドメインオブジェクトを推定するだけでよく `Command` 自体を組み立てる必要はない |
 | `estimate_opponent_selection(battle) -> list[int] \| None` | 相手の選出インデックス（`state.team` 基準、0始まり）の推定を**返り値**で返すフック。`None` なら推定しない（既定）。返したリストは `estimate_opponent` の既定実装が公開済みの選出とマージするため、書き込み先を利用者が直接触る必要はない |
 | `configure_sim(sim)` | `battle.copy()` 直後・`sim.step()` 実行前に呼ばれるフック。既定は何もしない。オーバーライドして、探索中だけ有効にしたい `BattleOption`（命中率固定・ダメージ平均値化など）を `sim` に設定する。実際の `battle` 本体には影響しない |
+| `filter_commands(battle, player, commands)` | 探索候補にする合法手を絞り込むフック。`player is self` なら自分側、そうでなければ相手側（`battle.opponent(self)`）の候補手が渡される。既定は恒等関数（絞り込みなし）で、オーバーライドしない限り探索木は一切変わらない。トップレベル探索と `max_plies>=2` の内側再帰の両方（自分・相手の双方）に適用され、`evaluate_commands()` にも反映される。ただし `fallback()` が割り込み交代の再入時に使う合法手取得には適用されない。フィルタ結果が空リストになった場合は絞り込み前のリストにフォールバックする |
 
 いずれのフックも、観測（`battle`）は毎ターン再構築されるため推定は毎回書き込む・返す
 必要があるが、公開済みの情報（revealed な技・選出）を上書きせず未公開分のみ補うこと
@@ -525,6 +567,33 @@ TreeSearchPlayer(
 「観測スナップショット由来のコマンド」と「推定情報を `CommandManager` に列挙させた
 コマンド」の和集合になる（公開済み候補が失われることはなく、推定由来の候補だけが
 追加される。実対戦の型推定に相当）。
+
+### 候補手の絞り込み（`filter_commands`）
+
+自分の合法手が多く探索コストを抑えたい場合、`filter_commands()` をオーバーライドして
+上位k件に枝刈りできる。
+
+```python
+from jpoke import Battle, Player
+from jpoke.enums import Command
+from jpoke.players import MinimaxPlayer
+
+class PrunedMinimax(MinimaxPlayer):
+    """自分の候補手だけ、威力上位3件に絞り込む例（相手側はそのまま）。"""
+
+    def filter_commands(self, battle: Battle, player: Player, commands: list[Command]) -> list[Command]:
+        if player is not self:
+            return commands
+
+        def power(command: Command) -> int:
+            if not command.is_regular_move:
+                return -1
+            move = battle.command_to_move(player, command)
+            # 攻撃技でも base_power が None の技（ちきゅうなげ等の固定ダメージ技）がある
+            return move.base_power if move.is_attack and move.base_power is not None else 0
+
+        return sorted(commands, key=power, reverse=True)[:3]
+```
 
 ### デバッグ用メソッド
 
@@ -570,9 +639,9 @@ ai_player = KOFocusedPlayer("TreeSearchAI", max_plies=1, max_nodes=50)
 
 | クラス | 概要 |
 |---|---|
-| `RandomPlayer` | 合法手から `battle.decision_random` でランダムに1つ選ぶ。選出もランダム。既定の `Player.choose_command()`（常に先頭のコマンドを選ぶ決定的挙動）では `battle_against()` による統計比較の分散が潰れてしまう問題への対応 |
+| `RandomPlayer` | 合法手から `battle.decision_random` でランダムに1つ選ぶ。選出も `RandomSelectionMixin`（後述）によりランダム。既定の `Player.choose_command()`（常に先頭のコマンドを選ぶ決定的挙動）では `battle_against()` による統計比較の分散が潰れてしまう問題への対応 |
 | `MaxDamagePlayer` | 相手の場のポケモンに与える最低保証ダメージ（乱数下振れ）が最大になる技を選ぶ。技以外のコマンド（交代等）は候補にしない |
-| `CLIPlayer` | 標準入出力で人間が対話的に操作する（`src/jpoke/players/cli_player.py`。手動対戦・デバッグ用） |
+| `CLIPlayer` | 標準入出力で人間が対話的に操作する（`src/jpoke/players/cli_player.py`。手動対戦・デバッグ用）。盤面・コマンドの表示には[jpoke.text](#盤面テキスト整形jpoketext)を使っている |
 
 ```python
 from jpoke.players import RandomPlayer, MaxDamagePlayer
@@ -581,6 +650,27 @@ baseline = RandomPlayer("Baseline")
 challenger = MaxDamagePlayer("Challenger")
 baseline.battle_against(challenger, n_battles=100, seed=1)
 ```
+
+### `RandomSelectionMixin`
+
+`TreeSearchPlayer`/`MinimaxPlayer` など `choose_selection()` を独自実装しない方策クラスは、
+`Player.choose_selection()` の既定実装により「先頭 n 体を決定的に選出」する。ランダムに
+選出したい場合は `jpoke.players.RandomSelectionMixin` を混ぜ込む。`RandomPlayer` も内部で
+この Mixin を使っている。
+
+```python
+from jpoke.players import RandomSelectionMixin, MinimaxPlayer
+
+class MyAI(RandomSelectionMixin, MinimaxPlayer):
+    """選出だけランダムにし、行動選択は MinimaxPlayer に委ねるAI。"""
+
+ai_player = MyAI("MyAI", max_plies=1)
+```
+
+**継承順（MRO）に注意**: `RandomSelectionMixin` を先に継承すること。逆順
+（`class MyAI(MinimaxPlayer, RandomSelectionMixin)`）にすると MRO 上
+`Player.choose_selection`（先頭から決定的に選ぶ既定実装）が先に解決され、
+本 Mixin の実装が使われない。
 
 ## Pokemon
 
@@ -865,6 +955,34 @@ move.modify_pp(-1)   # 技を1回使用した分PPを減らす
 move.modify_pp(-99)  # PPを0にする（わるあがきを誘発させたい場合など）
 ```
 
+## タイプ相性ユーティリティ
+
+`src/jpoke/data/type_chart.py`。攻撃技のタイプと防御側の複数タイプから、静的な相性表を
+参照して相性倍率を計算する。
+
+```python
+get_type_effectiveness(attack_type: Type, defense_types: Iterable[Type]) -> float
+```
+
+トップレベルから `from jpoke import get_type_effectiveness, TYPE_MODIFIER` で利用できる。
+`defense_types` に含まれる各タイプについて `TYPE_MODIFIER` の相性倍率を掛け合わせた値を
+返す（単タイプなら1個、複合タイプなら2個の相性を掛け合わせる）。`attack_type=""`
+（タイプなし技）は常に `1.0` を返し、`defense_types` に `""` が含まれる場合もその要素は
+`1.0` として扱われる。
+
+> **注意**: 本関数は**静的な相性表（`TYPE_MODIFIER`）の参照のみ**を行う。バトル文脈による
+> 特例——じめん技×浮いている相手（無効）、浮いていないひこうタイプへのじめん技（等倍）、
+> ステラ技×テラスタル状態（2倍）、特性・アイテム・技ハンドラ（ふゆう・きもったま等）に
+> よる補正——は**一切含まない**。バトル文脈込みの実際のダメージが必要な場合は
+> [`Battle.calc_damages()`](#ダメージ計算系) を使うこと。
+
+```python
+from jpoke import get_type_effectiveness, TYPE_MODIFIER
+
+modifier = get_type_effectiveness("でんき", ["みず", "ひこう"])
+print(modifier)  # みず:2倍 × ひこう:2倍 = 4.0（静的表のみを参照した理論値）
+```
+
 ## PokeAPIユーティリティ
 
 `src/jpoke/utils/pokeapi.py`。ポケモン・アイテム・タイプの和名から
@@ -899,6 +1017,48 @@ print(get_tera_type_image_url("でんき"))
 （非公式アイテム名など）。全件の名前解決可否・URL到達性を確認したい場合は
 `scripts/pokeapi/validate_urls.py` を手動実行する（PokeAPI/GitHubへの
 アクセスが多数発生するため、テストスイートには含めていない）。
+
+## 盤面テキスト整形（jpoke.text）
+
+`src/jpoke/text.py`。盤面・コマンドを人間可読なテキストに整形する公開API。
+`CLIPlayer`（[MinimaxPlayer#その他の標準実装](#その他の標準実装jpokeplayers)参照）
+もこれを使って表示している。
+
+```python
+from jpoke import describe_pokemon, describe_command, render_battle_state
+
+describe_pokemon(mon: Pokemon | None) -> str
+describe_command(battle: Battle, player: Player, command: Command) -> str
+render_battle_state(battle: Battle, viewer: Player, *, include_logs: bool = True) -> list[str]
+```
+
+| API | 概要 |
+|---|---|
+| `describe_pokemon(mon)` | ポケモン1体のHP・状態異常・ランク補正・テラスタル状況を1行の文字列にする。`mon=None`（場に出ていない）なら `"(場に出ていない)"` を返す |
+| `describe_command(battle, player, command)` | コマンド1件（技・交代・わるあがき等）を人間可読な説明文にする |
+| `render_battle_state(battle, viewer, *, include_logs=True)` | ターン数・自分/相手のポケモン・天候・フィールド・場の状態をまとめた行リストを返す。`include_logs=True`（既定）で先頭に現在ターン分のログ（`battle.get_log_lines()`）を含める |
+
+`Battle.get_log_lines()` と同じく戻り値が `list[str]` なのは、出力先を呼び出し側に委ねる
+ため。`print()` するもよし、`"\n".join()` してLLMへのプロンプトに含めるもよい。
+
+**観測視点の注意**: `choose_command()` に渡される `battle` は観測コピーであり、相手ポケモンは
+HP割合を保ったまま最大HPが再計算されている（`core/observation_builder.py` 参照）。そのため
+`render_battle_state()`/`describe_pokemon()` が表示する相手の `hp`/`max_hp` の**絶対値は
+真値ではなく、割合のみが正しい**。
+
+合法手を番号付きリストにして外部の意思決定器（LLM等）に渡す例:
+
+```python
+def choose_command(self, battle: Battle) -> Command:
+    commands = battle.available_commands(self)
+    lines = render_battle_state(battle, self)
+    lines.append("行動を選んでください:")
+    for i, command in enumerate(commands):
+        lines.append(f"{i}: {describe_command(battle, self, command)}")
+    prompt = "\n".join(lines)
+    choice = ask_llm(prompt)  # 外部LLM呼び出し（利用者側で実装）
+    return commands[choice]
+```
 
 ## テストユーティリティ（jpoke.testing）
 

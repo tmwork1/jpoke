@@ -22,6 +22,7 @@ from .utils import (
     download_pokemon_image,
     download_item_image,
 )
+from .text import describe_pokemon, describe_command, render_battle_state
 
 # pyproject.toml の version と手動で一致させること（tests/test_version.py で検証）
 __version__ = "0.3.0"
@@ -46,4 +47,7 @@ __all__ = [
     "get_tera_type_image_url",
     "download_pokemon_image",
     "download_item_image",
+    "describe_pokemon",
+    "describe_command",
+    "render_battle_state",
 ]
