@@ -6,7 +6,13 @@
 from .core import Battle, Player
 from .enums import Command
 from .model import Pokemon, Ability, Item, Move
-from .data import POKEDEX, get_pokemon_by_regulation, get_items_by_regulation
+from .data import (
+    POKEDEX,
+    TYPE_MODIFIER,
+    get_pokemon_by_regulation,
+    get_items_by_regulation,
+    get_type_effectiveness,
+)
 from .utils import (
     get_pokeapi_url,
     get_pokemon_image_url,
@@ -29,8 +35,10 @@ __all__ = [
     "Item",
     "Move",
     "POKEDEX",
+    "TYPE_MODIFIER",
     "get_pokemon_by_regulation",
     "get_items_by_regulation",
+    "get_type_effectiveness",
     "get_pokeapi_url",
     "get_pokemon_image_url",
     "get_item_image_url",

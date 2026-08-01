@@ -1,3 +1,7 @@
+from collections.abc import Iterable
+
+from jpoke.types import Type
+
 TYPE_MODIFIER = {
     "": {
         "": 1.0,
@@ -441,3 +445,32 @@ TYPE_MODIFIER = {
 }
 
 TYPES = list(TYPE_MODIFIER.keys())
+
+
+def get_type_effectiveness(attack_type: Type, defense_types: Iterable[Type]) -> float:
+    """攻撃技のタイプと防御側の複数タイプから、タイプ相性倍率を計算する。
+
+    `defense_types` に含まれる各タイプについて `TYPE_MODIFIER` の相性倍率を
+    掛け合わせた値を返す（単タイプなら1個、複合タイプなら2個の相性を掛け合わせる）。
+
+    注意:
+        - 本関数は **静的な相性表 (`TYPE_MODIFIER`) の参照のみ** を行う。バトル文脈に
+          よる特例——じめん技×浮いている相手（無効）、浮いていないひこうタイプへの
+          じめん技（等倍）、ステラ技×テラスタル状態（2倍）、特性・アイテム・技ハンドラ
+          （ふゆう・きもったま等）による補正——は **一切含まない**。
+        - `attack_type=""`（タイプなし技）は常に 1.0 を返す。`defense_types` に `""`
+          （タイプなしのポケモン等）が含まれる場合も、その要素は 1.0 として扱う。
+        - バトル文脈込みの実際のダメージが必要な場合は `Battle.calc_damages()` を使うこと。
+
+    Args:
+        attack_type: 攻撃技のタイプ
+        defense_types: 防御側ポケモンのタイプ（1つまたは複数）
+
+    Returns:
+        float: タイプ相性倍率（0.0 / 0.25 / 0.5 / 1.0 / 2.0 / 4.0 等）
+    """
+    modifier = 1.0
+    atk_chart = TYPE_MODIFIER.get(attack_type, {})
+    for def_type in defense_types:
+        modifier *= atk_chart.get(def_type, 1.0)
+    return modifier
