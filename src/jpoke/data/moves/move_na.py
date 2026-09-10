@@ -239,6 +239,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "ねがいごと": MoveData(
+        pp=8,
         flags={"heal"},
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
