@@ -1,6 +1,6 @@
 from typing import Literal
 
-Regulation = Literal["M-A", "M-B"]
+Regulation = Literal["M-A", "M-B", "M-C"]
 
 BattlePhase = Literal["", "selection", "action", "switch"]
 CommandType = Literal["any", "move", "switch"]
