@@ -15224,7 +15224,7 @@
       "ゴースト"
     ],
     "abilities": [
-      "マジックミラー"
+      "きれあじ"
     ],
     "baseStats": {
       "hp": 65,
@@ -18634,7 +18634,7 @@
       "ドラゴン"
     ],
     "abilities": [
-      "すなのちから"
+      "ふゆう"
     ],
     "baseStats": {
       "hp": 108,
@@ -18797,7 +18797,7 @@
       "はがね"
     ],
     "abilities": [
-      "てきおうりょく"
+      "はどうのぼうご"
     ],
     "baseStats": {
       "hp": 70,
@@ -31743,6 +31743,37 @@
     },
     "requiredItem": ""
   },
+  "メガグソクムシャ": {
+    "showdown_id": "golisopodmega",
+    "showdown_name": "Golisopod-Mega",
+    "num": 768,
+    "forme": "Mega",
+    "baseForme": "",
+    "types": [
+      "むし",
+      "はがね"
+    ],
+    "abilities": [
+      "かたいツメ"
+    ],
+    "baseStats": {
+      "hp": 75,
+      "atk": 150,
+      "def": 175,
+      "spa": 70,
+      "spd": 120,
+      "spe": 40
+    },
+    "weight": 148,
+    "height": 2.3,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "グソクムシャナイト"
+  },
   "スナバァ": {
     "showdown_id": "sandygast",
     "showdown_name": "Sandygast",
@@ -40879,6 +40910,38 @@
       "F": 0.5
     },
     "requiredItem": ""
+  },
+  "メガセグレイブ": {
+    "showdown_id": "baxcaliburmega",
+    "showdown_name": "Baxcalibur-Mega",
+    "num": 998,
+    "forme": "Mega",
+    "baseForme": "",
+    "types": [
+      "ドラゴン",
+      "こおり"
+    ],
+    "abilities": [
+      "ねつこうかん",
+      "アイスボディ"
+    ],
+    "baseStats": {
+      "hp": 115,
+      "atk": 175,
+      "def": 117,
+      "spa": 105,
+      "spd": 101,
+      "spe": 87
+    },
+    "weight": 315,
+    "height": 2.1,
+    "prevo": "",
+    "evos": [],
+    "genderRatio": {
+      "M": 0.5,
+      "F": 0.5
+    },
+    "requiredItem": "セグレイブナイト"
   },
   "コレクレー": {
     "showdown_id": "gimmighoul",

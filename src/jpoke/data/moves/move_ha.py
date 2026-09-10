@@ -577,11 +577,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
     ),
     "びりびりちくちく": MoveData(
-        type="でんき",
-        category="physical",
-        pp=10,
-        power=80,
-        accuracy=100,
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(

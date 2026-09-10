@@ -1456,6 +1456,13 @@ def どくバリ_modify_power_by_type(battle: Battle, ctx: AttackContext, value:
     return _modify_power_by_type(ctx.move, value, type_="どく", modifier=4915)
 
 
+def ながねぎ_boost_critical_rank(_battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """ながねぎ: カモネギ・ネギガナイトの急所ランクを+2する。"""
+    if ctx.attacker.name in {"カモネギ", "ネギガナイト"}:
+        value += 2
+    return HandlerReturn(value=value)
+
+
 def ナゾのみ_heal_on_super_effective(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ナゾのみ: 効果抜群のダメージを受けたときHPを最大HPの25%回復する。
 

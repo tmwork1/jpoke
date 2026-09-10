@@ -725,11 +725,6 @@ MOVES_TA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "でんこうそうげき": MoveData(
-        type="でんき",
-        category="physical",
-        pp=5,
-        power=120,
-        accuracy=100,
         flags={"contact"},
         handlers={
             Event.ON_TRY_ACTION: h.MoveHandler(
@@ -1208,11 +1203,6 @@ MOVES_TA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "ドラムアタック": MoveData(
-        type="くさ",
-        category="physical",
-        pp=12,
-        power=80,
-        accuracy=100,
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(

@@ -316,6 +316,34 @@
       "basePower": 90
     }
   },
+  "かなしばり": {
+    "showdown_id": "disable",
+    "showdown_name": "Disable",
+    "num": 50,
+    "type": "ノーマル",
+    "category": "Status",
+    "pp": 20,
+    "power": null,
+    "accuracy": 100,
+    "priority": 0,
+    "critRatio": 1,
+    "target": "normal",
+    "multihit": [],
+    "flags": [
+      "bypasssub",
+      "metronome",
+      "mirror",
+      "protect",
+      "reflectable"
+    ],
+    "spreadHit": false,
+    "isZ": false,
+    "isMax": false,
+    "zMove": {
+      "effect": "clearnegativeboost"
+    },
+    "maxMove": null
+  },
   "ドラゴンエール": {
     "showdown_id": "dragoncheer",
     "showdown_name": "Dragon Cheer",
@@ -766,6 +794,32 @@
       "basePower": 140
     }
   },
+  "ミルクのみ": {
+    "showdown_id": "milkdrink",
+    "showdown_name": "Milk Drink",
+    "num": 208,
+    "type": "ノーマル",
+    "category": "Status",
+    "pp": 8,
+    "power": null,
+    "accuracy": null,
+    "priority": 0,
+    "critRatio": 1,
+    "target": "adjacentAllyOrSelf",
+    "multihit": [],
+    "flags": [
+      "heal",
+      "metronome",
+      "snatch"
+    ],
+    "spreadHit": false,
+    "isZ": false,
+    "isMax": false,
+    "zMove": {
+      "effect": "clearnegativeboost"
+    },
+    "maxMove": null
+  },
   "ムーンフォース": {
     "showdown_id": "moonblast",
     "showdown_name": "Moonblast",
@@ -879,6 +933,30 @@
     "maxMove": {
       "basePower": 120
     }
+  },
+  "たこがため": {
+    "showdown_id": "octolock",
+    "showdown_name": "Octolock",
+    "num": 753,
+    "type": "かくとう",
+    "category": "Status",
+    "pp": 16,
+    "power": null,
+    "accuracy": 100,
+    "priority": 0,
+    "critRatio": 1,
+    "target": "normal",
+    "multihit": [],
+    "flags": [
+      "metronome",
+      "mirror",
+      "protect"
+    ],
+    "spreadHit": false,
+    "isZ": false,
+    "isMax": false,
+    "zMove": null,
+    "maxMove": null
   },
   "パワーシフト": {
     "showdown_id": "powershift",
@@ -1069,6 +1147,36 @@
       "basePower": 120
     }
   },
+  "きりさく": {
+    "showdown_id": "slash",
+    "showdown_name": "Slash",
+    "num": 163,
+    "type": "ノーマル",
+    "category": "Physical",
+    "pp": 20,
+    "power": 80,
+    "accuracy": 100,
+    "priority": 0,
+    "critRatio": 2,
+    "target": "normal",
+    "multihit": [],
+    "flags": [
+      "contact",
+      "metronome",
+      "mirror",
+      "protect",
+      "slicing"
+    ],
+    "spreadHit": false,
+    "isZ": false,
+    "isMax": false,
+    "zMove": {
+      "basePower": 160
+    },
+    "maxMove": {
+      "basePower": 130
+    }
+  },
   "トラバサミ": {
     "showdown_id": "snaptrap",
     "showdown_name": "Snap Trap",
@@ -1095,6 +1203,34 @@
     },
     "maxMove": {
       "basePower": 90
+    }
+  },
+  "ねらいうち": {
+    "showdown_id": "snipeshot",
+    "showdown_name": "Snipe Shot",
+    "num": 745,
+    "type": "みず",
+    "category": "Special",
+    "pp": 16,
+    "power": 85,
+    "accuracy": 100,
+    "priority": 0,
+    "critRatio": 2,
+    "target": "normal",
+    "multihit": [],
+    "flags": [
+      "metronome",
+      "mirror",
+      "protect"
+    ],
+    "spreadHit": false,
+    "isZ": false,
+    "isMax": false,
+    "zMove": {
+      "basePower": 160
+    },
+    "maxMove": {
+      "basePower": 130
     }
   },
   "ゆきげしき": {
@@ -1200,6 +1336,36 @@
     "maxMove": {
       "basePower": 80
     }
+  },
+  "ちからをすいとる": {
+    "showdown_id": "strengthsap",
+    "showdown_name": "Strength Sap",
+    "num": 668,
+    "type": "くさ",
+    "category": "Status",
+    "pp": 8,
+    "power": null,
+    "accuracy": 100,
+    "priority": 0,
+    "critRatio": 1,
+    "target": "normal",
+    "multihit": [],
+    "flags": [
+      "heal",
+      "metronome",
+      "mirror",
+      "protect",
+      "reflectable"
+    ],
+    "spreadHit": false,
+    "isZ": false,
+    "isMax": false,
+    "zMove": {
+      "boost": {
+        "def": 1
+      }
+    },
+    "maxMove": null
   },
   "ほおばる": {
     "showdown_id": "stuffcheeks",
@@ -1344,6 +1510,34 @@
     "maxMove": {
       "basePower": 130
     }
+  },
+  "ねがいごと": {
+    "showdown_id": "wish",
+    "showdown_name": "Wish",
+    "num": 273,
+    "type": "ノーマル",
+    "category": "Status",
+    "pp": 8,
+    "power": null,
+    "accuracy": null,
+    "priority": 0,
+    "critRatio": 1,
+    "target": "self",
+    "multihit": [],
+    "flags": [
+      "heal",
+      "metronome",
+      "snatch"
+    ],
+    "spreadHit": false,
+    "isZ": false,
+    "isMax": false,
+    "zMove": {
+      "boost": {
+        "spd": 1
+      }
+    },
+    "maxMove": null
   },
   "アクセルロック": {
     "showdown_id": "accelerock",
@@ -3499,6 +3693,29 @@
       "basePower": 75
     }
   },
+  "コートチェンジ": {
+    "showdown_id": "courtchange",
+    "showdown_name": "Court Change",
+    "num": 756,
+    "type": "ノーマル",
+    "category": "Status",
+    "pp": 12,
+    "power": null,
+    "accuracy": 100,
+    "priority": 0,
+    "critRatio": 1,
+    "target": "all",
+    "multihit": [],
+    "flags": [
+      "metronome",
+      "mirror"
+    ],
+    "spreadHit": false,
+    "isZ": false,
+    "isMax": false,
+    "zMove": null,
+    "maxMove": null
+  },
   "ほしがる": {
     "showdown_id": "covet",
     "showdown_name": "Covet",
@@ -3870,34 +4087,6 @@
       "basePower": 130
     }
   },
-  "かなしばり": {
-    "showdown_id": "disable",
-    "showdown_name": "Disable",
-    "num": 50,
-    "type": "ノーマル",
-    "category": "Status",
-    "pp": 20,
-    "power": null,
-    "accuracy": 100,
-    "priority": 0,
-    "critRatio": 1,
-    "target": "normal",
-    "multihit": [],
-    "flags": [
-      "bypasssub",
-      "metronome",
-      "mirror",
-      "protect",
-      "reflectable"
-    ],
-    "spreadHit": false,
-    "isZ": false,
-    "isMax": false,
-    "zMove": {
-      "effect": "clearnegativeboost"
-    },
-    "maxMove": null
-  },
   "ほうでん": {
     "showdown_id": "discharge",
     "showdown_name": "Discharge",
@@ -4020,6 +4209,34 @@
     },
     "maxMove": {
       "basePower": 120
+    }
+  },
+  "でんこうそうげき": {
+    "showdown_id": "doubleshock",
+    "showdown_name": "Double Shock",
+    "num": 892,
+    "type": "でんき",
+    "category": "Physical",
+    "pp": 8,
+    "power": 120,
+    "accuracy": 100,
+    "priority": 0,
+    "critRatio": 1,
+    "target": "normal",
+    "multihit": [],
+    "flags": [
+      "contact",
+      "mirror",
+      "protect"
+    ],
+    "spreadHit": false,
+    "isZ": false,
+    "isMax": false,
+    "zMove": {
+      "basePower": 190
+    },
+    "maxMove": {
+      "basePower": 140
     }
   },
   "かげぶんしん": {
@@ -4331,6 +4548,33 @@
     "flags": [
       "contact",
       "metronome",
+      "mirror",
+      "protect"
+    ],
+    "spreadHit": false,
+    "isZ": false,
+    "isMax": false,
+    "zMove": {
+      "basePower": 160
+    },
+    "maxMove": {
+      "basePower": 130
+    }
+  },
+  "ドラムアタック": {
+    "showdown_id": "drumbeating",
+    "showdown_name": "Drum Beating",
+    "num": 778,
+    "type": "くさ",
+    "category": "Physical",
+    "pp": 12,
+    "power": 80,
+    "accuracy": 100,
+    "priority": 0,
+    "critRatio": 1,
+    "target": "normal",
+    "multihit": [],
+    "flags": [
       "mirror",
       "protect"
     ],
@@ -6007,6 +6251,35 @@
       "basePower": 150
     }
   },
+  "きょけんとつげき": {
+    "showdown_id": "glaiverush",
+    "showdown_name": "Glaive Rush",
+    "num": 862,
+    "type": "ドラゴン",
+    "category": "Physical",
+    "pp": 8,
+    "power": 120,
+    "accuracy": 100,
+    "priority": 0,
+    "critRatio": 1,
+    "target": "normal",
+    "multihit": [],
+    "flags": [
+      "contact",
+      "metronome",
+      "mirror",
+      "protect"
+    ],
+    "spreadHit": false,
+    "isZ": false,
+    "isMax": false,
+    "zMove": {
+      "basePower": 190
+    },
+    "maxMove": {
+      "basePower": 140
+    }
+  },
   "へびにらみ": {
     "showdown_id": "glare",
     "showdown_name": "Glare",
@@ -7412,6 +7685,36 @@
     "isMax": false,
     "zMove": {
       "basePower": 180
+    },
+    "maxMove": {
+      "basePower": 130
+    }
+  },
+  "くらいつく": {
+    "showdown_id": "jawlock",
+    "showdown_name": "Jaw Lock",
+    "num": 746,
+    "type": "あく",
+    "category": "Physical",
+    "pp": 12,
+    "power": 80,
+    "accuracy": 100,
+    "priority": 0,
+    "critRatio": 1,
+    "target": "normal",
+    "multihit": [],
+    "flags": [
+      "bite",
+      "contact",
+      "metronome",
+      "mirror",
+      "protect"
+    ],
+    "spreadHit": false,
+    "isZ": false,
+    "isMax": false,
+    "zMove": {
+      "basePower": 160
     },
     "maxMove": {
       "basePower": 130
@@ -8828,6 +9131,35 @@
       "basePower": 140
     }
   },
+  "オーバードライブ": {
+    "showdown_id": "overdrive",
+    "showdown_name": "Overdrive",
+    "num": 786,
+    "type": "でんき",
+    "category": "Special",
+    "pp": 12,
+    "power": 80,
+    "accuracy": 100,
+    "priority": 0,
+    "critRatio": 1,
+    "target": "allAdjacentFoes",
+    "multihit": [],
+    "flags": [
+      "bypasssub",
+      "mirror",
+      "protect",
+      "sound"
+    ],
+    "spreadHit": false,
+    "isZ": false,
+    "isMax": false,
+    "zMove": {
+      "basePower": 160
+    },
+    "maxMove": {
+      "basePower": 130
+    }
+  },
   "オーバーヒート": {
     "showdown_id": "overheat",
     "showdown_name": "Overheat",
@@ -9786,6 +10118,35 @@
       "basePower": 130
     }
   },
+  "かえんボール": {
+    "showdown_id": "pyroball",
+    "showdown_name": "Pyro Ball",
+    "num": 780,
+    "type": "ほのお",
+    "category": "Physical",
+    "pp": 8,
+    "power": 120,
+    "accuracy": 90,
+    "priority": 0,
+    "critRatio": 1,
+    "target": "normal",
+    "multihit": [],
+    "flags": [
+      "bullet",
+      "defrost",
+      "mirror",
+      "protect"
+    ],
+    "spreadHit": false,
+    "isZ": false,
+    "isMax": false,
+    "zMove": {
+      "basePower": 190
+    },
+    "maxMove": {
+      "basePower": 140
+    }
+  },
   "さきおくり": {
     "showdown_id": "quash",
     "showdown_name": "Quash",
@@ -10223,6 +10584,29 @@
     "maxMove": {
       "basePower": 100
     }
+  },
+  "さいきのいのり": {
+    "showdown_id": "revivalblessing",
+    "showdown_name": "Revival Blessing",
+    "num": 863,
+    "type": "ノーマル",
+    "category": "Status",
+    "pp": 1,
+    "power": null,
+    "accuracy": null,
+    "priority": 0,
+    "critRatio": 1,
+    "target": "self",
+    "multihit": [],
+    "flags": [
+      "heal",
+      "nosketch"
+    ],
+    "spreadHit": false,
+    "isZ": false,
+    "isMax": false,
+    "zMove": null,
+    "maxMove": null
   },
   "ライジングボルト": {
     "showdown_id": "risingvoltage",
@@ -11048,6 +11432,31 @@
     "isZ": false,
     "isMax": false,
     "zMove": null,
+    "maxMove": null
+  },
+  "ギアチェンジ": {
+    "showdown_id": "shiftgear",
+    "showdown_name": "Shift Gear",
+    "num": 508,
+    "type": "はがね",
+    "category": "Status",
+    "pp": 12,
+    "power": null,
+    "accuracy": null,
+    "priority": 0,
+    "critRatio": 1,
+    "target": "self",
+    "multihit": [],
+    "flags": [
+      "metronome",
+      "snatch"
+    ],
+    "spreadHit": false,
+    "isZ": false,
+    "isMax": false,
+    "zMove": {
+      "effect": "clearnegativeboost"
+    },
     "maxMove": null
   },
   "シンプルビーム": {
@@ -12083,36 +12492,6 @@
     "maxMove": {
       "basePower": 130
     }
-  },
-  "ちからをすいとる": {
-    "showdown_id": "strengthsap",
-    "showdown_name": "Strength Sap",
-    "num": 668,
-    "type": "くさ",
-    "category": "Status",
-    "pp": 12,
-    "power": null,
-    "accuracy": 100,
-    "priority": 0,
-    "critRatio": 1,
-    "target": "normal",
-    "multihit": [],
-    "flags": [
-      "heal",
-      "metronome",
-      "mirror",
-      "protect",
-      "reflectable"
-    ],
-    "spreadHit": false,
-    "isZ": false,
-    "isMax": false,
-    "zMove": {
-      "boost": {
-        "def": 1
-      }
-    },
-    "maxMove": null
   },
   "いとをはく": {
     "showdown_id": "stringshot",
@@ -14039,34 +14418,6 @@
     },
     "maxMove": null
   },
-  "ねがいごと": {
-    "showdown_id": "wish",
-    "showdown_name": "Wish",
-    "num": 273,
-    "type": "ノーマル",
-    "category": "Status",
-    "pp": 12,
-    "power": null,
-    "accuracy": null,
-    "priority": 0,
-    "critRatio": 1,
-    "target": "self",
-    "multihit": [],
-    "flags": [
-      "heal",
-      "metronome",
-      "snatch"
-    ],
-    "spreadHit": false,
-    "isZ": false,
-    "isMax": false,
-    "zMove": {
-      "boost": {
-        "spd": 1
-      }
-    },
-    "maxMove": null
-  },
   "ワンダールーム": {
     "showdown_id": "wonderroom",
     "showdown_name": "Wonder Room",
@@ -14279,6 +14630,35 @@
     "pp": 16,
     "power": 80,
     "accuracy": 90,
+    "priority": 0,
+    "critRatio": 1,
+    "target": "normal",
+    "multihit": [],
+    "flags": [
+      "contact",
+      "metronome",
+      "mirror",
+      "protect"
+    ],
+    "spreadHit": false,
+    "isZ": false,
+    "isMax": false,
+    "zMove": {
+      "basePower": 160
+    },
+    "maxMove": {
+      "basePower": 130
+    }
+  },
+  "びりびりちくちく": {
+    "showdown_id": "zingzap",
+    "showdown_name": "Zing Zap",
+    "num": 716,
+    "type": "でんき",
+    "category": "Physical",
+    "pp": 12,
+    "power": 80,
+    "accuracy": 100,
     "priority": 0,
     "critRatio": 1,
     "target": "normal",

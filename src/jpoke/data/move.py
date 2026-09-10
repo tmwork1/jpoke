@@ -104,7 +104,8 @@ def common_setup() -> None:
         data.exist = True
         data.type = p["type"]
         data.category = _CATEGORY_MAP[p["category"]]
-        data.pp = p["pp"]
+        if data.pp == 0:
+            data.pp = p["pp"]
         data.accuracy = p["accuracy"]
         data.priority = p["priority"]
         if data.power is None:

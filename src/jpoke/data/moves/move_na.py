@@ -386,12 +386,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "ねらいうち": MoveData(
-        type="みず",
-        category="special",
-        pp=15,
-        power=80,
-        accuracy=100,
-        crit_ratio=1,
         handlers={},  # 追加効果なし
     ),
     "ねをはる": MoveData(

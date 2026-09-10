@@ -2435,6 +2435,15 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             )
         }
     ),
+    "はどうのぼうご": AbilityData(
+        flags={"mold_breaker_ignorable"},
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
+                h.はどうのぼうご_reduce_damage,
+                subject_spec="defender:self",
+            ),
+        }
+    ),
     "ハドロンエンジン": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(

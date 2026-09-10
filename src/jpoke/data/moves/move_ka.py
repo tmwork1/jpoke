@@ -125,11 +125,6 @@ MOVES_KA: dict[MoveName, MoveData] = {
         }
     ),
     "かえんボール": MoveData(
-        type="ほのお",
-        category="physical",
-        pp=5,
-        power=120,
-        accuracy=90,
         flags={"bullet", "secondary_effect", "thaw", "self_thaw"},
         handlers={
             Event.ON_TRY_ACTION: h.MoveHandler(
@@ -492,11 +487,6 @@ MOVES_KA: dict[MoveName, MoveData] = {
         }
     ),
     "きょけんとつげき": MoveData(
-        type="ドラゴン",
-        category="physical",
-        pp=5,
-        power=120,
-        accuracy=100,
         flags={"contact"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
@@ -541,12 +531,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         }
     ),
     "きりさく": MoveData(
-        type="ノーマル",
-        category="physical",
-        pp=20,
-        power=70,
-        accuracy=100,
-        crit_ratio=1,
+        power=80,  # M-Cで70から80に変更
         flags={"contact", "slash"},
         handlers={},  # 追加効果なし
     ),
@@ -580,10 +565,6 @@ MOVES_KA: dict[MoveName, MoveData] = {
         }
     ),
     "ギアチェンジ": MoveData(
-        type="はがね",
-        category="status",
-        pp=10,
-        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ギアチェンジ_boost_attacker_atk_spe,
@@ -669,11 +650,6 @@ MOVES_KA: dict[MoveName, MoveData] = {
         }
     ),
     "くらいつく": MoveData(
-        type="あく",
-        category="physical",
-        pp=10,
-        power=80,
-        accuracy=100,
         flags={"bite", "contact"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
@@ -1033,10 +1009,6 @@ MOVES_KA: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "コートチェンジ": MoveData(
-        type="ノーマル",
-        category="status",
-        pp=10,
-        target="field",
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.コートチェンジ_can_apply,

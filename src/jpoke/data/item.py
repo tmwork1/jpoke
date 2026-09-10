@@ -1478,6 +1478,15 @@ ITEMS: dict[ItemName, ItemData] = {
     "ドラゴンメモリ": ItemData(
         fling_power=50,
     ),
+    "ながねぎ": ItemData(
+        fling_power=60,
+        handlers={
+            Event.ON_CALC_CRITICAL_RANK: h.ItemHandler(
+                h.ながねぎ_boost_critical_rank,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "ナゾのみ": ItemData(
         fling_power=10,
         handlers={

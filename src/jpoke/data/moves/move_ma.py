@@ -411,10 +411,6 @@ MOVES_MA: dict[MoveName, MoveData] = {
         }
     ),
     "ミルクのみ": MoveData(
-        type="ノーマル",
-        category="status",
-        pp=8,
-        target="self",
         flags={"heal"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
