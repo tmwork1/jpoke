@@ -588,16 +588,19 @@ class Pokemon:
         """覚えられる技名の集合を取得する。
 
         シングルバトルで戦闘に一切影響しない技（MoveFlag「no_effect_in_singles」参照）は
-        あらかじめ除外する。data.moveの遅延インポートは、data.pokedex経由の循環インポートを
-        避けるため（learnsetローダー自体はps-champ-ja由来の生データのみを保持する）。
+        あらかじめ除外する。ps-champ-ja側のlearnsetに載っているが`MOVES`未実装の技
+        （日次同期で新たに解禁された種族の専用技等）も、jpoke側で使用できないため除外する。
+        data.moveの遅延インポートは、data.pokedex経由の循環インポートを避けるため
+        （learnsetローダー自体はps-champ-ja由来の生データのみを保持する）。
 
         Returns:
-            覚えられる技名の集合（ps-champ-ja由来のスナップショットから、対戦に影響しない技を除いたもの）
+            覚えられる技名の集合（ps-champ-ja由来のスナップショットから、対戦に影響しない技・
+            jpoke未実装の技を除いたもの）
         """
         from jpoke.data.move import MOVES
         return frozenset(
             move for move in self.data.learnset
-            if "no_effect_in_singles" not in MOVES[move].flags
+            if move in MOVES and "no_effect_in_singles" not in MOVES[move].flags
         )
 
     def can_learn(self, move_name: MoveName) -> bool:
