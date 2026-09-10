@@ -21,6 +21,7 @@ class PokemonData:
         self.base: list[int] = [stats["hp"], stats["atk"], stats["def"], stats["spa"], stats["spd"], stats["spe"]]
         self.learnset: list[MoveName] = learnset if learnset is not None else []
         self.regulations: set[Regulation] = field(default_factory=set)
+        self.banned_moves: dict[Regulation, frozenset[MoveName]] = {}
 
         if not self.abilities:
             self.abilities = [""]
