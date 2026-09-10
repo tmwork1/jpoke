@@ -7,6 +7,45 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-11
+
+### Added
+
+- `jpoke.text` — 盤面テキスト整形API（`describe_pokemon` / `describe_command` /
+  `render_battle_state`）を新設。`CLIPlayer` に逐語コピーされがちだった盤面・
+  コマンドの人間可読テキスト化を公開APIとして切り出した
+- `get_type_effectiveness()` — タイプ相性を返す公開関数を追加（`TYPE_MODIFIER`も
+  併せてトップレベルからexport）。静的な相性表の参照のみで、じめん技×浮遊等の
+  文脈込みの補正は含まない
+- `TreeSearchPlayer.filter_commands()` — 候補手フィルタの公開フックを追加。
+  既定実装は恒等関数でオーバーライドしない限り探索木は変わらない
+- `RandomSelectionMixin` を `jpoke.players` に追加し、`RandomPlayer` をこれに
+  統一
+- `Battle.active_side_fields(source)` を追加
+- 新規アイテム「ながねぎ」を実装（カモネギ・ネギガナイト専用、急所ランク+2）
+- 新規特性「はどうのぼうご」を実装（メガルカリオZ専用、接触技のダメージ半減）
+- レギュレーションM-C: 種族専用の技使用禁止を判定する公開クエリAPI
+  `get_banned_moves(species, regulation)` を追加（ブリジュラスのミラーコート・
+  メタルバースト禁止、ニョロトノのはたく禁止に対応）
+- ps-champ-jaデータの日次自動同期ワークフローを追加
+
+### Changed
+
+- きりさくの威力を70→80に変更（M-Cの技バランス調整）
+- ねがいごと・ちからをすいとるのPPを12→8に変更（M-Cの技バランス調整）
+- ps-champ-jaの最新データを同期（メガグソクムシャ・メガセグレイブの解禁を
+  含む）。この同期に伴い、メガガブリアスZの特性が「すなのちから」から
+  「ふゆう」に修正された
+- `Battle.__init__` で `Player` の hashable性・同一性ベース `__eq__` を検証
+  するようになった（`@dataclass` 継承等で `__hash__` が `None` になる不正な
+  実装を、原因を説明する `TypeError` で早期検出する）
+
+### Fixed
+
+- `scripts/ps_champ_ja/build_pokedex.py` の現行スキーマ非対応バグを修正
+- ps-champ-jaのlearnset同期で、jpoke未実装の技（たこがため等）による
+  `KeyError` を防ぐよう修正
+
 ## [0.3.0] - 2026-07-31
 
 ### Fixed
