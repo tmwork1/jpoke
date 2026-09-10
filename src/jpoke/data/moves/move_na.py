@@ -239,7 +239,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "ねがいごと": MoveData(
-        pp=8,
         flags={"heal"},
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
@@ -387,12 +386,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         }
     ),
     "ねらいうち": MoveData(
-        type="みず",
-        category="special",
-        pp=15,
-        power=80,
-        accuracy=100,
-        crit_ratio=1,
         handlers={},  # 追加効果なし
     ),
     "ねをはる": MoveData(

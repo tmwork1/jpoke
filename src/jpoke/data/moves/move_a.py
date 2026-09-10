@@ -974,11 +974,6 @@ MOVES_A: dict[MoveName, MoveData] = {
         }
     ),
     "オーバードライブ": MoveData(
-        type="でんき",
-        category="special",
-        pp=12,
-        power=80,
-        accuracy=100,
         flags={"sound", "spread"},
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(

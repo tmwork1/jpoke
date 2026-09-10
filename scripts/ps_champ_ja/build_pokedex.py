@@ -15,7 +15,7 @@ NEW_POKEDEX_SOURCE = ROOT / "ps-champ-ja/data_jp/pokedex.json"
 def load_old_names() -> set[str]:
     with open(OLD_POKEDEX, encoding='utf-8') as f:
         data = json.load(f)
-    return {entry["name"] for entry in data.values()}
+    return set(data.keys())
 
 
 def main():

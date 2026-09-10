@@ -3188,6 +3188,13 @@ def はとむね_block_B_drop(battle: Battle, ctx: EventContext, value: dict) ->
     return HandlerReturn(value=value)
 
 
+def はどうのぼうご_reduce_damage(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """はどうのぼうご特性: 接触技で受けるダメージを0.5倍にする。"""
+    if ctx.move.has_flag("contact"):
+        value = apply_fixed_modifier(value, 2048)
+    return HandlerReturn(value=value)
+
+
 def ハドロンエンジン_activate_terrain(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return _activate_terrain(battle, ctx.source, value, terrain="エレキフィールド", count=5)
 
