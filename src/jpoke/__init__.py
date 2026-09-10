@@ -10,6 +10,7 @@ from .data import (
     POKEDEX,
     TYPE_MODIFIER,
     get_pokemon_by_regulation,
+    get_banned_moves,
     get_items_by_regulation,
     get_type_effectiveness,
 )
@@ -38,6 +39,7 @@ __all__ = [
     "POKEDEX",
     "TYPE_MODIFIER",
     "get_pokemon_by_regulation",
+    "get_banned_moves",
     "get_items_by_regulation",
     "get_type_effectiveness",
     "get_pokeapi_url",
