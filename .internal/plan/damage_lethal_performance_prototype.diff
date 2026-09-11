@@ -1,0 +1,415 @@
+diff --git a/src/jpoke/core/battle.py b/src/jpoke/core/battle.py
+index 20622ac98..85d2080ed 100644
+--- a/src/jpoke/core/battle.py
++++ b/src/jpoke/core/battle.py
+@@ -21,6 +21,7 @@ from jpoke.types import BattlePhase, Stat, StatChangeReason, GlobalFieldName, \
+ from jpoke.enums import Event, Command, LogCode
+ from jpoke.exceptions import InvalidCommandError, InvalidPhaseError
+ from jpoke.utils import fast_copy
++from jpoke.utils.copy_utils import copy_random
+ from jpoke.utils.math import round_half_down
+ 
+ from jpoke.model.pokemon import Pokemon
+@@ -301,8 +302,6 @@ class Battle:
+     # マネージャー類は _deepcopy_keys() が自動検出するため、ここに列挙するのは
+     # 「マネージャーでない可変オブジェクト」のみ。
+     _EXTRA_DEEPCOPY_KEYS: tuple[str, ...] = (
+-        "random",
+-        "decision_random",
+         "_player_states",
+         "event_logger",
+         "option",
+@@ -343,6 +342,11 @@ class Battle:
+ 
+         fast_copy(self, new, keys_to_deepcopy=self._deepcopy_keys())
+ 
++        # 乱数生成器は getstate/setstate で複製する（deepcopy は 625 要素の
++        # メルセンヌ状態タプルを要素ごとにコピーするため極めて遅い）
++        new.random = copy_random(self.random)
++        new.decision_random = copy_random(self.decision_random)
++
+         # player_states のキャッシュを複製後の PlayerState で再構築する
+         new._player_states_map = dict(zip(new.players, new._player_states))
+ 
+diff --git a/src/jpoke/core/damage.py b/src/jpoke/core/damage.py
+index 4e6c2c617..7838ab815 100644
+--- a/src/jpoke/core/damage.py
++++ b/src/jpoke/core/damage.py
+@@ -13,7 +13,7 @@ from jpoke.enums import Event
+ from jpoke.types import Stat
+ from jpoke.utils import fast_copy
+ from jpoke.data.type_chart import TYPE_MODIFIER
+-from jpoke.utils.math import round_half_down
++from jpoke.utils.math import round_half_down, apply_modifier_half_down
+ 
+ from .context import AttackContext
+ 
+@@ -115,51 +115,44 @@ class DamageCalculator:
+ 
+         # 急所
+         if ctx.critical:
+-            max_damage = round_half_down(max_damage * 1.5)
++            max_damage = (max_damage * 3) // 2
+ 
+         # -- ここで乱数が適用される(計算はループ内で実行) --
+ 
+         # タイプ一致補正
+         self.atk_type_modifier = self._calc_atk_type_modifier(ctx)
+-        r_atk_type = self.atk_type_modifier / 4096
++        m_atk_type = self.atk_type_modifier
+ 
+         # タイプ相性補正
+         self.def_type_modifier = self.calc_def_type_modifier(ctx)
+-        r_def_type = self.def_type_modifier / 4096
++        m_def_type = self.def_type_modifier
+ 
+         # やけど補正（タイプ相性の後、ダメージ補正の前）
+         self.burn_modifier = self._events.emit(Event.ON_CALC_BURN_MODIFIER, ctx, 4096)
+-        r_burn = self.burn_modifier / 4096
++        m_burn = self.burn_modifier
+ 
+         # ダメージ補正
+         self.damage_modifier = self._events.emit(Event.ON_CALC_DAMAGE_MODIFIER, ctx, 4096)
+-        r_damage = self.damage_modifier / 4096
++        m_damage = self.damage_modifier
+ 
+         # まもる貫通系補正（Z技、ダイマックス技等）
+         self.protect_modifier = self._events.emit(Event.ON_CALC_PROTECT_MODIFIER, ctx, 4096)
+-        r_protect = self.protect_modifier / 4096
++        m_protect = self.protect_modifier
++
++        floor_one = m_def_type * m_damage > 0
+ 
+         damages = [0]*16
+         for i in range(16):
+             # 乱数 85~100%
+-            damages[i] = int(max_damage * (0.85+0.01*i))
+-
+-            # タイプ補正
+-            damages[i] = round_half_down(damages[i] * r_atk_type)
+-            damages[i] = round_half_down(damages[i] * r_def_type)
+-
+-            # やけど補正
+-            damages[i] = round_half_down(damages[i] * r_burn)
+-
+-            # ダメージ補正
+-            damages[i] = round_half_down(damages[i] * r_damage)
+-
+-            # まもる貫通系補正
+-            damages[i] = round_half_down(damages[i] * r_protect)
+-
+-            # 最低ダメージ補償
+-            if r_def_type * r_damage > 0:
+-                damages[i] = max(1, damages[i])
++            d = max_damage * (85 + i) // 100
++            d = (d * m_atk_type + 2047) >> 12
++            d = (d * m_def_type + 2047) >> 12
++            d = (d * m_burn + 2047) >> 12
++            d = (d * m_damage + 2047) >> 12
++            d = (d * m_protect + 2047) >> 12
++            if floor_one and d < 1:
++                d = 1
++            damages[i] = d
+ 
+         return damages
+ 
+@@ -266,7 +259,7 @@ class DamageCalculator:
+ 
+         # その他の補正
+         power_modifier = self._events.emit(Event.ON_CALC_POWER_MODIFIER, ctx, 4096)
+-        power = round_half_down(power*power_modifier/4096)
++        power = apply_modifier_half_down(power, power_modifier)
+ 
+         # テラスタル時の威力60底上げ補正
+         # 対象: テラスタイプ一致かつ非連続技かつ優先度+1未満
+@@ -341,7 +334,7 @@ class DamageCalculator:
+         # その他の補正
+         atk_modifier = self._events.emit(Event.ON_CALC_ATK_MODIFIER, ctx, 4096)
+ 
+-        final_attack = round_half_down(final_attack * atk_modifier/4096)
++        final_attack = apply_modifier_half_down(final_attack, atk_modifier)
+         final_attack = max(1, final_attack)
+ 
+         self.atk_modifier = atk_modifier  # デバッグ用に保存
+@@ -386,7 +379,7 @@ class DamageCalculator:
+ 
+         # その他の補正
+         def_modifier = self._events.emit(Event.ON_CALC_DEF_MODIFIER, ctx, 4096)
+-        final_defense = round_half_down(final_defense * def_modifier/4096)
++        final_defense = apply_modifier_half_down(final_defense, def_modifier)
+         final_defense = max(1, final_defense)
+ 
+         self.def_modifier = def_modifier  # デバッグ用に保存
+diff --git a/src/jpoke/core/lethal.py b/src/jpoke/core/lethal.py
+index ffa995648..bb460a04f 100644
+--- a/src/jpoke/core/lethal.py
++++ b/src/jpoke/core/lethal.py
+@@ -208,7 +208,7 @@ def calc_lethal(battle: Battle,
+     attacker_index = battle._get_player_index(attacker)
+ 
+     # deepcopy してバトル状態を壊さずに計算する
+-    battle = deepcopy(battle)
++    battle = battle.copy(copy_logs=False)
+     attacker = battle.actives[attacker_index]
+     defender = battle.foe(attacker)
+ 
+@@ -546,14 +546,15 @@ def _get_pokemon_handlers(event: LethalEvent,
+                           mon: Pokemon,
+                           subject: LethalSubject) -> list[LethalHandler]:
+     """ポケモンの特性・道具・状態異常・揮発状態から該当ハンドラを取得する。"""
+-    candidates = [
+-        mon.ability.data.lethal_handlers.get(event),
+-        mon.item.data.lethal_handlers.get(event),
+-        mon.ailment.data.lethal_handlers.get(event),
+-    ]
+-    candidates += [v.data.lethal_handlers.get(event)
+-                   for v in mon.volatiles.values()]
+-    return [h for h in candidates if h is not None and h.subject in {subject, None}]
++    result = []
++    for src in (mon.ability, mon.item, mon.ailment, *mon.volatiles.values()):
++        handlers = src.data.lethal_handlers
++        if not handlers:
++            continue
++        h = handlers.get(event)
++        if h is not None and h.subject in (subject, None):
++            result.append(h)
++    return result
+ 
+ 
+ def _get_move_handlers(event: LethalEvent, ctx: LethalContext) -> list[LethalHandler]:
+@@ -564,37 +565,48 @@ def _get_move_handlers(event: LethalEvent, ctx: LethalContext) -> list[LethalHan
+ 
+ def _get_global_field_handlers(event: LethalEvent, battle: Battle) -> list[LethalHandler]:
+     """天候・地形・共通フィールドから該当ハンドラを取得する。"""
+-    fields = [battle.weather, battle.terrain] + \
+-        list(battle.global_manager.fields.values())
+-    candidates = [field.data.lethal_handlers.get(
+-        event) for field in fields if field.is_active]
+-    return [h for h in candidates if h is not None]
++    result = []
++    for field in (battle.weather, battle.terrain,
++                  *battle.global_manager.fields.values()):
++        handlers = field.data.lethal_handlers
++        if not handlers:
++            continue
++        h = handlers.get(event)
++        if h is not None and field.is_active:
++            result.append(h)
++    return result
+ 
+ 
+ def _get_side_field_handlers(event: LethalEvent,
+                              side: SideFieldManager,
+                              subject: LethalSubject) -> list[LethalHandler]:
+     """片側フィールド（ステルスロックなど）から該当ハンドラを取得する。"""
+-    fields = side.fields.values()
+-    candidates = [field.data.lethal_handlers.get(
+-        event) for field in fields if field.is_active]
+-    return [h for h in candidates if h is not None and h.subject in {subject, None}]
++    result = []
++    for field in side.fields.values():
++        handlers = field.data.lethal_handlers
++        if not handlers:
++            continue
++        h = handlers.get(event)
++        if h is not None and field.is_active and h.subject in (subject, None):
++            result.append(h)
++    return result
+ 
+ 
+ def _get_handlers(event: LethalEvent,
+                   battle: Battle,
+                   ctx: LethalContext) -> list[LethalHandler]:
+     """イベントに対応する全ハンドラを priority 順で返す。"""
+-    handlers = []
+-    handlers += _get_pokemon_handlers(event, ctx.attacker, "attacker")
+-    handlers += _get_pokemon_handlers(event, ctx.defender, "defender")
+-    handlers += _get_move_handlers(event, ctx)
+-    handlers += _get_global_field_handlers(event, battle)
+-    handlers += _get_side_field_handlers(event,
+-                                         battle.get_side(ctx.attacker), "attacker")
+-    handlers += _get_side_field_handlers(event,
+-                                         battle.get_side(ctx.defender), "defender")
+-    return sorted(handlers, key=lambda h: h.priority)
++    handlers = _get_pokemon_handlers(event, ctx.attacker, "attacker")
++    handlers.extend(_get_pokemon_handlers(event, ctx.defender, "defender"))
++    handlers.extend(_get_move_handlers(event, ctx))
++    handlers.extend(_get_global_field_handlers(event, battle))
++    handlers.extend(_get_side_field_handlers(
++        event, battle.get_side(ctx.attacker), "attacker"))
++    handlers.extend(_get_side_field_handlers(
++        event, battle.get_side(ctx.defender), "defender"))
++    if len(handlers) > 1:
++        handlers.sort(key=lambda h: h.priority)
++    return handlers
+ 
+ 
+ def _apply_handlers(battle: Battle,
+diff --git a/src/jpoke/utils/copy_utils.py b/src/jpoke/utils/copy_utils.py
+index 549859768..718b6fb61 100644
+--- a/src/jpoke/utils/copy_utils.py
++++ b/src/jpoke/utils/copy_utils.py
+@@ -3,6 +3,7 @@
+ 選択的にディープコピーとシャローコピーを使い分けることで、
+ パフォーマンスを最適化します。
+ """
++import random
+ from copy import deepcopy
+ 
+ 
+@@ -43,3 +44,10 @@ def recursive_copy(obj):
+         return {recursive_copy(item) for item in obj}
+     else:
+         return obj
++
++
++def copy_random(rng: random.Random) -> random.Random:
++    """乱数生成器を複製する。"""
++    new = random.Random()
++    new.setstate(rng.getstate())
++    return new
+diff --git a/src/jpoke/utils/lethal_dist.py b/src/jpoke/utils/lethal_dist.py
+index 1b30d2299..9f4b04f4f 100644
+--- a/src/jpoke/utils/lethal_dist.py
++++ b/src/jpoke/utils/lethal_dist.py
+@@ -6,11 +6,10 @@ Battle・Pokemon・Move に依存しない純粋な分布演算のみを提供
+ from __future__ import annotations
+ 
+ from collections import defaultdict, Counter
+-from dataclasses import dataclass
++from typing import NamedTuple
+ 
+ 
+-@dataclass(frozen=True)
+-class State:
++class State(NamedTuple):
+     """HP分布の1要素。HP値と特性・道具の有効フラグを保持する。
+ 
+     ability_enabled / item_enabled は「消耗型アイテム使用済み」など
+@@ -42,51 +41,33 @@ def to_dist(x: int | list[int] | StateDist,
+         return {key: 1}
+ 
+ 
+-def flip_dist(dist: StateDist) -> StateDist:
+-    """分布の hp 符号を反転する（subtract_dist の内部用）。フラグはそのまま引き継ぐ。"""
+-    return {
+-        State(value=-k.value, ability_enabled=k.ability_enabled, item_enabled=k.item_enabled): v
+-        for k, v in dist.items()
+-    }
+-
+-
+-def _clip_dist(dist: StateDist,
+-               minimum: int | None = None,
+-               maximum: int | None = None) -> StateDist:
+-    """HP値を [minimum, maximum] にクランプし、同一 LethalState を集約する。フラグはそのまま引き継ぐ。"""
+-    if minimum is None and maximum is None:
+-        return dist
+-
+-    result = defaultdict(int)
+-    for value, freq in dist.items():
+-        hp = value.value
+-        if minimum is not None:
+-            hp = max(hp, minimum)
+-        if maximum is not None:
+-            hp = min(hp, maximum)
+-        key = State(value=hp, ability_enabled=value.ability_enabled, item_enabled=value.item_enabled)
+-        result[key] += freq
+-    return dict(result)
+-
+-
+-def _convolve(a: StateDist | list[int] | int,
+-              b: StateDist | list[int] | int) -> StateDist:
+-    """2つの分布の畳み込みを計算する（HP を加算、フラグは AND）。"""
++def _combine(a: StateDist | list[int] | int,
++             b: StateDist | list[int] | int,
++             sign: int,
++             minimum: int | None,
++             maximum: int | None) -> StateDist:
++    """a と b を1パスで畳み込み・クランプする（HP は sign 倍した b を加算）。"""
+     x = to_dist(a)
+     y = to_dist(b)
+ 
+-    result = defaultdict(int)
+-    for vx, fx in x.items():
+-        for vy, fy in y.items():
+-            hp = vx.value + vy.value
+-            ability_enabled = vx.ability_enabled and vy.ability_enabled
+-            item_enabled = vx.item_enabled and vy.item_enabled
+-            key = State(
+-                value=hp,
+-                ability_enabled=ability_enabled,
+-                item_enabled=item_enabled,
+-            )
+-            result[key] += fx * fy
++    # b 側のフラグが全て True なら AND 演算とフラグ再構築を省ける（通常のダメージ分布）
++    plain = all(k.ability_enabled and k.item_enabled for k in y)
++
++    result: dict[State, int] = defaultdict(int)
++    for sx, fx in x.items():
++        vx, ax, ix = sx.value, sx.ability_enabled, sx.item_enabled
++        for sy, fy in y.items():
++            hp = vx + sign * sy.value
++            if minimum is not None and hp < minimum:
++                hp = minimum
++            if maximum is not None and hp > maximum:
++                hp = maximum
++            if plain:
++                result[State(hp, ax, ix)] += fx * fy
++            else:
++                result[State(hp,
++                             ax and sy.ability_enabled,
++                             ix and sy.item_enabled)] += fx * fy
+     return dict(result)
+ 
+ 
+@@ -95,8 +76,7 @@ def add_dist(a: StateDist | list[int] | int,
+              minimum: int | None = None,
+              maximum: int | None = None) -> StateDist:
+     """HP 分布 a に b を加算し、結果を [minimum, maximum] にクランプする。"""
+-    result = _convolve(a, b)
+-    return _clip_dist(result, minimum=minimum, maximum=maximum)
++    return _combine(a, b, 1, minimum, maximum)
+ 
+ 
+ def subtract_dist(a: StateDist | list[int] | int,
+@@ -104,6 +84,4 @@ def subtract_dist(a: StateDist | list[int] | int,
+                   minimum: int | None = None,
+                   maximum: int | None = None) -> StateDist:
+     """HP 分布 a から b を減算し、結果を [minimum, maximum] にクランプする。"""
+-    y = to_dist(b)
+-    result = _convolve(a, flip_dist(y))
+-    return _clip_dist(result, minimum=minimum, maximum=maximum)
++    return _combine(a, b, -1, minimum, maximum)
+diff --git a/src/jpoke/utils/math.py b/src/jpoke/utils/math.py
+index 9d6073a5f..6da970d21 100644
+--- a/src/jpoke/utils/math.py
++++ b/src/jpoke/utils/math.py
+@@ -2,6 +2,7 @@
+ 
+ from __future__ import annotations
+ 
++import math
+ from decimal import Decimal, ROUND_HALF_DOWN, ROUND_HALF_UP
+ 
+ from jpoke.utils.constants import (
+@@ -25,7 +26,10 @@ def clamp_critic(value: int) -> int:
+ 
+ def round_half_down(v: float) -> int:
+     """五捨五超入で丸める。"""
+-    return int(Decimal(str(v)).quantize(Decimal("0"), rounding=ROUND_HALF_DOWN))
++    if isinstance(v, int):
++        return v
++    n = math.ceil(v - 0.5)
++    return n
+ 
+ 
+ def round_half_up(v: float) -> int:
+@@ -39,3 +43,8 @@ def round_half_up(v: float) -> int:
+ def apply_fixed_modifier(value: int, modifier: int) -> int:
+     """4096基準の固定小数点補正を適用する。"""
+     return value * modifier // FIXED_POINT_BASE
++
++
++def apply_modifier_half_down(value: int, modifier: int) -> int:
++    """4096基準の固定小数点補正を五捨五超入で適用する（整数演算）。"""
++    return (value * modifier + 2047) >> 12
