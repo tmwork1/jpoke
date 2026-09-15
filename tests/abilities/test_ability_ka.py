@@ -971,14 +971,14 @@ def test_きれあじ_連続技でとれないにおいにより2発目以降は
     )
     attacker = battle.actives[0]
     power_modifiers: list[int | None] = []
-    original_roll_damage = battle.roll_damage
+    original_roll_damage = battle.damage_calculator.roll_damage
 
     def _tracking_roll_damage(*args, **kwargs):
         damage = original_roll_damage(*args, **kwargs)
         power_modifiers.append(battle.damage_calculator.power_modifier)
         return damage
 
-    battle.roll_damage = _tracking_roll_damage
+    battle.damage_calculator.roll_damage = _tracking_roll_damage
     t.run_move(battle, 0)
     assert attacker.ability.name == "とれないにおい"
     assert power_modifiers[0] == 6144

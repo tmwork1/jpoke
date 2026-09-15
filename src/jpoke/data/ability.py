@@ -537,11 +537,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.announce_ability_triggered,
                 subject_spec="source:self",
             ),
-            Event.ON_BEGIN_MOVE: h.AbilityHandler(
+            Event.ON_SETUP_MOVE: h.AbilityHandler(
                 h.かたやぶり_disable_foe_ability,
                 subject_spec="attacker:self",
             ),
-            Event.ON_END_MOVE: h.AbilityHandler(
+            Event.ON_TEARDOWN_MOVE: h.AbilityHandler(
                 h.かたやぶり_restore_foe_ability,
                 subject_spec="attacker:self",
             ),
@@ -783,11 +783,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.きんしのちから_delay_status_move,
                 subject_spec="attacker:self",
             ),
-            Event.ON_BEGIN_MOVE: h.AbilityHandler(
+            Event.ON_SETUP_MOVE: h.AbilityHandler(
                 h.きんしのちから_disable_foe_ability,
                 subject_spec="attacker:self",
             ),
-            Event.ON_END_MOVE: h.AbilityHandler(
+            Event.ON_TEARDOWN_MOVE: h.AbilityHandler(
                 h.きんしのちから_restore_foe_ability,
                 subject_spec="attacker:self",
             ),
@@ -1723,11 +1723,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.announce_ability_triggered,
                 subject_spec="source:self",
             ),
-            Event.ON_BEGIN_MOVE: h.AbilityHandler(
+            Event.ON_SETUP_MOVE: h.AbilityHandler(
                 h.かたやぶり_disable_foe_ability,
                 subject_spec="attacker:self",
             ),
-            Event.ON_END_MOVE: h.AbilityHandler(
+            Event.ON_TEARDOWN_MOVE: h.AbilityHandler(
                 h.かたやぶり_restore_foe_ability,
                 subject_spec="attacker:self",
             ),
@@ -1928,11 +1928,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.announce_ability_triggered,
                 subject_spec="source:self",
             ),
-            Event.ON_BEGIN_MOVE: h.AbilityHandler(
+            Event.ON_SETUP_MOVE: h.AbilityHandler(
                 h.かたやぶり_disable_foe_ability,
                 subject_spec="attacker:self",
             ),
-            Event.ON_END_MOVE: h.AbilityHandler(
+            Event.ON_TEARDOWN_MOVE: h.AbilityHandler(
                 h.かたやぶり_restore_foe_ability,
                 subject_spec="attacker:self",
             ),
@@ -3406,11 +3406,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
     ),
     "メガソーラー": AbilityData(
         handlers={
-            Event.ON_BEGIN_MOVE: h.AbilityHandler(
+            Event.ON_SETUP_MOVE: h.AbilityHandler(
                 h.メガソーラー_activate,
                 subject_spec="attacker:self",
             ),
-            Event.ON_END_MOVE: h.AbilityHandler(
+            Event.ON_TEARDOWN_MOVE: h.AbilityHandler(
                 h.メガソーラー_deactivate,
                 subject_spec="attacker:self",
             ),

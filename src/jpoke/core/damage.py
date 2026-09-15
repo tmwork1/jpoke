@@ -77,6 +77,9 @@ class DamageCalculator:
                      critical: bool = False) -> list[int]:
         """1回の攻撃で与えるダメージ乱数列を計算する。
 
+        技のハンドラ登録・タイプ/分類の解決・かたやぶり適用が済んでいる前提の
+        内部実装。外部からは ``Battle.calc_damages`` を使用すること。
+
         Args:
             attacker: 攻撃側
             defender: 防御側
@@ -162,6 +165,46 @@ class DamageCalculator:
                 damages[i] = max(1, damages[i])
 
         return damages
+
+    def roll_damage(self,
+                    attacker: Pokemon,
+                    defender: Pokemon,
+                    move: Move,
+                    critical: bool = False) -> int:
+        """ダメージを計算して乱数に従い1つ選択する。
+
+        技のハンドラ登録・タイプ/分類の解決・かたやぶり適用が済んでいる前提の
+        内部実装。外部からは ``Battle.roll_damage`` を使用すること。
+
+        Args:
+            attacker: 攻撃側
+            defender: 防御側
+            move: 技
+            critical: 急所に当たるかどうか
+
+        Returns:
+            選択されたダメージ値
+        """
+        damages = self.calc_damages(attacker, defender, move, critical)
+        match self.battle.option.damage_roll:
+            case "average":
+                return round_half_down(sum(damages) / len(damages))
+            case "max":
+                return max(damages)
+            case "min":
+                return min(damages)
+            case _:
+                # random.choice() は getrandbits() 経由でPRNG内部状態に依存するため、
+                # random() のみを固定するテストヘルパー（fix_random）では制御できない。
+                # random() ベースの選択にすることで、乱数シードが異なる2つの Battle
+                # 間でも fix_random() だけでダメージロールを再現できるようにする。
+                # random() は理論上 [0, 1) だが、fix_random() で 1.0 を代入する
+                # テストが存在するため、境界超過による IndexError を防ぐ
+                index = min(
+                    int(self.battle.random.random() * len(damages)),
+                    len(damages) - 1,
+                )
+                return damages[index]
 
     def _calc_atk_type_modifier(self, ctx: AttackContext) -> int:
         """タイプ一致補正（STAB）を計算する。

@@ -1443,7 +1443,7 @@ def シャドーボール_lower_defender_spd(battle: Battle, ctx: AttackContext,
 
 
 def シャドーレイ_disable_defender_ability(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """シャドーレイ: 攻撃直前に相手の特性を無効化する（かたやぶりと同様の対象特性）。"""
+    """シャドーレイ: ON_SETUP_MOVEで相手の特性を無効化する。"""
     mon = ctx.defender
     if mon.ability.has_flag("mold_breaker_ignorable"):
         battle.add_ability_disabled_reason(mon, "シャドーレイ")
@@ -1451,7 +1451,7 @@ def シャドーレイ_disable_defender_ability(battle: Battle, ctx: AttackConte
 
 
 def シャドーレイ_restore_defender_ability(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """シャドーレイ: 攻撃終了後に相手の特性の無効化を解除する。"""
+    """シャドーレイ: ON_TEARDOWN_MOVEで相手の特性の無効化を解除する。"""
     battle.remove_ability_disabled_reason(ctx.defender, "シャドーレイ")
     return HandlerReturn(value=value)
 
@@ -2738,7 +2738,8 @@ def はめつのねがい_charge(battle: Battle, ctx: AttackContext, value: Any)
     foe_side = battle.get_side(ctx.defender)
     field = foe_side.get("はめつのねがい")
     if not field.is_active:
-        damage = battle.roll_damage(ctx.attacker, ctx.defender, ctx.move)
+        # 技実行中は Executor が既に前処理済みのため Battle.roll_damage を経由しない。
+        damage = battle.damage_calculator.roll_damage(ctx.attacker, ctx.defender, ctx.move)
         foe_side.activate("はめつのねがい", 3)
         field.damage = damage
         return HandlerReturn(value=False, stop_event=True)
@@ -3010,7 +3011,7 @@ def フェイント_remove_protect(battle: Battle, ctx: AttackContext, value: An
 
 
 def フォトンゲイザー_disable_defender_ability(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """フォトンゲイザー: 攻撃直前に相手の特性を無効化する（かたやぶりと同様の対象特性）。"""
+    """フォトンゲイザー: ON_SETUP_MOVEで相手の特性を無効化する。"""
     mon = ctx.defender
     if mon.ability.has_flag("mold_breaker_ignorable"):
         battle.add_ability_disabled_reason(mon, "フォトンゲイザー")
@@ -3026,7 +3027,7 @@ def フォトンゲイザー_modify_move_category(battle: Battle, ctx: AttackCon
 
 
 def フォトンゲイザー_restore_defender_ability(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """フォトンゲイザー: 攻撃終了後に相手の特性の無効化を解除する。"""
+    """フォトンゲイザー: ON_TEARDOWN_MOVEで相手の特性の無効化を解除する。"""
     battle.remove_ability_disabled_reason(ctx.defender, "フォトンゲイザー")
     return HandlerReturn(value=value)
 
@@ -3457,7 +3458,8 @@ def みらいよち_charge(battle: Battle, ctx: AttackContext, value: Any) -> Ha
     foe_side = battle.get_side(ctx.defender)
     field = foe_side.get("みらいよち")
     if not field.is_active:
-        damage = battle.roll_damage(ctx.attacker, ctx.defender, ctx.move)
+        # 技実行中は Executor が既に前処理済みのため Battle.roll_damage を経由しない。
+        damage = battle.damage_calculator.roll_damage(ctx.attacker, ctx.defender, ctx.move)
         foe_side.activate("みらいよち", 3)
         field.damage = damage
         return HandlerReturn(value=False, stop_event=True)
@@ -3618,7 +3620,7 @@ def メタルバースト_modify_damage(battle: Battle, ctx: AttackContext, valu
 
 
 def メテオドライブ_disable_defender_ability(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """メテオドライブ: 攻撃直前に相手の特性を無効化する（かたやぶりと同様の対象特性）。"""
+    """メテオドライブ: ON_SETUP_MOVEで相手の特性を無効化する。"""
     mon = ctx.defender
     if mon.ability.has_flag("mold_breaker_ignorable"):
         battle.add_ability_disabled_reason(mon, "メテオドライブ")
@@ -3626,7 +3628,7 @@ def メテオドライブ_disable_defender_ability(battle: Battle, ctx: AttackCo
 
 
 def メテオドライブ_restore_defender_ability(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """メテオドライブ: 攻撃終了後に相手の特性の無効化を解除する。"""
+    """メテオドライブ: ON_TEARDOWN_MOVEで相手の特性の無効化を解除する。"""
     battle.remove_ability_disabled_reason(ctx.defender, "メテオドライブ")
     return HandlerReturn(value=value)
 

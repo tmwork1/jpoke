@@ -284,7 +284,7 @@ def test_タネマシンガン_相手HP1で最初の1発で処理中断():
         damage_call_count += 1
         return 1  # 常に1ダメージ
 
-    battle.roll_damage = counting_determine_damage
+    battle.damage_calculator.roll_damage = counting_determine_damage
     battle.step()
 
     # 複数ヒット予定（min_hits=2）なのに、最初の1発で相手がひんしになったため処理が中断される

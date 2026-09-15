@@ -1067,6 +1067,7 @@ def かたいツメ_modify_power(battle: Battle, ctx: AttackContext, value: int)
 
 
 def かたやぶり_disable_foe_ability(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
+    """かたやぶり: ON_SETUP_MOVEで相手の特性を無効化する。"""
     mon = ctx.defender
     if mon.ability.has_flag("mold_breaker_ignorable"):
         battle.add_ability_disabled_reason(mon, "かたやぶり")
@@ -1074,6 +1075,7 @@ def かたやぶり_disable_foe_ability(battle: Battle, ctx: AttackContext, valu
 
 
 def かたやぶり_restore_foe_ability(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
+    """かたやぶり: ON_TEARDOWN_MOVEで相手の特性の無効化を解除する。"""
     battle.remove_ability_disabled_reason(ctx.defender, "かたやぶり")
     return HandlerReturn(value=value)
 
@@ -1430,7 +1432,7 @@ def きんしのちから_delay_status_move(battle: Battle, ctx: AttackContext, 
 
 
 def きんしのちから_disable_foe_ability(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
-    """きんしのちから特性: 変化技使用直前に相手の特性を無効化する。"""
+    """きんしのちから特性: ON_SETUP_MOVEで相手の特性を無効化する。"""
     if ctx.move.is_attack:
         return HandlerReturn(value=value)
     mon = ctx.defender
@@ -1440,7 +1442,7 @@ def きんしのちから_disable_foe_ability(battle: Battle, ctx: AttackContext
 
 
 def きんしのちから_restore_foe_ability(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
-    """きんしのちから特性: 変化技使用後に相手の特性の無効化を解除する。"""
+    """きんしのちから特性: ON_TEARDOWN_MOVEで相手の特性の無効化を解除する。"""
     if ctx.move.is_attack:
         return HandlerReturn(value=value)
     battle.remove_ability_disabled_reason(ctx.defender, "かたやぶり")

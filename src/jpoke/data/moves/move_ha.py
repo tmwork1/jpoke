@@ -661,10 +661,10 @@ MOVES_HA: dict[MoveName, MoveData] = {
             Event.ON_MODIFY_MOVE_CATEGORY: h.MoveHandler(
                 ha.フォトンゲイザー_modify_move_category,
             ),
-            Event.ON_BEGIN_MOVE: h.MoveHandler(
+            Event.ON_SETUP_MOVE: h.MoveHandler(
                 ha.フォトンゲイザー_disable_defender_ability,
             ),
-            Event.ON_END_MOVE: h.MoveHandler(
+            Event.ON_TEARDOWN_MOVE: h.MoveHandler(
                 ha.フォトンゲイザー_restore_defender_ability,
             ),
         },

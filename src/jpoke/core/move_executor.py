@@ -326,7 +326,10 @@ class MoveExecutor:
                 if self._run_move_depth == 1:
                     ctx.attacker.selected_move = ctx.move
 
-                # かたやぶりを適用する
+                # 問い合わせでも必要な技実行環境を適用する
+                self._events.emit(Event.ON_SETUP_MOVE, ctx)
+
+                # 技を実際に使う開始時の副作用を適用する
                 self._events.emit(Event.ON_BEGIN_MOVE, ctx)
 
                 # 技の実行
@@ -358,8 +361,11 @@ class MoveExecutor:
             player = self.battle.get_player(attacker)
             self.battle.player_states[player].last_move_succeeded = overall_success
 
-            # かたやぶりを解除する
+            # 技を実際に使う終了時の副作用を適用する
             self._events.emit(Event.ON_END_MOVE, ctx)
+
+            # 問い合わせでも必要な技実行環境を解除する。未適用でも安全である。
+            self._events.emit(Event.ON_TEARDOWN_MOVE, ctx)
 
             # 技のハンドラを解除
             # マジックコート・マジックミラー等でctx.attackerが入れ替わる場合があるため、
@@ -637,7 +643,8 @@ class MoveExecutor:
                     ctx.attacker, LogCode.CRITICAL_HIT,
                     payload=MoveActionPayload(move=ctx.move.name)
                 )
-        damage = self.battle.roll_damage(
+        # 技実行中は Executor が既に前処理済みのため Battle.roll_damage を経由しない。
+        damage = self.battle.damage_calculator.roll_damage(
             ctx.attacker, ctx.defender, ctx.move, critical=self.critical
         )
 
