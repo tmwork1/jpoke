@@ -572,10 +572,10 @@ MOVES_MA: dict[MoveName, MoveData] = {
         accuracy=100,
         flags={"contact", "ignore_ability"},
         handlers={
-            Event.ON_BEGIN_MOVE: h.MoveHandler(
+            Event.ON_SETUP_MOVE: h.MoveHandler(
                 ha.メテオドライブ_disable_defender_ability,
             ),
-            Event.ON_END_MOVE: h.MoveHandler(
+            Event.ON_TEARDOWN_MOVE: h.MoveHandler(
                 ha.メテオドライブ_restore_defender_ability,
             ),
         },

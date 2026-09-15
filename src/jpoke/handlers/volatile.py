@@ -604,11 +604,12 @@ def こんらん_try_action(battle: Battle, ctx: EventContext, value: Any) -> Ha
     if not confused:
         return HandlerReturn(value=True)
 
-    # 自傷ダメージの計算（通常のダメージ計算と同様の処理を行う）
-    damage = battle.roll_damage(
+    # 技実行外だが、前処理でスキン系のタイプ変換が乗ると挙動が変わるため内部呼びに揃える。
+    from jpoke.model.move import Move
+    damage = battle.damage_calculator.roll_damage(
         attacker=ctx.attacker,
         defender=ctx.attacker,
-        move="_こんらん",
+        move=Move("_こんらん"),
     )
 
     # 動けない理由のログを先に記録してから自傷ダメージを適用する

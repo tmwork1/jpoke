@@ -50,14 +50,16 @@ def fix_damage(battle: Battle, damage: int):
     """ダメージ計算のダイスロールを固定値にする。
 
     テスト・デバッグ専用のユーティリティであり、本番の対戦進行では使わないこと。
-    `Battle.roll_damage` を差し替えるモンキーパッチのため、以降そのBattleインスタンスの
-    ダメージ計算は全て固定値になる。
+    外部問い合わせ用の `Battle.roll_damage` と、技実行中に使う内部計算機の
+    `DamageCalculator.roll_damage` を差し替えるモンキーパッチのため、以降その
+    Battleインスタンスのダメージ計算は全て固定値になる。
 
     Args:
         battle: Battleインスタンス
         damage: 固定するダメージ値
     """
     battle.roll_damage = lambda *args, **kwargs: damage
+    battle.damage_calculator.roll_damage = lambda *args, **kwargs: damage
 
 
 def fix_random(battle: Battle, value: float):

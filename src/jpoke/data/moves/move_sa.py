@@ -399,10 +399,10 @@ MOVES_SA: dict[MoveName, MoveData] = {
         accuracy=100,
         flags={"ignore_ability"},
         handlers={
-            Event.ON_BEGIN_MOVE: h.MoveHandler(
+            Event.ON_SETUP_MOVE: h.MoveHandler(
                 ha.シャドーレイ_disable_defender_ability,
             ),
-            Event.ON_END_MOVE: h.MoveHandler(
+            Event.ON_TEARDOWN_MOVE: h.MoveHandler(
                 ha.シャドーレイ_restore_defender_ability,
             ),
         },

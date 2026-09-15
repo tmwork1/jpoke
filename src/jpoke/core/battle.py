@@ -7,7 +7,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal, cast
 if TYPE_CHECKING:
     from .lethal import LethalHitResult, LethalMonitor
-    from .context import AttackContext
 
 from dataclasses import dataclass
 from contextlib import contextmanager
@@ -21,7 +20,6 @@ from jpoke.types import BattlePhase, Stat, StatChangeReason, GlobalFieldName, \
 from jpoke.enums import Event, Command, LogCode
 from jpoke.exceptions import InvalidCommandError, InvalidPhaseError
 from jpoke.utils import fast_copy
-from jpoke.utils.math import round_half_down
 
 from jpoke.model.pokemon import Pokemon
 from jpoke.model.move import Move
@@ -30,7 +28,7 @@ from jpoke.model.field import Field
 
 from .player_state import PlayerState
 from .event_manager import EventManager
-from .context import EventContext
+from .context import AttackContext, EventContext
 from .player import Player
 from .event_logger import EventLogger
 from .log_payload import Payload
@@ -1436,6 +1434,9 @@ class Battle:
                     critical: bool = False) -> int:
         """ダメージを計算してランダムに1つ選択する。
 
+        外部問い合わせ用。技実行と同じ前処理（技ハンドラ登録・タイプ/分類解決・
+        かたやぶり適用）を施す。
+
         Args:
             attacker: 攻撃側のポケモン
             defender: 防御側のポケモン
@@ -1445,23 +1446,12 @@ class Battle:
         Returns:
             int: 計算されたダメージ値
         """
-        damages = self.calc_damages(attacker, defender, move, critical)
-        match self.option.damage_roll:
-            case "average":
-                return round_half_down(sum(damages) / len(damages))
-            case "max":
-                return max(damages)
-            case "min":
-                return min(damages)
-            case _:
-                # random.choice() は getrandbits() 経由でPRNG内部状態に依存するため、
-                # random() のみを固定するテストヘルパー（fix_random）では制御できない。
-                # random() ベースの選択にすることで、乱数シードが異なる2つの Battle
-                # 間でも fix_random() だけでダメージロールを再現できるようにする。
-                # random() は理論上 [0, 1) だが、fix_random() で 1.0 を代入する
-                # テストが存在するため、境界超過による IndexError を防ぐ
-                index = min(int(self.random.random() * len(damages)), len(damages) - 1)
-                return damages[index]
+        if isinstance(move, str):
+            move = Move(move)
+        with self._prepare_move_for_query(attacker, defender, move):
+            return self.damage_calculator.roll_damage(
+                attacker, defender, move, critical=critical
+            )
 
     def calc_damages(self,
                      attacker: Pokemon,
@@ -1469,6 +1459,9 @@ class Battle:
                      move: Move | MoveName,
                      critical: bool = False) -> list[int]:
         """可能なダメージ値のリストを計算する。
+
+        外部問い合わせ用。技実行と同じ前処理（技ハンドラ登録・タイプ/分類解決・
+        かたやぶり適用）を施す。
 
         乱数によるダメージ幅を考慮した全ての可能なダメージ値を返します。
 
@@ -1483,9 +1476,49 @@ class Battle:
         """
         if isinstance(move, str):
             move = Move(move)
-        return self.damage_calculator.calc_damages(
-            attacker, defender, move, critical=critical
+        with self._prepare_move_for_query(attacker, defender, move):
+            return self.damage_calculator.calc_damages(
+                attacker, defender, move, critical=critical
+            )
+
+    @contextmanager
+    def _prepare_move_for_query(self,
+                                attacker: Pokemon,
+                                defender: Pokemon,
+                                move: Move):
+        """外部問い合わせ用に技実行と同じ前処理を施し、終了時に元へ戻す。"""
+        relevant_events = (
+            Event.ON_MODIFY_MOVE_TYPE,
+            Event.ON_MODIFY_MOVE_CATEGORY,
+            Event.ON_SETUP_MOVE,
         )
+        if (
+            not move.data.handlers
+            and not any(event in self.events.handlers for event in relevant_events)
+        ):
+            yield
+            return
+
+        original_type, original_category = move.type, move.category
+        ctx = AttackContext(attacker=attacker, defender=defender, move=move)
+        move.register_handlers(self.events, attacker)
+        try:
+            # MoveExecutor と同じ基準値を使う。タイプは data.type、分類は現在値で
+            # 解決する非対称な仕様も、技実行時の挙動をそのまま踏襲する。
+            move.type = self.events.emit(
+                Event.ON_MODIFY_MOVE_TYPE, ctx, value=move.data.type
+            )
+            move.category = self.events.emit(
+                Event.ON_MODIFY_MOVE_CATEGORY, ctx, value=move.category
+            )
+            self.events.emit(Event.ON_SETUP_MOVE, ctx)
+            try:
+                yield
+            finally:
+                self.events.emit(Event.ON_TEARDOWN_MOVE, ctx)
+        finally:
+            move.unregister_handlers(self.events, attacker)
+            move.type, move.category = original_type, original_category
 
     def has_interrupt(self) -> bool:
         """割り込みフラグが設定されているか確認。
