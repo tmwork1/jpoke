@@ -222,7 +222,7 @@ class DamageCalculator:
         """
         attacker = ctx.attacker
         move_type = ctx.move.type
-        original_matches = move_type in attacker.data.types
+        original_matches = move_type in attacker.types_before_tera
         tera_type = attacker.active_tera_type
 
         base = 4096
