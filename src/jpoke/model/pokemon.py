@@ -533,6 +533,50 @@ class Pokemon:
         """
         return self.data.types
 
+    def _append_added_types(self, base: list[Type]) -> list[Type]:
+        """ベースタイプに added_types（ハロウィン・もりののろい等）を合成する。
+
+        Args:
+            base: ベースとなるタイプのリスト
+
+        Returns:
+            added_types のうちベースに含まれないものを末尾に追加したリスト
+        """
+        if not self.added_types:
+            return base
+        # 既にベースタイプに含まれているものは除外して追加する
+        extra = [t for t in self.added_types if t not in base]
+        return base + extra if extra else base
+
+    @property
+    def types_before_tera(self) -> list[Type]:
+        """テラスタルを考慮しない現在のタイプを取得する。
+
+        Returns:
+            タイプのリスト
+
+        Note:
+            STAB（タイプ一致補正）の「元タイプ」判定に使う。
+            へんげんじざい・みずびたし・へんしん・もりののろい 等によるタイプ変化は反映し、
+            テラスタルによる変化のみ無視する。テラスタル中はタイプ変化が無効化されるため、
+            これは「テラスタル直前のタイプ」と一致する。
+        """
+        base_types_ = self.transform_types if self.transform_types is not None else self.data.types
+        if self.move_override_types is not None:
+            base = self.move_override_types
+        elif self.ability_override_type is not None:
+            base = [self.ability_override_type]
+        elif self.volatile_override_type is not None:
+            base = [self.volatile_override_type]
+        else:
+            base = base_types_
+
+        result = self._append_added_types(base)
+        # はねやすめ等によるタイプ除去を適用
+        if self.removed_types:
+            result = [t for t in result if t not in self.removed_types]
+        return result
+
     @property
     def types(self) -> list[Type]:
         """ポケモンの現在のタイプを取得する。
@@ -545,32 +589,17 @@ class Pokemon:
             added_types は ハロウィン・もりののろい などによって後付けされたタイプを保持する。
             へんしん/かわりもので変身中は、種族本来のタイプ（self.data.types）の代わりに
             コピー元のタイプ（transform_types）を基準にする。
+            非テラスタル時の解決は types_before_tera に委譲する。
         """
-        base_types_ = self.transform_types if self.transform_types is not None else self.data.types
-        if self.active_tera_type:
-            if self.active_tera_type == 'ステラ':
-                base = base_types_
-            else:
-                base = [self.active_tera_type]
-        elif self.move_override_types is not None:
-            base = self.move_override_types
-        elif self.ability_override_type is not None:
-            base = [self.ability_override_type]
-        elif self.volatile_override_type is not None:
-            base = [self.volatile_override_type]
-        else:
-            base = base_types_
+        if not self.active_tera_type:
+            return self.types_before_tera
 
-        if not self.added_types:
-            result = base
+        if self.active_tera_type == 'ステラ':
+            base = self.transform_types if self.transform_types is not None else self.data.types
         else:
-            # 既にベースタイプに含まれているものは除外して追加する
-            extra = [t for t in self.added_types if t not in base]
-            result = base + extra if extra else base
-        # はねやすめ等によるタイプ除去を適用（テラスタル中は無視）
-        if self.removed_types and not self.active_tera_type:
-            result = [t for t in result if t not in self.removed_types]
-        return result
+            base = [self.active_tera_type]
+        # テラスタル中は removed_types（はねやすめ等）によるタイプ除去を無視する
+        return self._append_added_types(base)
 
     def has_type(self, type_: Type) -> bool:
         """指定されたタイプを持っているか判定する。
