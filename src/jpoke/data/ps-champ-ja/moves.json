@@ -344,6 +344,35 @@
     },
     "maxMove": null
   },
+  "でんこうそうげき": {
+    "showdown_id": "doubleshock",
+    "showdown_name": "Double Shock",
+    "num": 892,
+    "type": "でんき",
+    "category": "Physical",
+    "pp": 8,
+    "power": 120,
+    "accuracy": 100,
+    "priority": 0,
+    "critRatio": 1,
+    "target": "normal",
+    "multihit": [],
+    "flags": [
+      "contact",
+      "mirror",
+      "protect",
+      "punch"
+    ],
+    "spreadHit": false,
+    "isZ": false,
+    "isMax": false,
+    "zMove": {
+      "basePower": 190
+    },
+    "maxMove": {
+      "basePower": 140
+    }
+  },
   "ドラゴンエール": {
     "showdown_id": "dragoncheer",
     "showdown_name": "Dragon Cheer",
@@ -792,6 +821,35 @@
     },
     "maxMove": {
       "basePower": 140
+    }
+  },
+  "スターアサルト": {
+    "showdown_id": "meteorassault",
+    "showdown_name": "Meteor Assault",
+    "num": 794,
+    "type": "かくとう",
+    "category": "Physical",
+    "pp": 8,
+    "power": 170,
+    "accuracy": 100,
+    "priority": 0,
+    "critRatio": 1,
+    "target": "normal",
+    "multihit": [],
+    "flags": [
+      "failinstruct",
+      "mirror",
+      "protect",
+      "recharge"
+    ],
+    "spreadHit": false,
+    "isZ": false,
+    "isMax": false,
+    "zMove": {
+      "basePower": 200
+    },
+    "maxMove": {
+      "basePower": 100
     }
   },
   "ミルクのみ": {
@@ -4209,34 +4267,6 @@
     },
     "maxMove": {
       "basePower": 120
-    }
-  },
-  "でんこうそうげき": {
-    "showdown_id": "doubleshock",
-    "showdown_name": "Double Shock",
-    "num": 892,
-    "type": "でんき",
-    "category": "Physical",
-    "pp": 8,
-    "power": 120,
-    "accuracy": 100,
-    "priority": 0,
-    "critRatio": 1,
-    "target": "normal",
-    "multihit": [],
-    "flags": [
-      "contact",
-      "mirror",
-      "protect"
-    ],
-    "spreadHit": false,
-    "isZ": false,
-    "isMax": false,
-    "zMove": {
-      "basePower": 190
-    },
-    "maxMove": {
-      "basePower": 140
     }
   },
   "かげぶんしん": {
