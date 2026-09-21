@@ -1503,16 +1503,17 @@ class Battle:
         ctx = AttackContext(attacker=attacker, defender=defender, move=move)
         move.register_handlers(self.events, attacker)
         try:
-            # MoveExecutor と同じ基準値を使う。タイプは data.type、分類は現在値で
-            # 解決する非対称な仕様も、技実行時の挙動をそのまま踏襲する。
-            move.type = self.events.emit(
-                Event.ON_MODIFY_MOVE_TYPE, ctx, value=move.data.type
-            )
-            move.category = self.events.emit(
-                Event.ON_MODIFY_MOVE_CATEGORY, ctx, value=move.category
-            )
-            self.events.emit(Event.ON_SETUP_MOVE, ctx)
             try:
+                # メガソーラー等、技のタイプ・分類解決に影響する実行環境を先に適用する。
+                self.events.emit(Event.ON_SETUP_MOVE, ctx)
+                # MoveExecutor と同じ基準値を使う。タイプは data.type、分類は現在値で
+                # 解決する非対称な仕様も、技実行時の挙動をそのまま踏襲する。
+                move.type = self.events.emit(
+                    Event.ON_MODIFY_MOVE_TYPE, ctx, value=move.data.type
+                )
+                move.category = self.events.emit(
+                    Event.ON_MODIFY_MOVE_CATEGORY, ctx, value=move.category
+                )
                 yield
             finally:
                 self.events.emit(Event.ON_TEARDOWN_MOVE, ctx)

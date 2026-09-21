@@ -964,6 +964,29 @@ def test_メガソーラー_あめ中でもほのお技が1_5倍():
     assert battle.damage_calculator.power_modifier == 6144
 
 
+@pytest.mark.parametrize("weather_name", ["", "あめ", "すなあらし", "ゆき"])
+def test_メガソーラー_ウェザーボールを技実行中だけほのおタイプにする(weather_name: str):
+    """元天候に関係なくほのお化し、技実行後は技タイプと天候を復元する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="メガソーラー", move_names=["ウェザーボール"])],
+        team1=[Pokemon("ゲンガー")],
+        weather=(weather_name, 5) if weather_name else None,
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    move = attacker.moves[0]
+    hp_before = defender.hp
+
+    t.run_move(battle, 0)
+
+    # ノーマル技なら無効のゲンガーに命中することで、実行経路でのほのお化も確認する。
+    assert defender.hp < hp_before
+    assert battle.damage_calculator.power_modifier == 12288
+    assert move.type == "ノーマル"
+    assert battle.weather.name == weather_name
+    assert attacker.ability.weather_override_depth == 0
+
+
 def test_メガソーラー_ソーラービームが溜めずに1ターンで攻撃できる():
     """メガソーラー: 実際の天候に関わらず、ソーラービームがはれ扱いで即座に攻撃できる。"""
     battle = t.start_battle(
