@@ -373,6 +373,14 @@ class Event(Enum):
     # 用例: フォトンゲイザー等の分類変換能力
     ON_MODIFY_MOVE_CATEGORY = auto()
 
+    # 発火: 技のタイプ・分類の解決直後に基礎威力を書き換える（技実行時・
+    #        Battle.calc_move_power / calc_damages 等の外部問い合わせ時の両方）
+    # 用例: はきだす・なげつける・エコーボイス・りんしょう等、技固有の状況で基礎威力
+    #        （Move.base_power）自体が決まる技。値の読み取りだけを行い、
+    #        使用回数の記録などの副作用は登録してはならない（外部問い合わせでも発火するため）。
+    #        特性・持ち物等の乗算補正は ON_CALC_POWER_MODIFIER を使う
+    ON_MODIFY_BASE_POWER = auto()
+
     # 発火: みがわりへのヒット可否（音技・bypass_substituteフラグ技はこのイベントより前に
     #        move_executor 側で直接判定される）
     # 用例: すりぬけ等 subject_spec="attacker:self"

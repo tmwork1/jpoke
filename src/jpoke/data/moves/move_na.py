@@ -87,6 +87,10 @@ MOVES_NA: dict[MoveName, MoveData] = {
     "なげつける": MoveData(
         power=1,
         handlers={
+            Event.ON_MODIFY_BASE_POWER: h.MoveHandler(
+                ha.なげつける_calc_power,
+                subject_spec="attacker:self",
+            ),
             Event.ON_TRY_MOVE_1: h.MoveHandler(
                 ha.なげつける_check_item,
                 subject_spec="attacker:self",

@@ -97,15 +97,13 @@ MOVES_HA: dict[MoveName, MoveData] = {
     ),
     "はきだす": MoveData(
         handlers={
-            Event.ON_TRY_MOVE_1: [
-                h.MoveHandler(
-                    ha.はきだす_check_can_use,
-                    priority=30,
-                ),
-                h.MoveHandler(
-                    ha.はきだす_set_power,
-                ),
-            ],
+            Event.ON_MODIFY_BASE_POWER: h.MoveHandler(
+                ha.はきだす_calc_power,
+            ),
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
+                ha.はきだす_check_can_use,
+                priority=30,
+            ),
             Event.ON_END_MOVE: h.MoveHandler(
                 ha.はきだす_apply_after,
             ),

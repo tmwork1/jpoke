@@ -1491,27 +1491,18 @@ def test_ナイトヘッド_ノーマルタイプに無効でダメージ0():
 
 def test_なげつける_オボンのみ_相手のHP回復():
     """なげつける: オボンのみを投げると、相手のHPが最大HPの1/4回復する"""
-    battle_with_item = t.start_battle(
+    battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", item_name="オボンのみ")],
         team1=[Pokemon("カビゴン")],
     )
-    battle_without_item = t.start_battle(
-        team0=[Pokemon("ピカチュウ")],
-        team1=[Pokemon("カビゴン")],
-    )
-    max_hp = battle_with_item.actives[1].max_hp
-    # なげつけるはMoveData上base_power=1のプレースホルダーのため、
-    # 実際の威力（本来はfling_powerで決まる）を明示的に設定する。
-    # 乱数ダメージ幅の最小値がヒールの回復量を上回るよう、十分に大きい威力にする
-    # （そうでないとHPが上限に張り付き、回復量の差分を観測できない）。
-    move_with = Move("なげつける")
-    move_with.base_power = 250
-    move_without = Move("なげつける")
-    move_without.base_power = 250
-    results_with = t.calc_lethal(battle_with_item, player_idx=0, moves=move_with, max_attack=1, secondary=True)
-    results_without = t.calc_lethal(battle_without_item, player_idx=0, moves=move_without, max_attack=1, secondary=True)
-    heal = max(1, max_hp // 4)
-    assert max(results_with[0].hp_counter) - max(results_without[0].hp_counter) == heal
+    max_hp = battle.actives[1].max_hp
+    # 威力はfling_power（オボンのみ=10）で解決されるため、ダメージは回復量（1/4）を
+    # 下回る。追加効果ありでは回復によりHPが上限に張り付き、なしでは減ったままになる。
+    results_with = t.calc_lethal(battle, player_idx=0, moves="なげつける", max_attack=1, secondary=True)
+    results_without = t.calc_lethal(battle, player_idx=0, moves="なげつける", max_attack=1, secondary=False)
+    assert results_without[0].max_damage > 0
+    assert max(results_with[0].hp_counter) == max_hp
+    assert max(results_without[0].hp_counter) == max_hp - results_without[0].min_damage
 
 
 def test_なげつける_しろいハーブ_下がったランクをリセット():

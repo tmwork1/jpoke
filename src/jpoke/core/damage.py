@@ -295,6 +295,31 @@ class DamageCalculator:
 
         return self._events.emit(Event.ON_CALC_DEF_TYPE_MODIFIER, ctx, base)
 
+    def calc_final_power(self,
+                         attacker: Pokemon,
+                         defender: Pokemon,
+                         move: Move) -> int:
+        """ダメージ式に入る最終威力を計算する。
+
+        技のハンドラ登録・タイプ/分類/基礎威力の解決・かたやぶり適用が済んでいる
+        前提の内部実装。外部からは ``Battle.calc_move_power`` を使用すること。
+
+        Args:
+            attacker: 攻撃側
+            defender: 防御側
+            move: 技
+
+        Returns:
+            int: 最終威力。威力を持たない技は 0
+        """
+        self.reset_monitor_attributes()
+
+        if not move.base_power:
+            return 0
+
+        ctx = AttackContext(attacker=attacker, defender=defender, move=move)
+        return self._calc_final_power(ctx)
+
     def _calc_final_power(self, ctx: AttackContext) -> int:
         """最終威力を計算する。
 
