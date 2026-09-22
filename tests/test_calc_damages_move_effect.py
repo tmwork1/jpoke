@@ -198,6 +198,26 @@ def test_テラバースト_calc_damagesで実数値により分類を切り替�
     assert special_attack == special.actives[0].stats["spa"]
 
 
+def test_メガソーラー_ウェザーボールを問い合わせ中だけ晴れとして扱う():
+    """メガソーラーはタイプ解決前に晴れを適用し、問い合わせ後は状態を復元する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="メガソーラー", move_names=["ウェザーボール"])],
+        team1=[Pokemon("ゲンガー")],
+    )
+    attacker, defender = battle.actives
+    move = attacker.moves[0]
+
+    damages = battle.calc_damages(attacker, defender, move)
+
+    # ノーマル技なら無効のゲンガーにも、ほのおタイプとしてダメージが入る。
+    assert max(damages) > 0
+    # ウェザーボール固有の2倍と晴れの1.5倍がともに反映される。
+    assert battle.damage_calculator.power_modifier == 12288
+    assert move.type == "ノーマル"
+    assert battle.weather.name == ""
+    assert attacker.ability.weather_override_depth == 0
+
+
 def test_メトロノームとたくわえる_calc_damagesで回数を変えない():
     """問い合わせはON_END_MOVEを発火せず、実使用時の副作用を起こさない。"""
     battle = t.start_battle(

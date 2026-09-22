@@ -302,6 +302,10 @@ class MoveExecutor:
         # run_moveのネスト呼び出し深度を記録する（ねごと・さいはい等のサブ技実行検出用）
         self._run_move_depth += 1
         try:
+            # メガソーラー等、技のタイプ・分類解決に影響する実行環境を先に適用する。
+            # 行動成功判定より前に適用しても、finally の TEARDOWN で必ず解除される。
+            self._events.emit(Event.ON_SETUP_MOVE, ctx)
+
             # 技タイプを評価する（可変技対応）
             ctx.move.type = self.resolve_move_type(ctx.attacker, ctx.move)
             self.move_type = ctx.move.type
@@ -325,9 +329,6 @@ class MoveExecutor:
                 # .internal/spec/volatiles/いちゃもん.md 参照）。
                 if self._run_move_depth == 1:
                     ctx.attacker.selected_move = ctx.move
-
-                # 問い合わせでも必要な技実行環境を適用する
-                self._events.emit(Event.ON_SETUP_MOVE, ctx)
 
                 # 技を実際に使う開始時の副作用を適用する
                 self._events.emit(Event.ON_BEGIN_MOVE, ctx)
