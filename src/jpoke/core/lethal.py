@@ -77,7 +77,8 @@ class LethalHitResult:
         attack_count: 何回目の攻撃か（1始まり）
         hit_count: 多段技の何ヒット目か（1始まり）
         hp_dist: ダメージ適用後のHP分布
-        damage_dist: このヒットで与えたダメージの分布
+        damage_dist: そのヒットを受けた生存枝に対するダメージ分布
+            （全枝が既にHP0なら {0: 1}）
     """
     initial_hp: int
     move: Move
@@ -144,6 +145,21 @@ class LethalHitResult:
 def fainted(dist: StateDist) -> bool:
     """分布内に HP=0 の状態が存在するか確認する。"""
     return any(state.value == 0 for state in dist)
+
+
+def _split_fainted(hp_dist: StateDist) -> tuple[StateDist, StateDist]:
+    """HP分布を（生存枝, HP0枝）に分ける。"""
+    alive = {state: freq for state, freq in hp_dist.items() if state.value > 0}
+    dead = {state: freq for state, freq in hp_dist.items() if state.value == 0}
+    return alive, dead
+
+
+def _merge_dist(alive: StateDist, dead: StateDist) -> StateDist:
+    """生存枝とHP0枝を1つの分布に合流する。"""
+    result: StateDist = defaultdict(int, alive)
+    for state, freq in dead.items():
+        result[state] += freq
+    return dict(result)
 
 
 @dataclass
@@ -324,13 +340,16 @@ def _lethal_loop(initial_hp: int,
                 )
                 results.append(result)
 
-                if fainted(hp_dist):
-                    return results
-
                 # いのちがけ等、攻撃側自身がひんしになる技を使った場合はそこで打ち切る。
                 if ctx.attacker.fainted:
                     attacker_fainted_mid_round = True
                     break
+
+            if fainted(hp_dist):
+                # 1つでも致死枝が出たらこの攻撃回で打ち切る。ヒットループ内では
+                # 打ち切らない（連続技の途中で切ると生存枝への残りヒットが捨てられ、
+                # 致死率・打点が過小になる）。
+                return results
 
             if attacker_fainted_mid_round:
                 # ctx_list に後続の技（例: [("いのちがけ", 1), ("じしん", 1)] の
@@ -517,7 +536,13 @@ def _run_move(battle: Battle,
 
     この関数はダメージ計算・ON_BEFORE_MOVE・ダメージ適用・ON_HITを順に実行する。
     """
+    hp_dist, dead = _split_fainted(hp_dist)
+    if not hp_dist:
+        ctx.damage_dist = to_dist(0)
+        return _merge_dist(hp_dist, dead)
+
     # 技ダメージを計算して ctx に格納する
+    _update_hp(ctx, hp_dist)
     _calc_damage_dist(battle, ctx, hp_dist)
 
     # 技を適用する直前の処理（ハンドラは ctx.damage_dist を参照・更新する）
@@ -526,13 +551,17 @@ def _run_move(battle: Battle,
 
     # ダメージを適用する（満タン枝・非満タン枝を分けて処理する）
     hp_dist = _apply_damage(battle, ctx, hp_dist)
+    hp_dist, newly_dead = _split_fainted(hp_dist)
+    dead = _merge_dist(dead, newly_dead)
+    if not hp_dist:
+        return _merge_dist(hp_dist, dead)
     hp_dist = _update_hp(ctx, hp_dist)
 
     # ヒット時のハンドラを適用（きのみ回復など）
     hp_dist = _emit(LethalEvent.ON_HIT, battle, ctx,
                     hp_dist, every_event_handlers)
 
-    return hp_dist
+    return _merge_dist(hp_dist, dead)
 
 
 def _run_turn_end(battle: Battle,
@@ -601,16 +630,20 @@ def _apply_handlers(battle: Battle,
                     handlers: list[LethalHandler],
                     ctx: LethalContext,
                     hp_dist: StateDist) -> StateDist:
-    """ハンドラを順に適用する。HP=0 の状態が現れたら即打ち切り。
+    """生存枝にハンドラを順に適用し、HP0枝は後続ハンドラから除外する。
 
     ハンドラは `(battle, ctx, hp_dist) -> StateDist` を返す。ダメージ分布の変更は
     `ctx.damage_dist` を直接更新することで行う。
     """
-    for h in handlers:
-        if fainted(hp_dist):
+    dead: StateDist = defaultdict(int)
+    for handler in handlers:
+        hp_dist, newly_dead = _split_fainted(hp_dist)
+        for state, freq in newly_dead.items():
+            dead[state] += freq
+        if not hp_dist:
             break
-        hp_dist = h.func(battle, ctx, hp_dist)
-    return hp_dist
+        hp_dist = handler.func(battle, ctx, hp_dist)
+    return _merge_dist(hp_dist, dead)
 
 
 def _update_hp(ctx: LethalContext, hp_dist: StateDist) -> StateDist:
@@ -629,14 +662,27 @@ def _emit(event: LethalEvent,
     Args:
         every_event_handlers: 呼び出し元で事前取得した ON_EVERY_EVENT ハンドラ。
     """
-    if fainted(hp_dist):
-        return hp_dist
+    hp_dist, dead = _split_fainted(hp_dist)
+    if not hp_dist:
+        return _merge_dist(hp_dist, dead)
+
+    # resume_from などでHP0枝を含む分布から再開した場合も、最初のハンドラが
+    # 生存枝のHPを参照できるよう、分離直後に同期する。
+    hp_dist = _update_hp(ctx, hp_dist)
 
     handlers = _get_handlers(event, battle, ctx)
     hp_dist = _apply_handlers(battle, handlers, ctx, hp_dist)
+    hp_dist, newly_dead = _split_fainted(hp_dist)
+    dead = _merge_dist(dead, newly_dead)
+    if not hp_dist:
+        return _merge_dist(hp_dist, dead)
     hp_dist = _update_hp(ctx, hp_dist)
 
     hp_dist = _apply_handlers(battle, every_event_handlers, ctx, hp_dist)
+    hp_dist, newly_dead = _split_fainted(hp_dist)
+    dead = _merge_dist(dead, newly_dead)
+    if not hp_dist:
+        return _merge_dist(hp_dist, dead)
     hp_dist = _update_hp(ctx, hp_dist)
 
-    return hp_dist
+    return _merge_dist(hp_dist, dead)
