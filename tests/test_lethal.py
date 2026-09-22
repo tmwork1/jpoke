@@ -116,6 +116,30 @@ def test_Vジェネレート_ランクダウン_secondary無し():
     assert monitor.attacker.boosts.get("spe", 0) == 0
 
 
+def test_resume_from_HP0枝を含む分布から再開しても生存枝にON_BEFORE_MOVEが適用される():
+    """HP0 枝を含む分布（4ヒット目で乱数1発）から resume_from で再開した場合、
+    ON_BEFORE_MOVE ハンドラ（メテオビームのとくこう上昇）が生存枝に対して適用される"""
+    battle1 = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    first = t.calc_lethal(battle1, player_idx=0, moves=[(Move("スケイルショット"), 4)])
+    assert 0 < first[-1].lethal_probability < 1
+
+    monitor = LethalMonitor()
+    battle2 = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    second = t.calc_lethal(
+        battle2, player_idx=0, moves=Move("メテオビーム"), max_attack=1,
+        secondary=True, resume_from=first[-1], monitor=monitor,
+    )
+
+    assert monitor.attacker.boosts["spa"] == 1
+    assert second[-1].lethal_probability == 1.0
+
+
 def test_resume_from_HP分布が1発目終了時点から連続する():
     """1発目終了時点のHP分布の各枝から、resume_from した2発目でさらにダメージが
     差し引かれていることを確認する（たいあたりは20~24固定のダメージ幅を持つ）。"""
@@ -2308,6 +2332,47 @@ def test_固定ダメージ技と一撃必殺技のlethal_handlers登録漏れ�
     assert missing_reflect == []
 
 
+def test_多段技_2攻撃目の途中で致死枝が出ても確定数が正しい():
+    """ドデカバシ タネマシンガン5ヒット(22~26/hit) → カバルドン H215:
+    2攻撃目の4ヒット目(累計9ヒット)で最高乱数側のみ HP0 になるが、
+    5ヒット目まで適用されて確定2発になる"""
+    attacker = Pokemon("ドデカバシ", nature="いじっぱり", ability_name="スキルリンク")
+    defender = Pokemon("カバルドン", nature="わんぱく")
+    defender.set_evs({"hp": 32}, hp_policy="full")
+    battle = t.start_battle(team0=[attacker], team1=[defender])
+    results = t.calc_lethal(
+        battle, player_idx=0, moves=[(Move("タネマシンガン"), 5)], max_attack=2,
+    )
+
+    assert results[0].min_damage == 22
+    assert results[0].max_damage == 26
+    assert results[-2].lethal_probability == pytest.approx(0.0336, abs=0.001)
+    assert results[-1].attack_count == 2
+    assert results[-1].hit_count == 5
+    assert results[-1].lethal_probability == 1.0
+
+
+def test_多段技_resume_from経由でも2攻撃目の確定数が正しい():
+    """1攻撃目の results[-1] を resume_from に渡して2攻撃目を計算しても、
+    max_attack=2 で一括計算した場合と同じ確定2発になる"""
+    attacker = Pokemon("ドデカバシ", nature="いじっぱり", ability_name="スキルリンク")
+    defender = Pokemon("カバルドン", nature="わんぱく")
+    defender.set_evs({"hp": 32}, hp_policy="full")
+    battle = t.start_battle(team0=[attacker], team1=[defender])
+    first = t.calc_lethal(
+        battle, player_idx=0, moves=[(Move("タネマシンガン"), 5)], max_attack=1,
+    )
+    second = t.calc_lethal(
+        battle, player_idx=0, moves=[(Move("タネマシンガン"), 5)], max_attack=1,
+        resume_from=first[-1],
+    )
+
+    assert first[-1].lethal_probability == 0.0
+    assert [r.hit_count for r in second] == [1, 2, 3, 4, 5]
+    assert second[-1].attack_count == 2
+    assert second[-1].lethal_probability == 1.0
+
+
 def test_多段技_ヒットごとに分布を記録():
     """スケイルショットのような多段技は、ヒットごとに LethalHitResult が積まれる"""
     battle = t.start_battle(
@@ -2320,6 +2385,68 @@ def test_多段技_ヒットごとに分布を記録():
     assert all(r.attack_count == 1 for r in results)
     assert results[0].min_damage == 19
     assert results[0].max_damage == 24
+
+
+def test_多段技_全枝がHP0になった後のヒットはダメージ0():
+    """全枝が HP0 になった後のヒットは damage_dist が {0: 1} になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    results = t.calc_lethal(battle, player_idx=0, moves=[(Move("スケイルショット"), 6)])
+
+    assert results[4].lethal_probability == 1.0
+    assert results[5].hit_count == 6
+    assert results[5].damage_counter == {0: 1}
+    assert results[5].lethal_probability == 1.0
+
+
+def test_多段技_致死枝が出た後も生存枝のダメージ分布が汚れない():
+    """致死枝が出た後のヒットの damage_dist は生存枝に対するダメージ分布であり、
+    HP0 枝の 0 ダメージが混ざらない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    results = t.calc_lethal(battle, player_idx=0, moves=[(Move("スケイルショット"), 5)])
+
+    assert results[3].lethal_probability > 0
+    assert results[4].min_damage == 38
+    assert results[4].max_damage == 48
+
+
+def test_多段技_致死枝が出た後も生存枝のヒット時ハンドラが動く():
+    """致死枝が出た後のヒットでも、生存枝には ON_HIT ハンドラ（じきゅうりょくの
+    ぼうぎょ上昇）が適用される。4ヒット目で一部の枝が HP0 になった後、
+    5ヒット目のダメージは4ヒット目のぼうぎょ上昇を反映して下がる"""
+    monitor = LethalMonitor()
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("ピカチュウ", ability_name="じきゅうりょく")],
+    )
+    results = t.calc_lethal(
+        battle, player_idx=0, moves=[(Move("スケイルショット"), 5)], monitor=monitor,
+    )
+
+    assert 0 < results[3].lethal_probability < 1
+    assert results[3].max_damage == 19
+    assert results[4].max_damage == 16
+    # 5ヒット目の生存枝にも ON_HIT が適用され、ぼうぎょは5段階上がる
+    assert monitor.defender.boosts["def"] == 5
+
+
+def test_多段技_途中ヒットで致死枝が出ても全ヒット適用する():
+    """連続技の途中ヒットで一部の枝が HP0 になっても、指定ヒット数まで
+    すべて適用される（参考値 1.2: 4hit 乱数1発 81.91%, 5hit 確定1発）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    results = t.calc_lethal(battle, player_idx=0, moves=[(Move("スケイルショット"), 5)])
+
+    assert [r.hit_count for r in results] == [1, 2, 3, 4, 5]
+    assert results[3].lethal_probability == pytest.approx(0.8191, abs=0.001)
+    assert results[4].lethal_probability == 1.0
 
 
 def test_多段技マルチスケイル_1ヒット目のみ半減():
