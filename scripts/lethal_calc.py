@@ -48,9 +48,9 @@ def main(attacker: str,
 
 
 if __name__ == "__main__":
-    # result = main("ガブリアス", "カイリュー", [("ドラゴンテール", 1)])
+    result = main("ガブリアス", "ヤドキング", [("じしん", 1)])
     # result = main("ガブリアス", "カイリュー", [("ドラゴンテール", 1)], defender_item="オボンのみ")  # 乱2 (5.9%)
     # result = main("ガブリアス", "カイリュー", [("ドラゴンテール", 1)], defender_ability="マルチスケイル")
     # result = main("ガブリアス", "カイリュー", [("ドラゴンテール",1), ("ドラゴンクロー",1)], defender_ability="マルチスケイル")
     # result = main("ガブリアス", "カイリュー", [("スケイルショット", 3)], defender_ability="マルチスケイル")
-    result = main("ガブリアス", "カイリュー", [("アイアンヘッド", 1), ("スケイルショット", 3)], defender_ability="マルチスケイル")
+    # result = main("ガブリアス", "カイリュー", [("アイアンヘッド", 1), ("スケイルショット", 3)], defender_ability="マルチスケイル")
