@@ -314,6 +314,9 @@ class MoveExecutor:
             ctx.move.category = self.resolve_move_category(ctx.attacker, ctx.move)
             self.move_category = ctx.move.category
 
+            # 技固有の状況で決まる基礎威力を解決する（はきだす・なげつける等）
+            ctx.move.base_power = self.resolve_base_power(ctx)
+
             # 行動成功判定
             self.action_success = self._events.emit(Event.ON_TRY_ACTION, ctx, True)
             if self.action_success:
@@ -761,6 +764,21 @@ class MoveExecutor:
             Event.ON_MODIFY_MOVE_CATEGORY,
             AttackContext(attacker=attacker, defender=self.battle.foe(attacker), move=move),
             value=move.category
+        )
+
+    def resolve_base_power(self, ctx: AttackContext) -> int | None:
+        """技固有の状況で決まる基礎威力を解決する（ON_MODIFY_BASE_POWER）。
+
+        Args:
+            ctx: 攻撃側・防御側・技を設定済みのコンテキスト
+
+        Returns:
+            解決後の基礎威力（威力を持たない技は None）
+        """
+        return self._events.emit(
+            Event.ON_MODIFY_BASE_POWER,
+            ctx,
+            value=ctx.move.base_power,
         )
 
     def _consume_pp(self, ctx: AttackContext):

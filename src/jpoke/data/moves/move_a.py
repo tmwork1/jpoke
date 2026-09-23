@@ -791,8 +791,11 @@ MOVES_A: dict[MoveName, MoveData] = {
         accuracy=100,
         flags={"sound"},
         handlers={
+            Event.ON_MODIFY_BASE_POWER: h.MoveHandler(
+                ha.エコーボイス_calc_power,
+            ),
             Event.ON_TRY_MOVE_1: h.MoveHandler(
-                ha.エコーボイス_apply_chain_power,
+                ha.エコーボイス_record_use,
                 priority=50,
             ),
         }

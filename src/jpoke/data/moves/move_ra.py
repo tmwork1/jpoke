@@ -139,8 +139,11 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "りんしょう": MoveData(
         flags={"sound"},
         handlers={
+            Event.ON_MODIFY_BASE_POWER: h.MoveHandler(
+                ha.りんしょう_calc_power,
+            ),
             Event.ON_BEGIN_MOVE: h.MoveHandler(
-                ha.りんしょう_apply_chain_power,
+                ha.りんしょう_record_use,
             ),
         }
     ),

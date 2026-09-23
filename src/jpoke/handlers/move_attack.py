@@ -430,19 +430,32 @@ def エアスラッシュ_apply_flinch(battle: Battle, ctx: AttackContext, value
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.3)
 
 
-def エコーボイス_apply_chain_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """エコーボイス: 直前のターンから連続で使用され続けていれば威力を40上昇させる
-    （最大200）。途切れていれば威力を40にリセットする。
+def _エコーボイス_next_power(battle: Battle) -> int:
+    """エコーボイスをこのターンに使った場合の威力を返す（状態は変更しない）。"""
+    if battle.echoed_voice_last_turn == battle.turn - 1:
+        return min(battle.echoed_voice_power + 40, 200)
+    if battle.echoed_voice_last_turn != battle.turn:
+        return 40
+    return battle.echoed_voice_power
 
-    無効化判定（まもる等）より前の ON_TRY_MOVE_1（priority=50）で威力を確定させるため、
+
+def エコーボイス_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """エコーボイス（ON_MODIFY_BASE_POWER）: 直前のターンから連続で使用され続けていれば
+    威力を40上昇させる（最大200）。途切れていれば威力を40にリセットする。
+
+    使用の記録はエコーボイス_record_useが行う。
+    """
+    return HandlerReturn(value=_エコーボイス_next_power(battle))
+
+
+def エコーボイス_record_use(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """エコーボイス（ON_TRY_MOVE_1）: 使用ターンと威力段階を記録する。
+
+    無効化判定（まもる等）より前の ON_TRY_MOVE_1（priority=50）で記録するため、
     技が外れた・まもるで防がれた場合でも「使われたこと」自体は次のターンに引き継がれる。
     """
-    if battle.echoed_voice_last_turn == battle.turn - 1:
-        battle.echoed_voice_power = min(battle.echoed_voice_power + 40, 200)
-    elif battle.echoed_voice_last_turn != battle.turn:
-        battle.echoed_voice_power = 40
+    battle.echoed_voice_power = _エコーボイス_next_power(battle)
     battle.echoed_voice_last_turn = battle.turn
-    ctx.move.base_power = battle.echoed_voice_power
     return HandlerReturn(value=value)
 
 
@@ -2414,11 +2427,25 @@ def _なげつける_is_item_throwable(attacker: Pokemon) -> bool:
     return True
 
 
+def なげつける_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """なげつける（ON_MODIFY_BASE_POWER）: 使用者のアイテムのfling_powerを威力にする。
+
+    投げられないアイテム（なげつける_check_itemで失敗する場合）は威力0。
+    """
+    attacker = ctx.attacker
+    if (
+        not attacker.has_item(consider_enabled=True)
+        or not _なげつける_is_item_throwable(attacker)
+    ):
+        return HandlerReturn(value=0)
+    return HandlerReturn(value=attacker.item.data.fling_power)
+
+
 def なげつける_check_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """なげつける: 使用者のアイテムを確認し、威力を設定する。
+    """なげつける（ON_TRY_MOVE_1）: 使用者のアイテムを確認する。
 
     投げられないアイテムの場合は失敗する（詳細は_なげつける_is_item_throwableを参照）。
-    成功した場合はアイテムのfling_powerをctx.move.powerに設定する。
+    威力の設定はなげつける_calc_powerが行う。
 
     この判定に失敗した場合はEvent.ON_MOVE_ENDへ到達してもアイテムを消費しない
     （なげつける_consume_itemが_なげつける_is_item_throwableで再度ガードする）。
@@ -2439,7 +2466,6 @@ def なげつける_check_item(battle: Battle, ctx: AttackContext, value: Any) -
         )
         return HandlerReturn(value=False, stop_event=True)
 
-    ctx.move.base_power = attacker.item.data.fling_power
     return HandlerReturn(value=value)
 
 
@@ -2643,6 +2669,13 @@ def はきだす_apply_after(battle: Battle, ctx: AttackContext, value: Any) -> 
     return HandlerReturn(value=value)
 
 
+def はきだす_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """はきだす（ON_MODIFY_BASE_POWER）: たくわえ回数に応じて威力を決める。"""
+    mon = ctx.attacker
+    count = (mon.volatiles["たくわえる"].count or 0) if mon.has_volatile("たくわえる") else 0
+    return HandlerReturn(value=count * 100)  # 1回=100, 2回=200, 3回=300
+
+
 def はきだす_check_can_use(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """はきだすの使用条件チェック: たくわえた回数が0なら失敗する。"""
     mon = ctx.attacker
@@ -2655,15 +2688,6 @@ def はきだす_check_can_use(battle: Battle, ctx: AttackContext, value: Any) -
             payload=FailureLogPayload(move=ctx.move.name, display_reason="はきだす")
         )
         return HandlerReturn(value=False, stop_event=True)
-    return HandlerReturn(value=value)
-
-
-def はきだす_set_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """はきだすの効果（ON_TRY_MOVE_1）: たくわえ回数に応じて威力を設定する。"""
-    mon = ctx.attacker
-    count = (mon.volatiles["たくわえる"].count or 0) if mon.has_volatile("たくわえる") else 0
-    power = count * 100  # 1回=100, 2回=200, 3回=300
-    ctx.move.base_power = power
     return HandlerReturn(value=value)
 
 
@@ -3809,14 +3833,22 @@ def りんごさん_lower_defender_spd(battle: Battle, ctx: AttackContext, value
     return modify_defender_stats(battle, ctx, value, stats={"spd": -1})
 
 
-def りんしょう_apply_chain_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """りんしょう: 同じターン中に既に使われていれば威力を120にする。
+def りんしょう_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """りんしょう（ON_MODIFY_BASE_POWER）: 同じターン中に既に使われていれば威力を120にする。
 
-    先に使われたりんしょうがまもる・タイプ相性などで無効化されても後発の威力上昇は
-    成立するため、無効化判定より前の ON_BEGIN_MOVE の時点で判定・記録する。
+    使用の記録はりんしょう_record_useが行う。
     """
     if battle.round_used_turn == battle.turn:
-        ctx.move.base_power = 120
+        return HandlerReturn(value=120)
+    return HandlerReturn(value=value)
+
+
+def りんしょう_record_use(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """りんしょう（ON_BEGIN_MOVE）: 使用ターンを記録する。
+
+    先に使われたりんしょうがまもる・タイプ相性などで無効化されても後発の威力上昇は
+    成立するため、無効化判定より前の ON_BEGIN_MOVE の時点で記録する。
+    """
     battle.round_used_turn = battle.turn
     return HandlerReturn(value=value)
 

@@ -1481,6 +1481,34 @@ class Battle:
                 attacker, defender, move, critical=critical
             )
 
+    def calc_move_power(self,
+                        attacker: Pokemon,
+                        defender: Pokemon,
+                        move: Move | MoveName) -> int:
+        """現在の状況における技の最終威力を計算する。
+
+        外部問い合わせ用。技実行と同じ前処理（技ハンドラ登録・タイプ/分類/基礎威力の
+        解決・かたやぶり適用）を施したうえで、けたぐり・アクロバット等の技固有の
+        変動、特性・持ち物・天候等の威力補正（ON_CALC_POWER_MODIFIER）、テラスタル時の
+        威力60底上げまで含めた、ダメージ式に入る威力を返す。
+
+        Args:
+            attacker: 攻撃側のポケモン
+            defender: 防御側のポケモン
+            move: 使用する技（MoveオブジェクトまたはID文字列）
+
+        Returns:
+            int: 最終威力。威力を持たない技（変化技・固定ダメージ技等）は 0。
+                連続技は1撃目の威力
+
+        Note:
+            プレゼントのように乱数で威力が決まる技はデータ上の威力のまま返す。
+        """
+        if isinstance(move, str):
+            move = Move(move)
+        with self._prepare_move_for_query(attacker, defender, move):
+            return self.damage_calculator.calc_final_power(attacker, defender, move)
+
     @contextmanager
     def _prepare_move_for_query(self,
                                 attacker: Pokemon,
@@ -1490,6 +1518,7 @@ class Battle:
         relevant_events = (
             Event.ON_MODIFY_MOVE_TYPE,
             Event.ON_MODIFY_MOVE_CATEGORY,
+            Event.ON_MODIFY_BASE_POWER,
             Event.ON_SETUP_MOVE,
         )
         if (
@@ -1500,6 +1529,7 @@ class Battle:
             return
 
         original_type, original_category = move.type, move.category
+        original_base_power = move.base_power
         ctx = AttackContext(attacker=attacker, defender=defender, move=move)
         move.register_handlers(self.events, attacker)
         try:
@@ -1514,12 +1544,15 @@ class Battle:
                 move.category = self.events.emit(
                     Event.ON_MODIFY_MOVE_CATEGORY, ctx, value=move.category
                 )
+                # はきだす・なげつける等、技固有の状況で決まる基礎威力を解決する。
+                move.base_power = self.move_executor.resolve_base_power(ctx)
                 yield
             finally:
                 self.events.emit(Event.ON_TEARDOWN_MOVE, ctx)
         finally:
             move.unregister_handlers(self.events, attacker)
             move.type, move.category = original_type, original_category
+            move.base_power = original_base_power
 
     def has_interrupt(self) -> bool:
         """割り込みフラグが設定されているか確認。
