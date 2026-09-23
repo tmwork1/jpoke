@@ -1401,6 +1401,17 @@ def test_きしかいせい_HP約68パーセントのとき威力40():
     assert battle.damage_calculator.final_power == 40
 
 
+def test_きしかいせい_ちからのハチマキの補正が乗る():
+    """HP満タン時の基礎威力20にちからのハチマキの1.1倍補正が乗る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="ちからのハチマキ", move_names=["きしかいせい"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 22
+
+
 def test_きまぐレーザー_30パーセントで威力2倍():
     """きまぐレーザー: 乱数が0.3未満のとき威力が2倍になる。"""
     battle = t.start_battle(
@@ -2060,6 +2071,17 @@ def test_くさむすび_50kg以上100kg未満のとき威力80():
     )
     t.run_move(battle, 0)
     assert battle.damage_calculator.final_power == 80
+
+
+def test_くさむすび_ものしりメガネの補正が乗る():
+    """カビゴン相手の基礎威力120にものしりメガネの1.1倍補正が乗る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", item_name="ものしりメガネ", move_names=["くさむすび"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 132
 
 
 def test_くさわけ_素早さ1段階上昇が発動する():
@@ -2799,6 +2821,17 @@ def test_けたぐり_200kg以上のとき威力120():
     )
     t.run_move(battle, 0)
     assert battle.damage_calculator.final_power == 120
+
+
+def test_けたぐり_ちからのハチマキの補正が乗る():
+    """カビゴン相手の基礎威力120にちからのハチマキの1.1倍補正が乗る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", item_name="ちからのハチマキ", move_names=["けたぐり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 132
 
 
 def test_げきりん_カウント終了後にこんらんが付与される():

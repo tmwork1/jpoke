@@ -952,6 +952,17 @@ def test_しおふき_HP満タンのとき威力150():
     assert battle.damage_calculator.final_power == 150
 
 
+def test_しおふき_ものしりメガネの補正が乗る():
+    """HP満タン時の基礎威力150にものしりメガネの1.1倍補正が乗る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="ものしりメガネ", move_names=["しおふき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 165
+
+
 def test_しおみず_相手HPが半分より多いとき威力補正なし():
     """しおみず: 相手の現在HPが最大HPの半分より多いとき威力補正なし。"""
     battle = t.start_battle(
@@ -1691,6 +1702,17 @@ def test_じしん_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_じたばた_ちからのハチマキの補正が乗る():
+    """HP満タン時の基礎威力20にちからのハチマキの1.1倍補正が乗る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="ちからのハチマキ", move_names=["じたばた"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 22
+
+
 def test_じだんだ_タイプ相性で無効化された場合威力2倍になる():
     """じだんだ: 前のターンにタイプ相性(ひこうタイプ)で技が無効化された場合も、威力が2倍になる。"""
     battle = t.start_battle(
@@ -1881,6 +1903,17 @@ def test_じばく_使用後に攻撃者がひんしになる():
     t.run_move(battle, 0)
     assert attacker.hp == 0
     assert not attacker.alive
+
+
+def test_ジャイロボール_ちからのハチマキの補正が乗る():
+    """カビゴン対ピカチュウの基礎威力56にちからのハチマキの1.1倍補正が乗る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="ちからのハチマキ", move_names=["ジャイロボール"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 62
 
 
 def test_ジャイロボール_まひで実効素早さが半減すると威力が増加する():

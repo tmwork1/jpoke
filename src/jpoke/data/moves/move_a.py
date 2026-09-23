@@ -839,7 +839,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         power=1,
         flags={"bullet"},
         handlers={
-            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+            Event.ON_MODIFY_BASE_POWER: h.MoveHandler(
                 ha.エレキボール_calc_power,
             ),
         }

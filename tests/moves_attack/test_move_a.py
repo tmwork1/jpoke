@@ -2259,6 +2259,17 @@ def test_エレキボール_まひで実効素早さが半減すると威力が�
     assert battle.damage_calculator.final_power == 80
 
 
+def test_エレキボール_ものしりメガネの補正が乗る():
+    """ピカチュウ対カビゴンの基礎威力80にものしりメガネの1.1倍補正が乗る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ものしりメガネ", move_names=["エレキボール"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 88
+
+
 def test_エレキボール_比率0のとき威力40():
     """エレキボール: 攻撃者S // 防御者S が 0 のとき威力40。
     カビゴン(S=50) vs ピカチュウ(S=110) → 比率0 → 威力40。

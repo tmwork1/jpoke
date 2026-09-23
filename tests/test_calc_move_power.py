@@ -1,4 +1,4 @@
-"""Battle.calc_move_power による最終威力問い合わせのテスト。"""
+"""Battle.calc_move_base_power / calc_move_power による威力問い合わせのテスト。"""
 from __future__ import annotations
 
 from jpoke import Pokemon
@@ -96,6 +96,17 @@ def test_エコーボイス_calc_move_powerで連続使用の威力を副作用�
     assert battle.damage_calculator.final_power == 80
 
 
+def test_けたぐり_calc_move_base_powerで持ち物補正を含まない():
+    """カビゴン相手の基礎威力は120で、くろおびの1.2倍補正は含まない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", item_name="くろおび", move_names=["けたぐり"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker, defender = battle.actives
+    assert battle.calc_move_base_power(attacker, defender, "けたぐり") == 120
+    assert battle.calc_move_power(attacker, defender, "けたぐり") == 144
+
+
 def test_なげつける_calc_move_powerで持ち物の威力を返す():
     """くろいてっきゅうなら130、持ち物なしなら0。"""
     battle = t.start_battle(
@@ -105,6 +116,31 @@ def test_なげつける_calc_move_powerで持ち物の威力を返す():
     attacker, defender = battle.actives
     assert battle.calc_move_power(attacker, defender, "なげつける") == 130
     assert battle.calc_move_power(defender, attacker, "なげつける") == 0
+
+
+def test_のろい_calc_move_base_powerで変化技は0を返す():
+    """威力を持たない変化技は0。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["のろい"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker, defender = battle.actives
+    assert battle.calc_move_base_power(attacker, defender, "のろい") == 0
+
+
+def test_はきだす_calc_move_base_powerでMove状態を復元する():
+    """たくわえ2回の基礎威力200を返し、技の可変状態とハンドラ登録を残さない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["はきだす"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"たくわえる": 2},
+    )
+    attacker, defender = battle.actives
+    move = attacker.moves[0]
+    original = (move.base_power, move.type, move.category)
+    assert battle.calc_move_base_power(attacker, defender, move) == 200
+    assert (move.base_power, move.type, move.category) == original
+    assert all(event not in battle.events.handlers for event in move.data.handlers)
 
 
 def test_はきだす_calc_move_powerでたくわえ回数を反映する():

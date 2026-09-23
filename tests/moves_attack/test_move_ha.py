@@ -1134,6 +1134,17 @@ def test_ハードプラント_相手をひんしにしてもリチャージ状�
     assert attacker.has_volatile("リチャージ")
 
 
+def test_ハードプレス_ちからのハチマキの補正が乗る():
+    """HP満タンの相手に対する基礎威力100にちからのハチマキの1.1倍補正が乗る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="ちからのハチマキ", move_names=["ハードプレス"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 110
+
+
 def test_ハードプレス_相手HP1のとき威力1():
     """ハードプレス: 相手のHPが1のとき威力は最低1（max(1, floor(100*1/max_hp))）。"""
     battle = t.start_battle(
@@ -1666,6 +1677,29 @@ def test_ひょうざんおろし_威力は120():
     assert battle.damage_calculator.final_power == 120
 
 
+def test_ヒートスタンプ_ちいさくなる中は体重比の威力が2倍():
+    """ヒートスタンプ: 体重比で決まる基礎威力120にちいさくなるの2倍補正が乗る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ヒートスタンプ"])],
+        team1=[Pokemon("マリルリ")],
+        accuracy=100,
+        volatile1={"ちいさくなる": 1},
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 240
+
+
+def test_ヒートスタンプ_ちからのハチマキの補正が乗る():
+    """カビゴン対ピカチュウの基礎威力120にちからのハチマキの1.1倍補正が乗る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="ちからのハチマキ", move_names=["ヒートスタンプ"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 132
+
+
 def test_ヒートスタンプ_体重比2以上3未満のとき威力60():
     """ヒートスタンプ: 自分/相手の体重比が2以上3未満のとき威力60。
     バクフーン(79.5kg) vs マリルリ(28.5kg) → 比率2.79 → 威力60。
@@ -1729,21 +1763,6 @@ def test_ヒートスタンプ_体重比5以上のとき威力120():
     )
     t.run_move(battle, 0)
     assert battle.damage_calculator.final_power == 120
-
-
-def test_ヒートスタンプ_相手がちいさくなる中は体重比計算をスキップ():
-    """ヒートスタンプ: 相手がちいさくなる状態のとき体重比計算をスキップする。
-    ちいさくなる中は minimize ラベルの共通処理（威力2倍）のみが適用される。
-    """
-    battle = t.start_battle(
-        team0=[Pokemon("カビゴン", move_names=["ヒートスタンプ"])],
-        team1=[Pokemon("マリルリ")],
-        accuracy=100,
-        volatile1={"ちいさくなる": 1},
-    )
-    t.run_move(battle, 0)
-    # ちいさくなる中は元の power=1 に minimize 補正(2倍)が適用されて 2 になる
-    assert battle.damage_calculator.final_power == 2
 
 
 def test_びりびりちくちく_ひるみが発動する():
@@ -2024,6 +2043,17 @@ def test_フェイント_みがわり状態でもまもる状態を解除する(
     assert not defender.has_volatile("みがわり")
 
 
+def test_ふくろだたき_ちからのハチマキの補正が乗る():
+    """ガブリアスの基礎こうげきから決まる威力18にちからのハチマキの1.1倍補正が乗る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス", item_name="ちからのハチマキ", move_names=["ふくろだたき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 20
+
+
 def test_ふぶき_こおりが発動する():
     """ふぶき: 10%でこおりを付与する。"""
     battle = t.start_battle(
@@ -2270,6 +2300,17 @@ def test_ふんか_HP満タンのとき威力150():
     attacker.hp = attacker.max_hp  # 満タン
     t.run_move(battle, 0)
     assert battle.damage_calculator.final_power == 150
+
+
+def test_ふんか_ものしりメガネの補正が乗る():
+    """HP満タン時の基礎威力150にものしりメガネの1.1倍補正が乗る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="ものしりメガネ", move_names=["ふんか"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 165
 
 
 def test_ぶきみなじゅもん_ちからずくで威力上昇しPP減少は発動しない():
@@ -2865,6 +2906,29 @@ def test_ヘドロばくだん_どくが発動する():
     assert battle.actives[1].ailment.name == "どく"
 
 
+def test_ヘビーボンバー_ちいさくなる中は体重比の威力が2倍():
+    """ヘビーボンバー: 体重比で決まる基礎威力120にちいさくなるの2倍補正が乗る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ヘビーボンバー"])],
+        team1=[Pokemon("マリルリ")],
+        accuracy=100,
+        volatile1={"ちいさくなる": 1},
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 240
+
+
+def test_ヘビーボンバー_ちからのハチマキの補正が乗る():
+    """カビゴン対ピカチュウの基礎威力120にちからのハチマキの1.1倍補正が乗る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="ちからのハチマキ", move_names=["ヘビーボンバー"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 132
+
+
 def test_ヘビーボンバー_体重比2未満のとき威力40():
     """ヘビーボンバー: 自分/相手の体重比が2未満のとき威力40。
     ヤドン(36kg) vs マリルリ(28.5kg) → 比率1.26 → 威力40。
@@ -2889,21 +2953,6 @@ def test_ヘビーボンバー_体重比5以上のとき威力120():
     )
     t.run_move(battle, 0)
     assert battle.damage_calculator.final_power == 120
-
-
-def test_ヘビーボンバー_相手がちいさくなる中は体重比計算をスキップ():
-    """ヘビーボンバー: 相手がちいさくなる状態のとき体重比計算をスキップする。
-    ちいさくなる中は minimize ラベルの共通処理（威力2倍）のみが適用される。
-    """
-    battle = t.start_battle(
-        team0=[Pokemon("カビゴン", move_names=["ヘビーボンバー"])],
-        team1=[Pokemon("マリルリ")],
-        accuracy=100,
-        volatile1={"ちいさくなる": 1},
-    )
-    t.run_move(battle, 0)
-    # ちいさくなる中は元の power=1 に minimize 補正(2倍)が適用されて 2 になる
-    assert battle.damage_calculator.final_power == 2
 
 
 def test_ベノムショック_どく状態のとき威力2倍():

@@ -58,16 +58,19 @@ def test_フォトンゲイザー_攻撃後に相手の特性が有効に戻る(
     assert defender.ability.enabled is True
 
 
-def test_ふくろだたき_威力は基礎こうげきから計算される():
-    """ふくろだたき: 各ヒットの威力 = 基礎こうげき種族値 / 10 + 5（ガブリアスA=130 → 威力18）。"""
+def test_ふくろだたき_ヒットごとに参加者の基礎こうげきから威力を決める():
+    """3撃目はカビゴンの基礎こうげき110から威力16となる。"""
     battle = t.start_battle(
-        team0=[Pokemon("ガブリアス", move_names=["ふくろだたき"])],
+        team0=[
+            Pokemon("ガブリアス", move_names=["ふくろだたき"]),
+            Pokemon("ピカチュウ"),
+            Pokemon("カビゴン"),
+        ],
         team1=[Pokemon("カビゴン")],
         accuracy=100,
     )
     t.run_move(battle, 0)
-    # ガブリアス基礎こうげき=130 → 130//10+5=18
-    assert battle.damage_calculator.final_power == 18
+    assert battle.damage_calculator.final_power == 16
 
 
 def test_ふくろだたき_ヨワシはむれたすがたでもたんどくのすがたの種族値で計算される():
@@ -82,6 +85,18 @@ def test_ふくろだたき_ヨワシはむれたすがたでもたんどくの�
     assert mon.name == "ヨワシ(むれ)"
     t.run_move(battle, 0)
     assert battle.damage_calculator.final_power == 7
+
+
+def test_ふくろだたき_威力は基礎こうげきから計算される():
+    """ふくろだたき: 各ヒットの威力 = 基礎こうげき種族値 / 10 + 5（ガブリアスA=130 → 威力18）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス", move_names=["ふくろだたき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    # ガブリアス基礎こうげき=130 → 130//10+5=18
+    assert battle.damage_calculator.final_power == 18
 
 
 def test_ふくろだたき_状態異常ポケモンはカウントされない():

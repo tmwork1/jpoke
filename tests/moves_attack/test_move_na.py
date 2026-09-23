@@ -1126,6 +1126,17 @@ def test_なみのり_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_にぎりつぶす_ちからのハチマキの補正が乗る():
+    """HP満タンの相手に対する基礎威力120にちからのハチマキの1.1倍補正が乗る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="ちからのハチマキ", move_names=["にぎりつぶす"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 132
+
+
 def test_にぎりつぶす_相手HP1のとき威力1():
     """にぎりつぶす: 相手のHPが1のとき威力は最低1（max(1, round_half_down(120*1/max_hp))）。"""
     battle = t.start_battle(

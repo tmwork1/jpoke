@@ -3264,6 +3264,17 @@ def test_ドラゴンエナジー_HP満タンのとき威力150():
     assert battle.damage_calculator.final_power == 150
 
 
+def test_ドラゴンエナジー_ものしりメガネの補正が乗る():
+    """HP満タン時の基礎威力150にものしりメガネの1.1倍補正が乗る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="ものしりメガネ", move_names=["ドラゴンエナジー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 165
+
+
 def test_ドラゴンクロー_PPは16():
     """ドラゴンクロー: チャンピオンズでのPPは16（.internal/champions/move_list.txt準拠）。"""
     assert MOVES["ドラゴンクロー"].pp == 16

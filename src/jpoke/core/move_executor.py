@@ -142,16 +142,17 @@ class MoveExecutor:
 
         return self._events.emit(Event.ON_MODIFY_HIT_COUNT, ctx, base_hit_count)
 
-    def _resolve_hit_power(self, move: Move, hit_index: int) -> int | None:
+    def _resolve_hit_power(self, ctx: AttackContext, hit_index: int) -> int | None:
         """現在ヒットの威力を取得する。
 
         Args:
-            move: 使用する技
+            ctx: 攻防・技の情報を持つバトルコンテキスト
             hit_index: 1 始まりのヒット番号
 
         Returns:
             ヒットごとの威力。指定がなければ基礎威力を返す。
         """
+        move = ctx.move
         if move.data.multi_hit is None:
             return move.base_power
 
@@ -159,7 +160,15 @@ class MoveExecutor:
         if power_sequence:
             idx = min(hit_index - 1, len(power_sequence) - 1)
             return power_sequence[idx]
-        return move.base_power
+
+        # ふくろだたきのようにヒットごとに状況から基礎威力が
+        # 決まる連続技のため、静的な威力を起点に再解決する。
+        current_power = move.base_power
+        move.base_power = move.data.power
+        try:
+            return self.resolve_base_power(ctx)
+        finally:
+            move.base_power = current_power
 
     def _check_hit(self, ctx: AttackContext) -> bool:
         """技の命中判定。
@@ -572,7 +581,7 @@ class MoveExecutor:
                 ctx.hit_index = hit_index
 
                 # ヒットごとの技の威力を設定
-                ctx.move.base_power = self._resolve_hit_power(ctx.move, hit_index)
+                ctx.move.base_power = self._resolve_hit_power(ctx, hit_index)
                 self.move_power = ctx.move.base_power
 
                 # 命中判定: 通常技は初回ヒットのみ、ヒットごと判定技は毎ヒットで判定
