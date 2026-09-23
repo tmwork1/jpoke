@@ -1633,8 +1633,8 @@ def test_ひゃっきやこう_状態異常のとき威力2倍():
     battle_ailment.ailment_manager.apply(battle_ailment.actives[1], "まひ")
     t.run_move(battle_normal, 0)
     t.run_move(battle_ailment, 0)
-    assert battle_normal.damage_calculator.power_modifier == 4096
-    assert battle_ailment.damage_calculator.power_modifier == 8192
+    assert battle_normal.damage_calculator.final_power == 65
+    assert battle_ailment.damage_calculator.final_power == 130
 
 
 def test_ひやみず_secondary_effectフラグを持つ():

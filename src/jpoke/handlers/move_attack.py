@@ -158,8 +158,8 @@ def あくのはどう_apply_flinch(battle: Battle, ctx: AttackContext, value: A
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.2)
 
 
-def アクロバット_double_power_when_no_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """アクロバット: 自分が道具を持っていないとき威力が2倍になる。
+def アクロバット_double_power_when_no_item(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """アクロバット（ON_MODIFY_BASE_POWER）: 自分が道具を持っていないとき基礎威力が2倍になる（55→110）。
 
     `has_item()` のデフォルト（`consider_enabled=False`）は、道具の効果が
     ぶきよう・さしおさえ・マジックルームなどで無効化されていても、物理的に
@@ -168,24 +168,18 @@ def アクロバット_double_power_when_no_item(battle: Battle, ctx: AttackCont
     そのまま利用する。
     """
     if not ctx.attacker.has_item():
-        value = apply_fixed_modifier(value, 8192)
+        value = value * 2
     return HandlerReturn(value=value)
 
 
-def アシストパワー_boost_power_by_rank(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """アシストパワー: 使用者のランク上昇合計1段階ごとに威力が20増加する（基本威力20）。
-
-    威力 = 20 + 20 * rank_sum = 20 * (1 + rank_sum)
-    ON_CALC_POWER_MODIFIER は 4096 = 1.0 倍基準のため
-    modifier = 4096 * (1 + rank_sum) を apply_fixed_modifier に渡す。
+def アシストパワー_boost_power_by_rank(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """アシストパワー（ON_MODIFY_BASE_POWER）: 使用者のランク上昇合計1段階ごとに
+    基礎威力が20増加する（基本威力20、威力 = 20 + 20 * rank_sum）。
     """
     attacker = ctx.attacker
     # 正のランク変化の合計を計算（A/B/C/D/S/命中率/回避率が対象、HPは除く）
     rank_sum = sum(max(0, v) for k, v in attacker.boosts.items() if k != "hp")
-    if rank_sum > 0:
-        modifier = 4096 * (1 + rank_sum)
-        value = apply_fixed_modifier(value, modifier)
-    return HandlerReturn(value=value)
+    return HandlerReturn(value=value + 20 * rank_sum)
 
 
 def アシッドボム_sharply_lower_defender_spd(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -361,14 +355,14 @@ def ウェザーボール_modify_move_type(battle: Battle, ctx: AttackContext, v
     return HandlerReturn(value=value)
 
 
-def ウェザーボール_power_modifier(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ウェザーボール: タイプが変化する天候のとき威力を2倍にする。
+def ウェザーボール_power_modifier(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """ウェザーボール（ON_MODIFY_BASE_POWER）: タイプが変化する天候のとき基礎威力を2倍にする。
 
     らんきりゅうは対応するタイプ変化がないため威力も変化しない。
     """
     weather = battle.weather_for(ctx.attacker)
     if weather.name in WEATHERBALL_TYPE_MAP:
-        value = apply_fixed_modifier(value, 8192)  # ×2倍
+        value = value * 2
     return HandlerReturn(value=value)
 
 
@@ -562,16 +556,16 @@ def おどろかす_apply_flinch(battle: Battle, ctx: AttackContext, value: Any)
 
 
 def おはかまいり_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """おはかまいり: ひんしになった味方の数に応じて威力が増加する。
+    """おはかまいり（ON_MODIFY_BASE_POWER）: ひんしになった味方の数に応じて基礎威力が増加する。
 
-    基本威力 50 に対して (1 + ひんし味方数) 倍の modifier を掛ける。
+    基本威力 50 に対して (1 + ひんし味方数) 倍。
     ひんし味方数は控えポケモン（bench）のうちひんしのもの。
     場に出ている自分自身はひんしでないため bench に含まれない。
     """
     player = battle.get_player(ctx.attacker)
     state = battle.player_states[player]
     fainted_count = sum(1 for p in state.bench if p.fainted)
-    return HandlerReturn(value=apply_fixed_modifier(value, 4096 * (1 + fainted_count)))
+    return HandlerReturn(value=value * (1 + fainted_count))
 
 
 def オーバーヒート_lower_attacker_spa(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -1402,8 +1396,9 @@ def しっとのほのお_apply_burn_to_defender(battle: Battle, ctx: AttackCont
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど")
 
 
-def しっぺがえし_double_power_when_second(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """しっぺがえし: 相手（対象）がそのターンにすでに行動していると威力が2倍になる。
+def しっぺがえし_double_power_when_second(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """しっぺがえし（ON_MODIFY_BASE_POWER）: 相手（対象）がそのターンにすでに
+    行動していると基礎威力が2倍になる。
 
     そのターンに交代してきたばかりで技を未使用の相手には威力補正が乗らない
     （第五世代以降の仕様）。
@@ -1414,7 +1409,7 @@ def しっぺがえし_double_power_when_second(battle: Battle, ctx: AttackConte
 
     attacker_player = battle.get_player(ctx.attacker)
     if battle.query.is_second_actor(attacker_player):
-        value = apply_fixed_modifier(value, 8192)
+        value = value * 2
     return HandlerReturn(value=value)
 
 
@@ -1486,10 +1481,12 @@ def じたばた_calc_power(battle: Battle, ctx: AttackContext, value: int) -> H
     return HandlerReturn(value=_hp_low_to_power(ctx.attacker.hp, ctx.attacker.max_hp))
 
 
-def じだんだ_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """じだんだ: 自分が前のターンで動けなかったとき、または使った技が失敗していたとき、威力が2倍になる。"""
+def じだんだ_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """じだんだ（ON_MODIFY_BASE_POWER）: 自分が前のターンで動けなかったとき、
+    または使った技が失敗していたとき、基礎威力が2倍になる。
+    """
     if ctx.attacker.failed_or_immobile_last_turn:
-        return HandlerReturn(value=apply_fixed_modifier(value, 8192))
+        return HandlerReturn(value=value * 2)
     return HandlerReturn(value=value)
 
 
@@ -1744,10 +1741,10 @@ def たきのぼり_apply_flinch(battle: Battle, ctx: AttackContext, value: Any)
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.2)
 
 
-def たたりめ_double_power_when_ailment(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """たたりめ: 対象が状態異常のとき威力が2倍になる。"""
+def たたりめ_double_power_when_ailment(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """たたりめ（ON_MODIFY_BASE_POWER）: 対象が状態異常のとき基礎威力が2倍になる。"""
     if ctx.defender.ailment.is_active:
-        value = apply_fixed_modifier(value, 8192)
+        value = value * 2
     return HandlerReturn(value=value)
 
 
@@ -1776,13 +1773,13 @@ def だいちのはどう_modify_move_type(battle: Battle, ctx: AttackContext, v
     return HandlerReturn(value=value)
 
 
-def だいちのはどう_power_modifier(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """だいちのはどう: 接地かつフィールドありのとき威力を2倍にする。"""
+def だいちのはどう_power_modifier(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """だいちのはどう（ON_MODIFY_BASE_POWER）: 接地かつフィールドありのとき基礎威力を2倍にする。"""
     if battle.query.is_floating(ctx.attacker):
         return HandlerReturn(value=value)
     terrain = battle.terrain.name
     if terrain in {"エレキフィールド", "グラスフィールド", "ミストフィールド", "サイコフィールド"}:
-        value = apply_fixed_modifier(value, 8192)  # ×2倍
+        value = value * 2
     return HandlerReturn(value=value)
 
 
@@ -1808,10 +1805,12 @@ def ダストシュート_apply_poison_to_defender(battle: Battle, ctx: AttackCo
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく", chance=0.3)
 
 
-def ダメおし_double_power_when_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ダメおし: 同ターン中に対象が既にダメージを受けていたら威力が2倍になる。"""
+def ダメおし_double_power_when_hit(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """ダメおし（ON_MODIFY_BASE_POWER）: 同ターン中に対象が既にダメージを受けていたら
+    基礎威力が2倍になる。
+    """
     if ctx.defender.hits_taken > 0:
-        value = apply_fixed_modifier(value, 8192)
+        value = value * 2
     return HandlerReturn(value=value)
 
 
@@ -1820,15 +1819,15 @@ def チャージビーム_boost_attacker_spa(battle: Battle, ctx: AttackContext,
 
 
 def つけあがる_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """つけあがる: 使用者の能力ランク上昇段階の合計1段階ごとに威力が20増加する（基本威力20）。
+    """つけあがる（ON_MODIFY_BASE_POWER）: 使用者の能力ランク上昇段階の合計1段階ごとに
+    基礎威力が20増加する（基本威力20、威力 = 20 + 20 * rank_sum）。
 
-    基本威力 20 に対して (1 + rank_sum) 倍の modifier を掛ける。
     A/B/C/D/S/命中率/回避率の正ランク合計を使う（HPは対象外）。
     アシストパワーと同様の計算。
     """
     attacker = ctx.attacker
     rank_sum = sum(max(0, v) for k, v in attacker.boosts.items() if k != "hp")
-    return HandlerReturn(value=apply_fixed_modifier(value, 4096 * (1 + rank_sum)))
+    return HandlerReturn(value=value + 20 * rank_sum)
 
 
 def ツタこんぼう_modify_move_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -1904,10 +1903,16 @@ def テラバースト_modify_move_type(battle: Battle, ctx: AttackContext, valu
     return HandlerReturn(value=value)
 
 
-def テラバースト_stellar_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ステラテラスタル状態ではテラバーストの威力が100になる補正。"""
+def テラバースト_stellar_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """テラバースト（ON_MODIFY_BASE_POWER）: ステラテラスタル状態では基礎威力が100になる。
+
+    基礎威力そのものを書き換えるだけなので、特性・持ち物等の
+    ON_CALC_POWER_MODIFIER による先行の威力補正は失われない
+    （旧実装は ON_CALC_POWER_MODIFIER で value を5120に上書きしており、
+    先に登録された補正が消える不具合があった）。
+    """
     if ctx.attacker.active_tera_type == 'ステラ':
-        value = 5120  # = 4096 * 100 / 80
+        value = 100
     return HandlerReturn(value=value)
 
 
@@ -2917,10 +2922,10 @@ def ひゃっきやこう_apply_burn_to_defender(battle: Battle, ctx: AttackCont
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.3)
 
 
-def ひゃっきやこう_double_power_when_ailment(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ひゃっきやこう: 相手が状態異常のとき威力が2倍になる。"""
+def ひゃっきやこう_double_power_when_ailment(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """ひゃっきやこう（ON_MODIFY_BASE_POWER）: 相手が状態異常のとき基礎威力が2倍になる。"""
     if ctx.defender.ailment.is_active:
-        value = apply_fixed_modifier(value, 8192)
+        value = value * 2
     return HandlerReturn(value=value)
 
 
@@ -3746,19 +3751,23 @@ def やきつくす_burn_item(battle: Battle, ctx: AttackContext, value: Any) ->
     return HandlerReturn(value=value)
 
 
-def やけっぱち_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """やけっぱち: 自分が前のターンで動けなかったとき、または使った技が失敗していたとき、威力が2倍になる。"""
+def やけっぱち_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """やけっぱち（ON_MODIFY_BASE_POWER）: 自分が前のターンで動けなかったとき、
+    または使った技が失敗していたとき、基礎威力が2倍になる。
+    """
     if ctx.attacker.failed_or_immobile_last_turn:
-        return HandlerReturn(value=apply_fixed_modifier(value, 8192))
+        return HandlerReturn(value=value * 2)
     return HandlerReturn(value=value)
 
 
-def ゆきなだれ_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ゆきなだれ: そのターンに相手からダメージを受けていた場合、威力が2倍になる。"""
+def ゆきなだれ_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """ゆきなだれ（ON_MODIFY_BASE_POWER）: そのターンに相手からダメージを受けていた場合、
+    基礎威力が2倍になる。
+    """
     attacker = ctx.attacker
     if (attacker.last_physical_damage_received > 0
             or attacker.last_special_damage_received > 0):
-        return HandlerReturn(value=apply_fixed_modifier(value, 8192))
+        return HandlerReturn(value=value * 2)
     return HandlerReturn(value=value)
 
 
@@ -3776,13 +3785,15 @@ def らいげき_apply_paralysis_to_defender(battle: Battle, ctx: AttackContext,
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ", chance=0.2)
 
 
-def ライジングボルト_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ライジングボルト: エレキフィールド中かつ相手が接地している場合、威力が2倍になる。"""
+def ライジングボルト_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """ライジングボルト（ON_MODIFY_BASE_POWER）: エレキフィールド中かつ相手が接地している場合、
+    基礎威力が2倍になる。
+    """
     if (
         battle.terrain.name == "エレキフィールド"
         and not battle.query.is_floating(ctx.defender)
     ):
-        return HandlerReturn(value=apply_fixed_modifier(value, 8192))
+        return HandlerReturn(value=value * 2)
     return HandlerReturn(value=value)
 
 
@@ -3906,17 +3917,15 @@ def れんぞくぎり_apply_count(battle: Battle, ctx: AttackContext, value: An
     return apply_volatile_to_attacker(battle, ctx, value, volatile="れんぞくぎり", count=1)
 
 
-def れんぞくぎり_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """れんぞくぎり: 連続使用回数に応じて威力を倍増する（最大4倍=160）。
+def れんぞくぎり_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """れんぞくぎり（ON_MODIFY_BASE_POWER）: 連続使用回数に応じて基礎威力を倍増する（最大4倍=160）。
 
     count=1 → 2倍(80), count=2以上 → 4倍(160)。
-    ON_CALC_POWER_MODIFIER は 4096 = 1.0 倍基準。
     """
     mon = ctx.attacker
     if "れんぞくぎり" in mon.volatiles:
         count = mon.volatiles["れんぞくぎり"].count or 0
-        multiplier = 4096 * (2 ** min(count, 2))
-        return HandlerReturn(value=apply_fixed_modifier(value, multiplier))
+        return HandlerReturn(value=value * (2 ** min(count, 2)))
     return HandlerReturn(value=value)
 
 

@@ -2335,6 +2335,33 @@ def test_そうしょく_連続技を受けてもこうげき上昇は1回のみ
     assert defender.boosts["atk"] == 1
 
 
+def test_そうだいしょう_テラバーストステラで先行する威力補正が消えない():
+    """そうだいしょう: テラバーストのステラ補正（ON_MODIFY_BASE_POWER、基礎威力を100に固定）は
+    基礎威力自体の書き換えのため、そうだいしょうのON_CALC_POWER_MODIFIER補正（1.1倍）は
+    消えずに乗る（旧実装ではON_CALC_POWER_MODIFIERでvalueを直接上書きしており、
+    先に登録された補正が消える不具合があった）。
+    final_power = round_half_down(100 * (4096*11//10) / 4096) = 110。
+    """
+    battle = t.start_battle(
+        team0=[
+            Pokemon("ピカチュウ"), Pokemon("ライチュウ"),
+            Pokemon("カビゴン", ability_name="そうだいしょう", tera_type="ステラ", move_names=["テラバースト"]),
+        ],
+        team1=[Pokemon("フシギダネ")],
+    )
+    player0 = battle.players[0]
+    bench = battle.player_states[player0].bench
+    battle.modify_hp(bench[0], v=-bench[0].max_hp)  # ライチュウをひんしにする
+
+    mon = t.run_switch(battle, 0, 2)
+    assert mon.ability.revealed
+    mon.terastallize()
+
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096 * 11 // 10
+    assert battle.damage_calculator.final_power == 110
+
+
 def test_そうだいしょう_ひんしの味方がいないとき補正なし():
     """そうだいしょう: ひんしの味方がいないときは威力補正がかからない。"""
     battle = t.start_battle(

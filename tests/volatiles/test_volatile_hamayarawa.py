@@ -446,7 +446,7 @@ def test_まもる系_相手対象変化技への反応(volatile_name, blocks_st
 
 
 def test_まるくなる():
-    """まるくなる: ころがる・アイスボールの威力が2倍になる"""
+    """まるくなる: ころがる・アイスボールの基礎威力が2倍になる（30→60）"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["ころがる"])],
         team1=[Pokemon("ピカチュウ")],
@@ -454,7 +454,7 @@ def test_まるくなる():
         accuracy=100,
     )
     t.run_move(battle, 0)
-    assert 8192 == battle.damage_calculator.power_modifier
+    assert 60 == battle.damage_calculator.final_power
 
 
 def test_まるくなる_他技は倍にならない():
@@ -465,7 +465,7 @@ def test_まるくなる_他技は倍にならない():
         volatile0={"まるくなる": 1}
     )
     t.run_move(battle, 0)
-    assert 4096 == battle.damage_calculator.power_modifier
+    assert 40 == battle.damage_calculator.final_power
 
 
 def test_みがわり_攻撃によりみがわりのHPが減る():

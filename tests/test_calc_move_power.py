@@ -76,6 +76,52 @@ def test_calc_move_powerで相手依存の威力変動を反映する():
     assert battle.calc_move_power(attacker, defender, "けたぐり") == 120
 
 
+def test_アクロバット_calc_move_base_powerで道具の有無を反映する():
+    """道具を持っていないとき基礎威力は110、持っているときは55のまま。"""
+    battle_no_item = t.start_battle(
+        team0=[Pokemon("チルタリス", move_names=["アクロバット"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker_no_item, defender_no_item = battle_no_item.actives
+    assert battle_no_item.calc_move_base_power(attacker_no_item, defender_no_item, "アクロバット") == 110
+
+    battle_item = t.start_battle(
+        team0=[Pokemon("チルタリス", item_name="たべのこし", move_names=["アクロバット"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker_item, defender_item = battle_item.actives
+    assert battle_item.calc_move_base_power(attacker_item, defender_item, "アクロバット") == 55
+
+
+def test_アシストパワー_calc_move_base_powerでランク上昇を反映する():
+    """正ランク合計3段階のとき基礎威力80（20 + 20*3）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["アシストパワー"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker, defender = battle.actives
+    battle.modify_stats(attacker, {"atk": 2, "def": 1}, source=attacker)
+    assert battle.calc_move_base_power(attacker, defender, "アシストパワー") == 80
+
+
+def test_ウェザーボール_calc_move_base_powerで天候を反映する():
+    """天候が有効なとき基礎威力は100、天候がないときは50のまま。"""
+    battle_weather = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ウェザーボール"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("あめ", 5),
+    )
+    attacker_weather, defender_weather = battle_weather.actives
+    assert battle_weather.calc_move_base_power(attacker_weather, defender_weather, "ウェザーボール") == 100
+
+    battle_none = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ウェザーボール"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker_none, defender_none = battle_none.actives
+    assert battle_none.calc_move_base_power(attacker_none, defender_none, "ウェザーボール") == 50
+
+
 def test_エコーボイス_calc_move_powerで連続使用の威力を副作用なしに返す():
     """前ターンに使用済みなら80を返し、問い合わせ自体は使用として記録されない。"""
     battle = t.start_battle(
@@ -105,6 +151,50 @@ def test_けたぐり_calc_move_base_powerで持ち物補正を含まない():
     attacker, defender = battle.actives
     assert battle.calc_move_base_power(attacker, defender, "けたぐり") == 120
     assert battle.calc_move_power(attacker, defender, "けたぐり") == 144
+
+
+def test_ころがる_calc_move_base_powerで連続命中回数を反映する():
+    """揮発状態count=2のとき基礎威力は120（30 × 2^2）、揮発状態がなければ30のまま。"""
+    battle = t.start_battle(
+        team0=[Pokemon("イシツブテ", move_names=["ころがる"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker, defender = battle.actives
+    assert battle.calc_move_base_power(attacker, defender, "ころがる") == 30
+
+    battle.volatile_manager.apply(attacker, "ころがる", count=2, source=attacker, move_name="ころがる")
+    assert battle.calc_move_base_power(attacker, defender, "ころがる") == 120
+
+
+def test_だいちのはどう_calc_move_base_powerでフィールドを反映する():
+    """接地かつフィールドありのとき基礎威力は100、フィールドがないときは50のまま。"""
+    battle_terrain = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["だいちのはどう"])],
+        team1=[Pokemon("カビゴン")],
+        terrain=("エレキフィールド", 5),
+    )
+    attacker_terrain, defender_terrain = battle_terrain.actives
+    assert battle_terrain.calc_move_base_power(attacker_terrain, defender_terrain, "だいちのはどう") == 100
+
+    battle_none = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["だいちのはどう"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker_none, defender_none = battle_none.actives
+    assert battle_none.calc_move_base_power(attacker_none, defender_none, "だいちのはどう") == 50
+
+
+def test_テラバースト_calc_move_base_powerでステラテラスタル時に100を返す():
+    """ステラテラスタル中は基礎威力100、テラスタルしていなければ80のまま。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", tera_type="ステラ", move_names=["テラバースト"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker, defender = battle.actives
+    assert battle.calc_move_base_power(attacker, defender, "テラバースト") == 80
+
+    attacker.terastallize()
+    assert battle.calc_move_base_power(attacker, defender, "テラバースト") == 100
 
 
 def test_なげつける_calc_move_powerで持ち物の威力を返す():

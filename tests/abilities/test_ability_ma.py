@@ -981,7 +981,9 @@ def test_メガソーラー_ウェザーボールを技実行中だけほのお�
 
     # ノーマル技なら無効のゲンガーに命中することで、実行経路でのほのお化も確認する。
     assert defender.hp < hp_before
-    assert battle.damage_calculator.power_modifier == 12288
+    # ウェザーボール固有の基礎威力2倍（50→100）とメガソーラーによる常時晴れ扱いの1.5倍が反映される。
+    assert battle.damage_calculator.power_modifier == 6144
+    assert battle.damage_calculator.final_power == 150
     assert move.type == "ノーマル"
     assert battle.weather.name == weather_name
     assert attacker.ability.weather_override_depth == 0
@@ -1134,9 +1136,11 @@ def test_メガソーラー_相手が攻撃するときは天候補正なし():
 
 
 def test_メガランチャー_だいちのはどうとフィールドの複合補正():
-    """メガランチャー: フィールド一致で威力2倍になるだいちのはどうに、
-    フィールドのタイプ一致ボーナス（でんきタイプ化後の1.3倍）とメガランチャーの1.5倍が重ねて乗る。
-    power_modifier = floor(floor(4096*6144/4096)*5325/4096)*2 = floor(6144*5325/4096)*2 = 7987*2 = 15974
+    """メガランチャー: だいちのはどうは基礎威力が50→100（フィールド一致で2倍）になった上で、
+    フィールドのタイプ一致ボーナス（でんきタイプ化後の1.3倍）とメガランチャーの1.5倍が
+    power_modifierとして重ねて乗る。
+    power_modifier = floor(floor(4096*6144/4096)*5325/4096) = floor(6144*5325/4096) = 7987
+    final_power = round_half_down(100 * 7987 / 4096) = 195
     """
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", ability_name="メガランチャー", move_names=["だいちのはどう"])],
@@ -1145,7 +1149,8 @@ def test_メガランチャー_だいちのはどうとフィールドの複合�
         accuracy=100,
     )
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 15974
+    assert battle.damage_calculator.power_modifier == 7987
+    assert battle.damage_calculator.final_power == 195
 
 
 def test_メタルプロテクト_かたやぶりで無効化されない():

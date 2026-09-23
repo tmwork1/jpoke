@@ -541,7 +541,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "ひゃっきやこう": MoveData(
         flags={"secondary_effect"},
         handlers={
-            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+            Event.ON_MODIFY_BASE_POWER: h.MoveHandler(
                 ha.ひゃっきやこう_double_power_when_ailment,
             ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(

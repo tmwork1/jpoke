@@ -2645,8 +2645,10 @@ def テクニシャン_boost_power(battle: Battle, ctx: AttackContext, value: in
 
     以下の技固有の例外は従来どおり個別に処理する。
     - こんらんによる自傷攻撃（内部技"_こんらん"）の威力は上がらない。
-    - アクロバットは攻撃者が道具を持っていないとき技自身の効果で威力が110に変動し、
-      テクニシャンの対象外になる（道具を持っている場合は威力55のままなので対象になる）。
+
+    アクロバット・アシストパワー・ウェザーボール等、技固有の基礎威力変動は
+    ON_MODIFY_BASE_POWER で `ctx.move.base_power` 自体に反映済みのため、
+    ここで個別の例外処理を行う必要はない。
     """
     if ctx.move.name == "_こんらん":
         return HandlerReturn(value=value)
@@ -2654,9 +2656,6 @@ def テクニシャン_boost_power(battle: Battle, ctx: AttackContext, value: in
     power = ctx.move.base_power
     if power is None:
         return HandlerReturn(value=value)
-
-    if ctx.move.name == "アクロバット" and not ctx.attacker.has_item():
-        power *= 2
 
     if power <= 60:
         value = apply_fixed_modifier(value, 6144)

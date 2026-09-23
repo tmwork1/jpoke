@@ -211,8 +211,9 @@ def test_メガソーラー_ウェザーボールを問い合わせ中だけ晴�
 
     # ノーマル技なら無効のゲンガーにも、ほのおタイプとしてダメージが入る。
     assert max(damages) > 0
-    # ウェザーボール固有の2倍と晴れの1.5倍がともに反映される。
-    assert battle.damage_calculator.power_modifier == 12288
+    # ウェザーボール固有の基礎威力2倍（50→100）と晴れの1.5倍がともに反映される。
+    assert battle.damage_calculator.power_modifier == 6144
+    assert battle.damage_calculator.final_power == 150
     assert move.type == "ノーマル"
     assert battle.weather.name == ""
     assert attacker.ability.weather_override_depth == 0

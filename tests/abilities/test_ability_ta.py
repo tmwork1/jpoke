@@ -769,16 +769,17 @@ def test_てきおうりょく_STAB補正(name: str, tera_type: Type, move_name:
 
 
 def test_テクニシャン_アクロバット_道具を持っていないとき変動後威力で補正がかからない():
-    """アクロバットは道具を持っていないとき技自身の効果で威力が110に変動する。
-    テクニシャンは変動後の威力（110）で判定するため、60を超えて対象外になる。
+    """アクロバットは道具を持っていないときON_MODIFY_BASE_POWERで基礎威力が110に変動する。
+    テクニシャンは変動後の基礎威力（110）で判定するため、60を超えて対象外になる。
     """
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="テクニシャン", move_names=["アクロバット"])],
         team1=[Pokemon("ピカチュウ")],
     )
     t.run_move(battle, 0)
-    # 8192(4096*2) = アクロバット自身の道具無し補正(2倍)のみ。テクニシャンの1.5倍は乗らない。
-    assert battle.damage_calculator.power_modifier == 8192
+    # アクロバット自身の道具無し補正（55→110）は基礎威力の変動でpower_modifierには乗らない。
+    # テクニシャンの1.5倍も基礎威力110には適用されない。
+    assert battle.damage_calculator.power_modifier == 4096
     assert battle.damage_calculator.final_power == 110
 
 
@@ -794,6 +795,36 @@ def test_テクニシャン_アクロバット_道具を持っているとき変
     t.run_move(battle, 0)
     assert battle.damage_calculator.power_modifier == 6144
     assert battle.damage_calculator.final_power == 82
+
+
+def test_テクニシャン_アシストパワー_ランク上昇後の基礎威力で判定する():
+    """アシストパワーはこうげき+3で基礎威力80（20+20*3）になり、60を超えるため
+    テクニシャンは適用されない。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="テクニシャン", move_names=["アシストパワー"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    battle.modify_stats(attacker, {"atk": 3}, source=attacker)
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+    assert battle.damage_calculator.final_power == 80
+
+
+def test_テクニシャン_ウェザーボール_天候後の基礎威力で判定する():
+    """あめ中のウェザーボールは基礎威力100（50×2）になり、60を超えるため
+    テクニシャンは適用されない。みずタイプ一致のSTAB補正（1.5倍）のみ乗り、
+    final_power = 100 * 6144 // 4096 = 150。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ラプラス", ability_name="テクニシャン", move_names=["ウェザーボール"])],
+        team1=[Pokemon("ピカチュウ")],
+        weather=("あめ", 5),
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 6144
+    assert battle.damage_calculator.final_power == 150
 
 
 @pytest.mark.parametrize(
@@ -817,6 +848,22 @@ def test_テクニシャン_けたぐりは体重で決まった基礎威力で�
     assert battle.damage_calculator.final_power == expected_power
 
 
+def test_テクニシャン_ころがる_連続命中回数後の基礎威力で判定する():
+    """ころがるはcount=2で基礎威力120（30×2^2）になり、60を超えるため
+    テクニシャンは適用されない。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("イシツブテ", ability_name="テクニシャン", move_names=["ころがる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    battle.volatile_manager.apply(attacker, "ころがる", count=2, source=attacker, move_name="ころがる")
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+    assert battle.damage_calculator.final_power == 120
+
+
 def test_テクニシャン_こんらんの自傷では威力上昇しない():
     """こんらんによる自傷ダメージ（内部技"_こんらん"、威力40）はテクニシャンの対象外。"""
     battle = t.start_battle(
@@ -827,6 +874,21 @@ def test_テクニシャン_こんらんの自傷では威力上昇しない():
     battle.test_option.trigger_volatile = True
     battle.step()
     assert battle.damage_calculator.power_modifier == 4096
+
+
+def test_テクニシャン_つけあがる_ランク上昇後の基礎威力で判定する():
+    """つけあがるはランク合計+2で基礎威力60（20+20*2）になり、60以下のため
+    テクニシャンが適用される（60×1.5=90）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="テクニシャン", move_names=["つけあがる"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    battle.modify_stats(attacker, {"atk": 2}, source=attacker)
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 6144
+    assert battle.damage_calculator.final_power == 90
 
 
 def test_テクニシャン_トリプルアクセルはヒットごとの基礎威力で判定する():
@@ -858,6 +920,22 @@ def test_テクニシャン_プレゼントは抽選後の基礎威力で判定�
     battle.random.random = lambda: roll
     t.run_move(battle, 0)
     assert battle.damage_calculator.final_power == expected_power
+
+
+def test_テクニシャン_れんぞくぎり_連続使用カウント後の基礎威力で判定する():
+    """れんぞくぎりはcount=1以上で基礎威力80以上になり、60を超えるため
+    テクニシャンは適用されない。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", ability_name="テクニシャン", move_names=["れんぞくぎり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    battle.volatile_manager.apply(attacker, "れんぞくぎり", count=1, source=attacker, move_name="れんぞくぎり")
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+    assert battle.damage_calculator.final_power == 80
 
 
 @pytest.mark.parametrize(

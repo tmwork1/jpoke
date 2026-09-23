@@ -127,7 +127,7 @@ def test_やけっぱち_まひで行動不能だった場合威力2倍になる
 
     battle.test_option.trigger_ailment = False
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 8192
+    assert battle.damage_calculator.final_power == 150
 
 
 def test_やけっぱち_まもるで防がれた場合威力2倍になる():
@@ -143,7 +143,7 @@ def test_やけっぱち_まもるで防がれた場合威力2倍になる():
     t.end_turn(battle)
 
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 8192
+    assert battle.damage_calculator.final_power == 150
 
 
 def test_やけっぱち_交代直後は前のターンの失敗を引き継がない():
@@ -165,7 +165,7 @@ def test_やけっぱち_交代直後は前のターンの失敗を引き継が�
 
     battle.test_option.accuracy = 100
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 4096
+    assert battle.damage_calculator.final_power == 75
 
 
 def test_やけっぱち_技が外れた場合威力2倍になる():
@@ -181,7 +181,7 @@ def test_やけっぱち_技が外れた場合威力2倍になる():
 
     battle.test_option.accuracy = 100
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 8192
+    assert battle.damage_calculator.final_power == 150
 
 
 def test_やけっぱち_特性で無効化された場合威力2倍になる():
@@ -198,7 +198,7 @@ def test_やけっぱち_特性で無効化された場合威力2倍になる():
     # 無効化されないポケモンに交代してから、やけっぱちを再度使用
     t.run_switch(battle, 1, 1)
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 8192
+    assert battle.damage_calculator.final_power == 150
 
 
 def test_やけっぱち_通常成功時は次のターン威力2倍にならない():
@@ -212,7 +212,7 @@ def test_やけっぱち_通常成功時は次のターン威力2倍にならな
     t.end_turn(battle)
 
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 4096
+    assert battle.damage_calculator.final_power == 75
 
 
 def test_やまあらし_確定急所():
@@ -228,18 +228,18 @@ def test_やまあらし_確定急所():
 
 
 def test_ゆきなだれ_ダメージを受けていない場合通常威力():
-    """ゆきなだれ: そのターン相手からダメージを受けていない場合、威力補正なし（power_modifier=4096）。"""
+    """ゆきなだれ: そのターン相手からダメージを受けていない場合、威力補正なし（final_power=60）。"""
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", move_names=["ゆきなだれ"])],
         team1=[Pokemon("カビゴン")],
         accuracy=100,
     )
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 4096
+    assert battle.damage_calculator.final_power == 60
 
 
 def test_ゆきなだれ_物理ダメージを受けた場合威力が2倍():
-    """ゆきなだれ: そのターン相手から物理ダメージを受けた場合、威力が2倍（power_modifier=8192）。"""
+    """ゆきなだれ: そのターン相手から物理ダメージを受けた場合、威力が2倍（final_power=120）。"""
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", move_names=["ゆきなだれ"])],
         team1=[Pokemon("カビゴン", move_names=["ひっかく"])],
@@ -251,11 +251,11 @@ def test_ゆきなだれ_物理ダメージを受けた場合威力が2倍():
     assert attacker.last_physical_damage_received > 0
     # ゆきなだれ実行: 物理被ダメあり → 威力2倍
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 8192
+    assert battle.damage_calculator.final_power == 120
 
 
 def test_ゆきなだれ_特殊ダメージを受けた場合も威力が2倍():
-    """ゆきなだれ: そのターン相手から特殊ダメージを受けた場合も、威力が2倍（power_modifier=8192）。"""
+    """ゆきなだれ: そのターン相手から特殊ダメージを受けた場合も、威力が2倍（final_power=120）。"""
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", move_names=["ゆきなだれ"])],
         team1=[Pokemon("カビゴン", move_names=["みずでっぽう"])],
@@ -267,7 +267,7 @@ def test_ゆきなだれ_特殊ダメージを受けた場合も威力が2倍():
     assert attacker.last_special_damage_received > 0
     # ゆきなだれ実行: 特殊被ダメあり → 威力2倍
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 8192
+    assert battle.damage_calculator.final_power == 120
 
 
 def test_ゆめくい_ぜったいねむり特性の相手にも成功する():
@@ -383,9 +383,9 @@ def test_らいげき_まひが発動する():
 
 
 def test_ライジングボルト_エレキフィールドかつ相手接地で威力2倍になる():
-    """ライジングボルト: エレキフィールド中かつ相手が接地している場合、威力が2倍になる。
+    """ライジングボルト: エレキフィールド中かつ相手が接地している場合、基礎威力が70→140（2倍）になる。
     さらにエレキフィールドのでんき技1.3倍ボーナスも別枠で乗るため、
-    power_modifier = 4096 * (8192/4096) * (5325/4096) = 10650。
+    final_power = 140 * 5325 // 4096 = 182。
     """
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["ライジングボルト"])],
@@ -395,8 +395,8 @@ def test_ライジングボルト_エレキフィールドかつ相手接地で�
     )
     battle.random.random = lambda: 0.9
     t.run_move(battle, 0)
-    # 8192(自己ボーナス) → 8192 * 5325 // 4096 = 10650(フィールドボーナス込み)
-    assert battle.damage_calculator.power_modifier == 10650
+    # 基礎威力: 70 × 2 = 140（自己ボーナス）、power_modifier: 5325（フィールドボーナス）
+    assert battle.damage_calculator.final_power == 182
 
 
 def test_ライジングボルト_フィールドなしのとき威力補正なし():
@@ -408,12 +408,13 @@ def test_ライジングボルト_フィールドなしのとき威力補正な�
     )
     battle.random.random = lambda: 0.9
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 4096
+    assert battle.damage_calculator.final_power == 70
 
 
 def test_ライジングボルト_相手が浮遊している場合は威力2倍が乗らない():
-    """ライジングボルト: エレキフィールド中でも相手が浮いている場合、自己ボーナスの威力2倍は乗らない。
+    """ライジングボルト: エレキフィールド中でも相手が浮いている場合、自己ボーナスの基礎威力2倍は乗らない。
     ただしエレキフィールドのでんき技1.3倍ボーナスは攻撃側の設置状況で判定するため乗る。
+    final_power = 70 * 5325 // 4096 = 91。
     """
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["ライジングボルト"])],
@@ -423,7 +424,7 @@ def test_ライジングボルト_相手が浮遊している場合は威力2倍
     )
     battle.random.random = lambda: 0.9
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 5325
+    assert battle.damage_calculator.final_power == 91
 
 
 def test_らいめいげり_ぼうぎょ1段階低下が発動する():
@@ -854,14 +855,14 @@ def test_れんごく_やけどが発動する():
 
 
 def test_れんぞくぎり_初回は通常威力():
-    """れんぞくぎり: 揮発状態がない初回使用時は威力補正なし（power_modifier=4096）。"""
+    """れんぞくぎり: 揮発状態がない初回使用時は威力補正なし（final_power=40）。"""
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", move_names=["れんぞくぎり"])],
         team1=[Pokemon("カビゴン")],
         accuracy=100,
     )
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 4096
+    assert battle.damage_calculator.final_power == 40
 
 
 def test_れんぞくぎり_別の技を挟むとカウントがリセットされる():
@@ -885,7 +886,7 @@ def test_れんぞくぎり_別の技を挟むとカウントがリセットさ�
 
     # 3ターン目: れんぞくぎりを再度使用 → 通常威力に戻っている
     t.run_move(battle, 0, move_idx=0)
-    assert battle.damage_calculator.power_modifier == 4096
+    assert battle.damage_calculator.final_power == 40
 
 
 def test_れんぞくぎり_外れた場合カウントがリセットされる():
@@ -913,7 +914,7 @@ def test_れんぞくぎり_外れた場合カウントがリセットされる(
     # 3ターン目: 命中 → 通常威力に戻っている（前回の威力倍率が引き継がれない）
     battle.test_option.accuracy = 100
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 4096
+    assert battle.damage_calculator.final_power == 40
 
 
 def test_れんぞくぎり_連続ヒットで威力が2倍から4倍に上昇する():
@@ -930,15 +931,15 @@ def test_れんぞくぎり_連続ヒットで威力が2倍から4倍に上昇�
     assert attacker.volatiles["れんぞくぎり"].count == 1
     t.end_turn(battle)
 
-    # 2ターン目: count=1のため威力2倍(8192)、命中後count=2に増加する
+    # 2ターン目: count=1のため威力2倍(80)、命中後count=2に増加する
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 8192
+    assert battle.damage_calculator.final_power == 80
     assert attacker.volatiles["れんぞくぎり"].count == 2
     t.end_turn(battle)
 
-    # 3ターン目: count=2以上のため威力4倍(16384、上限)になる
+    # 3ターン目: count=2以上のため威力4倍(160、上限)になる
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 16384
+    assert battle.damage_calculator.final_power == 160
     assert attacker.volatiles["れんぞくぎり"].count == 3
 
 

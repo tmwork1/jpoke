@@ -157,7 +157,7 @@ def test_たたりめ_ぜったいねむりの相手には常に威力2倍():
     assert battle.actives[1].ailment.name == "ゆめうつつ"
     battle.random.random = lambda: 0.9
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 8192
+    assert battle.damage_calculator.final_power == 130
 
 
 def test_たたりめ_まひ状態でも威力2倍():
@@ -172,7 +172,7 @@ def test_たたりめ_まひ状態でも威力2倍():
     )
     battle.random.random = lambda: 0.9
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 8192
+    assert battle.damage_calculator.final_power == 130
 
 
 def test_たたりめ_状態異常なしのとき通常威力():
@@ -186,7 +186,7 @@ def test_たたりめ_状態異常なしのとき通常威力():
     )
     battle.random.random = lambda: 0.9
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 4096
+    assert battle.damage_calculator.final_power == 65
 
 
 def test_たたりめ_状態異常のとき威力2倍():
@@ -201,7 +201,7 @@ def test_たたりめ_状態異常のとき威力2倍():
     )
     battle.random.random = lambda: 0.9
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 8192
+    assert battle.damage_calculator.final_power == 130
 
 
 def test_たつまき_ひるみが発動する():
@@ -344,8 +344,9 @@ def test_だいちのはどう_エレキフィールドでタイプがでんき�
 
 
 def test_だいちのはどう_エレキフィールドで威力2倍かつ1_3倍ボーナスが乗る():
-    """だいちのはどう: エレキフィールド時はwazaの威力×2かつでんきタイプとして1.3倍ボーナスが乗る。
-    power_modifier = 4096 * (8192/4096) * (5325/4096) = 4096 * 2 * 1.3 = 10650。
+    """だいちのはどう: エレキフィールド時は基礎威力が50→100（威力2倍）に変化した上で、
+    でんきタイプとしてpower_modifier 5325（1.3倍ボーナス）がかかる。
+    final_power = 100 * 5325 // 4096 = 130。
     """
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", move_names=["だいちのはどう"])],
@@ -355,8 +356,7 @@ def test_だいちのはどう_エレキフィールドで威力2倍かつ1_3倍
     )
     battle.random.random = lambda: 0.9
     t.run_move(battle, 0)
-    # 4096 * 8192 // 4096 = 8192 → 8192 * 5325 // 4096 = 10650
-    assert battle.damage_calculator.power_modifier == 10650
+    assert battle.damage_calculator.final_power == 130
 
 
 def test_だいちのはどう_グラスフィールドでタイプがくさに変化する():
@@ -381,8 +381,8 @@ def test_だいちのはどう_グラスフィールドで威力2倍が乗る():
     )
     battle.random.random = lambda: 0.9
     t.run_move(battle, 0)
-    # グラスフィールドはくさ技を×1.3倍: 8192 * 5325 // 4096 = 10650
-    assert battle.damage_calculator.power_modifier == 10650
+    # 基礎威力50×2=100、グラスフィールドはくさ技を×1.3倍: 100 * 5325 // 4096 = 130
+    assert battle.damage_calculator.final_power == 130
 
 
 def test_だいちのはどう_サイコフィールドでタイプがエスパーに変化する():
@@ -407,8 +407,8 @@ def test_だいちのはどう_サイコフィールドで威力2倍が乗る():
     )
     battle.random.random = lambda: 0.9
     t.run_move(battle, 0)
-    # サイコフィールドはエスパー技を×1.3倍: 8192 * 5325 // 4096 = 10650
-    assert battle.damage_calculator.power_modifier == 10650
+    # 基礎威力50×2=100、サイコフィールドはエスパー技を×1.3倍: 100 * 5325 // 4096 = 130
+    assert battle.damage_calculator.final_power == 130
 
 
 def test_だいちのはどう_フィールドなしのときノーマルタイプで通常威力():
@@ -421,7 +421,7 @@ def test_だいちのはどう_フィールドなしのときノーマルタイ�
     battle.random.random = lambda: 0.9
     t.run_move(battle, 0)
     assert battle.move_executor.move_type == "ノーマル"
-    assert battle.damage_calculator.power_modifier == 4096
+    assert battle.damage_calculator.final_power == 50
 
 
 def test_だいちのはどう_ふゆう特性持ちのときフィールド効果なし():
@@ -435,7 +435,7 @@ def test_だいちのはどう_ふゆう特性持ちのときフィールド効�
     battle.random.random = lambda: 0.9
     t.run_move(battle, 0)
     assert battle.move_executor.move_type == "ノーマル"
-    assert battle.damage_calculator.power_modifier == 4096
+    assert battle.damage_calculator.final_power == 50
 
 
 def test_だいちのはどう_ミストフィールドでタイプがフェアリーに変化する():
@@ -462,8 +462,8 @@ def test_だいちのはどう_ミストフィールドで威力2倍が乗る():
     )
     battle.random.random = lambda: 0.9
     t.run_move(battle, 0)
-    # ミストフィールドはフェアリー技ボーナスなし: ×2のみ
-    assert battle.damage_calculator.power_modifier == 8192
+    # ミストフィールドはフェアリー技ボーナスなし: 基礎威力50×2=100のみ
+    assert battle.damage_calculator.final_power == 100
 
 
 def test_だいばくはつ_HP消費後も攻撃が相手に届く():
@@ -803,7 +803,7 @@ def test_ダメおし_ダメージを受けていないとき通常威力():
     )
     battle.random.random = lambda: 0.9
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 4096
+    assert battle.damage_calculator.final_power == 60
 
 
 def test_ダメおし_同ターンにダメージを受けていたら威力2倍():
@@ -818,7 +818,7 @@ def test_ダメおし_同ターンにダメージを受けていたら威力2倍
     defender.hits_taken = 1
     battle.random.random = lambda: 0.9
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 8192
+    assert battle.damage_calculator.final_power == 120
 
 
 def test_ダメおし_相手がみをけずるでHPを消費しても威力は2倍にならない():
@@ -832,7 +832,7 @@ def test_ダメおし_相手がみをけずるでHPを消費しても威力は2�
     t.run_move(battle, 0)
     battle.random.random = lambda: 0.9
     t.run_move(battle, 1)
-    assert battle.damage_calculator.power_modifier == 4096
+    assert battle.damage_calculator.final_power == 60
 
 
 def test_ダメおし_相手が受けたゴツゴツメットの反射ダメージも同ターンのダメージとして扱われる():
@@ -847,7 +847,7 @@ def test_ダメおし_相手が受けたゴツゴツメットの反射ダメー�
     battle.random.random = lambda: 0.9
     # team1のダメおしは、反射ダメージを受けたばかりのteam0を対象にする
     t.run_move(battle, 1)
-    assert battle.damage_calculator.power_modifier == 8192
+    assert battle.damage_calculator.final_power == 120
 
 
 def test_ダメおし_相手が受けたさめはだの反撃ダメージも同ターンのダメージとして扱われる():
@@ -862,7 +862,7 @@ def test_ダメおし_相手が受けたさめはだの反撃ダメージも同�
     battle.random.random = lambda: 0.9
     # team1のダメおしは、反撃ダメージを受けたばかりのteam0を対象にする
     t.run_move(battle, 1)
-    assert battle.damage_calculator.power_modifier == 8192
+    assert battle.damage_calculator.final_power == 120
 
 
 def test_ダメおし_相手のいのちのたま反動も同ターンのダメージとして扱われる():
@@ -875,7 +875,7 @@ def test_ダメおし_相手のいのちのたま反動も同ターンのダメ�
     t.run_move(battle, 0)
     battle.random.random = lambda: 0.9
     t.run_move(battle, 1)
-    assert battle.damage_calculator.power_modifier == 8192
+    assert battle.damage_calculator.final_power == 120
 
 
 def test_ダメおし_相手の反動ダメージも同ターンのダメージとして扱われる():
@@ -890,7 +890,7 @@ def test_ダメおし_相手の反動ダメージも同ターンのダメージ�
     battle.random.random = lambda: 0.9
     # team1（ダメおし）がその反動を受けたばかりのteam0を対象にする
     t.run_move(battle, 1)
-    assert battle.damage_calculator.power_modifier == 8192
+    assert battle.damage_calculator.final_power == 120
 
 
 def test_だんがいのつるぎ_相手にダメージを与える():
