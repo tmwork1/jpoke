@@ -290,7 +290,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "しっぺがえし": MoveData(
         flags={"contact"},
         handlers={
-            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+            Event.ON_MODIFY_BASE_POWER: h.MoveHandler(
                 ha.しっぺがえし_double_power_when_second,
             ),
         }
@@ -553,7 +553,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "じだんだ": MoveData(
         flags={"contact"},
         handlers={
-            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+            Event.ON_MODIFY_BASE_POWER: h.MoveHandler(
                 ha.じだんだ_calc_power,
                 subject_spec="attacker:self",
             ),

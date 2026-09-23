@@ -244,7 +244,7 @@ VOLATILES: dict[str, VolatileData] = {
                 h.force_command,
                 subject_spec="source:self",
             ),
-            Event.ON_CALC_POWER_MODIFIER: h.VolatileHandler(
+            Event.ON_MODIFY_BASE_POWER: h.VolatileHandler(
                 h.ころがる_boost_power,
                 subject_spec="attacker:self",
             ),
@@ -823,7 +823,7 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "まるくなる": VolatileData(
         handlers={
-            Event.ON_CALC_POWER_MODIFIER: h.VolatileHandler(
+            Event.ON_MODIFY_BASE_POWER: h.VolatileHandler(
                 h.まるくなる_boost_power,
                 subject_spec="attacker:self",
             ),

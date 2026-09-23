@@ -192,7 +192,7 @@ MOVES_A: dict[MoveName, MoveData] = {
     "アクロバット": MoveData(
         flags={"contact"},
         handlers={
-            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+            Event.ON_MODIFY_BASE_POWER: h.MoveHandler(
                 ha.アクロバット_double_power_when_no_item,
             ),
         },
@@ -207,7 +207,7 @@ MOVES_A: dict[MoveName, MoveData] = {
     ),
     "アシストパワー": MoveData(
         handlers={
-            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+            Event.ON_MODIFY_BASE_POWER: h.MoveHandler(
                 ha.アシストパワー_boost_power_by_rank,
                 subject_spec="attacker:self",
             ),
@@ -644,7 +644,7 @@ MOVES_A: dict[MoveName, MoveData] = {
             Event.ON_MODIFY_MOVE_TYPE: h.MoveHandler(
                 ha.ウェザーボール_modify_move_type,
             ),
-            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+            Event.ON_MODIFY_BASE_POWER: h.MoveHandler(
                 ha.ウェザーボール_power_modifier,
             ),
         },
@@ -971,7 +971,7 @@ MOVES_A: dict[MoveName, MoveData] = {
     ),
     "おはかまいり": MoveData(
         handlers={
-            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+            Event.ON_MODIFY_BASE_POWER: h.MoveHandler(
                 ha.おはかまいり_calc_power,
             ),
         }

@@ -3359,7 +3359,7 @@ def test_ころがる_初回命中時にころがる揮発状態が付与され�
 
 
 def test_ころがる_命中するたびに威力が2倍になる():
-    """ころがる: 揮発状態のcountに応じて威力補正が2^count倍になる（count=2なら4倍）。"""
+    """ころがる: 揮発状態のcountに応じて基礎威力が2^count倍になる（count=2なら4倍、30→120）。"""
     battle = t.start_battle(
         team0=[Pokemon("イシツブテ", move_names=["ころがる"])],
         team1=[Pokemon("カビゴン")],
@@ -3368,7 +3368,7 @@ def test_ころがる_命中するたびに威力が2倍になる():
     attacker = battle.actives[0]
     battle.volatile_manager.apply(attacker, "ころがる", count=2, source=attacker, move_name="ころがる")
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 4096 * 4
+    assert battle.damage_calculator.final_power == 120
 
 
 def test_ころがる_外れると強制行動が解除される():

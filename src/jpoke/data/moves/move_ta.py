@@ -71,7 +71,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     ),
     "たたりめ": MoveData(
         handlers={
-            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+            Event.ON_MODIFY_BASE_POWER: h.MoveHandler(
                 ha.たたりめ_double_power_when_ailment,
             ),
         }
@@ -146,7 +146,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
             Event.ON_MODIFY_MOVE_TYPE: h.MoveHandler(
                 ha.だいちのはどう_modify_move_type,
             ),
-            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+            Event.ON_MODIFY_BASE_POWER: h.MoveHandler(
                 ha.だいちのはどう_power_modifier,
             ),
         },
@@ -257,7 +257,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "ダメおし": MoveData(
         flags={"contact"},
         handlers={
-            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+            Event.ON_MODIFY_BASE_POWER: h.MoveHandler(
                 ha.ダメおし_double_power_when_hit,
             ),
         }
@@ -406,7 +406,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "つけあがる": MoveData(
         flags={"contact"},
         handlers={
-            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+            Event.ON_MODIFY_BASE_POWER: h.MoveHandler(
                 ha.つけあがる_calc_power,
             ),
         }
@@ -624,7 +624,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
             Event.ON_MODIFY_MOVE_CATEGORY: h.MoveHandler(
                 ha.テラバースト_modify_move_category,
             ),
-            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+            Event.ON_MODIFY_BASE_POWER: h.MoveHandler(
                 ha.テラバースト_stellar_power,
             ),
             Event.ON_HIT: h.MoveHandler(

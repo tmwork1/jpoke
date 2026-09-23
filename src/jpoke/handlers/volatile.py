@@ -557,8 +557,13 @@ def こらえる_remove_volatile(battle: Battle, ctx: EventContext, value: Any) 
     return remove_volatile(battle, ctx, value, volatile="こらえる")
 
 
-def ころがる_boost_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ころがる状態: これまでの連続命中回数に応じて威力を2^count倍にする（30→60→120→240→480）。"""
+def ころがる_boost_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """ころがる状態（ON_MODIFY_BASE_POWER）: これまでの連続命中回数に応じて
+    基礎威力を2^count倍にする（30→60→120→240→480）。
+
+    受け取った value（基礎威力）を起点に掛けるため、まるくなる状態による
+    追加の2倍補正（まるくなる_boost_power）と登録順に依存せず重ねがけできる。
+    """
     volatile = ctx.attacker.volatiles.get("ころがる")
     if volatile is not None:
         value *= 2 ** volatile.count
@@ -1448,18 +1453,20 @@ def まもる_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> 
     return remove_volatile(battle, ctx, value, volatile="まもる")
 
 
-def まるくなる_boost_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """まるくなる状態で特定技の威力補正
+def まるくなる_boost_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """まるくなる状態（ON_MODIFY_BASE_POWER）で特定技の基礎威力補正
 
-    まるくなる状態のポケモンが ころがる・アイスボール を使うと威力が2倍になる。
+    まるくなる状態のポケモンが ころがる・アイスボール を使うと基礎威力が2倍になる。
+    受け取った value（基礎威力）を起点に掛けるため、ころがる状態自身の
+    連続命中による倍化（ころがる_boost_power）と登録順に依存せず重ねがけできる。
 
     Args:
         battle: バトルインスタンス
         ctx: コンテキスト
-        value: 威力補正値（4096基準）
+        value: 基礎威力
 
     Returns:
-        HandlerReturn: 補正後の値
+        HandlerReturn: 補正後の基礎威力
     """
     if ctx.move.name in ("ころがる", "アイスボール"):
         value *= 2

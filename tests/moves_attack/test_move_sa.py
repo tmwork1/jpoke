@@ -1053,13 +1053,13 @@ def test_しっぺがえし_交代直後の相手には威力補正が乗らな�
     )
     t.reserve_command(battle, command0=Command.MOVE_0, command1=Command.SWITCH_1)
     battle.step()
-    assert battle.damage_calculator.power_modifier == 4096
+    assert battle.damage_calculator.final_power == 50
 
 
 def test_しっぺがえし_先攻のとき通常威力():
     """しっぺがえし: 先攻で行動する場合、威力補正なし。
     ピカチュウ(高速)がしっぺがえし、カビゴン(低速)がはねるでターンを進めると
-    ピカチュウが先攻になるため power_modifier = 4096 になる。
+    ピカチュウが先攻になるため final_power = 50 になる。
     """
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["しっぺがえし"])],
@@ -1068,13 +1068,13 @@ def test_しっぺがえし_先攻のとき通常威力():
     )
     battle.random.random = lambda: 0.9
     battle.step()
-    assert battle.damage_calculator.power_modifier == 4096
+    assert battle.damage_calculator.final_power == 50
 
 
 def test_しっぺがえし_後攻のとき威力2倍():
     """しっぺがえし: 同ターン後攻で行動する場合、威力が2倍になる。
     カビゴン(低速)がしっぺがえし、ピカチュウ(高速)がはねるでターンを進めると
-    カビゴンが後攻になるため power_modifier = 8192 になる。
+    カビゴンが後攻になるため final_power = 100 になる。
     """
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", move_names=["しっぺがえし"])],
@@ -1083,7 +1083,7 @@ def test_しっぺがえし_後攻のとき威力2倍():
     )
     battle.random.random = lambda: 0.9
     battle.step()
-    assert battle.damage_calculator.power_modifier == 8192
+    assert battle.damage_calculator.final_power == 100
 
 
 def test_しねんのずつき_ひるみが発動する():
@@ -1727,7 +1727,7 @@ def test_じだんだ_タイプ相性で無効化された場合威力2倍にな
     # 無効化されないポケモンに交代してから、じだんだを再度使用
     t.run_switch(battle, 1, 1)
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 8192
+    assert battle.damage_calculator.final_power == 150
 
 
 def test_じだんだ_まひで行動不能だった場合威力2倍になる():
@@ -1745,7 +1745,7 @@ def test_じだんだ_まひで行動不能だった場合威力2倍になる():
 
     battle.test_option.trigger_ailment = False
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 8192
+    assert battle.damage_calculator.final_power == 150
 
 
 def test_じだんだ_まもるで防がれた場合威力2倍になる():
@@ -1761,7 +1761,7 @@ def test_じだんだ_まもるで防がれた場合威力2倍になる():
     t.end_turn(battle)
 
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 8192
+    assert battle.damage_calculator.final_power == 150
 
 
 def test_じだんだ_交代直後は前のターンの失敗を引き継がない():
@@ -1783,7 +1783,7 @@ def test_じだんだ_交代直後は前のターンの失敗を引き継がな�
 
     battle.test_option.accuracy = 100
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 4096
+    assert battle.damage_calculator.final_power == 75
 
 
 def test_じだんだ_技が外れた場合威力2倍になる():
@@ -1799,7 +1799,7 @@ def test_じだんだ_技が外れた場合威力2倍になる():
 
     battle.test_option.accuracy = 100
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 8192
+    assert battle.damage_calculator.final_power == 150
 
 
 def test_じだんだ_通常成功時は次のターン威力2倍にならない():
@@ -1813,7 +1813,7 @@ def test_じだんだ_通常成功時は次のターン威力2倍にならない
     t.end_turn(battle)
 
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 4096
+    assert battle.damage_calculator.final_power == 75
 
 
 def test_じならし_すばやさ低下が発動する():

@@ -32,7 +32,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
     ),
     "ライジングボルト": MoveData(
         handlers={
-            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+            Event.ON_MODIFY_BASE_POWER: h.MoveHandler(
                 ha.ライジングボルト_calc_power,
                 subject_spec="attacker:self",
             ),
@@ -218,7 +218,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
         accuracy=95,
         flags={"contact", "slash"},
         handlers={
-            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+            Event.ON_MODIFY_BASE_POWER: h.MoveHandler(
                 ha.れんぞくぎり_calc_power,
                 subject_spec="attacker:self",
             ),

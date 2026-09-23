@@ -40,7 +40,7 @@ MOVES_YA: dict[MoveName, MoveData] = {
     "やけっぱち": MoveData(
         flags={"contact"},
         handlers={
-            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+            Event.ON_MODIFY_BASE_POWER: h.MoveHandler(
                 ha.やけっぱち_calc_power,
                 subject_spec="attacker:self",
             ),
@@ -72,7 +72,7 @@ MOVES_YA: dict[MoveName, MoveData] = {
     "ゆきなだれ": MoveData(
         flags={"contact"},
         handlers={
-            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+            Event.ON_MODIFY_BASE_POWER: h.MoveHandler(
                 ha.ゆきなだれ_calc_power,
                 subject_spec="attacker:self",
             ),
