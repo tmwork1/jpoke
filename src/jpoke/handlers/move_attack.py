@@ -468,7 +468,7 @@ def エレキネット_lower_defender_spe(battle: Battle, ctx: AttackContext, va
 
 
 def エレキボール_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """エレキボール: 自分の実効素早さ / 相手の実効素早さ の比率で威力を決定する。
+    """エレキボール（ON_MODIFY_BASE_POWER）: 実効素早さの比率で基礎威力を決定する。
 
     比率 = floor(自分の実効素早さ / 相手の実効素早さ)
     比率が 0 または相手の実効素早さが 0 の場合は威力 40。
@@ -492,7 +492,7 @@ def エレキボール_calc_power(battle: Battle, ctx: AttackContext, value: int
         power = 60
     else:
         power = 40
-    return HandlerReturn(value=power * 4096)
+    return HandlerReturn(value=power)
 
 
 def エレクトロビーム_boost_spa(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -866,12 +866,12 @@ def きあいパンチ_suppress_pp_on_fail(battle: Battle, ctx: AttackContext, v
 
 
 def きしかいせい_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """きしかいせい: 自分の残りHPが少ないほど威力が高くなる。
+    """きしかいせい（ON_MODIFY_BASE_POWER）: 自分の残りHPが少ないほど基礎威力が高くなる。
 
     計算式: X = floor(残りHP × 48 / 最大HP)
     X ≥ 33 → 20 / 17-32 → 40 / 10-16 → 80 / 5-9 → 100 / 2-4 → 150 / 0-1 → 200
     """
-    return HandlerReturn(value=_hp_low_to_power(ctx.attacker.hp, ctx.attacker.max_hp) * 4096)
+    return HandlerReturn(value=_hp_low_to_power(ctx.attacker.hp, ctx.attacker.max_hp))
 
 
 def きまぐレーザー_maybe_double_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -990,8 +990,8 @@ def ぎんいろのかぜ_boost_all_stats(battle: Battle, ctx: AttackContext, va
 
 
 def くさむすび_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """くさむすび: 対象の体重で威力を決定する。"""
-    return HandlerReturn(value=_weight_to_power(ctx.defender.weight) * 4096)
+    """くさむすび（ON_MODIFY_BASE_POWER）: 対象の体重で基礎威力を決定する。"""
+    return HandlerReturn(value=_weight_to_power(ctx.defender.weight))
 
 
 def _weight_to_power(weight: float) -> int:
@@ -1141,8 +1141,8 @@ def グロウパンチ_boost_attacker_atk(battle: Battle, ctx: AttackContext, va
 
 
 def けたぐり_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """けたぐり: 対象の体重で威力を決定する。"""
-    return HandlerReturn(value=_weight_to_power(ctx.defender.weight) * 4096)
+    """けたぐり（ON_MODIFY_BASE_POWER）: 対象の体重で基礎威力を決定する。"""
+    return HandlerReturn(value=_weight_to_power(ctx.defender.weight))
 
 
 def ゲップ_check_ate_berry(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -1379,14 +1379,9 @@ def しおづけ_apply_volatile_to_defender(battle: Battle, ctx: AttackContext, 
 
 
 def しおふき_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """しおふき: 自分のHP比率に比例して威力が決まる（最大150）。
-
-    ON_CALC_POWER_MODIFIER では modifier = floor(HP比率 × 4096) を返す。
-    final_power = round_half_down(150 × modifier / 4096) = round_half_down(150 × HP比率)
-    """
-    modifier = int(ctx.attacker.hp * 4096 / ctx.attacker.max_hp)
-    modifier = max(1, modifier)  # 威力が最低1になるよう保証
-    return HandlerReturn(value=modifier)
+    """しおふき（ON_MODIFY_BASE_POWER）: 自分のHP比率に比例して基礎威力を決定する。"""
+    power = 150 * ctx.attacker.hp // ctx.attacker.max_hp
+    return HandlerReturn(value=max(1, power))
 
 
 def しおみず_double_power_if_defender_hp_half_or_less(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -1487,8 +1482,8 @@ def じごくづき_apply_volatile_to_defender(battle: Battle, ctx: AttackContex
 
 
 def じたばた_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """じたばた: 自分の残りHPが少ないほど威力が高くなる（きしかいせいと同計算）。"""
-    return HandlerReturn(value=_hp_low_to_power(ctx.attacker.hp, ctx.attacker.max_hp) * 4096)
+    """じたばた（ON_MODIFY_BASE_POWER）: 自分の残りHPから基礎威力を決定する。"""
+    return HandlerReturn(value=_hp_low_to_power(ctx.attacker.hp, ctx.attacker.max_hp))
 
 
 def じだんだ_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -1509,7 +1504,7 @@ def じばく_pay_hp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerR
 
 
 def ジャイロボール_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """ジャイロボール: 自分の実効素早さが相手より遅いほど威力が高くなる。
+    """ジャイロボール（ON_MODIFY_BASE_POWER）: 実効素早さの比率で基礎威力を決定する。
 
     威力 = floor(25 × 相手の実効素早さ ÷ 自分の実効素早さ) + 1、最大150。
     実効素早さはランク補正・特性・もちもの・まひ・おいかぜ・しつげんの影響を含む。
@@ -1521,7 +1516,7 @@ def ジャイロボール_calc_power(battle: Battle, ctx: AttackContext, value: 
         power = 1
     else:
         power = min(150, 25 * def_speed // atk_speed + 1)
-    return HandlerReturn(value=power * 4096)
+    return HandlerReturn(value=power)
 
 
 def じゃどくのくさり_apply_toxic_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -2124,14 +2119,9 @@ def どくばりセンボン_double_power_when_poisoned(battle: Battle, ctx: Att
 
 
 def ドラゴンエナジー_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """ドラゴンエナジー: 自分のHP比率に比例して威力が決まる（最大150）。しおふき・ふんかと同計算。
-
-    ON_CALC_POWER_MODIFIER では modifier = floor(HP比率 × 4096) を返す。
-    final_power = round_half_down(150 × modifier / 4096) = round_half_down(150 × HP比率)
-    """
-    modifier = int(ctx.attacker.hp * 4096 / ctx.attacker.max_hp)
-    modifier = max(1, modifier)  # 威力が最低1になるよう保証
-    return HandlerReturn(value=modifier)
+    """ドラゴンエナジー（ON_MODIFY_BASE_POWER）: 自分のHP比率で基礎威力を決定する。"""
+    power = 150 * ctx.attacker.hp // ctx.attacker.max_hp
+    return HandlerReturn(value=max(1, power))
 
 
 def ドラゴンダイブ_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -2504,13 +2494,13 @@ def なげつける_consume_item(battle: Battle, ctx: AttackContext, value: Any)
 
 
 def にぎりつぶす_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """にぎりつぶす: 対象の残りHP / 最大HP の比率で威力を決定する（最大120）。
+    """にぎりつぶす（ON_MODIFY_BASE_POWER）: 対象のHP比率で基礎威力を決定する。
 
     威力 = max(1, round_half_down(120 × 現在HP / 最大HP))
     端数は五捨五超入で処理する（第五世代以降の仕様）。
     """
     power = max(1, round_half_down(120 * ctx.defender.hp / ctx.defender.max_hp))
-    return HandlerReturn(value=power * 4096)
+    return HandlerReturn(value=power)
 
 
 def ニトロチャージ_boost_attacker_spe(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -2841,12 +2831,12 @@ def はるのあらし_lower_defender_atk(battle: Battle, ctx: AttackContext, va
 
 
 def ハードプレス_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """ハードプレス: 対象の残りHP / 最大HP の比率で威力を決定する（最大100）。
+    """ハードプレス（ON_MODIFY_BASE_POWER）: 対象のHP比率で基礎威力を決定する。
 
     威力 = max(1, floor(100 × 現在HP / 最大HP))
     """
-    power = max(1, int(100 * ctx.defender.hp / ctx.defender.max_hp))
-    return HandlerReturn(value=power * 4096)
+    power = max(1, 100 * ctx.defender.hp // ctx.defender.max_hp)
+    return HandlerReturn(value=power)
 
 
 def ばかぢから_lower_attacker_atk_def(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -2943,14 +2933,8 @@ def ひょうざんおろし_apply_flinch(battle: Battle, ctx: AttackContext, va
 
 
 def ヒートスタンプ_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """ヒートスタンプ: 自分の体重 / 相手の体重 の比率で威力を決定する。
-
-    相手がちいさくなる状態の場合は体重比率計算をスキップし、
-    minimize ラベルの共通処理（威力2倍）のみが適用される。
-    """
-    if ctx.defender.has_volatile("ちいさくなる"):
-        return HandlerReturn(value=value)
-    return HandlerReturn(value=_weight_ratio_to_power(ctx.attacker.weight, ctx.defender.weight) * 4096)
+    """ヒートスタンプ（ON_MODIFY_BASE_POWER）: 自分と相手の体重比で基礎威力を決定する。"""
+    return HandlerReturn(value=_weight_ratio_to_power(ctx.attacker.weight, ctx.defender.weight))
 
 
 def びりびりちくちく_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -3057,18 +3041,27 @@ def フォトンゲイザー_restore_defender_ability(battle: Battle, ctx: Attac
 
 
 def ふくろだたき_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ふくろだたき: 各ヒットの威力 = 使用者の基礎こうげき種族値 / 10 + 5。
+    """ふくろだたき（ON_MODIFY_BASE_POWER）: 各ヒットの参加者から基礎威力を決定する。
 
     ヨワシは現在のフォルム（ぎょぐんによるフォルムチェンジ）に関係なく、
     「たんどくのすがた」の基礎こうげき種族値を用いる。
     """
-    mon = ctx.attacker
+    player = battle.get_player(ctx.attacker)
+    participants = [
+        mon for mon in battle.player_states[player].selection
+        if mon.alive and not mon.ailment.is_active
+    ]
+    mon = (
+        participants[min(ctx.hit_index - 1, len(participants) - 1)]
+        if participants
+        else ctx.attacker
+    )
     if mon.name in (WISHIWASHI_SOLO, WISHIWASHI_SCHOOL):
         base_atk = POKEDEX[WISHIWASHI_SOLO].base[1]
     else:
         base_atk = mon.data.base[1]
     power = base_atk // 10 + 5
-    return HandlerReturn(value=power * 4096)
+    return HandlerReturn(value=power)
 
 
 def ふくろだたき_hit_count(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -3158,10 +3151,9 @@ def ふんえん_apply_burn_to_defender(battle: Battle, ctx: AttackContext, valu
 
 
 def ふんか_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """ふんか: 自分のHP比率に比例して威力が決まる（最大150）。しおふきと同計算。"""
-    modifier = int(ctx.attacker.hp * 4096 / ctx.attacker.max_hp)
-    modifier = max(1, modifier)  # 威力が最低1になるよう保証
-    return HandlerReturn(value=modifier)
+    """ふんか（ON_MODIFY_BASE_POWER）: 自分のHP比率で基礎威力を決定する。"""
+    power = 150 * ctx.attacker.hp // ctx.attacker.max_hp
+    return HandlerReturn(value=max(1, power))
 
 
 def ふんどのこぶし_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -3285,14 +3277,8 @@ def ヘドロばくだん_apply_poison_to_defender(battle: Battle, ctx: AttackCo
 
 
 def ヘビーボンバー_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """ヘビーボンバー: 自分の体重 / 相手の体重 の比率で威力を決定する。
-
-    相手がちいさくなる状態の場合は体重比率計算をスキップし、
-    minimize ラベルの共通処理（威力2倍）のみが適用される。
-    """
-    if ctx.defender.has_volatile("ちいさくなる"):
-        return HandlerReturn(value=value)
-    return HandlerReturn(value=_weight_ratio_to_power(ctx.attacker.weight, ctx.defender.weight) * 4096)
+    """ヘビーボンバー（ON_MODIFY_BASE_POWER）: 自分と相手の体重比で基礎威力を決定する。"""
+    return HandlerReturn(value=_weight_ratio_to_power(ctx.attacker.weight, ctx.defender.weight))
 
 
 def ベノムショック_double_power_when_poisoned(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

@@ -796,6 +796,27 @@ def test_テクニシャン_アクロバット_道具を持っているとき変
     assert battle.damage_calculator.final_power == 82
 
 
+@pytest.mark.parametrize(
+    ("defender_name", "expected_power"),
+    [
+        ("ピカチュウ", 30),  # 基礎威力20なので1.5倍
+        ("カビゴン", 120),  # 基礎威力120なので補正なし
+    ],
+)
+def test_テクニシャン_けたぐりは体重で決まった基礎威力で判定する(
+    defender_name: str,
+    expected_power: int,
+):
+    """けたぐりはプレースホルダー1ではなく、体重で決まった基礎威力で判定する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", ability_name="テクニシャン", move_names=["けたぐり"])],
+        team1=[Pokemon(defender_name)],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == expected_power
+
+
 def test_テクニシャン_こんらんの自傷では威力上昇しない():
     """こんらんによる自傷ダメージ（内部技"_こんらん"、威力40）はテクニシャンの対象外。"""
     battle = t.start_battle(
@@ -806,6 +827,37 @@ def test_テクニシャン_こんらんの自傷では威力上昇しない():
     battle.test_option.trigger_volatile = True
     battle.step()
     assert battle.damage_calculator.power_modifier == 4096
+
+
+def test_テクニシャン_トリプルアクセルはヒットごとの基礎威力で判定する():
+    """power_sequenceの20・40・60の各威力がテクニシャンの対象になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", ability_name="テクニシャン", move_names=["トリプルアクセル"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 90
+
+
+@pytest.mark.parametrize(
+    ("roll", "expected_power"),
+    [
+        (0.0, 60),  # 基礎威力40なので1.5倍
+        (0.5, 80),  # 基礎威力80なので補正なし
+        (0.75, 120),  # 基礎威力120なので補正なし
+    ],
+)
+def test_テクニシャン_プレゼントは抽選後の基礎威力で判定する(roll: float, expected_power: int):
+    """プレゼントのON_TRY_MOVE_1で書き換えられたbase_powerを参照する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", ability_name="テクニシャン", move_names=["プレゼント"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    battle.random.random = lambda: roll
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == expected_power
 
 
 @pytest.mark.parametrize(

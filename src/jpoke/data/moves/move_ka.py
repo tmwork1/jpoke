@@ -459,7 +459,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         power=1,
         flags={"contact"},
         handlers={
-            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+            Event.ON_MODIFY_BASE_POWER: h.MoveHandler(
                 ha.きしかいせい_calc_power,
             ),
         }
@@ -619,7 +619,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         power=1,
         flags={"contact"},
         handlers={
-            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+            Event.ON_MODIFY_BASE_POWER: h.MoveHandler(
                 ha.くさむすび_calc_power,
             ),
         }
@@ -783,7 +783,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         power=1,
         flags={"contact"},
         handlers={
-            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+            Event.ON_MODIFY_BASE_POWER: h.MoveHandler(
                 ha.けたぐり_calc_power,
             ),
         }

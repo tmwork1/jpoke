@@ -184,7 +184,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
         accuracy=100,
         flags={"contact"},
         handlers={
-            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+            Event.ON_MODIFY_BASE_POWER: h.MoveHandler(
                 ha.にぎりつぶす_calc_power,
             ),
         }

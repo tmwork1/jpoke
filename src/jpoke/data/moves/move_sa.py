@@ -236,7 +236,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "しおふき": MoveData(
         flags={"spread"},
         handlers={
-            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+            Event.ON_MODIFY_BASE_POWER: h.MoveHandler(
                 ha.しおふき_calc_power,
             ),
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
@@ -545,7 +545,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         power=1,
         flags={"contact"},
         handlers={
-            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+            Event.ON_MODIFY_BASE_POWER: h.MoveHandler(
                 ha.じたばた_calc_power,
             ),
         }
@@ -596,7 +596,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         power=1,
         flags={"bullet", "contact"},
         handlers={
-            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+            Event.ON_MODIFY_BASE_POWER: h.MoveHandler(
                 ha.ジャイロボール_calc_power,
             ),
         }

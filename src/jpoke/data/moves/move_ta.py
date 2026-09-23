@@ -1161,7 +1161,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         accuracy=100,
         flags={"spread"},
         handlers={
-            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+            Event.ON_MODIFY_BASE_POWER: h.MoveHandler(
                 ha.ドラゴンエナジー_calc_power,
             ),
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(

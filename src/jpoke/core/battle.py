@@ -1481,6 +1481,35 @@ class Battle:
                 attacker, defender, move, critical=critical
             )
 
+    def calc_move_base_power(self,
+                             attacker: Pokemon,
+                             defender: Pokemon,
+                             move: Move | MoveName) -> int:
+        """現在の状況における技固有の基礎威力を計算する。
+
+        外部問い合わせ用。技実行と同じ前処理（技ハンドラ登録・タイプ/分類/
+        基礎威力の解決・かたやぶり適用）を施し、けたぐり・はきだす等の
+        技固有の変動までを含む基礎威力を返す。特性・持ち物・天候等の
+        ON_CALC_POWER_MODIFIER による補正とテラスタル時の威力60底上げは
+        含まない。それらを含む値は :meth:`calc_move_power` を使用する。
+
+        Args:
+            attacker: 攻撃側のポケモン
+            defender: 防御側のポケモン
+            move: 使用する技（MoveオブジェクトまたはID文字列）
+
+        Returns:
+            int: 技固有の変動を解決後の基礎威力。威力を持たない技は 0。
+                連続技は1撃目の威力
+
+        Note:
+            プレゼントのように乱数で威力が決まる技はデータ上の威力のまま返す。
+        """
+        if isinstance(move, str):
+            move = Move(move)
+        with self._prepare_move_for_query(attacker, defender, move):
+            return move.base_power or 0
+
     def calc_move_power(self,
                         attacker: Pokemon,
                         defender: Pokemon,
@@ -1491,6 +1520,7 @@ class Battle:
         解決・かたやぶり適用）を施したうえで、けたぐり・アクロバット等の技固有の
         変動、特性・持ち物・天候等の威力補正（ON_CALC_POWER_MODIFIER）、テラスタル時の
         威力60底上げまで含めた、ダメージ式に入る威力を返す。
+        これらの補正前の基礎威力は :meth:`calc_move_base_power` を使用する。
 
         Args:
             attacker: 攻撃側のポケモン
