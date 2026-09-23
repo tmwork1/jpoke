@@ -7,6 +7,27 @@
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-09-23
+
+### Added
+
+- `Battle.calc_move_power(attacker, defender, move)` を追加。技固有の威力変動・
+  特性/持ち物/天候補正（`ON_CALC_POWER_MODIFIER`）・テラスタルの威力60底上げを
+  含めた最終威力を返す（威力を持たない技は 0）
+- `Event.ON_MODIFY_BASE_POWER` を新設。技実行時と外部問い合わせ
+  （`calc_move_power` / `calc_damages` / `calc_lethal`）の両方で基礎威力を解決する
+
+### Fixed
+
+- はきだす・なげつける・エコーボイス・りんしょうの威力が、`calc_damages` /
+  `calc_lethal` などの問い合わせ経由では反映されていなかった問題を修正
+
+### Changed
+
+- ps-champ-jaの最新データ（2026-09-22）を同期（ネギガナイトの習得技にスターアサルト
+  を追加、メガセグレイブの特性からアイスボディを削除、でんこうそうげきにパンチ技
+  フラグを追加）
+
 ## [0.5.1] - 2026-09-22
 
 ### Fixed
