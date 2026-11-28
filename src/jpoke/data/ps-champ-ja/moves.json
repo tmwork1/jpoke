@@ -794,6 +794,35 @@
     },
     "maxMove": null
   },
+  "とっておき": {
+    "showdown_id": "lastresort",
+    "showdown_name": "Last Resort",
+    "num": 387,
+    "type": "ノーマル",
+    "category": "Physical",
+    "pp": 8,
+    "power": 140,
+    "accuracy": 100,
+    "priority": 0,
+    "critRatio": 1,
+    "target": "normal",
+    "multihit": [],
+    "flags": [
+      "contact",
+      "metronome",
+      "mirror",
+      "protect"
+    ],
+    "spreadHit": false,
+    "isZ": false,
+    "isMax": false,
+    "zMove": {
+      "basePower": 200
+    },
+    "maxMove": {
+      "basePower": 140
+    }
+  },
   "はめつのひかり": {
     "showdown_id": "lightofruin",
     "showdown_name": "Light of Ruin",
@@ -1016,6 +1045,29 @@
     "maxMove": {
       "basePower": 120
     }
+  },
+  "はいすいのじん": {
+    "showdown_id": "noretreat",
+    "showdown_name": "No Retreat",
+    "num": 748,
+    "type": "かくとう",
+    "category": "Status",
+    "pp": 8,
+    "power": null,
+    "accuracy": null,
+    "priority": 0,
+    "critRatio": 1,
+    "target": "self",
+    "multihit": [],
+    "flags": [
+      "metronome",
+      "snatch"
+    ],
+    "spreadHit": false,
+    "isZ": false,
+    "isMax": false,
+    "zMove": null,
+    "maxMove": null
   },
   "たこがため": {
     "showdown_id": "octolock",
@@ -7867,35 +7919,6 @@
       "basePower": 130
     }
   },
-  "とっておき": {
-    "showdown_id": "lastresort",
-    "showdown_name": "Last Resort",
-    "num": 387,
-    "type": "ノーマル",
-    "category": "Physical",
-    "pp": 8,
-    "power": 140,
-    "accuracy": 100,
-    "priority": 0,
-    "critRatio": 1,
-    "target": "normal",
-    "multihit": [],
-    "flags": [
-      "contact",
-      "metronome",
-      "mirror",
-      "protect"
-    ],
-    "spreadHit": false,
-    "isZ": false,
-    "isMax": false,
-    "zMove": {
-      "basePower": 200
-    },
-    "maxMove": {
-      "basePower": 140
-    }
-  },
   "おはかまいり": {
     "showdown_id": "lastrespects",
     "showdown_name": "Last Respects",
@@ -9077,29 +9100,6 @@
         "def": 1
       }
     },
-    "maxMove": null
-  },
-  "はいすいのじん": {
-    "showdown_id": "noretreat",
-    "showdown_name": "No Retreat",
-    "num": 748,
-    "type": "かくとう",
-    "category": "Status",
-    "pp": 8,
-    "power": null,
-    "accuracy": null,
-    "priority": 0,
-    "critRatio": 1,
-    "target": "self",
-    "multihit": [],
-    "flags": [
-      "metronome",
-      "snatch"
-    ],
-    "spreadHit": false,
-    "isZ": false,
-    "isMax": false,
-    "zMove": null,
     "maxMove": null
   },
   "ほっぺすりすり": {
